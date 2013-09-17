@@ -3,6 +3,11 @@ pms
 
 Search and stream music
 
+Works in Python 2 or 3
+Requires mplayer
+
+# Usage
+
     usage: pms.py [-h] [-c N] query [query ...]
     
     positional arguments:
