@@ -1,10 +1,9 @@
 pms
 ===
 
-Search and stream music
-
-Works in Python 2 or 3
-Requires mplayer
+ - Search and stream music
+ - Works under Python 2.7 or 3
+ - Requires mplayer
 
 # Usage
 
