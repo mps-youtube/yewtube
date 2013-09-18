@@ -90,7 +90,11 @@ def getclean(songs, num):
 def dosearch(results, term):
     url = "http://ex.fm/api/v3/song/search/%s?start=0&results=%s"
     url = url % (term, results)
-    rawdata = urlopen(url).read().decode("utf8")
+    try:
+        rawdata = urlopen(url, None, 15).read().decode("utf8")
+    except:
+        print "Timed out.."
+        sys.exit()
     songs = loads(rawdata)['songs']
     return songs
     
@@ -157,7 +161,7 @@ def reqinput(songlist):
         txt = "\n[%s1-%s%s] or [%sq%s]uit  : " 
         txt = txt  % (col, len(songlist), white, col, white)
         choice = raw_input(txt)
-        if choice == "q":
+        if choice.lower() == "q" or choice.lower() == "quit":
             sys.exit("Laters")
         elif choice == "l":
             #generate_choices(songlist)
