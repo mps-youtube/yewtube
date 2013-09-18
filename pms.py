@@ -25,7 +25,6 @@ import logging
 import argparse
 from json import loads
 from subprocess import call
-import os
 
 # python 2/3 compatibility
 PY3 = False
@@ -120,13 +119,6 @@ def getargs():
     return(parser.parse_args())
 
 def playsong(song):
-    # save history in file
-    logdir = "~/.pms/"
-    filename = "%s - %s.mp3" % (song['cartist'], song['ctitle'])
-    filename = os.path.join(logdir, filename)
-    if not os.path.exists(logdir):
-        os.makedirs(logdir)
-    open(filename, "w").write(song['curl'])
     callx = [PLAYER] + PLAYERARGS.split() + [song['curl']]
     call(callx)
 
