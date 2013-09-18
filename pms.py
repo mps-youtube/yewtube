@@ -25,6 +25,7 @@ import logging
 import argparse
 from json import loads
 from subprocess import call
+import os
 
 # python 2/3 compatibility
 PY3 = False
@@ -93,7 +94,7 @@ def dosearch(results, term):
     try:
         rawdata = urlopen(url, None, 15).read().decode("utf8")
     except:
-        print "Timed out.."
+        print("Timed out..")
         sys.exit()
     songs = loads(rawdata)['songs']
     return songs
@@ -119,6 +120,13 @@ def getargs():
     return(parser.parse_args())
 
 def playsong(song):
+    # save history in file
+    logdir = "~/.pms/"
+    filename = "%s - %s.mp3" % (song['cartist'], song['ctitle'])
+    filename = os.path.join(logdir, filename)
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
+    open(filename, "w").write(song['curl'])
     callx = [PLAYER] + PLAYERARGS.split() + [song['curl']]
     call(callx)
 
