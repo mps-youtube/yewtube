@@ -69,11 +69,9 @@ def getclean(songs, num):
                 if "mplayer" in PLAYER.lower():
                     raise Exception
         except:
-            #pass
             sys.stdout.write("-")
             sys.stdout.flush()
             continue
-            #raise
         url = url.replace("#_=_", "")
         song['curl'] = url
         for field in "title artist album".split(" "):
@@ -163,9 +161,6 @@ def reqinput(songlist):
         choice = raw_input(txt)
         if choice.lower() == "q" or choice.lower() == "quit":
             sys.exit("Laters")
-        elif choice == "l":
-            #generate_choices(songlist)
-            pass
         else:
             try:
                 selected = int(choice)
