@@ -41,7 +41,6 @@ else:
 
 PLAYER = "mplayer"
 PLAYERARGS = "-nocache -prefer-ipv4 -really-quiet"
-LOGGING = True
 COLOURS = True # Change to false if you experience display issues
 
 opener = build_opener()
@@ -116,7 +115,7 @@ def generate_choices(songs):
     return(out)
 
 def get_stream(song):
-    r" Takes a song, returns the song with real url item "
+    r" Takes a song, returns the real url"
     if not "curl" in song:
         logging.debug("API call: %s" % song['link'])
         URL = 'http://pleer.com/site_api/files/get_url'
@@ -129,7 +128,7 @@ def get_stream(song):
         return song['curl']
 
 def reqinput(songs):
-    r'gets input, returns acion/value pair'
+    r'gets input, returns action/value pair and songlist'
     intset = False
     if len(songs) > 1:
         txt = ("[%s1-%s%s] to play or [%sd 1-%s%s] to download or [%sq%s]uit"
@@ -145,7 +144,7 @@ def reqinput(songs):
                 intset = int(choice)
                 song = songs[int(choice) - 1]
                 return("play", song, songs)
-            except: # NaN
+            except: # Nan
                 dl = re.match(r'(?:d|D)(?:\s)*(\d+)', choice)
                 if intset:
                     return("rangeerror", intset, songs)
@@ -156,17 +155,10 @@ def reqinput(songs):
                     return("search", choice, songs)
 
 def playsong(song):
-    r'save history in file, play song'
+    r'play song, uses mplayer by default'
     curl = get_stream(song)
     song['curl'] = curl
-    if LOGGING:
-        logdir = os.path.join(os.path.expanduser("~"), ".plr")
-        filename = "%s - %s.log" % (song['singer'][:30], song['song'][:30])
-        filename = os.path.join(logdir, filename)
-        if not os.path.exists(logdir):
-            os.makedirs(logdir)
-        open(filename, "w").write(curl)
-    print("Playing - [%sq%s] to quit.." % (c.yellow, c.white))
+    print("Playing - [%sq%s] to quit.." % (c.y, c.w))
     print("")
     callx = [PLAYER] + PLAYERARGS.split() + [song['curl']]
     call(callx)
