@@ -3,7 +3,9 @@ pms
 
  - Search and stream music
  - Download music
- - Works under Python 2.7 or 3
+ - Works with Python 2.7 and 3
+ - Works with Windows and Linux (untested with MacOS)
+ - No Python dependencies
  - Requires mplayer
 
 # Usage
