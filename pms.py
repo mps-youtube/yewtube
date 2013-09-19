@@ -43,7 +43,6 @@ PLAYER = "mplayer"
 PLAYERARGS = "-nocache -prefer-ipv4 -really-quiet"
 COLOURS = True # Change to false if you experience display issues
 DDIR = os.path.join(os.path.expanduser("~"), "Downloads", "PMS") 
-DDIR = "/f/h/Downloads/PMS/"
 
 opener = build_opener()
 ua = ("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64;"
