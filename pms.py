@@ -43,6 +43,7 @@ PLAYER = "mplayer"
 PLAYERARGS = "-nocache -prefer-ipv4 -really-quiet"
 COLOURS = True # Change to false if you experience display issues
 DDIR = os.path.join(os.path.expanduser("~"), "Downloads", "PMS") 
+DDIR = "/f/h/Downloads/PMS/"
 
 opener = build_opener()
 ua = ("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64;"
@@ -50,13 +51,12 @@ ua = ("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64;"
 opener.addheaders = [('User-Agent', ua)]
 urlopen = opener.open
 
-
 def tidy(raw, field):
     if field == "duration":
         raw = time.strftime('%M:%S', time.gmtime(int(raw)))
     else:
         for r in (("&#039;", "'"), ("&amp;#039;", "'"), ("&amp;amp;", "&"),
-            ("  ", " "), ("&amp;", "&")):
+            ("  ", " "), ("&amp;", "&"), ("&quot;", '"')):
             raw = raw.replace(r[0], r[1])
     return raw
 
@@ -83,17 +83,17 @@ def get_tracks_from_page(page):
 
 def generate_song_meta(song):
     r" Generates formatted song metadata "
-    out = ""
     fields = "singer song duration rate size".split(" ")
     names = "Artist Title Length Bitrate Size".split(" ")
     maxlen = max([len(song.get(f) or "-" * 18) for f in fields])
     hyphens = min(78, maxlen + 10)
     hyphenstr = ("  " + "-" * hyphens + "\n")
     fmt = "  %s%-7s%s : %s%s%s\n"
+    out = "\n" + hyphenstr
     for n, name in enumerate(names):
         if song[fields[n]]:
             out += (fmt % (c.y, name, c.w, c.g, song[fields[n]], c.w))
-    return("\n" + hyphenstr + out + hyphenstr)
+    return(out + hyphenstr)
 
 def generate_choices(songs):
     r" Generates list of choices from a song list"
@@ -134,7 +134,7 @@ def reqinput(songs):
     if not songs:
         return("nilinput", None, None)
     txt = ("[%s1-%s%s] to play or [%sd 1-%s%s] to download or [%sq%s]uit"
-        " or enter new search\n : ")
+        " or enter new search\n > ")
     txt = txt  % (c.g, len(songs), c.w, c.g, len(songs), c.w, c.g, c.w)
     r = {   'nil': r'\s*$',
             'play': r'\s*(\d{1,3})',
@@ -144,7 +144,7 @@ def reqinput(songs):
     for k in r.keys():
         r[k] = re.compile(r[k], re.IGNORECASE)
     if r['quit'].match(choice):
-        sys.exit("(c) 2013 nagev.  Thanks for coming..")
+        sys.exit("{}(c) 2013 nagev.  Thanks for coming..{}".format(c.b, c.w))
     elif r['nil'].match(choice):
         return("nilerror", None, songs)
     elif r['play'].match(choice):
