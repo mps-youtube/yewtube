@@ -96,8 +96,8 @@ def generate_song_meta(song):
 def generate_choices(songs):
     r" Generates list of choices from a song list"
     fmthd = "%s%-6s %-7s %-21s %-22s %-8s %-8s%s\n"
-    out = (fmthd % (c.g, "ITEM", "SIZE", "ARTIST", "TRACK", "LENGTH",
-        "BITRATE", c.w))
+    out = (fmthd % (c.g, "Item", "Size", "Artist", "Track", "Length",
+        "Bitrate", c.w))
     out += (fmthd % (c.w, "----", "----", "------", "-----", "------",
         "-------", c.w))
     fmtrow = "%s%-6s %-7s %-21s %-22s %-8s %-8s%s\n"
@@ -130,7 +130,7 @@ def get_stream(song):
 def reqinput(songs):
     r'gets input, returns action/value pair and songlist'
     intset = False
-    if len(songs) > 1:
+    if len(songs) >= 1:
         txt = ("[%s1-%s%s] to play or [%sd 1-%s%s] to download or [%sq%s]uit"
             " or enter new search\n : ")
         txt = txt  % (c.g, len(songs), c.w, c.g, len(songs), c.w, c.g, c.w)
