@@ -42,12 +42,14 @@ else:
 PLAYER = "mplayer"
 PLAYERARGS = "-nocache -prefer-ipv4 -really-quiet"
 COLOURS = True # Change to false if you experience display issues
+DDIR = os.path.join(os.path.expanduser("~"), "Downloads", "PMS") 
 
 opener = build_opener()
 ua = ("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64;"
       "Trident/5.0)")
 opener.addheaders = [('User-Agent', ua)]
 urlopen = opener.open
+
 
 def tidy(raw, field):
     if field == "duration":
@@ -129,30 +131,34 @@ def get_stream(song):
 
 def reqinput(songs):
     r'gets input, returns action/value pair and songlist'
-    intset = False
-    if len(songs) >= 1:
-        txt = ("[%s1-%s%s] to play or [%sd 1-%s%s] to download or [%sq%s]uit"
-            " or enter new search\n : ")
-        txt = txt  % (c.g, len(songs), c.w, c.g, len(songs), c.w, c.g, c.w)
-        choice = raw_input(txt)
-        if choice.lower() == "q" or choice.lower() == "quit":
-            sys.exit("Laters")
-        elif not choice:
-            return("nilerror", None, songs)
-        else:
-            try:
-                intset = int(choice)
-                song = songs[int(choice) - 1]
-                return("play", song, songs)
-            except: # Nan
-                dl = re.match(r'(?:d|D)(?:\s)*(\d+)', choice)
-                if intset:
-                    return("rangeerror", intset, songs)
-                elif dl:
-                    song = songs[int(dl.group(1)) -1]
-                    return("download", song, songs)
-                else:
-                    return("search", choice, songs)
+    if not songs:
+        return("nilinput", None, None)
+    txt = ("[%s1-%s%s] to play or [%sd 1-%s%s] to download or [%sq%s]uit"
+        " or enter new search\n : ")
+    txt = txt  % (c.g, len(songs), c.w, c.g, len(songs), c.w, c.g, c.w)
+    r = {   'nil': r'\s*$',
+            'play': r'\s*(\d{1,3})',
+            'dl': r'\s*(?:d|dl|download|down)(?:\s)*(\d{1,3})',
+            'quit': r'\s*(q|quit)\s*$' }
+    choice = raw_input(txt)
+    for k in r.keys():
+        r[k] = re.compile(r[k], re.IGNORECASE)
+    if r['quit'].match(choice):
+        sys.exit("(c) 2013 nagev.  Thanks for coming..")
+    elif r['nil'].match(choice):
+        return("nilerror", None, songs)
+    elif r['play'].match(choice):
+        songnum = int(r['play'].match(choice).group(1))
+        if songnum > len(songs):
+            return("rangeerror", songnum, songs)
+        return("play", songs[songnum - 1], songs)
+    elif r['dl'].match(choice):
+        songnum = int(r['dl'].match(choice).group(1))
+        if songnum > len(songs):
+            return("rangeerror", songnum, songs)
+        return("download", songs[songnum - 1], songs)
+    else:
+        return("search", choice, songs)
 
 def playsong(song):
     r'play song, uses mplayer by default'
@@ -185,7 +191,10 @@ def main():
 
 def download(song):
     r'Downloads file, shows status'
+    if not os.path.exists(DDIR):
+        os.makedirs(DDIR)
     filename = song['singer'][:30] + " - " + song['song'][:30] + ".mp3"
+    filename = os.path.join(DDIR, filename)
     print("\nDownloading %s%s%s .." % (c.g, filename, c.w))
     status_string = ('  {}{:,}{} Bytes [{}{:.2%}{}] received. Rate: [{}{:4.0f}'
                      ' kbps{}].  ETA: [{}{:.0f} secs{}]')
