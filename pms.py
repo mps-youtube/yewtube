@@ -76,7 +76,7 @@ def get_tracks_from_page(page):
                     raise Exception("wtf1")
             songs.append(cursong)
     else:
-        logging.debug("couldn't find regex: <li.duration[^>]+)\>")
+        logging.error("got unexpected webpage")
         return False
     return songs
 
@@ -165,6 +165,10 @@ def playsong(song):
     song['curl'] = curl
     print("Playing - [%sq%s] to quit.." % (c.y, c.w))
     print("")
+    try:
+        filesize = int(opener.open(curl).headers['content-length'])
+    except:
+        print("\nSorry, this track no longer exists!")
     callx = [PLAYER] + PLAYERARGS.split() + [song['curl']]
     call(callx)
 
