@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.02"
+__version__ = "0.03"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -40,7 +40,7 @@ else:
 #logging.basicConfig(level=logging.DEBUG)
 
 PLAYER = "mplayer"
-PLAYERARGS = "-nocache -prefer-ipv4 -really-quiet"
+PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
 COLOURS = True # Change to false if you experience display issues
 DDIR = os.path.join(os.path.expanduser("~"), "Downloads", "PMS") 
 
