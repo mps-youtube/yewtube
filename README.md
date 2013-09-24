@@ -31,8 +31,7 @@ Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://g
     pms.py
 
 # Screenshot
-![pms running in terminal](http://i.imgur.com/lCRgP7J.png "pms running in
-terminal")
+![pms running in terminal](http://i.imgur.com/Oqyz5vk.png "pms running in terminal")
 
 # Usage Example:
 
