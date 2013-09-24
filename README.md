@@ -22,7 +22,6 @@ Manually:
 
 Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://github.com/np1/pms/archive/master.tar.gz) file and extract
 
-
 # Usage
 
     usage: pms.py query [query ...]
@@ -30,6 +29,10 @@ Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://g
     or simply:
 
     pms.py
+
+# Screenshot
+![pms running in terminal](http://i.imgur.com/lCRgP7J.png "pms running in
+terminal")
 
 # Usage Example:
 
@@ -81,7 +84,7 @@ Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://g
 --
 
     [1-20] to play or [d 1-20] to download or [q]uit or enter new search
-     > d 3
+     > d3
 
 
 
