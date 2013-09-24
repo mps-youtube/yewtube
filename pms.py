@@ -20,6 +20,7 @@ __version__ = "0.03"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
+import readline
 import logging
 import time
 import json
