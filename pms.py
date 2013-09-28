@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.03"
+__version__ = "0.04"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -42,8 +42,11 @@ else:
 
 PLAYER = "mplayer"
 PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
-COLOURS = True # Change to false if you experience display issues
+COLOURS = True 
 DDIR = os.path.join(os.path.expanduser("~"), "Downloads", "PMS") 
+
+if os.name == "nt": # Disable colours for Windows
+    COLOURS = False
 
 opener = build_opener()
 ua = ("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64;"
@@ -133,9 +136,8 @@ def reqinput(songs):
     r'gets input, returns action/value pair and songlist'
     if not songs:
         return("nilinput", None, None)
-    txt = ("[%s1-%s%s] to play or [%sd 1-%s%s] to download or [%sq%s]uit"
-        " or enter new search\n > ")
-    txt = txt  % (c.g, len(songs), c.w, c.g, len(songs), c.w, c.g, c.w)
+    txt = ("[{0}1-{1}{2}] to play or [{0}d 1-{1}{2}] to download or [{0}q{2}]"
+        "uit or enter new search\n > ".format(c.g, len(songs), c.w))
     r = {   'nil': r'\s*$',
             'play': r'\s*(\d{1,3})',
             'dl': r'\s*(?:d|dl|download|down)(?:\s)*(\d{1,3})',
@@ -170,8 +172,12 @@ def playsong(song):
         filesize = int(opener.open(curl).headers['content-length'])
     except:
         print("\nSorry, this track no longer exists!")
-    callx = [PLAYER] + PLAYERARGS.split() + [song['curl']]
-    call(callx)
+    try:
+        callx = [PLAYER] + PLAYERARGS.split() + [song['curl']]
+        call(callx)
+    except OSError:
+        print("{}{}{} not found on this system".format(c.y, PLAYER, c.w))
+        time.sleep(2)
 
 def dosearch(term):
     # perform search on term, returns songs or false
@@ -200,8 +206,8 @@ def download(song):
     filename = song['singer'][:30] + " - " + song['song'][:30] + ".mp3"
     filename = os.path.join(DDIR, filename)
     print("\nDownloading %s%s%s .." % (c.g, filename, c.w))
-    status_string = ('  {}{:,}{} Bytes [{}{:.2%}{}] received. Rate: [{}{:4.0f}'
-                     ' kbps{}].  ETA: [{}{:.0f} secs{}]')
+    status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
+        '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
     url = get_stream(song)
     resp = urlopen(url)
     total = int(resp.info()['Content-Length'].strip())
@@ -214,8 +220,8 @@ def download(song):
         bytesdone += len(chunk)
         rate = (bytesdone / 1024) / elapsed
         eta = (total - bytesdone) / (rate * 1024)
-        progress_stats = (c.y, bytesdone, c.w, c.y, bytesdone * 1.0 / total,
-                c.w, c.y, rate, c.w, c.y, eta, c.w)
+        progress_stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate,
+                eta)
         if not chunk:
             outfh.close()
             break
