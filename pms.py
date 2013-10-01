@@ -20,7 +20,6 @@ __version__ = "0.04"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
-import readline
 import logging
 import time
 import json
@@ -47,6 +46,8 @@ DDIR = os.path.join(os.path.expanduser("~"), "Downloads", "PMS")
 
 if os.name == "nt": # Disable colours for Windows
     COLOURS = False
+else:
+    import readline # import realine if not running on windows
 
 opener = build_opener()
 ua = ("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64;"
