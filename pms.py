@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-''' pms 
+''' pms
     Copyright (C)  2013 nagev
 
     This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.04"
+__version__ = "0.05"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -41,13 +41,16 @@ else:
 
 PLAYER = "mplayer"
 PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
-COLOURS = True 
-DDIR = os.path.join(os.path.expanduser("~"), "Downloads", "PMS") 
+COLOURS = True
+DDIR = os.path.join(os.path.expanduser("~"), "Downloads", "PMS")
 
-if os.name == "nt": # Disable colours for Windows
+if os.name == "nt":  # Disable colours for Windows
     COLOURS = False
 else:
-    import readline # import realine if not running on windows
+    try:
+        import readline  # import realine if not running on windows
+    except:
+        pass  # no biggie
 
 opener = build_opener()
 ua = ("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64;"
@@ -55,14 +58,16 @@ ua = ("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64;"
 opener.addheaders = [('User-Agent', ua)]
 urlopen = opener.open
 
+
 def tidy(raw, field):
     if field == "duration":
         raw = time.strftime('%M:%S', time.gmtime(int(raw)))
     else:
         for r in (("&#039;", "'"), ("&amp;#039;", "'"), ("&amp;amp;", "&"),
-            ("  ", " "), ("&amp;", "&"), ("&quot;", '"')):
+                 ("  ", " "), ("&amp;", "&"), ("&quot;", '"')):
             raw = raw.replace(r[0], r[1])
     return raw
+
 
 def get_tracks_from_page(page):
     r" Gets search results from web page "
@@ -85,6 +90,7 @@ def get_tracks_from_page(page):
         return False
     return songs
 
+
 def generate_song_meta(song):
     r" Generates formatted song metadata "
     fields = "singer song duration rate size".split(" ")
@@ -99,13 +105,14 @@ def generate_song_meta(song):
             out += (fmt % (c.y, name, c.w, c.g, song[fields[n]], c.w))
     return(out + hyphenstr)
 
+
 def generate_choices(songs):
     r" Generates list of choices from a song list"
     fmthd = "%s%-6s %-7s %-21s %-22s %-8s %-8s%s\n"
     out = (fmthd % (c.g, "Item", "Size", "Artist", "Track", "Length",
-        "Bitrate", c.w))
+           "Bitrate", c.w))
     out += (fmthd % (c.w, "----", "----", "------", "-----", "------",
-        "-------", c.w))
+            "-------", c.w))
     fmtrow = "%s%-6s %-7s %-21s %-22s %-8s %-8s%s\n"
     for n, x in enumerate(songs):
         col = c.p
@@ -116,16 +123,17 @@ def generate_choices(songs):
         artist = x.get('singer') or "unknown artist"
         duration = x.get('duration') or "unknown length"
         bitrate = x.get('rate') or "unknown"
-        out += (fmtrow % (col, str(n+1), str(size)[:3] + " Mb", artist[:20],
-            title[:21], duration[:8], bitrate[:3], c.w))
+        out += (fmtrow % (col, str(n + 1), str(size)[:3] + " Mb", artist[:20],
+                title[:21], duration[:8], bitrate[:3], c.w))
     return(out)
+
 
 def get_stream(song):
     r" Takes a song, returns the real url"
     if not "curl" in song:
         logging.debug("API call: %s" % song['link'])
         URL = 'http://pleer.com/site_api/files/get_url'
-        url = URL + "?action=download&id=%s" % song['link'] 
+        url = URL + "?action=download&id=%s" % song['link']
         wdata = urlopen(url).read().decode("utf8")
         j = json.loads(wdata)
         curl = j['track_link']
@@ -133,16 +141,17 @@ def get_stream(song):
     else:
         return song['curl']
 
+
 def reqinput(songs):
     r'gets input, returns action/value pair and songlist'
     if not songs:
         return("nilinput", None, None)
     txt = ("[{0}1-{1}{2}] to play or [{0}d 1-{1}{2}] to download or [{0}q{2}]"
-        "uit or enter new search\n > ".format(c.g, len(songs), c.w))
-    r = {   'nil': r'\s*$',
-            'play': r'\s*(\d{1,3})',
-            'dl': r'\s*(?:d|dl|download|down)(?:\s)*(\d{1,3})',
-            'quit': r'\s*(q|quit)\s*$' }
+           "uit or enter new search\n > ".format(c.g, len(songs), c.w))
+    r = {'nil': r'\s*$',
+         'play': r'\s*(\d{1,3})',
+         'dl': r'\s*(?:d|dl|download|down)(?:\s)*(\d{1,3})',
+         'quit': r'\s*(q|quit)\s*$'}
     choice = raw_input(txt)
     for k in r.keys():
         r[k] = re.compile(r[k], re.IGNORECASE)
@@ -163,6 +172,7 @@ def reqinput(songs):
     else:
         return("search", choice, songs)
 
+
 def playsong(song):
     r'play song, uses mplayer by default'
     curl = get_stream(song)
@@ -170,7 +180,7 @@ def playsong(song):
     print("Playing - [%sq%s] to quit.." % (c.y, c.w))
     print("")
     try:
-        filesize = int(opener.open(curl).headers['content-length'])
+        opener.open(curl).headers['content-length']
     except:
         print("\nSorry, this track no longer exists!")
     try:
@@ -179,6 +189,7 @@ def playsong(song):
     except OSError:
         print("{}{}{} not found on this system".format(c.y, PLAYER, c.w))
         time.sleep(2)
+
 
 def dosearch(term):
     # perform search on term, returns songs or false
@@ -195,10 +206,12 @@ def dosearch(term):
             return False
         return songs
 
+
 def main():
     args = sys.argv[1:]
     args = " ".join(args).strip()
     start(args)
+
 
 def download(song):
     r'Downloads file, shows status'
@@ -208,7 +221,7 @@ def download(song):
     filename = os.path.join(DDIR, filename)
     print("\nDownloading %s%s%s .." % (c.g, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
-        '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
+                     '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
     url = get_stream(song)
     resp = urlopen(url)
     total = int(resp.info()['Content-Length'].strip())
@@ -222,7 +235,7 @@ def download(song):
         rate = (bytesdone / 1024) / elapsed
         eta = (total - bytesdone) / (rate * 1024)
         progress_stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate,
-                eta)
+                          eta)
         if not chunk:
             outfh.close()
             break
@@ -230,6 +243,7 @@ def download(song):
         sys.stdout.write("\r" + status + ' ' * 4 + "\r")
         sys.stdout.flush()
     print("\n%sDone\n" % c.y)
+
 
 def songaction(action, value, songs):
     if action == "play":
@@ -239,7 +253,8 @@ def songaction(action, value, songs):
         download(value)
     elif action == "rangeerror" or action == "nilerror":
         value = value or "zilch"
-        return("Sorry, %s%s%s is not a valid choice"  %(c.g, value, c.w))
+        return("Sorry, %s%s%s is not a valid choice" % (c.g, value, c.w))
+
 
 def start(args):
     songs = dosearch(args)
@@ -263,9 +278,10 @@ def start(args):
         if a == "search":
             start(v)
 
+
 class c:
     white = "\033[0m"
-    red, green, yellow, blue, pink = ["\033[%sm" % n for n in range(91,96)]
+    red, green, yellow, blue, pink = ["\033[%sm" % n for n in range(91, 96)]
     if not COLOURS:
         red = green = yellow = blue = pink = white = ""
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
