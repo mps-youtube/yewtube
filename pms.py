@@ -49,6 +49,7 @@ if os.name == "nt":  # Disable colours for Windows
 else:
     try:
         import readline  # import realine if not running on windows
+        readline.get_history_length()  # redundant, prevents unused import warn
     except:
         pass  # no biggie
 
