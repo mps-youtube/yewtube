@@ -271,7 +271,7 @@ def start(args):
         start(None)
     elif songs:
         text = generate_choices(songs)
-        print(text)
+        print(text.encode("utf8"))
         a, v, s = reqinput(songs)
         sactions = "play download rangeerror nilerror".split(" ")
         while a in sactions:
