@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.05"
+__version__ = "0.06"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -30,12 +30,14 @@ from subprocess import call
 
 # Python 3 compatibility hack
 PY3 = False
+compat_input = None
 if sys.version_info[:2] >= (3, 0):
     PY3 = True
     from urllib.request import build_opener
-    raw_input = input
+    compat_input = input
 else:
     from urllib2 import build_opener
+    compat_input = raw_input
 
 #logging.basicConfig(level=logging.DEBUG)
 
@@ -50,7 +52,7 @@ else:
     try:
         import readline  # import realine if not running on windows
         readline.get_history_length()  # redundant, prevents unused import warn
-    except:
+    except ImportError:
         pass  # no biggie
 
 opener = build_opener()
@@ -83,7 +85,7 @@ def get_tracks_from_page(page):
                 if v:
                     cursong[f] = tidy(v.group(1), f)
                 else:
-                    logging.error("Couldn't get %s" % f)
+                    logging.error("Couldn't get " + f)
                     raise Exception("wtf1")
             songs.append(cursong)
     else:
@@ -132,7 +134,7 @@ def generate_choices(songs):
 def get_stream(song):
     r" Takes a song, returns the real url"
     if not "curl" in song:
-        logging.debug("API call: %s" % song['link'])
+        logging.debug("API call: " + song['link'])
         URL = 'http://pleer.com/site_api/files/get_url'
         url = URL + "?action=download&id=%s" % song['link']
         wdata = urlopen(url).read().decode("utf8")
@@ -153,25 +155,27 @@ def reqinput(songs):
          'play': r'\s*(\d{1,3})',
          'dl': r'\s*(?:d|dl|download|down)(?:\s)*(\d{1,3})',
          'quit': r'\s*(q|quit)\s*$'}
-    choice = raw_input(txt)
+    choice = compat_input(txt)
+    retval = ()
     for k in r.keys():
         r[k] = re.compile(r[k], re.IGNORECASE)
     if r['quit'].match(choice):
         sys.exit("{}(c) 2013 nagev.  Thanks for coming..{}".format(c.b, c.w))
     elif r['nil'].match(choice):
-        return("nilerror", None, songs)
+        retval = ("nilerror", None, songs)
     elif r['play'].match(choice):
         songnum = int(r['play'].match(choice).group(1))
         if songnum > len(songs):
-            return("rangeerror", songnum, songs)
-        return("play", songs[songnum - 1], songs)
+            return ("rangeerror", songnum, songs)
+        retval = ("play", songs[songnum - 1], songs)
     elif r['dl'].match(choice):
         songnum = int(r['dl'].match(choice).group(1))
         if songnum > len(songs):
-            return("rangeerror", songnum, songs)
-        return("download", songs[songnum - 1], songs)
+            return ("rangeerror", songnum, songs)
+        retval = ("download", songs[songnum - 1], songs)
     else:
-        return("search", choice, songs)
+        retval = ("search", choice, songs)
+    return retval
 
 
 def playsong(song):
@@ -182,7 +186,7 @@ def playsong(song):
     print("")
     try:
         opener.open(curl).headers['content-length']
-    except:
+    except IOError:
         print("\nSorry, this track no longer exists!")
     try:
         callx = [PLAYER] + PLAYERARGS.split() + [song['curl']]
@@ -260,7 +264,7 @@ def songaction(action, value, songs):
 def start(args):
     songs = dosearch(args)
     if not args:
-        inp = raw_input("Enter artist/song to search : ")
+        inp = compat_input("Enter artist/song to search : ")
         start(inp)
     elif not songs:
         print("Sorry, nothing matched %s%s%s" % (c.g, args, c.w))
@@ -280,9 +284,10 @@ def start(args):
             start(v)
 
 
-class c:
+class c(object):
     white = "\033[0m"
-    red, green, yellow, blue, pink = ["\033[%sm" % n for n in range(91, 96)]
+    #red, green, yellow, blue, pink = ["\033[%sm" % n for n in range(91, 96)]
+    red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
     if not COLOURS:
         red = green = yellow = blue = pink = white = ""
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
