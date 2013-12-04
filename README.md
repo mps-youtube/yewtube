@@ -27,7 +27,8 @@ Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://g
     Download mplayer - https://www.macupdate.com/app/mac/18580/mplayer
     Make a link for mplayer - ln -s /Applications/MPlayer OSX.app/Contents/Resources/External_Binaries/mplayer.app/Contents/MacOS/mplayer /usr/local/bin/mplayer
     Install X11 - http://xquartz.macosforge.org/landing/
-
+    
+    NOTE: To MplayerX: ln -s /Applications/MPlayerX.app/Contents/Resources/binaries/x86_64/mplayer /usr/local/bin/mplayer
 # Usage
 
     usage: pms.py query [query ...]
