@@ -3,7 +3,7 @@ pms
 
  - Search and stream music
  - Download music
- - Works with Python 2.7 and 3
+ - Works with Python 2.7 and 3.x
  - Works with Windows, Linux and Mac OSX 10.9
  - No Python dependencies
  - Requires mplayer
@@ -31,11 +31,11 @@ Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://g
     NOTE - for MplayerX: ln -s /Applications/MPlayerX.app/Contents/Resources/binaries/x86_64/mplayer /usr/local/bin/mplayer
 # Usage
 
-    usage: pms.py query [query ...]
+    usage: pms query [query ...]
 
     or simply:
 
-    pms.py
+    pms
 
 # Screenshot
 ![pms running in terminal](http://i.imgur.com/Oqyz5vk.png "pms running in terminal")
@@ -43,8 +43,8 @@ Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://g
 # Usage Example:
 
     $ > ls
-    LICENSE  pms.py  README.md
-    $ > ./pms.py
+    LICENSE  pms  README.md
+    $ > ./pms
     Enter artist/song to search : gotye somebody i used to know
 
     Search for 'gotye somebody i used to know'
