@@ -143,31 +143,31 @@ def get_stream(song):
 
     r" Return the url for a song "
 
-    if not "curl" in song:
+    if not "track_url" in song:
         URL = 'http://pleer.com/site_api/files/get_url'
         url = URL + "?action=download&id=%s" % song['link']
         wdata = urlopen(url).read().decode("utf8")
         j = json.loads(wdata)
-        curl = j['track_link']
-        return curl
+        track_url = j['track_link']
+        return track_url
     else:
-        return song['curl']
+        return song['track_url']
 
 
 def playsong(song):
 
     r" Play song using PLAYER called with args PLAYERARGS "
 
-    curl = get_stream(song)
-    song['curl'] = curl
+    track_url = get_stream(song)
+    song['track_url'] = track_url
     print("Playing - [%sq%s] to quit.." % (c.y, c.w))
     print("")
     try:
-        opener.open(curl).headers['content-length']
+        opener.open(track_url).headers['content-length']
     except IOError:
         print("\nSorry, this track no longer exists!")
     try:
-        cmd = [PLAYER] + PLAYERARGS.split() + [song['curl']]
+        cmd = [PLAYER] + PLAYERARGS.split() + [song['track_url']]
         call(cmd)
     except OSError:
         print("{}{}{} not found on this system".format(c.y, PLAYER, c.w))
@@ -201,8 +201,8 @@ def download(song):
     print("\nDownloading %s%s%s .." % (c.g, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
-    song['curl'] = get_stream(song)
-    resp = urlopen(song['curl'])
+    song['track_url'] = get_stream(song)
+    resp = urlopen(song['track_url'])
     total = int(resp.info()['Content-Length'].strip())
     chunksize, bytesdone, t0 = 16384, 0, time.time()
     outfh = open(filename, 'wb')
@@ -268,7 +268,7 @@ def get_input(songs):
 
 def songaction(action, value):
 
-    r' Plays or downloads the song specified in `value` '
+    r' Plays or downloads the song specified in `value`.  Returns msg on error'
 
     if action == "play":
         print(generate_song_meta(value))
@@ -280,7 +280,27 @@ def songaction(action, value):
         return("Sorry, %s%s%s is not a valid choice" % (c.g, value, c.w))
 
 
-def start(args):
+def song_selection_loop(songs):
+
+    r''' main control loop; show song list, get user input via get_input()
+         call songaction() for play/download '''
+
+    sactions = "play download rangeerror nilerror".split()
+    print(generate_choices(songs))
+    action, value = get_input(songs)
+    while action in sactions:
+        status = songaction(action, value)
+        print(generate_choices(songs))
+        if status:
+            print(status)
+        action, value = get_input(songs)
+    if action == "search":
+        start(value)
+
+
+def start(args, cmdline=None):
+    if cmdline:
+        args = " ".join(args).strip()
     songs = dosearch(args)
     if not args:
         inp = compat_input("Enter artist/song to search : ")
@@ -289,24 +309,7 @@ def start(args):
         print("Sorry, nothing matched %s%s%s" % (c.g, args, c.w))
         start(None)
     elif songs:
-        text = generate_choices(songs)
-        print(text)
-        action, value = get_input(songs)
-        sactions = "play download rangeerror nilerror".split()
-        while action in sactions:
-            status = songaction(action, value)
-            print(generate_choices(songs))
-            if status:
-                print(status)
-            action, value = get_input(songs)
-        if action == "search":
-            start(value)
-
-
-def main():
-    args = sys.argv[1:]
-    args = " ".join(args).strip()
-    start(args)
+        song_selection_loop(songs)
 
 
 class c(object):
@@ -316,4 +319,4 @@ class c(object):
         red = green = yellow = blue = pink = white = ""
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
-main()
+start(sys.argv[1:], True)
