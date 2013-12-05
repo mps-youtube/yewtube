@@ -57,9 +57,8 @@ else:
         pass  # no biggie
 
 opener = build_opener()
-ua = ("Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64;"
-      "Trident/5.0)")
-opener.addheaders = [('User-Agent', ua)]
+opener.addheaders = [("User-Agent", "Mozilla/5.0 (compatible; MSIE 9.0; "
+                      "Windows NT 6.1; WOW64; Trident/5.0)")]
 urlopen = opener.open
 
 
@@ -214,12 +213,11 @@ def download(song):
         bytesdone += len(chunk)
         rate = (bytesdone / 1024) / elapsed
         eta = (total - bytesdone) / (rate * 1024)
-        progress_stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate,
-                          eta)
+        stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate, eta)
         if not chunk:
             outfh.close()
             break
-        status = status_string.format(*progress_stats)
+        status = status_string.format(*stats)
         sys.stdout.write("\r" + status + ' ' * 4 + "\r")
         sys.stdout.flush()
     print("\n%sDone\n" % c.y)
@@ -227,10 +225,10 @@ def download(song):
 
 def get_input(songs):
 
-    r' gets input, returns action/value and songlist '
+    r' gets input, returns action/value '
 
     if not songs:
-        return("nilinput", None, None)
+        return("nilinput", None)
 
     txt = ("[{0}1-{1}{2}] to play or [{0}d 1-{1}{2}] to download or [{0}q{2}]"
            "uit or enter new search\n > ".format(c.g, len(songs), c.w))
@@ -247,24 +245,24 @@ def get_input(songs):
         sys.exit("{}(c) 2013 nagev.  Thanks for coming..{}".format(c.b, c.w))
 
     elif r['nil'].match(choice):
-        retval = ("nilerror", None, songs)
+        retval = ("nilerror", None)
 
     elif r['play'].match(choice):
         songnum = int(r['play'].match(choice).group(1))
         try:
-            retval = ("play", songs[songnum - 1], songs)
+            retval = ("play", songs[songnum - 1])
         except IndexError:
-            return ("rangeerror", songnum, songs)
+            return ("rangeerror", songnum)
 
     elif r['dl'].match(choice):
         songnum = int(r['dl'].match(choice).group(1))
         try:
-            retval = ("download", songs[songnum - 1], songs)
+            retval = ("download", songs[songnum - 1])
         except IndexError:
-            return ("rangeerror", songnum, songs)
+            return ("rangeerror", songnum)
 
     else:
-        retval = ("search", choice, songs)
+        retval = ("search", choice)
     return retval
 
 
@@ -293,16 +291,16 @@ def start(args):
     elif songs:
         text = generate_choices(songs)
         print(text)
-        a, v, s = get_input(songs)
+        action, value = get_input(songs)
         sactions = "play download rangeerror nilerror".split()
-        while a in sactions:
-            status = songaction(a, v)
+        while action in sactions:
+            status = songaction(action, value)
             print(generate_choices(songs))
             if status:
                 print(status)
-            a, v, s = get_input(songs)
-        if a == "search":
-            start(v)
+            action, value = get_input(songs)
+        if action == "search":
+            start(value)
 
 
 def main():
