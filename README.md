@@ -4,7 +4,7 @@ pms
  - Search and stream music
  - Download music
  - Works with Python 2.7 and 3
- - Works with Windows, Linux and Mac osx 10.9
+ - Works with Windows, Linux and Mac OSX 10.9
  - No Python dependencies
  - Requires mplayer
 
@@ -22,13 +22,13 @@ Manually:
 
 Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://github.com/np1/pms/archive/master.tar.gz) file and extract
 
-# Special instruction for Mac osx.
+# Special instruction for Mac OSX.
     
-    Download mplayer - https://www.macupdate.com/app/mac/18580/mplayer
-    Make a link for mplayer - ln -s /Applications/MPlayer OSX.app/Contents/Resources/External_Binaries/mplayer.app/Contents/MacOS/mplayer /usr/local/bin/mplayer
-    Install X11 - http://xquartz.macosforge.org/landing/
+    Download mplayer: https://www.macupdate.com/app/mac/18580/mplayer
+    Make a link for mplayer: ln -s /Applications/MPlayer OSX.app/Contents/Resources/External_Binaries/mplayer.app/Contents/MacOS/mplayer /usr/local/bin/mplayer
+    Install X11: http://xquartz.macosforge.org/landing/
     
-    NOTE: To MplayerX: ln -s /Applications/MPlayerX.app/Contents/Resources/binaries/x86_64/mplayer /usr/local/bin/mplayer
+    NOTE - for MplayerX: ln -s /Applications/MPlayerX.app/Contents/Resources/binaries/x86_64/mplayer /usr/local/bin/mplayer
 # Usage
 
     usage: pms.py query [query ...]
