@@ -23,13 +23,13 @@ __version__ = "0.08"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
+import subprocess
 import logging
 import time
 import json
 import sys
 import re
 import os
-from subprocess import call
 
 # Python 3 compatibility hack
 compat_input = None
@@ -126,9 +126,7 @@ def generate_choices(songs):
     out += (fmtrow % (c.w, "----", "----", "------", "-----", "------",
             "-------", c.w))
     for n, x in enumerate(songs):
-        col = c.p
-        if n % 2 == 0:
-            col = c.r
+        col = c.r if n % 2 == 0 else c.p
         size = x.get('size') or 0
         title = x.get('song') or "unknown title"
         artist = x.get('singer') or "unknown artist"
@@ -168,7 +166,7 @@ def playsong(song):
         print("\nSorry, this track no longer exists!")
     try:
         cmd = [PLAYER] + PLAYERARGS.split() + [song['track_url']]
-        call(cmd)
+        subprocess.call(cmd)
     except OSError:
         print("{}{}{} not found on this system".format(c.y, PLAYER, c.w))
         time.sleep(2)
