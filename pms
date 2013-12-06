@@ -299,12 +299,28 @@ def song_selection_loop(songs):
         start(value)
 
 
+def get_top_period():
+
+    r''' Get top musics per a week, returns songs or false '''
+
+    url = "http://pleer.com/en/gettopperiod?target1=%s&target2=r1&select=e&page_ru=1&page_en=%s"
+    url = url % ("e1", 1)
+    wdata = urlopen(url).read().decode("utf8")
+    match = re.search(r"<ol id=\"search-results\">[\w\W]+?<\/ol>", wdata)
+    html_ol = match.group(0)
+    songs = get_tracks_from_page(html_ol)
+    return songs if songs else False
+
+
 def start(args, cmdline=None):
     if cmdline:
         args = " ".join(args).strip()
-    songs = dosearch(args)
+    if args == "\\top":
+        songs = get_top_period()
+    else:
+        songs = dosearch(args)
     if not args:
-        inp = compat_input("Enter artist/song to search : ")
+        inp = compat_input("Enter artist/song to search or \\top for top musics this week: ")
         start(inp)
     elif not songs:
         print("Sorry, nothing matched %s%s%s" % (c.g, args, c.w))
