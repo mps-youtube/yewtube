@@ -94,7 +94,7 @@ def get_tracks_from_page(page):
                     raise Exception("wtf1")
             songs.append(cursong)
     else:
-        logging.error("got unexpected webpage")
+        logging.debug("got unexpected webpage or no search results")
         return False
     return songs
 
@@ -174,7 +174,7 @@ def playsong(song):
 
 def dosearch(term):
 
-    r" Perform search on term, returns songs or false "
+    r" Perform search on term, returns songs list "
 
     if not term:
         logging.debug("no search term")
@@ -185,7 +185,7 @@ def dosearch(term):
         url = url % (term.replace(" ", "+"), 1)
         wdata = urlopen(url).read().decode("utf8")
         songs = get_tracks_from_page(wdata)
-        return songs if songs else False
+        return songs
 
 
 def download(song):
@@ -301,15 +301,16 @@ def song_selection_loop(songs):
 
 def get_top_period():
 
-    r''' Get top musics per a week, returns songs or false '''
+    r''' Get top music this week, returns songs list '''
 
-    url = "http://pleer.com/en/gettopperiod?target1=%s&target2=r1&select=e&page_ru=1&page_en=%s"
+    url = ("http://pleer.com/en/gettopperiod?target1=%s&target2=r1&select=e&"
+           "page_ru=1&page_en=%s")
     url = url % ("e1", 1)
     wdata = urlopen(url).read().decode("utf8")
     match = re.search(r"<ol id=\"search-results\">[\w\W]+?<\/ol>", wdata)
     html_ol = match.group(0)
     songs = get_tracks_from_page(html_ol)
-    return songs if songs else False
+    return songs
 
 
 def start(args, cmdline=None):
@@ -320,7 +321,8 @@ def start(args, cmdline=None):
     else:
         songs = dosearch(args)
     if not args:
-        inp = compat_input("Enter artist/song to search or \\top for top musics this week: ")
+        inp = compat_input("Enter artist/song to search or \\top for top music"
+                           " this week: ")
         start(inp)
     elif not songs:
         print("Sorry, nothing matched %s%s%s" % (c.g, args, c.w))
