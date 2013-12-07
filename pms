@@ -85,6 +85,14 @@ HELP = ("\n\tType an artist and/or song title to search or alternatively you"
         (c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w))
 HELP += "\t\t%s\\list <playlist_url>%s to load a playlist\n" % ( c.g, c.w)
 
+
+MPLAYER_HELP = """   [%s<-%s] rewind and fast-forward [%s->%s]
+   [%s9%s] decrease and increase volume [%s0%s]
+   [%sSPACE%s] to pause / resume
+   [%sq%s] to stop
+""" % (c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w)
+
+
 def tidy(raw, field):
 
     r" Tidies HTML entities, formats songlength if field is duration "
@@ -180,7 +188,8 @@ def playsong(song):
 
     track_url = get_stream(song)
     song['track_url'] = track_url
-    print("Playing - [%sq%s] to quit.." % (c.y, c.w))
+    if PLAYER == "mplayer":
+        print(MPLAYER_HELP)
     try:
         opener.open(track_url).headers['content-length']
     except IOError:
