@@ -37,7 +37,17 @@ Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://g
 
     pms
 
-    then follow the interactive prompts
+    then follow the interactive prompts, use \h to display help or you can
+    enter one of the following
+
+        \top for top tracks this week
+        \top3m for top tracks of the last 3 months
+        \top6m for top tracks of the last 6 months
+        \topyear for top tracks of the last year
+        \topall for all time top tracks
+        \list <playlist_url> to load a playlist created on pleer.com
+
+
 
 
 
