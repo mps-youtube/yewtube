@@ -61,5 +61,4 @@ Screenshot
 .. image:: http://i.imgur.com/Oqyz5vk.png
 
 """
-)
 
