@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.08"
+__version__ = "0.10"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -303,13 +303,13 @@ def song_selection_loop(songs):
         start(value)
 
 
-def get_top_period():
+def get_top_period(period):
 
-    r''' Get top music this week, returns songs list '''
+    r''' Get top music for period, returns songs list '''
 
     url = ("http://pleer.com/en/gettopperiod?target1=%s&target2=r1&select=e&"
            "page_ru=1&page_en=%s")
-    url = url % ("e1", 1)
+    url = url % ("e%s" % period, 1)
     wdata = urlopen(url).read().decode("utf8")
     match = re.search(r"<ol id=\"search-results\">[\w\W]+?<\/ol>", wdata)
     html_ol = match.group(0)
@@ -321,8 +321,9 @@ def start(args, cmdline=None):
 
     if cmdline:
         args = " ".join(args).strip()
-    if args == "\\top":
-        songs = get_top_period()
+    tops = "\\top \\top3m \\top6m \\topyear \\topall".split()
+    if args in tops:
+        songs = get_top_period(tops.index(args) + 1)
     else:
         songs = dosearch(args)
     if not args:
