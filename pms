@@ -35,9 +35,11 @@ import os
 compat_input = None
 if sys.version_info[:2] >= (3, 0):
     from urllib.request import build_opener
+    py2utf = lambda x: x
     compat_input = input
 else:
     from urllib2 import build_opener
+    py2utf = lambda x: x.encode("utf8")
     compat_input = raw_input
 
 #logging.basicConfig(level=logging.DEBUG)
@@ -90,8 +92,7 @@ def get_tracks_from_page(page):
                 if v:
                     cursong[f] = tidy(v.group(1), f)
                 else:
-                    logging.error("Couldn't get " + f)
-                    raise Exception("wtf1")
+                    raise Exception("problem with field " + f)
             songs.append(cursong)
     else:
         logging.debug("got unexpected webpage or no search results")
@@ -276,7 +277,7 @@ def songaction(action, value):
     r' Plays or downloads the song specified in `value`.  Returns msg on error'
 
     if action == "play":
-        print(generate_song_meta(value))
+        print(py2utf(generate_song_meta(value)))
         playsong(value)
     elif action == "download":
         download(value)
@@ -291,11 +292,11 @@ def song_selection_loop(songs):
          call songaction() for play/download '''
 
     sactions = "play download rangeerror nilerror".split()
-    print(generate_choices(songs))
+    print(py2utf(generate_choices(songs)))
     action, value = get_input(songs)
     while action in sactions:
         status = songaction(action, value)
-        print(generate_choices(songs))
+        print(py2utf(generate_choices(songs)))
         if status:
             print(status)
         action, value = get_input(songs)
