@@ -36,9 +36,10 @@ Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://g
     or simply:
 
     pms
-# Advance usage
-    \list [url]
-    \top \top3m \top6m \topyear \topall
+
+    then follow the interactive prompts
+
+
 
 # Screenshot
 ![pms running in terminal](http://i.imgur.com/Oqyz5vk.png "pms running in terminal")
