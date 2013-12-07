@@ -247,10 +247,14 @@ def get_input(songs):
     elif r['play'].match(choice) or r['dl'].match(choice):
         return _play_dl_check(choice, r, songs)
 
-    return ("search", choice)
+    else:
+        return ("search", choice)
 
 
 def _play_dl_check(choice, r, songs):
+
+    r''' Checks whether track to play or download is in range, returns track
+         or rangeerror '''
 
     if r['play'].match(choice):
         songnum = int(r['play'].match(choice).group(1))
@@ -314,6 +318,7 @@ def get_top_period():
 
 
 def start(args, cmdline=None):
+
     if cmdline:
         args = " ".join(args).strip()
     if args == "\\top":
@@ -332,6 +337,9 @@ def start(args, cmdline=None):
 
 
 class c(object):
+
+    r' Class for holding colour code values '
+
     white = "\033[0m"
     red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
     if not COLOURS:
