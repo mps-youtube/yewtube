@@ -143,8 +143,8 @@ def get_stream(song):
     r" Return the url for a song "
 
     if not "track_url" in song:
-        URL = 'http://pleer.com/site_api/files/get_url'
-        url = URL + "?action=download&id=%s" % song['link']
+        url = 'http://pleer.com/site_api/files/get_url?action=download&id=%s'
+        url = url % song['link']
         wdata = urlopen(url).read().decode("utf8")
         j = json.loads(wdata)
         track_url = j['track_link']
@@ -180,13 +180,16 @@ def dosearch(term):
     if not term:
         logging.debug("no search term")
         return False
+    elif term.startswith("\\list"):
+        url = term.split(" ")[1]
+        print("\nfetching playlist %s%s%s\n" % (c.y, url, c.w))
     else:
         print("\nSearching for '%s%s%s'\n" % (c.y, term, c.w))
         url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
         url = url % (term.replace(" ", "+"), 1)
-        wdata = urlopen(url).read().decode("utf8")
-        songs = get_tracks_from_page(wdata)
-        return songs
+    wdata = urlopen(url).read().decode("utf8")
+    songs = get_tracks_from_page(wdata)
+    return songs
 
 
 def download(song):
