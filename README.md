@@ -1,5 +1,8 @@
 pms
 ===
+[![PyPI version](http://badge.fury.io/py/Poor-Mans-Spotify.png)](https://pypi.python.org/pypi/Poor-Mans-Spotify)
+[![Downloads](https://pypip.in/d/Poor-Mans-Spotify/badge.png)](https://pypi.python.org/pypi/Poor-Mans-Spotify)
+
 
  - Search and stream music
  - Download music
@@ -10,23 +13,19 @@ pms
 
 # Installation
 
-Using pip:
-----------
+### Using pip:
     
     sudo pip install Poor-Mans-Spotify
 
-Using git:
-----------
+### Using git:
 
     git clone https://github.com/np1/pms.git
     
-Manually:
----------
+###Manually:
 
 Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://github.com/np1/pms/archive/master.tar.gz) file and extract
 
-Mac OSX installation notes:
----------------------------
+### Mac OSX installation notes:
     
 Download mplayer
 
@@ -40,21 +39,19 @@ Install X11
 
     http://xquartz.macosforge.org/landing/
     
-NOTE - for MplayerX: 
+if using MplayerX: 
 
     ln -s /Applications/MPlayerX.app/Contents/Resources/binaries/x86_64/mplayer /usr/local/bin/mplayer# Upgrade
 
-# Upgrade
+# Upgrading
 
 It is recommended you update to the latest version
 
-Upgrade pip installation:
--------------------------
+### Upgrade pip installation:
 
     sudo pip install Poor-Mans-Spotify --upgrade
 
-Upgrade git clone:
-------------------
+### Upgrade git clone:
 
 from within the pms directory;
 
@@ -65,12 +62,12 @@ from within the pms directory;
 
     usage: pms query [query ...]
 
-    or simply:
+or simply:
 
     pms
 
-    then follow the interactive prompts, use \h to display help or you can
-    enter one of the following
+then follow the interactive prompts, use `\h` to display help or you can
+enter one of the following;
 
         \top for top tracks this week
         \top3m for top tracks of the last 3 months
