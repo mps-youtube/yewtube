@@ -39,8 +39,7 @@ if sys.version_info[:2] >= (3, 0):
     py2utf = lambda x: x
     compat_input = input
 else:
-    from urllib2 import build_opener
-    from urllib2 import HTTPError
+    from urllib2 import build_opener, HTTPError
     py2utf = lambda x: x.encode("utf8")
     compat_input = raw_input
 
@@ -65,6 +64,26 @@ opener.addheaders = [("User-Agent", "Mozilla/5.0 (compatible; MSIE 9.0; "
                       "Windows NT 6.1; WOW64; Trident/5.0)")]
 urlopen = opener.open
 
+class c(object):
+
+    r' Class for holding colour code values '
+
+    white = "\033[0m"
+    red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
+    if not COLOURS:
+        red = green = yellow = blue = pink = white = ""
+    r, g, y, b, p, w = red, green, yellow, blue, pink, white
+
+
+HELP = ("\n\tType an artist and/or song title to search or alternatively you"
+        "\n\tcan enter one of the following:\n\n"
+        "\t\t%s\\top%s for top tracks this week\n"
+        "\t\t%s\\top3m%s for top tracks of the last 3 months\n"
+        "\t\t%s\\top6m%s for top tracks of the last 6 months\n"
+        "\t\t%s\\topyear%s for top tracks of the last year\n"
+        "\t\t%s\\topall%s for all time top tracks\n" %
+        (c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w))
+HELP += "\t\t%s\\list <playlist_url>%s to load a playlist\n" % ( c.g, c.w)
 
 def tidy(raw, field):
 
@@ -124,7 +143,7 @@ def generate_choices(songs):
     r" Generates list of choices from a song list"
 
     fmtrow = "%s%-6s %-7s %-21s %-22s %-8s %-8s%s\n"
-    out = (fmtrow % (c.g, "Item", "Size", "Artist", "Track", "Length",
+    out = (fmtrow % (c.g, "\nItem", "Size", "Artist", "Track", "Length",
            "Bitrate", c.w))
     out += (fmtrow % (c.w, "----", "----", "------", "-----", "------",
             "-------", c.w))
@@ -162,7 +181,6 @@ def playsong(song):
     track_url = get_stream(song)
     song['track_url'] = track_url
     print("Playing - [%sq%s] to quit.." % (c.y, c.w))
-    print("")
     try:
         opener.open(track_url).headers['content-length']
     except IOError:
@@ -183,7 +201,7 @@ def dosearch(term):
         logging.debug("no search term")
         return False
     elif term.startswith("\\list"):
-        playlist = re.search("(list(\w){8,13})", term)
+        playlist = re.search(r"(list(\w){8,13})", term)
         if not playlist:
             print("invalid playlist")
             return False
@@ -191,7 +209,7 @@ def dosearch(term):
             url = "http://pleer.com/en/" + playlist.group(1)
             print("\nfetching playlist %s%s%s\n" % (c.y, url, c.w))
     else:
-        print("\nSearching for '%s%s%s'\n" % (c.y, term, c.w))
+        print("\nSearching for '%s%s%s'" % (c.y, term, c.w))
         url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
         url = url % (term.replace(" ", "+"), 1)
     try:
@@ -242,20 +260,16 @@ def get_input(songs):
     if not songs:
         return("nilinput", None)
 
-    txt = ("[{0}1-{1}{2}] to play or [{0}d 1-{1}{2}] to download or [{0}q{2}]"
-           "uit or enter new search\n > ".format(c.g, len(songs), c.w))
+    txt = ("[{0}1-{1}{2}] to play or [{0}d 1-{1}{2}] to download or [{0}q{2}"
+           "]uit or enter new search\n > ".format(c.g, len(songs), c.w))
     r = {'nil': r'\s*$',
          'play': r'\s*(\d{1,3})',
-         'dl': r'\s*(?:d|dl|download|down)(?:\s)*(\d{1,3})',
-         'quit': r'\s*(q|quit)\s*$'}
+         'dl': r'\s*(?:d|dl|download|down)(?:\s)*(\d{1,3})'}
 
     choice = compat_input(txt)
     r = {a: re.compile(k, re.IGNORECASE) for a, k in r.items()}
 
-    if r['quit'].match(choice):
-        sys.exit("{}(c) 2013 nagev.  Thanks for coming..{}".format(c.b, c.w))
-
-    elif r['nil'].match(choice):
+    if r['nil'].match(choice):
         return ("nilerror", None)
 
     elif r['play'].match(choice) or r['dl'].match(choice):
@@ -338,11 +352,17 @@ def start(args, cmdline=None):
     tops = "\\top \\top3m \\top6m \\topyear \\topall".split()
     if args in tops:
         songs = get_top_period(tops.index(args) + 1)
+    elif args == "\\h":
+        print(HELP)
+        args = None
+    elif args in "\\q q".split():
+        sys.exit("{}(c) 2013 nagev.  Thanks for coming..{}".format(c.b, c.w))
     else:
         songs = dosearch(args)
     if not args:
-        inp = compat_input("Enter artist/song to search or \\top for top music"
-                           " this week: ")
+        prompt = "Enter artist/song name or %s\\h%s for help or %s\\q%s "
+        prompt += "to quit: "
+        inp = compat_input(prompt % (c.g, c.w, c.g, c.w))
         start(inp)
     elif not songs:
         print("Sorry, nothing matched %s%s%s" % (c.g, args, c.w))
@@ -350,15 +370,5 @@ def start(args, cmdline=None):
     elif songs:
         song_selection_loop(songs)
 
-
-class c(object):
-
-    r' Class for holding colour code values '
-
-    white = "\033[0m"
-    red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
-    if not COLOURS:
-        red = green = yellow = blue = pink = white = ""
-    r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
 start(sys.argv[1:], True)
