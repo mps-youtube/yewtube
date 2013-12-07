@@ -35,10 +35,12 @@ import os
 compat_input = None
 if sys.version_info[:2] >= (3, 0):
     from urllib.request import build_opener
+    from urllib.error import HTTPError
     py2utf = lambda x: x
     compat_input = input
 else:
     from urllib2 import build_opener
+    from urllib2 import HTTPError
     py2utf = lambda x: x.encode("utf8")
     compat_input = raw_input
 
@@ -175,13 +177,13 @@ def playsong(song):
 
 def dosearch(term):
 
-    r" Perform search on term, returns songs list "
+    r" Perform search or fetch playlist, returns songs list "
 
     if not term:
         logging.debug("no search term")
         return False
     elif term.startswith("\\list"):
-        playlist = re.search("(list(\w){8,})", term)
+        playlist = re.search("(list(\w){8,13})", term)
         if not playlist:
             print("invalid playlist")
             return False
@@ -192,8 +194,11 @@ def dosearch(term):
         print("\nSearching for '%s%s%s'\n" % (c.y, term, c.w))
         url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
         url = url % (term.replace(" ", "+"), 1)
-    wdata = urlopen(url).read().decode("utf8")
-    songs = get_tracks_from_page(wdata)
+    try:
+        wdata = urlopen(url).read().decode("utf8")
+        songs = get_tracks_from_page(wdata)
+    except HTTPError:
+        songs = None
     return songs
 
 
