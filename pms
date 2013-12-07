@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.10"
+__version__ = "0.11"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -64,6 +64,7 @@ opener.addheaders = [("User-Agent", "Mozilla/5.0 (compatible; MSIE 9.0; "
                       "Windows NT 6.1; WOW64; Trident/5.0)")]
 urlopen = opener.open
 
+
 class c(object):
 
     r' Class for holding colour code values '
@@ -75,21 +76,22 @@ class c(object):
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
 
-HELP = ("\n\tType an artist and/or song title to search or alternatively you"
-        "\n\tcan enter one of the following:\n\n"
-        "\t\t%s\\top%s for top tracks this week\n"
-        "\t\t%s\\top3m%s for top tracks of the last 3 months\n"
-        "\t\t%s\\top6m%s for top tracks of the last 6 months\n"
-        "\t\t%s\\topyear%s for top tracks of the last year\n"
-        "\t\t%s\\topall%s for all time top tracks\n" %
-        (c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w))
-HELP += "\t\t%s\\list <playlist_url>%s to load a playlist\n" % ( c.g, c.w)
+HELP = "\n" * 200 + """
+\tType an artist and/or song title to search or alternatively you
+\tcan enter one of the following:\n\n
+\t\t%s\\top%s for top tracks this week
+\t\t%s\\top3m%s for top tracks of the last 3 months
+\t\t%s\\top6m%s for top tracks of the last 6 months
+\t\t%s\\topyear%s for top tracks of the last year
+\t\t%s\\topall%s for all time top tracks\n""" % (
+    c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w)
+HELP += "\t\t%s\\list <playlist_url>%s to load a playlist\n" % (c.g, c.w)
 
 
-MPLAYER_HELP = """   [%s<-%s] rewind and fast-forward [%s->%s]
-   [%s9%s] decrease and increase volume [%s0%s]
-   [%sSPACE%s] to pause / resume
-   [%sq%s] to stop
+MPLAYER_HELP = """   [%s<-%s] seek [%s->%s]
+   [%s9%s] volume [%s0%s]
+   [%sSPACE%s] pause / resume
+   [%sq%s] stop
 """ % (c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w)
 
 
@@ -139,7 +141,7 @@ def generate_song_meta(song):
     hyphens = min(78, maxlen + 10)
     hyphenstr = ("  " + "-" * hyphens + "\n")
     fmt = "  %s%-7s%s : %s%s%s\n"
-    out = "\n" + hyphenstr
+    out = "\n" * 200 + hyphenstr
     for n, name in enumerate(names):
         if song[fields[n]]:
             out += (fmt % (c.y, name, c.w, c.g, song[fields[n]], c.w))
@@ -188,8 +190,6 @@ def playsong(song):
 
     track_url = get_stream(song)
     song['track_url'] = track_url
-    if PLAYER == "mplayer":
-        print(MPLAYER_HELP)
     try:
         opener.open(track_url).headers['content-length']
     except IOError:
@@ -218,7 +218,7 @@ def dosearch(term):
             url = "http://pleer.com/en/" + playlist.group(1)
             print("\nfetching playlist %s%s%s\n" % (c.y, url, c.w))
     else:
-        print("\nSearching for '%s%s%s'" % (c.y, term, c.w))
+        print("\n" * 200 + "Searching for '%s%s%s'" % (c.y, term, c.w))
         url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
         url = url % (term.replace(" ", "+"), 1)
     try:
@@ -314,6 +314,8 @@ def songaction(action, value):
 
     if action == "play":
         print(py2utf(generate_song_meta(value)))
+        if PLAYER == "mplayer":
+            print(MPLAYER_HELP)
         playsong(value)
     elif action == "download":
         download(value)
@@ -332,6 +334,7 @@ def song_selection_loop(songs):
     action, value = get_input(songs)
     while action in sactions:
         status = songaction(action, value)
+        print("\n" * 200)
         print(py2utf(generate_choices(songs)))
         if status:
             print(status)
@@ -369,14 +372,14 @@ def start(args, cmdline=None):
     else:
         songs = dosearch(args)
     if not args:
-        prompt = "Enter artist/song name or %s\\h%s for help or %s\\q%s "
-        prompt += "to quit: "
+        prompt = "\nEnter artist/song name or %s\\h%s for help or %s\\q%s to "
+        prompt += "quit: "
         inp = compat_input(prompt % (c.g, c.w, c.g, c.w))
         start(inp)
     elif not songs:
         print("Sorry, nothing matched %s%s%s" % (c.g, args, c.w))
         start(None)
-    elif songs:
+    else:
         song_selection_loop(songs)
 
 
