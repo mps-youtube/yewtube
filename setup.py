@@ -6,7 +6,7 @@ from distutils.core import setup
 
 setup(
     name="Poor-Mans-Spotify",
-    version='0.10',
+    version='0.11',
     description="Search, Stream and Download MP3",
     keywords=["MP3", "music", "audio", "search", "stream", "download"],
     author="nagev",
@@ -30,7 +30,10 @@ setup(
         "Topic :: Utilities",
         "Topic :: Multimedia :: Sound/Audio :: Players",
         "Topic :: Internet :: WWW/HTTP"],
-    long_description="""\
+    long_description=open("README.md").read()
+)
+
+"""
 
 Description
 -----------
@@ -59,3 +62,4 @@ Screenshot
 
 """
 )
+
