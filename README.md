@@ -8,7 +8,7 @@ pms
  - No Python dependencies
  - Requires mplayer
 
-# Installation:
+# Installation
 
 Using pip:
 ----------
@@ -25,7 +25,8 @@ Manually:
 
 Download [zip](https://github.com/np1/pms/archive/master.zip)/[tar.gz](https://github.com/np1/pms/archive/master.tar.gz) file and extract
 
-# Mac OSX installation notes:
+Mac OSX installation notes:
+---------------------------
     
 Download mplayer
 
