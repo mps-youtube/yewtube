@@ -181,8 +181,13 @@ def dosearch(term):
         logging.debug("no search term")
         return False
     elif term.startswith("\\list"):
-        url = term.split(" ")[1]
-        print("\nfetching playlist %s%s%s\n" % (c.y, url, c.w))
+        playlist = re.search("(list(\w){8,})", term)
+        if not playlist:
+            print("invalid playlist")
+            return False
+        else:
+            url = "http://pleer.com/en/" + playlist.group(1)
+            print("\nfetching playlist %s%s%s\n" % (c.y, url, c.w))
     else:
         print("\nSearching for '%s%s%s'\n" % (c.y, term, c.w))
         url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
