@@ -88,8 +88,7 @@ enter one of the following;
 
     Searching for 'wagner'
 
-    Item  Size    Artist                Track                  Length   Bitrate 
-    ----   ----    ------                -----                  ------   ------- 
+    Item   Size    Artist                Track                  Length   Bitrate 
     1      2.1 Mb  Wilhelm Richard Wagn  Die Hochzeit (Сон в л  03:09    96      
     2      7.2 Mb  Wilhelm Richard Wagn  Ein Sommernachtstraum  03:09    320     
     3      9.2 Mb  Richard Wagner        Ride Of The Valkyries  10:07    128     
@@ -98,8 +97,8 @@ enter one of the following;
     6      4.8 Mb  Richard Wagner        Carmina Burana         05:19    128     
     7      4.8 Mb  Wagner                O Fortuna (Excalibur   05:18    128     
     8      3.5 Mb  Wilhelm Richard Wagn  Das Leben (Жизнь)      03:55    128     
-    9      9.2 Mb  Richard Wagner        Die Walküre (Der Ring  10:07    128     
-    10     10. Mb  Johann Sebastian Bac  Concerto in D minor a  04:47    320     
+    9      10. Mb  Johann Sebastian Bac  Concerto in D minor a  04:47    320     
+    10     9.2 Mb  Richard Wagner        Die Walküre (Der Ring  10:07    128     
     11     3.4 Mb  Wilhelm Richard Wagn  Spring waltz           01:31    320     
     12     2.1 Mb  Wilhelm Richard Wagn  Die Hochzeit (Der Tra  03:09    96      
     13     9.8 Mb  Richard Wagner (Виль  The Mastersinger of N  10:42    128     
@@ -110,6 +109,7 @@ enter one of the following;
     18     5.6 Mb  Wilhelm Richard Wagn  Requem for a dream     04:05    192     
     19     3.8 Mb  Richard Wagner Lisa   Now we are free        04:14    128     
     20     8.8 Mb  Wilhelm Richard Wagn  Der Weg in Walghal     06:28    192     
+
 
     [1-20] to play or [d 1-20] to download or [q]uit or enter new search
      > 3
@@ -122,7 +122,7 @@ enter one of the following;
       Size    : 9.274 Mb
       -------------------------------
 
-       [<-] rewind and fast-forward [->]
-       [9] decrease and increase volume [0]
-       [SPACE] to pause / resume
-       [q] to stop
+   [<-] seek [->]
+   [9] volume [0]
+   [SPACE] pause / resume
+   [q] stop
