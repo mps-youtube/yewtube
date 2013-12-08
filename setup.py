@@ -30,10 +30,10 @@ setup(
         "Topic :: Utilities",
         "Topic :: Multimedia :: Sound/Audio :: Players",
         "Topic :: Internet :: WWW/HTTP"],
-    long_description=open("README.md").read()
-)
+    long_description="""
 
-"""
+.. image::http://badge.fury.io/py/Poor-Mans-Spotify.png
+.. image::https://pypip.in/d/Poor-Mans-Spotify/badge.png
 
 Description
 -----------
@@ -61,4 +61,5 @@ Screenshot
 .. image:: http://i.imgur.com/Oqyz5vk.png
 
 """
+)
 
