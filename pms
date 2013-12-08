@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.11"
+__version__ = "0.12"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -123,8 +123,17 @@ def get_tracks_from_page(page):
                 v = re.search(r'%s=\"([^"]+)"' % f, song)
                 if v:
                     cursong[f] = tidy(v.group(1), f)
+                    cursong["R" + f] = v.group(1)
                 else:
                     raise Exception("problem with field " + f)
+            if cursong["rate"] == "VBR":
+                vbrsize = float(cursong["Rsize"][:-3]) * 10000
+                vbrlen = float(cursong["Rduration"])
+                vbrabr = str(int(vbrsize / vbrlen))
+                cursong["listrate"] = vbrabr + " v"
+                cursong["rate"] = vbrabr + " Kb/s VBR"
+            else:
+                cursong["listrate"] = cursong["rate"][:3]
             songs.append(cursong)
     else:
         logging.debug("got unexpected webpage or no search results")
@@ -162,9 +171,9 @@ def generate_choices(songs):
         title = x.get('song') or "unknown title"
         artist = x.get('singer') or "unknown artist"
         duration = x.get('duration') or "unknown length"
-        bitrate = x.get('rate') or "unknown"
+        bitrate = x.get('listrate') or "unknown"
         out += (fmtrow % (col, str(n + 1), str(size)[:3] + " Mb", artist[:20],
-                title[:21], duration[:8], bitrate[:3], c.w))
+                title[:21], duration[:8], bitrate[:6], c.w))
     return out
 
 
@@ -236,7 +245,7 @@ def download(song):
         os.makedirs(DDIR)
     filename = song['singer'][:30] + " - " + song['song'][:30] + ".mp3"
     filename = os.path.join(DDIR, filename)
-    print("\n" * 200 + "Downloading %s%s%s ..\n\n\n" % (c.g, filename, c.w))
+    print("\n" * 200 + "Downloading %s%s%s ..\n" % (c.g, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
     song['track_url'] = get_stream(song)
@@ -349,6 +358,9 @@ def get_top_period(period):
     url = ("http://pleer.com/en/gettopperiod?target1=%s&target2=r1&select=e&"
            "page_ru=1&page_en=%s")
     url = url % ("e%s" % period, 1)
+    tps = "past week,past 3 months,past 6 months,past year,all time".split(",")
+    print("\n" * 200)
+    print("%sTop songs for %s...%s" % (c.y, tps[period - 1], c.w))
     wdata = urlopen(url).read().decode("utf8")
     match = re.search(r"<ol id=\"search-results\">[\w\W]+?<\/ol>", wdata)
     html_ol = match.group(0)
