@@ -6,7 +6,7 @@ from distutils.core import setup
 
 setup(
     name="Poor-Mans-Spotify",
-    version='0.11',
+    version='0.12',
     description="Search, Stream and Download MP3",
     keywords=["MP3", "music", "audio", "search", "stream", "download"],
     author="nagev",
@@ -62,4 +62,3 @@ Screenshot
 
 """
 )
-
