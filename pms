@@ -71,8 +71,9 @@ class c(object):
 
     white = "\033[0m"
     red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
+    hh = "\x1b[%sm" * 3 % (100, 4, 93)
     if not COLOURS:
-        red = green = yellow = blue = pink = white = ""
+        hh = red = green = yellow = blue = pink = white = ""
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
 
@@ -153,10 +154,8 @@ def generate_choices(songs):
     r" Generates list of choices from a song list"
 
     fmtrow = "%s%-6s %-7s %-21s %-22s %-8s %-8s%s\n"
-    out = (fmtrow % (c.g, "\nItem", "Size", "Artist", "Track", "Length",
-           "Bitrate", c.w))
-    out += (fmtrow % (c.w, "----", "----", "------", "-----", "------",
-            "-------", c.w))
+    head = (c.hh, "Item", "Size", "Artist", "Track", "Length", "Bitrate", c.w)
+    out = "\n" + fmtrow % head
     for n, x in enumerate(songs):
         col = c.r if n % 2 == 0 else c.p
         size = x.get('size') or 0
@@ -237,7 +236,7 @@ def download(song):
         os.makedirs(DDIR)
     filename = song['singer'][:30] + " - " + song['song'][:30] + ".mp3"
     filename = os.path.join(DDIR, filename)
-    print("\nDownloading %s%s%s .." % (c.g, filename, c.w))
+    print("\n" * 200 + "Downloading %s%s%s ..\n\n\n" % (c.g, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
     song['track_url'] = get_stream(song)
@@ -315,7 +314,7 @@ def songaction(action, value):
     if action == "play":
         print(py2utf(generate_song_meta(value)))
         if PLAYER == "mplayer":
-            print(MPLAYER_HELP)
+            print(MPLAYER_HELP + "\n\n")
         playsong(value)
     elif action == "download":
         download(value)
