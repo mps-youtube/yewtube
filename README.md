@@ -122,7 +122,7 @@ enter one of the following;
       Size    : 9.274 Mb
       -------------------------------
 
-   [<-] seek [->]
+   [\<-] seek [-\>]
    [9] volume [0]
    [SPACE] pause / resume
    [q] stop
