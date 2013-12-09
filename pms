@@ -210,6 +210,23 @@ def playsong(song):
         time.sleep(2)
 
 
+def get_top_period(period):
+
+    r''' Get top music for period, returns songs list '''
+
+    url = ("http://pleer.com/en/gettopperiod?target1=%s&target2=r1&select=e&"
+           "page_ru=1&page_en=%s")
+    url = url % ("e%s" % period, 1)
+    tps = "past week,past 3 months,past 6 months,past year,all time".split(",")
+    print("\n" * 200)
+    print("%sTop songs for %s...%s" % (c.y, tps[period - 1], c.w))
+    wdata = urlopen(url).read().decode("utf8")
+    match = re.search(r"<ol id=\"search-results\">[\w\W]+?<\/ol>", wdata)
+    html_ol = match.group(0)
+    songs = get_tracks_from_page(html_ol)
+    return songs
+
+
 def dosearch(term):
 
     r" Perform search or fetch playlist, returns songs list "
@@ -349,23 +366,6 @@ def song_selection_loop(songs):
         action, value = get_input(songs)
     if action == "search":
         start(value)
-
-
-def get_top_period(period):
-
-    r''' Get top music for period, returns songs list '''
-
-    url = ("http://pleer.com/en/gettopperiod?target1=%s&target2=r1&select=e&"
-           "page_ru=1&page_en=%s")
-    url = url % ("e%s" % period, 1)
-    tps = "past week,past 3 months,past 6 months,past year,all time".split(",")
-    print("\n" * 200)
-    print("%sTop songs for %s...%s" % (c.y, tps[period - 1], c.w))
-    wdata = urlopen(url).read().decode("utf8")
-    match = re.search(r"<ol id=\"search-results\">[\w\W]+?<\/ol>", wdata)
-    html_ol = match.group(0)
-    songs = get_tracks_from_page(html_ol)
-    return songs
 
 
 def start(args, cmdline=None):
