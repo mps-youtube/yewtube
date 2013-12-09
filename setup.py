@@ -3,10 +3,11 @@
 # Pafy setup script
 
 from distutils.core import setup
+import pms
 
 setup(
     name="Poor-Mans-Spotify",
-    version='0.13',
+    version=pms.__version__,
     description="Search, Stream and Download MP3",
     keywords=["MP3", "music", "audio", "search", "stream", "download"],
     author="nagev",
