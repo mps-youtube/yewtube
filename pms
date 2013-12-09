@@ -78,8 +78,10 @@ class c(object):
     white = "\033[0m"
     red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
     hh = "\x1b[%sm" * 3 % (100, 4, 93)
+
     if not COLOURS:
         hh = red = green = yellow = blue = pink = white = ""
+
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
 
@@ -144,15 +146,18 @@ def get_tracks_from_page(page):
                 else:
                     raise Exception("problem with field " + f)
 
+            # calculate average bitrate of VBR files
+
             if cursong["rate"] == "VBR":
                 vbrsize = float(cursong["Rsize"][:-3]) * 10000
                 vbrlen = float(cursong["Rduration"])
                 vbrabr = str(int(vbrsize / vbrlen))
-                cursong["listrate"] = vbrabr + " v"
-                cursong["rate"] = vbrabr + " Kb/s VBR"
+                cursong["listrate"] = vbrabr + " v"  # for display in list
+                cursong["rate"] = vbrabr + " Kb/s VBR"  # for playback display
 
             else:
                 cursong["listrate"] = cursong["rate"][:3]
+
             songs.append(cursong)
 
     else:
@@ -289,6 +294,7 @@ def dosearch(term):
         songs = get_tracks_from_page(wdata)
 
     except HTTPError:
+        logging.debug("HTTP Error fetching url:" + url)
         songs = None
 
     return songs
@@ -382,8 +388,6 @@ def select_song(songs, message=None):
          perform play / download or return new search query text
     '''
 
-    # show song list
-
     print(py2utf(generate_choices(songs)))
 
     if message:
@@ -411,15 +415,13 @@ def start(args=""):
 
     r''' Get songs list from user input and call song_selection_loop(songs) '''
 
-    # strip and convert to empty string if None value
-
     tops = "\\top \\top3m \\top6m \\topyear \\topall".split()
     args = args.strip()
 
     if not args:
         return None
 
-    # return top song
+    # return top songs
 
     elif args in tops:
         return get_top_period(tops.index(args) + 1)
