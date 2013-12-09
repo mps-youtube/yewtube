@@ -33,11 +33,13 @@ import os
 
 # Python 3 compatibility hack
 compat_input = None
+
 if sys.version_info[:2] >= (3, 0):
     from urllib.request import build_opener
     from urllib.error import HTTPError
     py2utf = lambda x: x
     compat_input = input
+
 else:
     from urllib2 import build_opener, HTTPError
     py2utf = lambda x: x.encode("utf8")
@@ -52,10 +54,13 @@ DDIR = os.path.join(os.path.expanduser("~"), "Downloads", "PMS")
 
 if os.name == "nt":  # Disable colours for Windows
     COLOURS = False
+
 else:
+
     try:
         import readline  # import readline if not running on windows
         readline.get_history_length()  # redundant, prevents unused import warn
+
     except ImportError:
         pass  # no biggie
 
@@ -69,6 +74,7 @@ class c(object):
 
     r' Class for holding colour code values '
 
+    blank = "\n" * 200
     white = "\033[0m"
     red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
     hh = "\x1b[%sm" * 3 % (100, 4, 93)
@@ -77,7 +83,9 @@ class c(object):
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
 
-HELP = "\n" * 200 + """
+r' Help text '
+
+HELP = c.blank + """
 \tType an artist and/or song title to search or alternatively you
 \tcan enter one of the following:\n\n
 \t\t%s\\top%s for top tracks this week
@@ -88,6 +96,7 @@ HELP = "\n" * 200 + """
     c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w)
 HELP += "\t\t%s\\list <playlist_url>%s to load a playlist\n" % (c.g, c.w)
 
+r' Mplayer help '
 
 MPLAYER_HELP = """   [%s<-%s] seek [%s->%s]
    [%s9%s] volume [%s0%s]
@@ -102,10 +111,13 @@ def tidy(raw, field):
 
     if field == "duration":
         raw = time.strftime('%M:%S', time.gmtime(int(raw)))
+
     else:
+
         for r in (("&#039;", "'"), ("&amp;#039;", "'"), ("&amp;amp;", "&"),
                  ("  ", " "), ("&amp;", "&"), ("&quot;", '"')):
             raw = raw.replace(r[0], r[1])
+
     return raw
 
 
@@ -116,28 +128,37 @@ def get_tracks_from_page(page):
     fields = "duration file_id singer song link rate size source".split()
     matches = re.findall(r"\<li.(duration[^>]+)\>", page)
     songs = []
+
     if matches:
+
         for song in matches:
             cursong = {}
+
             for f in fields:
                 v = re.search(r'%s=\"([^"]+)"' % f, song)
+
                 if v:
                     cursong[f] = tidy(v.group(1), f)
                     cursong["R" + f] = v.group(1)
+
                 else:
                     raise Exception("problem with field " + f)
+
             if cursong["rate"] == "VBR":
                 vbrsize = float(cursong["Rsize"][:-3]) * 10000
                 vbrlen = float(cursong["Rduration"])
                 vbrabr = str(int(vbrsize / vbrlen))
                 cursong["listrate"] = vbrabr + " v"
                 cursong["rate"] = vbrabr + " Kb/s VBR"
+
             else:
                 cursong["listrate"] = cursong["rate"][:3]
             songs.append(cursong)
+
     else:
         logging.debug("got unexpected webpage or no search results")
         return False
+
     return songs
 
 
@@ -151,10 +172,13 @@ def generate_song_meta(song):
     hyphens = min(78, maxlen + 10)
     hyphenstr = ("  " + "-" * hyphens + "\n")
     fmt = "  %s%-7s%s : %s%s%s\n"
-    out = "\n" * 200 + hyphenstr
+    out = c.blank + hyphenstr
+
     for n, name in enumerate(names):
+
         if song[fields[n]]:
             out += (fmt % (c.y, name, c.w, c.g, song[fields[n]], c.w))
+
     return out + hyphenstr
 
 
@@ -165,6 +189,7 @@ def generate_choices(songs):
     fmtrow = "%s%-6s %-7s %-21s %-22s %-8s %-8s%s\n"
     head = (c.hh, "Item", "Size", "Artist", "Track", "Length", "Bitrate", c.w)
     out = "\n" + fmtrow % head
+
     for n, x in enumerate(songs):
         col = c.r if n % 2 == 0 else c.p
         size = x.get('size') or 0
@@ -174,6 +199,7 @@ def generate_choices(songs):
         bitrate = x.get('listrate') or "unknown"
         out += (fmtrow % (col, str(n + 1), str(size)[:3] + " Mb", artist[:20],
                 title[:21], duration[:8], bitrate[:6], c.w))
+
     return out
 
 
@@ -188,6 +214,7 @@ def get_stream(song):
         j = json.loads(wdata)
         track_url = j['track_link']
         return track_url
+
     else:
         return song['track_url']
 
@@ -198,13 +225,18 @@ def playsong(song):
 
     track_url = get_stream(song)
     song['track_url'] = track_url
+
     try:
         opener.open(track_url).headers['content-length']
+
     except IOError:
         print("\nSorry, this track no longer exists!")
+
     try:
         cmd = [PLAYER] + PLAYERARGS.split() + [song['track_url']]
         subprocess.call(cmd)
+        print(c.blank)
+
     except OSError:
         print("{}{}{} not found on this system".format(c.y, PLAYER, c.w))
         time.sleep(2)
@@ -218,7 +250,7 @@ def get_top_period(period):
            "page_ru=1&page_en=%s")
     url = url % ("e%s" % period, 1)
     tps = "past week,past 3 months,past 6 months,past year,all time".split(",")
-    print("\n" * 200)
+    print(c.blank)
     print("%sTop songs for %s...%s" % (c.y, tps[period - 1], c.w))
     wdata = urlopen(url).read().decode("utf8")
     match = re.search(r"<ol id=\"search-results\">[\w\W]+?<\/ol>", wdata)
@@ -234,23 +266,31 @@ def dosearch(term):
     if not term:
         logging.debug("no search term")
         return False
+
     elif term.startswith("\\list"):
         playlist = re.search(r"(list(\w){8,13})", term)
+
         if not playlist:
             print("invalid playlist")
             return False
+
         else:
             url = "http://pleer.com/en/" + playlist.group(1)
-            print("\nfetching playlist %s%s%s\n" % (c.y, url, c.w))
+            formatstr = (c.blank, c.y, url, c.w)
+            print("%sImporting playlist from %s%s%s\n" % (formatstr))
+
     else:
-        print("\n" * 200 + "Searching for '%s%s%s'" % (c.y, term, c.w))
+        print(c.blank + "Searching for '%s%s%s'" % (c.y, term, c.w))
         url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
         url = url % (term.replace(" ", "+"), 1)
+
     try:
         wdata = urlopen(url).read().decode("utf8")
         songs = get_tracks_from_page(wdata)
+
     except HTTPError:
         songs = None
+
     return songs
 
 
@@ -260,9 +300,10 @@ def download(song):
 
     if not os.path.exists(DDIR):
         os.makedirs(DDIR)
+
     filename = song['singer'][:30] + " - " + song['song'][:30] + ".mp3"
     filename = os.path.join(DDIR, filename)
-    print("\n" * 200 + "Downloading %s%s%s ..\n" % (c.g, filename, c.w))
+    print(c.blank + "Downloading %s%s%s ..\n" % (c.g, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
     song['track_url'] = get_stream(song)
@@ -270,6 +311,7 @@ def download(song):
     total = int(resp.info()['Content-Length'].strip())
     chunksize, bytesdone, t0 = 16384, 0, time.time()
     outfh = open(filename, 'wb')
+
     while True:
         chunk = resp.read(chunksize)
         outfh.write(chunk)
@@ -278,21 +320,21 @@ def download(song):
         rate = (bytesdone / 1024) / elapsed
         eta = (total - bytesdone) / (rate * 1024)
         stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate, eta)
+
         if not chunk:
             outfh.close()
             break
+
         status = status_string.format(*stats)
         sys.stdout.write("\r" + status + ' ' * 4 + "\r")
         sys.stdout.flush()
-    print("\n%sDone\n" % c.y)
+
+    print("\nDone\n")
 
 
 def get_input(songs):
 
-    r' gets input, returns action/value '
-
-    if not songs:
-        return("nilinput", None)
+    r' gets input, returns action/value pair'
 
     txt = ("[{0}1-{1}{2}] to play or [{0}d 1-{1}{2}] to download or [{0}q{2}"
            "]uit or enter new search\n > ".format(c.g, len(songs), c.w))
@@ -304,94 +346,126 @@ def get_input(songs):
     r = {a: re.compile(k, re.IGNORECASE) for a, k in r.items()}
 
     if r['nil'].match(choice):
-        return ("nilerror", None)
+        raise IOError
 
-    elif r['play'].match(choice) or r['dl'].match(choice):
-        return _play_dl_check(choice, r, songs)
+    if r['play'].match(choice):
+        songnum = int(r['play'].match(choice).group(1))
+        return ("play", songs[songnum - 1])
+
+    elif r['dl'].match(choice):
+        songnum = int(r['dl'].match(choice).group(1))
+        return ("download", songs[songnum - 1])
 
     else:
         return ("search", choice)
 
 
-def _play_dl_check(choice, r, songs):
-
-    r''' Checks whether track to play or download is in range, returns track
-         or rangeerror '''
-
-    if r['play'].match(choice):
-        songnum = int(r['play'].match(choice).group(1))
-        try:
-            return ("play", songs[songnum - 1])
-        except IndexError:
-            return ("rangeerror", songnum)
-
-    elif r['dl'].match(choice):
-        songnum = int(r['dl'].match(choice).group(1))
-        try:
-            return ("download", songs[songnum - 1])
-        except IndexError:
-            return ("rangeerror", songnum)
-
-
 def songaction(action, value):
 
-    r' Plays or downloads the song specified in `value`.  Returns msg on error'
+    r' Plays or downloads the song specified in `value`. '
 
     if action == "play":
+
         print(py2utf(generate_song_meta(value)))
+
         if PLAYER == "mplayer":
             print(MPLAYER_HELP + "\n\n")
+
         playsong(value)
+
     elif action == "download":
         download(value)
-    elif action == "rangeerror" or action == "nilerror":
-        value = value or "zilch"
-        return("Sorry, %s%s%s is not a valid choice" % (c.g, value, c.w))
 
 
-def song_selection_loop(songs):
+def select_song(songs, message=None):
 
-    r''' main control loop; show song list, get user input via get_input()
-         call songaction() for play/download '''
+    r''' Shows song list and message, get user input, call songaction() to
+         perform play / download or return new search query text
+    '''
 
-    sactions = "play download rangeerror nilerror".split()
+    # show song list
+
     print(py2utf(generate_choices(songs)))
-    action, value = get_input(songs)
-    while action in sactions:
-        status = songaction(action, value)
-        print("\n" * 200)
-        print(py2utf(generate_choices(songs)))
-        if status:
-            print(status)
+
+    if message:
+        print(message)
+
+    try:
         action, value = get_input(songs)
+
+    except IOError:
+        print(c.blank)
+        return ("Error", "Nothing")
+
+    except IndexError as e:
+        print(c.blank)
+        return ("Error", e)
+
     if action == "search":
-        start(value)
+        return ("search", value)
+
+    songaction(action, value)
+    return (None, None)
 
 
-def start(args, cmdline=None):
+def start(args=""):
 
-    if cmdline:
-        args = " ".join(args).strip()
+    r''' Get songs list from user input and call song_selection_loop(songs) '''
+
+    # strip and convert to empty string if None value
+
     tops = "\\top \\top3m \\top6m \\topyear \\topall".split()
-    if args in tops:
-        songs = get_top_period(tops.index(args) + 1)
+    args = args.strip()
+
+    if not args:
+        return None
+
+    # return top song
+
+    elif args in tops:
+        return get_top_period(tops.index(args) + 1)
+
+    # show help
+
     elif args == "\\h":
         print(HELP)
-        args = None
+        return None
+
+    # quit option
+
     elif args in "\\q q".split():
         sys.exit("{}(c) 2013 nagev.  Thanks for coming..{}".format(c.b, c.w))
+
+    # have args, do search
     else:
         songs = dosearch(args)
-    if not args:
-        prompt = "\nEnter artist/song name or %s\\h%s for help or %s\\q%s to "
-        prompt += "quit: "
-        inp = compat_input(prompt % (c.g, c.w, c.g, c.w))
-        start(inp)
-    elif not songs:
-        print("Sorry, nothing matched %s%s%s" % (c.g, args, c.w))
-        start(None)
-    else:
-        song_selection_loop(songs)
+        if not songs:
+            print("Sorry, nothing matched %s%s%s" % (c.g, args, c.w))
+            return None
+        else:
+            return songs
 
 
-start(sys.argv[1:], True)
+def main():
+
+    action = message = None
+    songlist = start(" ".join(sys.argv[1:]))
+
+    while True:
+
+        if not songlist:
+            prompt = "\nEnter artist/song name or %s\\h%s for help or %s\\q%s "
+            prompt += "to quit: "
+            inp = compat_input(prompt % (c.g, c.w, c.g, c.w))
+            songlist = start(inp)
+
+        else:
+            action, value = select_song(songlist, message)
+            message = None
+            if action == "Error":
+                message = "Invalid entry: " + str(value)
+            elif action == "search":
+                songlist = start(value)
+
+
+main()
