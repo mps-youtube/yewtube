@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.12"
+__version__ = "0.13"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -365,7 +365,6 @@ def songaction(action, value):
     r' Plays or downloads the song specified in `value`. '
 
     if action == "play":
-
         print(py2utf(generate_song_meta(value)))
 
         if PLAYER == "mplayer":
