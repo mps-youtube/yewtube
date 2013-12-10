@@ -345,17 +345,16 @@ def download(song):
     print("\nDone\n")
 
 
-def _bi_range(mylist):
+def _bi_range(seq):
 
     r''' Takes a two-element seq, returns ascending or descending range
          eg. [5,2] returns [5,4,3,2] and (2, 4) returns [2,3,4]
      '''
-    start, end = mylist[0], mylist[1]
+    start, end = seq
     if start == end:
         return start
     elif end < start:
-        start, end = end, start + 1
-        return reversed(range(start, end))
+        return reversed(range(end, start + 1))
     else:
         return range(start, end + 1)
 
