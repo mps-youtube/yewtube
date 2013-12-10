@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.16.1"
+__version__ = "0.16.2"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -89,14 +89,15 @@ r' Help text '
 HELP = c.blank + """
 \tType an artist and/or song title to search or alternatively you
 \tcan enter one of the following:\n\n
-\t\t%s\\top%s for top tracks this week
-\t\t%s\\top3m%s for top tracks of the last 3 months
-\t\t%s\\top6m%s for top tracks of the last 6 months
-\t\t%s\\topyear%s for top tracks of the last year
-\t\t%s\\topall%s for all time top tracks\n""" % (
-    c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w)
-HELP += "\t\t%s\\list <playlist_url>%s to load a playlist\n" % (c.g, c.w)
-
+\t\t{0}\\top{1} for top tracks this week
+\t\t{0}\\top3m{1} for top tracks of the last 3 months
+\t\t{0}\\top6m{1} for top tracks of the last 6 months
+\t\t{0}\\topyear{1} for top tracks of the last year
+\t\t{0}\\topall{1} for all time top tracks\n
+\t\t{0}\\list <playlist_url>{1} to load a playlist\n
+\n\tWhen results are displayed, use {0}n,n{1} and {0}n-n{1} to play multiple \
+tracks\n\teg. {0}2,9,4-7{1} will play tracks 2, 9, 4, 5, 6 and 7.\
+""".format(c.g, c.w)
 
 r' Mplayer help '
 
@@ -183,7 +184,7 @@ def generate_song_meta(song):
     hyphens = min(78, maxlen + 10)
     hyphenstr = ("  " + "-" * hyphens + "\n")
     fmt = "  %s%-7s%s : %s%s%s\n"
-    out = c.blank + hyphenstr
+    out = hyphenstr
 
     for n, name in enumerate(names):
 
@@ -221,7 +222,14 @@ def get_stream(song):
     if not "track_url" in song:
         url = 'http://pleer.com/site_api/files/get_url?action=download&id=%s'
         url = url % song['link']
-        wdata = urlopen(url).read().decode("utf8")
+
+        try:
+            wdata = urlopen(url).read().decode("utf8")
+
+        except HTTPError:
+            time.sleep(2)  # try again
+            wdata = urlopen(url).read().decode("utf8")
+
         j = json.loads(wdata)
         track_url = j['track_link']
         return track_url
@@ -234,8 +242,15 @@ def playsong(song):
 
     r" Play song using PLAYER called with args PLAYERARGS "
 
-    track_url = get_stream(song)
-    song['track_url'] = track_url
+    try:
+        track_url = get_stream(song)
+        song['track_url'] = track_url
+
+    except HTTPError:
+        print("\nProblem fetching this track :(")
+        time.sleep(3)
+        print(c.blank)
+        return
 
     try:
         opener.open(track_url).headers['content-length']
@@ -414,15 +429,41 @@ def get_input(songs):
         return ("search", choice)
 
 
+def multiplay_progress(idx, cursong, allsongs):
+
+    out = "  {}Playing {} tracks:{}\n\n".format(c.hh, len(allsongs), c.w)
+
+    for n, song in enumerate(allsongs):
+        title = song['song'][:30]
+        artist = song['singer'][:30]
+        length = song['duration']
+        #rate = song['rate']
+        fmt = ("  ", c.b, title, c.w, c.b, artist, c.w, c.y, length, c.w)
+
+        if n == idx:
+            fmt = ("> ", c.b, title, c.w, c.b, artist, c.w, c.y, length, c.w)
+
+        out += "%s%s%s%s by %s%s%s [%s%s%s]\n" % fmt
+
+    if PLAYER == "mplayer":
+        out += "\n" + MPLAYER_HELP.replace("stop", "next")
+
+    fmt = (c.g, c.w, c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
+    out += "[{}ctrl-c{}] to exit\n\n    Playing {}{}{} of {}{}{} ".format(*fmt)
+
+    return out
+
+
 def songaction(action, value):
 
     r' Plays or downloads the song specified in `value`. '
 
     if action == "play":
+        print(c.blank)
         print(py2utf(generate_song_meta(value)))
 
         if PLAYER == "mplayer":
-            print(MPLAYER_HELP + "\n\n")
+            print(MPLAYER_HELP + "\n\n\n")
 
         playsong(value)
 
@@ -431,12 +472,16 @@ def songaction(action, value):
 
     elif action == "playmany":
 
-        for song in value:
+        print(c.blank)
+
+        for n, song in enumerate(value):
+            print(py2utf(multiplay_progress(n, song, value)))
 
             try:
-                songaction("play", song)
+                playsong(song)
 
             except KeyboardInterrupt:
+                print(c.white)
                 print(c.blank)
                 break
 
