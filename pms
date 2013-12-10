@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.16"
+__version__ = "0.16.1"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -73,8 +73,7 @@ class c(object):
 
     r' Class for holding colour code values '
 
-    blank = "\n" * 200
-    white = "\033[0m"
+    white = "\x1b[0m"
     red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
     hh = "\x1b[%sm" * 3 % (100, 4, 93)
 
@@ -82,6 +81,7 @@ class c(object):
         hh = red = green = yellow = blue = pink = white = ""
 
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
+    blank = white + "\n" * 200
 
 
 r' Help text '
@@ -380,11 +380,13 @@ def get_input(songs):
 
     r' gets input, returns action/value pair'
 
-    txt = ("[{0}1-{1}{2}] to play or [{0}d 1-{1}{2}] to download or [{0}q{2}"
-           "]uit or enter new search\n > ".format(c.g, len(songs), c.w))
+    txt = ("[{0}1-{1}{2}] or [{0}all{2}] to play or [{0}d 1-{1}{2}] to "
+           "download or [{0}q{2}]uit or enter new search\n > ".format(
+               c.g, len(songs), c.w))
     r = {'nil': r'\s*$',
          'play': r'\s*(\d{1,3})\s*$',
          'multi': r'\s*\d{1,3}\s*(?:[,-]\s*\d{1,3}\s*){1,30}$',
+         'all': r'\s*all\s*$',
          'dl': r'\s*(?:d|dl|download|down)(?:\s)*(\d{1,3})'}
 
     choice = compat_input(txt)
@@ -404,6 +406,9 @@ def get_input(songs):
     elif r['dl'].match(choice):
         songnum = int(r['dl'].match(choice).group(1))
         return ("download", songs[songnum - 1])
+
+    elif r['all'].match(choice):
+        return("playmany", songs)
 
     else:
         return ("search", choice)
@@ -427,7 +432,13 @@ def songaction(action, value):
     elif action == "playmany":
 
         for song in value:
-            songaction("play", song)
+
+            try:
+                songaction("play", song)
+
+            except KeyboardInterrupt:
+                print(c.blank)
+                break
 
 
 def select_song(songs, message=None):
