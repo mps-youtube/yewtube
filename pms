@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.15"
+__version__ = "0.16"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -484,7 +484,7 @@ def get_songs(args=""):
 
     elif args in ("\\q", "q"):
         exitstr = ("\n{}pms - {}http://github.com/np1/pms{}\n"
-                   "Released under GPLv3 license\n"
+                   "Released under the GPLv3 license\n"
                    "(c) 2013 nagev{}\n")
         sys.exit(exitstr.format(c.r, c.b, c.r, c.w))
 
