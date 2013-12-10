@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.14"
+__version__ = "0.15"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -97,13 +97,14 @@ HELP = c.blank + """
     c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w)
 HELP += "\t\t%s\\list <playlist_url>%s to load a playlist\n" % (c.g, c.w)
 
+
 r' Mplayer help '
 
-MPLAYER_HELP = """   [%s<-%s] seek [%s->%s]
-   [%s9%s] volume [%s0%s]
-   [%sSPACE%s] pause / resume
-   [%sq%s] stop
-""" % (c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w)
+MPLAYER_HELP = """    [%s<-%s] seek [%s->%s]
+    [%s9%s] volume [%s0%s]
+    [%sSPACE%s] pause / resume
+    [%sq%s] stop
+    """ % (c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w)
 
 
 def tidy(raw, field):
@@ -344,6 +345,38 @@ def download(song):
     print("\nDone\n")
 
 
+def _bi_range(mylist):
+
+    r''' Takes a two-element seq, returns ascending or descending range
+         eg. [5,2] returns [5,4,3,2] and (2, 4) returns [2,3,4]
+     '''
+    start, end = mylist[0], mylist[1]
+    if start == end:
+        return start
+    elif end < start:
+        start, end = end, start + 1
+        return reversed(range(start, end))
+    else:
+        return range(start, end + 1)
+
+
+def _parse_multi(choice):
+
+    r''' Takes a string such as 1,2,5-1 and returns [1,2,5,4,3,2,1] '''
+
+    choice = choice.replace(" ", "")
+    tracks = choice.split(",")
+    alltracks = []
+    for x in tracks:
+        if "-" in x:
+            nrange = x.split("-")
+            startend = map(int, nrange)
+            alltracks += _bi_range(startend)
+        else:
+            alltracks.append(int(x))
+    return alltracks
+
+
 def get_input(songs):
 
     r' gets input, returns action/value pair'
@@ -351,7 +384,8 @@ def get_input(songs):
     txt = ("[{0}1-{1}{2}] to play or [{0}d 1-{1}{2}] to download or [{0}q{2}"
            "]uit or enter new search\n > ".format(c.g, len(songs), c.w))
     r = {'nil': r'\s*$',
-         'play': r'\s*(\d{1,3})',
+         'play': r'\s*(\d{1,3})\s*$',
+         'multi': r'\s*\d{1,3}\s*(?:[,-]\s*\d{1,3}\s*){1,30}$',
          'dl': r'\s*(?:d|dl|download|down)(?:\s)*(\d{1,3})'}
 
     choice = compat_input(txt)
@@ -360,7 +394,11 @@ def get_input(songs):
     if r['nil'].match(choice):
         raise IOError
 
-    if r['play'].match(choice):
+    elif r['multi'].match(choice):
+        selection = _parse_multi(choice)
+        return ("playmany", [songs[x - 1] for x in selection])
+
+    elif r['play'].match(choice):
         songnum = int(r['play'].match(choice).group(1))
         return ("play", songs[songnum - 1])
 
@@ -386,6 +424,11 @@ def songaction(action, value):
 
     elif action == "download":
         download(value)
+
+    elif action == "playmany":
+
+        for song in value:
+            songaction("play", song)
 
 
 def select_song(songs, message=None):
@@ -417,9 +460,9 @@ def select_song(songs, message=None):
     return (None, None)
 
 
-def start(args=""):
+def get_songs(args=""):
 
-    r''' Get songs list from user input and call song_selection_loop(songs) '''
+    r''' Return list of songs based on the search term, or None '''
 
     tops = "\\top \\top3m \\top6m \\topyear \\topall".split()
     args = args.strip()
@@ -459,7 +502,7 @@ def start(args=""):
 def main():
 
     action = message = None
-    songlist = start(" ".join(sys.argv[1:]))
+    songlist = get_songs(" ".join(sys.argv[1:]))
 
     while True:
 
@@ -467,7 +510,7 @@ def main():
             prompt = "\nEnter artist/song name or %s\\h%s for help or %s\\q%s "
             prompt += "to quit: "
             inp = compat_input(prompt % (c.g, c.w, c.g, c.w))
-            songlist = start(inp)
+            songlist = get_songs(inp)
 
         else:
             action, value = select_song(songlist, message)
@@ -475,7 +518,7 @@ def main():
             if action == "Error":
                 message = "Invalid entry: " + str(value)
             elif action == "search":
-                songlist = start(value)
+                songlist = get_songs(value)
 
 
 if __name__ == "__main__":
