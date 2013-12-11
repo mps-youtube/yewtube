@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.16.3"
+__version__ = "0.16.4"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -35,12 +35,12 @@ import os
 
 if sys.version_info[:2] >= (3, 0):
     from urllib.request import build_opener
-    from urllib.error import HTTPError
+    from urllib.error import HTTPError, URLError
     py2utf = lambda x: x
     compat_input = input
 
 else:
-    from urllib2 import build_opener, HTTPError
+    from urllib2 import build_opener, HTTPError, URLError
     py2utf = lambda x: x.encode("utf8")
     compat_input = raw_input
 
@@ -84,6 +84,10 @@ class c(object):
     blank = white + "\n" * 200
 
 
+EXITMSG = """\n
+{0}pms - {1}http://github.com/np1/pms{0}
+Released under the GPLv3 license
+(c) 2013 nagev{2}\n""".format(c.r, c.b, c.w)
 r' Help text '
 
 HELP = c.blank + """
@@ -101,11 +105,11 @@ tracks\n\teg. {0}2,9,4-7{1} will play tracks 2, 9, 4, 5, 6 and 7.\
 
 r' Mplayer help '
 
-MPLAYER_HELP = """    [%s<-%s] seek [%s->%s]
-    [%s9%s] volume [%s0%s]
-    [%sSPACE%s] pause / resume
-    [%sq%s] return
-    """ % (c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w, c.g, c.w)
+MPLAYER_HELP = """\
+ [{0}<-{1}] seek [{0}->{1}]         \
+[{0}9{1}] volume [{0}0{1}]
+ [{0}SPACE{1}] pause          \
+[{0}q{1}] return\n""".format(c.g, c.w)
 
 
 def tidy(raw, field):
@@ -174,26 +178,6 @@ def get_tracks_from_page(page):
     return songs
 
 
-def generate_song_meta(song):
-
-    r" Generates formatted song metadata, displayed during playback "
-
-    fields = "singer song duration rate size".split(" ")
-    names = "Artist Title Length Bitrate Size".split(" ")
-    maxlen = max([len(song.get(f) or "-" * 18) for f in fields])
-    hyphens = min(78, maxlen + 10)
-    hyphenstr = ("  " + "-" * hyphens + "\n")
-    fmt = "  %s%-7s%s : %s%s%s\n"
-    out = hyphenstr
-
-    for n, name in enumerate(names):
-
-        if song[fields[n]]:
-            out += (fmt % (c.y, name, c.w, c.g, song[fields[n]], c.w))
-
-    return out + hyphenstr
-
-
 def generate_choices(songs):
 
     r" Generates list of choices from a song list"
@@ -250,8 +234,8 @@ def playsong(song):
         track_url = get_stream(song)
         song['track_url'] = track_url
 
-    except HTTPError:
-        print("\nProblem fetching this track :(")
+    except (URLError, HTTPError) as e:
+        print("\nProblem fetching this track: " + c.r + str(e) + c.w)
         time.sleep(3)
         print(c.blank)
         return
@@ -288,7 +272,15 @@ def get_top_period(period):
     print(c.blank)
     print("%sTop tracks for %s...%s" % (c.y, tps[period - 1], c.w))
     logging.debug("[2] fetching " + url)
-    wdata = urlopen(url).read().decode("utf8")
+
+    try:
+        wdata = urlopen(url).read().decode("utf8")
+
+    except (URLError, HTTPError) as e:
+        print("Error fetching data: " + "{}{}{}".format(c.r, e, c.w))
+        time.sleep(2)
+        return None
+
     logging.debug("fetched " + url)
     match = re.search(r"<ol id=\"search-results\">[\w\W]+?<\/ol>", wdata)
     html_ol = match.group(0)
@@ -327,7 +319,9 @@ def dosearch(term):
         logging.debug("fetched" + url)
         songs = get_tracks_from_page(wdata)
 
-    except HTTPError:
+    except (URLError, HTTPError) as e:
+        print("Error fetching data from source: %s%s%s" % (c.r, str(e), c.w))
+        time.sleep(2)
         logging.debug("HTTP Error fetching url:" + url)
         songs = None
 
@@ -413,42 +407,43 @@ def get_input(songs):
            "download or [{0}q{2}]uit or enter new search\n > ".format(
                c.g, len(songs), c.w))
     r = {'nil': r'\s*$',
-         'play': r'\s*(\d{1,3})\s*$',
-         'multi': r'\s*\d{1,3}\s*(?:[,-]\s*\d{1,3}\s*){1,30}$',
+         'play': r'\s*\d{1,3}\s*(?:[,-]\s*\d{1,3}\s*){0,30}$',
          'all': r'\s*all\s*$',
          'dl': r'\s*(?:d|dl|download|down)(?:\s)*(\d{1,3})'}
 
-    choice = compat_input(txt)
+    try:
+        choice = compat_input(txt)
+
+    except KeyboardInterrupt:
+        sys.exit(EXITMSG)
+
     r = {a: re.compile(k, re.IGNORECASE) for a, k in r.items()}
 
     if r['nil'].match(choice):
         raise IOError
 
-    elif r['multi'].match(choice):
-        selection = _parse_multi(choice)
-        return ("playmany", [songs[x - 1] for x in selection])
-
     elif r['play'].match(choice):
-        songnum = int(r['play'].match(choice).group(1))
-        return ("play", songs[songnum - 1])
+        selection = _parse_multi(choice)
+        return ("play", [songs[x - 1] for x in selection])
 
     elif r['dl'].match(choice):
         songnum = int(r['dl'].match(choice).group(1))
         return ("download", songs[songnum - 1])
 
     elif r['all'].match(choice):
-        return("playmany", songs)
+        return("play", songs)
 
     else:
         return ("search", choice)
 
 
-def multiplay_progress(idx, cursong, allsongs):
+def playback_progress(idx, cursong, allsongs):
 
     r''' return string to show selected tracks, indicates current track '''
 
     out = "  %s%-31s  %-31s %s   %s\n" % (c.hh, "Artist", "Title", "Time", c.w)
     curtitle, curartist = None, None
+    multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
         title = song['song'][:30]
@@ -462,16 +457,20 @@ def multiplay_progress(idx, cursong, allsongs):
             curtitle, curartist, currate = title, artist, rate
 
         out += "%s%s%s%-31s%s  %s%-31s%s [%s%s%s]\n" % fmt
-    out += "\n" * (14 - len(allsongs))
+
+    out += "\n" * (17 - len(allsongs))
+    pos = (25 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
+    playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
+    ctrlc = "{}[{}ctrl-c{}] to return".format(" " * 24,
+                                              c.g, c.w) if multi else ""
+    mplayerback = "next track" if multi else "to return"
 
     if PLAYER == "mplayer":
-        out += "\n" + MPLAYER_HELP.replace("return", "next track")
+        out += "\n" + MPLAYER_HELP.replace("return", mplayerback)
 
-    fmt = (c.g, c.w, c.y, idx + 1, c.w, c.y, len(allsongs), c.w, c.b,
-           c.w, c.b, c.w, currate)
-    out += ("[{}ctrl-c{}] to return\n                              "
-            "[Playing {}{}{} of {}{}{}]\n    {}%s{} - "
-            "{}%s{} [{}]" % (curtitle, curartist)).format(*fmt)
+    fmt = (ctrlc, playing, c.r, c.w, c.r, c.w, currate)
+    out += ("{}{} {}%s{} by {}%s{} [{}]" %
+            (curtitle, curartist)).format(*fmt)
 
     return out
 
@@ -480,24 +479,15 @@ def songaction(action, value):
 
     r' Plays or downloads the song specified in `value`. '
 
-    if action == "play":
-        print(c.blank)
-        print(py2utf(generate_song_meta(value)))
-
-        if PLAYER == "mplayer":
-            print(MPLAYER_HELP + "\n\n\n")
-
-        playsong(value)
-
-    elif action == "download":
+    if action == "download":
         download(value)
 
-    elif action == "playmany":
+    elif action == "play":
 
         print(c.blank)
 
         for n, song in enumerate(value):
-            print(py2utf(multiplay_progress(n, song, value)))
+            print(py2utf(playback_progress(n, song, value)))
 
             try:
                 playsong(song)
@@ -565,10 +555,7 @@ def get_songs(args=""):
     # quit option
 
     elif args in ("\\q", "q", "quit", "exit"):
-        exitstr = ("\n{}pms - {}http://github.com/np1/pms{}\n"
-                   "Released under the GPLv3 license\n"
-                   "(c) 2013 nagev{}\n")
-        sys.exit(exitstr.format(c.r, c.b, c.r, c.w))
+        sys.exit(EXITMSG)
 
     # have args, do search
     else:
@@ -590,7 +577,13 @@ def main():
         if not songlist:
             prompt = "\nEnter artist/song name or %sh%s for help or %sq%s "
             prompt += "to quit: "
-            inp = compat_input(prompt % (c.g, c.w, c.g, c.w))
+
+            try:
+                inp = compat_input(prompt % (c.g, c.w, c.g, c.w))
+
+            except KeyboardInterrupt:
+                sys.exit(EXITMSG)
+
             songlist = get_songs(inp)
 
         else:
