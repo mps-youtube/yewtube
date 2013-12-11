@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.16.4"
+__version__ = "0.16.5"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -103,13 +103,19 @@ HELP = c.blank + """
 tracks\n\teg. {0}2,9,4-7{1} will play tracks 2, 9, 4, 5, 6 and 7.\
 """.format(c.g, c.w)
 
-r' Mplayer help '
 
-MPLAYER_HELP = """\
- [{0}<-{1}] seek [{0}->{1}]         \
-[{0}9{1}] volume [{0}0{1}]
- [{0}SPACE{1}] pause          \
-[{0}q{1}] return\n""".format(c.g, c.w)
+def mplayer_help(short=True):
+
+    r' Mplayer help '
+
+    seek = "[{0}<-{1}] seek [{0}->{1}]"
+    volume = "[{0}9{1}] volume [{0}0{1}]"
+    volume = volume if short else volume + "      [{0}ctrl-c{1}] return"
+    pause = "[{0}SPACE{1}] pause"
+    ret = "[{0}q{1}] %s" % ("return" if short else "next track")
+    fmt = "    %-20s       %-20s"
+    lines = fmt % (seek, volume) + "\n" + fmt % (pause, ret)
+    return lines.format(c.g, c.w)
 
 
 def tidy(raw, field):
@@ -442,36 +448,29 @@ def playback_progress(idx, cursong, allsongs):
     r''' return string to show selected tracks, indicates current track '''
 
     out = "  %s%-31s  %-31s %s   %s\n" % (c.hh, "Artist", "Title", "Time", c.w)
-    curtitle, curartist = None, None
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
-        title = song['song'][:30]
-        a = artist = song['singer'][:30]
-        length = song['duration']
+        i = song['song'][:30], song['singer'][:30], song['duration']
         rate = song['rate']
-        fmt = (c.w, "  ", c.b, title, c.w, c.b, artist, c.w, c.y, length, c.w)
+        fmt = (c.w, "  ", c.b, i[0], c.w, c.b, i[1], c.w, c.y, i[2], c.w)
 
         if n == idx:
-            fmt = (c.y, "> ", c.p, title, c.w, c.p, a, c.w, c.p, length, c.w)
-            curtitle, curartist, currate = title, artist, rate
+            fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w, c.p, i[2], c.w)
+            cur = i
 
         out += "%s%s%s%-31s%s  %s%-31s%s [%s%s%s]\n" % fmt
 
     out += "\n" * (17 - len(allsongs))
-    pos = (25 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
-    playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
-    ctrlc = "{}[{}ctrl-c{}] to return".format(" " * 24,
-                                              c.g, c.w) if multi else ""
-    mplayerback = "next track" if multi else "to return"
+    pos = (27 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
+    playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
+    keys = mplayer_help(short=not multi)
 
     if PLAYER == "mplayer":
-        out += "\n" + MPLAYER_HELP.replace("return", mplayerback)
+        out += "\n" + keys
 
-    fmt = (ctrlc, playing, c.r, c.w, c.r, c.w, currate)
-    out += ("{}{} {}%s{} by {}%s{} [{}]" %
-            (curtitle, curartist)).format(*fmt)
-
+    fmt = (playing, c.r, c.w, c.r, c.w, rate)
+    out += ("{}    {}%s{} by {}%s{} [{}]" % (cur[0], cur[1])).format(*fmt)
     return out
 
 
@@ -483,7 +482,6 @@ def songaction(action, value):
         download(value)
 
     elif action == "play":
-
         print(c.blank)
 
         for n, song in enumerate(value):
@@ -532,7 +530,7 @@ def get_songs(args=""):
     r''' Return list of songs based on the search term, or None '''
 
     tops = "\\top \\top3m \\top6m \\topyear \\topall".split()
-    tops2 = "top top3m top6m topyear topall".split()
+    tops += "top top3m top6m topyear topall".split()
     args = args.strip()
 
     if not args:
@@ -541,10 +539,7 @@ def get_songs(args=""):
     # return top songs
 
     elif args in tops:
-        return get_top_period(tops.index(args) + 1)
-
-    elif args in tops2:
-        return get_top_period(tops2.index(args) + 1)
+        return get_top_period((tops.index(args) + 1) % 5)
 
     # show help
 
