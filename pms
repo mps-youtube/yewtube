@@ -53,6 +53,7 @@ COLOURS = True
 try:
     from gi.repository import GLib
     DDIR = GLib.get_user_special_dir(GLib.USER_DIRECTORY_DOWNLOAD)
+    DDIR = DDIR.decode("utf8")
 
 except ImportError:
     DDIR = os.path.join(os.path.expanduser("~"), "Downloads")
