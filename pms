@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.16.6"
+__version__ = "0.16.7"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -248,7 +248,7 @@ def playsong(song):
 
     try:
         logging.debug("getting content-length header for " + track_url)
-        opener.open(track_url, timeout=5).headers['content-length']
+        assert opener.open(track_url, timeout=5).headers['content-length']
         logging.debug("got CL header")
 
     except IOError:
@@ -457,7 +457,7 @@ def playback_progress(idx, cursong, allsongs):
 
         if n == idx:
             fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w, c.p, i[2], c.w)
-            cur = i
+            r, cur = rate, i
 
         out += "%s%s%s%-31s%s  %s%-31s%s [%s%s%s]\n" % fmt
 
@@ -469,7 +469,7 @@ def playback_progress(idx, cursong, allsongs):
     if PLAYER == "mplayer":
         out += "\n" + keys
 
-    fmt = (playing, c.r, c.w, c.r, c.w, rate)
+    fmt = (playing, c.r, c.w, c.r, c.w, r)
     out += ("{}    {}%s{} by {}%s{} [{}]" % (cur[0], cur[1])).format(*fmt)
     return out
 
@@ -494,6 +494,11 @@ def songaction(action, value):
                 print(c.white)
                 print(c.blank)
                 break
+
+            except AssertionError:
+                print(c.blank)
+                print("Unable to fetch track")
+                time.sleep(2)
 
 
 def select_song(songs, message=None):
