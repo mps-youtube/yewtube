@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.16.5"
+__version__ = "0.16.6"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -111,7 +111,7 @@ def mplayer_help(short=True):
     seek = "[{0}<-{1}] seek [{0}->{1}]"
     volume = "[{0}9{1}] volume [{0}0{1}]"
     volume = volume if short else volume + "      [{0}ctrl-c{1}] return"
-    pause = "[{0}SPACE{1}] pause"
+    pause = "[{0}DN{1}] SEEK [{0}UP{1}]       [{0}space{1}] pause"
     ret = "[{0}q{1}] %s" % ("return" if short else "next track")
     fmt = "    %-20s       %-20s"
     lines = fmt % (seek, volume) + "\n" + fmt % (pause, ret)
@@ -381,7 +381,7 @@ def _bi_range(seq):
      '''
     start, end = seq
     if start == end:
-        return start
+        return start, start
     elif end < start:
         return reversed(range(end, start + 1))
     else:
@@ -462,7 +462,7 @@ def playback_progress(idx, cursong, allsongs):
         out += "%s%s%s%-31s%s  %s%-31s%s [%s%s%s]\n" % fmt
 
     out += "\n" * (17 - len(allsongs))
-    pos = (27 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
+    pos = (8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
     playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
     keys = mplayer_help(short=not multi)
 
