@@ -49,7 +49,15 @@ else:
 PLAYER = "mplayer"
 PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
 COLOURS = True
-DDIR = os.path.join(os.path.expanduser("~"), "Downloads", "PMS")
+
+try:
+    from gi.repiository import GLib
+    DDIR = GLib.get_user_special_dir(GLib.USER_DIRECTORY_DOWNLOAD)
+
+except ImportError:
+    DDIR = os.path.join(os.path.expanduser("~"), "Downloads")
+
+DDIR = os.path.join(DDIR, "PMS")
 
 if os.name == "nt":  # Disable colours for Windows
     COLOURS = False
@@ -461,7 +469,7 @@ def playback_progress(idx, cursong, allsongs):
 
         out += "%s%s%s%-31s%s  %s%-31s%s [%s%s%s]\n" % fmt
 
-    out += "\n" * (17 - len(allsongs))
+    out += "\n" * (3 - len(allsongs))
     pos = (8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
     playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
     keys = mplayer_help(short=not multi)
