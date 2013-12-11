@@ -51,7 +51,7 @@ PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
 COLOURS = True
 
 try:
-    from gi.repiository import GLib
+    from gi.repository import GLib
     DDIR = GLib.get_user_special_dir(GLib.USER_DIRECTORY_DOWNLOAD)
 
 except ImportError:
