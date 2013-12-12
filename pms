@@ -484,6 +484,7 @@ def playback_progress(idx, cursong, allsongs):
 
         out += "%s%s%s%-31s%s  %s%-31s%s [%s%s%s]\n" % fmt
 
+    out = out if multi else ""
     out += "\n" * (3 - len(allsongs))
     pos = (8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
     playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
