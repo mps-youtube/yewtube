@@ -474,7 +474,7 @@ def playback_progress(idx, cursong, allsongs):
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
-        i = song['song'][:30], song['singer'][:30], song['duration']
+        i = song['singer'][:30], song['song'][:30], song['duration']
         rate = song['rate']
         fmt = (c.w, "  ", c.b, i[0], c.w, c.b, i[1], c.w, c.y, i[2], c.w)
 
@@ -493,7 +493,7 @@ def playback_progress(idx, cursong, allsongs):
         out += "\n" + keys
 
     fmt = (playing, c.r, c.w, c.r, c.w, r)
-    out += ("{}    {}%s{} by {}%s{} [{}]" % (cur[0], cur[1])).format(*fmt)
+    out += ("{}    {}%s{} by {}%s{} [{}]" % (cur[1], cur[0])).format(*fmt)
     return out
 
 
