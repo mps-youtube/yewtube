@@ -19,7 +19,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
 
-__version__ = "0.16.9"
+__version__ = "0.16.10"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -92,7 +92,7 @@ class c(object):
     blank = white + "\n" * 200
 
 
-EXITMSG = """\n
+EXITMSG = c.blank + """\n
 {0}pms - {1}http://github.com/np1/pms{0}
 Released under the GPLv3 license
 (c) 2013 nagev{2}\n""".format(c.r, c.b, c.w)
@@ -606,7 +606,12 @@ def show_help(songs=None):
     else:
         print(HELP_GENERAL)
 
-    compat_input("Press {}Enter{} to continue".format(c.g, c.w))
+    try:
+        compat_input("Press {}Enter{} to continue".format(c.g, c.w))
+
+    except KeyboardInterrupt:
+        pass
+
     print(c.blank)
 
 
