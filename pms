@@ -1,23 +1,28 @@
 #!/usr/bin/python
 
-''' pms
+"""
+pms.
 
-    https://github.com/np1/pms
+https://github.com/np1/pms
 
-    Copyright (C)  2013 nagev
+Copyright (C)  2013 nagev
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.  '''
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+
+from __future__ import print_function
 
 __version__ = "0.16.10"
 __author__ = "nagev"
@@ -34,6 +39,7 @@ import os
 # Python 3 compatibility hack
 
 if sys.version_info[:2] >= (3, 0):
+    # pylint: disable=E0611,F0401
     from urllib.request import build_opener
     from urllib.error import HTTPError, URLError
     py2utf = lambda x: x
@@ -51,6 +57,7 @@ PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
 COLOURS = True
 
 try:
+    # pylint: disable=E0611
     from gi.repository import GLib
     DDIR = GLib.get_user_special_dir(GLib.USER_DIRECTORY_DOWNLOAD)
 
@@ -79,7 +86,7 @@ urlopen = opener.open
 
 class c(object):
 
-    r' Class for holding colour code values '
+    """ Class for holding colour code values. """
 
     white = "\x1b[0m"
     red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
@@ -96,7 +103,8 @@ EXITMSG = c.blank + """\n
 {0}pms - {1}http://github.com/np1/pms{0}
 Released under the GPLv3 license
 (c) 2013 nagev{2}\n""".format(c.r, c.b, c.w)
-r' Help text '
+
+#  Help text
 
 HELP_GENERAL = """\
 \t{2}Searching{1}
@@ -127,8 +135,7 @@ HELP_DOWNLOAD = """\
 
 
 def mplayer_help(short=True):
-
-    r' Mplayer help '
+    """ Mplayer help.  """
 
     seek = "[{0}<-{1}] seek [{0}->{1}]"
     volume = "[{0}9{1}] volume [{0}0{1}]"
@@ -141,8 +148,7 @@ def mplayer_help(short=True):
 
 
 def tidy(raw, field):
-
-    r" Tidies HTML entities, formats songlength if field is duration "
+    """ Tidy HTML entities, format songlength if field is duration.  """
 
     if field == "duration":
         raw = time.strftime('%M:%S', time.gmtime(int(raw)))
@@ -157,8 +163,7 @@ def tidy(raw, field):
 
 
 def get_average_bitrate(song):
-
-    r' calculate average bitrate of VBR tracks '
+    """ calculate average bitrate of VBR tracks. """
 
     if song["rate"] == "VBR":
         vbrsize = float(song["Rsize"][:-3]) * 10000
@@ -174,8 +179,7 @@ def get_average_bitrate(song):
 
 
 def get_tracks_from_page(page):
-
-    r" Gets search results from web page "
+    """ Get search results from web page. """
 
     fields = "duration file_id singer song link rate size source".split()
     matches = re.findall(r"\<li.(duration[^>]+)\>", page)
@@ -207,8 +211,7 @@ def get_tracks_from_page(page):
 
 
 def generate_choices(songs):
-
-    r" Generates list of choices from a song list"
+    """ Generate list of choices from a song list."""
 
     fmtrow = "%s%-6s %-7s %-21s %-22s %-8s %-8s%s\n"
     head = (c.hh, "Item", "Size", "Artist", "Track", "Length", "Bitrate", c.w)
@@ -228,8 +231,7 @@ def generate_choices(songs):
 
 
 def get_stream(song):
-
-    r" Return the url for a song "
+    """ Return the url for a song. """
 
     if not "track_url" in song:
         url = 'http://pleer.com/site_api/files/get_url?action=download&id=%s'
@@ -255,8 +257,7 @@ def get_stream(song):
 
 
 def playsong(song):
-
-    r" Play song using PLAYER called with args PLAYERARGS "
+    """ Play song using PLAYER called with args PLAYERARGS."""
 
     try:
         track_url = get_stream(song)
@@ -290,8 +291,7 @@ def playsong(song):
 
 
 def get_top_period(period):
-
-    r''' Get top music for period, returns songs list '''
+    """ Get top music for period, returns songs list."""
 
     url = ("http://pleer.com/en/gettopperiod?target1=%s&target2=r1&select=e&"
            "page_ru=1&page_en=%s")
@@ -317,8 +317,7 @@ def get_top_period(period):
 
 
 def dosearch(term):
-
-    r" Perform search or fetch playlist, returns songs list "
+    """ Perform search or fetch playlist, returns songs list."""
 
     if not term or len(term) < 2:
         logging.debug("no search term")
@@ -357,8 +356,7 @@ def dosearch(term):
 
 
 def download(song):
-
-    r" Downloads file, shows status "
+    """ Download file, shows status. """
 
     if not os.path.exists(DDIR):
         os.makedirs(DDIR)
@@ -397,10 +395,12 @@ def download(song):
 
 
 def _bi_range(seq):
+    """
+    Take a two-element seq, returns ascending or descending range.
 
-    r''' Takes a two-element seq, returns ascending or descending range
-         eg. [5,2] returns [5,4,3,2] and (2, 4) returns [2,3,4]
-     '''
+    eg. [5,2] returns [5,4,3,2] and (2, 4) returns [2,3,4]
+
+    """
     start, end = seq
     if start == end:
         return start, start
@@ -411,8 +411,7 @@ def _bi_range(seq):
 
 
 def _parse_multi(choice):
-
-    r''' Takes a string such as 1,2,5-1 and returns [1,2,5,4,3,2,1] '''
+    """ Given a string such as 1,2,5-1 return [1,2,5,4,3,2,1]. """
 
     choice = choice.replace(" ", "")
     tracks = choice.split(",")
@@ -428,11 +427,8 @@ def _parse_multi(choice):
 
 
 def get_input(songs):
+    """ Prompt for user input, return action/value pair. """
 
-    r' gets input, returns action/value pair'
-
-    #txt = ("[{0}1-{1}{2}] or [{0}all{2}] to play or [{0}d 1-{1}{2}] to "
-           #"download or [{0}q{2}]uit or enter new search\n {3}>{2} ")
     txt = "Enter selection or [{0}h{1}]elp or [{0}q{1}]uit\n {2}> {1}"
     txt = txt.format(c.g, c.w, c.y)
     r = {'nil': r'\s*$',
@@ -467,8 +463,7 @@ def get_input(songs):
 
 
 def playback_progress(idx, cursong, allsongs):
-
-    r''' return string to show selected tracks, indicates current track '''
+    """ Generate string to show selected tracks, indicate current track. """
 
     out = "  %s%-31s  %-31s %s   %s\n" % (c.hh, "Artist", "Title", "Time", c.w)
     multi = len(allsongs) > 1
@@ -499,8 +494,7 @@ def playback_progress(idx, cursong, allsongs):
 
 
 def songaction(action, value):
-
-    r' Plays or downloads the song specified in `value`. '
+    """ Play or download the song specified in `value`. """
 
     if action == "download":
         download(value)
@@ -526,10 +520,12 @@ def songaction(action, value):
 
 
 def select_song(songs, message=None):
+    """ Show song list and message if present.
 
-    r''' Shows song list and message, get user input, call songaction() to
-         perform play / download or return new search query text
-    '''
+    Get user input, call songaction() to perform play / download or return new
+    search query text
+
+    """
 
     print(py2utf(generate_choices(songs)))
 
@@ -555,8 +551,7 @@ def select_song(songs, message=None):
 
 
 def get_songs(args="", songs=None):
-
-    r''' Return list of songs based on the search term, or None '''
+    """ Return list of songs based on the search term, or None. """
 
     tops = "\\top \\top3m \\top6m \\topyear \\topall".split()
     tops += "top top3m top6m topyear topall".split()
@@ -593,8 +588,7 @@ def get_songs(args="", songs=None):
 
 
 def show_help(songs=None):
-
-    r'  Show context-sensitive help '
+    """  Show context-sensitive help. """
 
     print(c.blank)
     print("  {}Available choices:{}\n".format(c.hh, c.w))
@@ -616,6 +610,7 @@ def show_help(songs=None):
 
 
 def main():
+    """loop forever, branch depending on whether search results are held."""
 
     action = message = None
     songlist = get_songs(" ".join(sys.argv[1:]))
