@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.16.10"
+__version__ = "0.16.11"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -43,11 +43,13 @@ if sys.version_info[:2] >= (3, 0):
     from urllib.request import build_opener
     from urllib.error import HTTPError, URLError
     py2utf = lambda x: x
+    py2utf8_decode = lambda x: x
     compat_input = input
 
 else:
     from urllib2 import build_opener, HTTPError, URLError
     py2utf = lambda x: x.encode("utf8")
+    py2utf8_decode = lambda x: x.decode("utf8")
     compat_input = raw_input
 
 #logging.basicConfig(level=logging.DEBUG)
@@ -60,6 +62,7 @@ try:
     # pylint: disable=E0611
     from gi.repository import GLib
     DDIR = GLib.get_user_special_dir(GLib.USER_DIRECTORY_DOWNLOAD)
+    DDIR = py2utf8_decode(DDIR)
 
 except ImportError:
     DDIR = os.path.join(os.path.expanduser("~"), "Downloads")
