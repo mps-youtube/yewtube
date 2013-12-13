@@ -584,6 +584,7 @@ def get_songs(args="", songs=None):
     else:
         songs = dosearch(args)
         if not songs:
+            print(c.blank)
             print("Sorry, nothing matched %s%s%s" % (c.g, args, c.w))
             return None
         else:
@@ -621,11 +622,11 @@ def main():
     while True:
 
         if not songlist:
-            prompt = ("\n{3}Enter artist and/or song name or {0}h{1} for help "
+            prompt = ("\nEnter artist and/or song name or {0}h{1} for help "
                       "or {0}q{1} to quit:\n {2}> {1}")
 
             try:
-                inp = compat_input(prompt.format(c.g, c.w, c.y, c.blank))
+                inp = compat_input(prompt.format(c.g, c.w, c.y))
 
             except KeyboardInterrupt:
                 sys.exit(EXITMSG)
