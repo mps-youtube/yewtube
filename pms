@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18"
+__version__ = "0.18.1"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -205,7 +205,8 @@ def playlists_display():
 
     for n, p in P['userpl'].items():
         out += "\t%s%s%s: %s songs\n" % (c.g, n, c.w, p.size)
-        out += "\n\nEnter %sopen <name>%s to load a playlist" % (c.g, c.w)
+
+    out += "\n\nEnter %sopen <name>%s to load a playlist" % (c.g, c.w)
 
     return out
 
