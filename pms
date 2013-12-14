@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.4"
+__version__ = "0.18.5"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -112,8 +112,10 @@ class Playlist(object):
 
     def __init__(self, name=None, songs=None):
         self.name = name
+        self.creation = time.time()
         self.songs = songs or []
 
+    @property
     def is_empty(self):
         """ Return True / False if songs are populated or not. """
 
@@ -124,6 +126,18 @@ class Playlist(object):
         """ Return number of tracks. """
 
         return len(self.songs)
+
+    @property
+    def duration(self):
+        """ Sum duration of the playlist """
+
+        duration = 0
+
+        for song in self.songs:
+            duration += int(song['Rduration'])
+
+        duration = time.strftime('%H:%M:%S', time.gmtime(int(duration)))
+        return duration
 
 
 HELP = """
@@ -138,7 +152,7 @@ during playback):
 `2-4, 6, 6-3` to play songs 2, 3, 4, 6, 6, 5, 4, 3
 
 `rm 1,3` to remove songs 1, 2 and 3.  Also use rm 1,2,5-7 to remove a range
-`rm all` to remove all songs
+`rm all` to remove all songduratiom
 `sw 1,3` to swap the position of songs 1 and 3
 `mv 1,3` to move song 1 to postion 3
 `add 1,2,3` to add songs 1,2 and 3 to the temporary playlist.  Also use
@@ -149,7 +163,7 @@ during playback):
 `save <playlist_name>` to save the currently displayed songs as a stored
     playlist on disk
 
-`lp` to view your saved playlists
+`ls` to list your saved playlists
 
 `open <playlist_name>` to open a saved playlist as the current playlist
 
@@ -198,16 +212,24 @@ def open_from_file():
 
 
 def playlists_display():
-    """ Produce a list of all playlsits. """
+    """ Produce a list of all playlist. """
 
     if not P.get("userpl"):
         P['message'] = c.r + "No playlists created!" + c.w
         return ""
 
-    out = "{0}Your playlists{1}\n\n".format(c.hh, c.w)
+    maxname = max(len(a) for a in P['userpl'])
+    print(maxname)
 
+    out = "      {0}Saved Playlists{1}\n".format(c.hh, c.w)
+    start = "      "
+    fmt = "%s%s%-" + str(maxname + 3) + "s%s %s%-7s%s %-5s%s"
+    head = (start, c.b, "Name", c.b, c.b, "Count", c.b, "Duration", c.w)
+    out += "\n" + fmt % head + "\n\n"
     for n, p in P['userpl'].items():
-        out += "\t%s%s%s: %s songs\n" % (c.g, n, c.w, p.size)
+        l = fmt % (start, c.g, n, c.w, c.y, str(p.size), c.y,
+                   p.duration, c.w) + "\n"
+        out += l
 
     out += "\n\nEnter %sopen <name>%s to load a playlist" % (c.g, c.w)
 
@@ -636,13 +658,13 @@ def playlist_operate(choice):
         name = match.group(1)
         if P['userpl'].get(name):
             del P['userpl'][name]
-            P['message'] = "Deleted %s%s%s" % (c.y + name + c.w)
+            P['message'] = "Deleted %s%s%s" % (c.y, name, c.w)
             P['content'] = playlists_display()
             save_to_file()
             return
 
         else:
-            P['message'] = ("Playlist %s%s%s was not found.  Use lp to list"
+            P['message'] = ("Playlist %s%s%s was not found.  Use ls to list"
                             % (c.r, name, c.w))
 
     else:
@@ -667,11 +689,11 @@ def persist_operate(choice):
                             (c.y, name, c.w))
 
         else:
-            P['message'] = choice.strip("open").strip() + \
-                c.r + "??" + c.w + "Choose one of the above"
+            P['message'] = c.r + choice[4:].strip() + \
+                " ??" + c.w + " Select from one of the above to open"
             P['content'] = playlists_display()
             return
-            #P["message"] = ("Playlist %s not found!  Use lp to list playlists"
+            #P["message"] = ("Playlist %s not found!  Use ls to list playlists"
                             #% match.group(1))
 
     elif re_save.match(choice):
@@ -680,7 +702,7 @@ def persist_operate(choice):
         print(name)
         P['userpl'] = P.get('userpl') or {}
         P['userpl'][name] = Playlist(name, list(P['model'].songs))
-        P['message'] = ("Playlist saved as %s%s%s.  Use %slp%s to list "
+        P['message'] = ("Playlist saved as %s%s%s.  Use %sls%s to list "
                         "playlists" % (c.y, name, c.w, c.g, c.w))
         save_to_file()
 
@@ -690,7 +712,7 @@ def persist_operate(choice):
                                                 choice.lstrip("save").strip(),
                                                 c.w))
 
-    elif choice == "lp":
+    elif choice == "ls":
 
         if not P['userpl']:
             P['message'] = c.r + "You have no playlists!" + c.w
@@ -701,12 +723,18 @@ def persist_operate(choice):
 
     # show playlist
 
-    elif choice == "vp" and P['active'].is_empty():
-        txt = "Playlist is empty! Use %sadd N%s to add a track" % (c.g, c.w)
-        P['message'] = txt
+    elif choice == "vp" and P['active'].is_empty:
+
+        if P['model'].is_empty:
+            txt2 = "Search for songs and then use %sadd%s to add them"
+
+        else:
+            txt2 = "Use %sadd N%s to add a track"
+
+        P['message'] = "Playlist is empty! " + txt2 % (c.g, c.w)
         #P['content'] = generate_songlist_display()
 
-    elif choice in ("vp") and not P['active'].is_empty():
+    elif choice in ("vp") and not P['active'].is_empty:
         P['model'].songs = P['active'].songs
         P['message'] = ("This is the current playlist. Use %ssave <name>%s to "
                         "save it" % (c.g, c.w))
@@ -827,7 +855,7 @@ def main():
     playlist_operations = ("rm", "mv", "sw", "add")
     play_operations = tuple([str(x) for x in range(10)] + ["all"])
     action_operations = ("d", "q", "exit", "h")
-    persist_operations = ("open", "save", "saveas", "lp", "dp", "vp")
+    persist_operations = ("open", "load", "save", "saveas", "ls", "dp", "vp")
     top_operations = "top top3m top6m topyear topall".split()
 
     prompt = "Enter .artist/song name to search or [%sh%s]elp > " % (c.g, c.w)
@@ -865,9 +893,7 @@ def main():
                             % (c.g, c.w))
             P['content'] = generate_songlist_display()
 
-
         screen_update()
-
 
 if __name__ == "__main__":
     main()
