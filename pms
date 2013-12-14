@@ -25,12 +25,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.5"
+__version__ = "0.18.6"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
 import subprocess
 import logging
+import random
 import time
 import json
 import sys
@@ -150,6 +151,10 @@ during playback):
 `all` to play all
 `1,2,3` to play songs 1 2 and 3
 `2-4, 6, 6-3` to play songs 2, 3, 4, 6, 6, 5, 4, 3
+
+Note: The commands `shuffle` and `repeat` can be inserted at the start or end
+of any of the above to enable those mode: eg, `shuffle 1,2,3` and
+`repeat 2-4, 1`
 
 `rm 1,3` to remove songs 1, 2 and 3.  Also use rm 1,2,5-7 to remove a range
 `rm all` to remove all songs
@@ -326,7 +331,7 @@ def screen_update():
     P['noblank'] = False
 
 
-def playback_progress(idx, cursong, allsongs):
+def playback_progress(idx, cursong, allsongs, repeat=False):
     """ Generate string to show selected tracks, indicate current track. """
 
     out = "  %s%-31s  %-31s %s   %s\n" % (c.hh, "Artist", "Title", "Time", c.w)
@@ -347,13 +352,14 @@ def playback_progress(idx, cursong, allsongs):
     out += "\n" * (3 - len(allsongs))
     pos = (8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
     playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
-    keys = mplayer_help(short=not multi)
+    keys = mplayer_help(short=(not multi and not repeat))
 
     if PLAYER == "mplayer":
         out += "\n" + keys
 
     fmt = (playing, c.r, c.w, c.r, c.w, r)
     out += ("{}    {}%s{} by {}%s{} [{}]" % (cur[1], cur[0])).format(*fmt)
+    out += "    REPEAT MODE" if repeat else ""
     return out
 
 
@@ -582,9 +588,11 @@ def playlist_manipulate(r, choice):
         for songnum in selection:
             P['active'].songs.append(P['model'].songs[songnum - 1])
 
-        P['message'] = ("%s%s%s tracks added (%s%s%s total). Use %svp%s to vi"
-                        "ew." % (c.y, len(selection), c.w, c.y,
-                                 P['active'].size, c.w, c.g, c.w))
+        dur = P['active'].duration
+        P['message'] = ("%s%s%s tracks added (%s%s%s total [%s%s%s]). Use %svp"
+                        "%s to view." % (c.y, len(selection), c.w, c.y,
+                                         P['active'].size, c.w, c.y, dur, c.w,
+                                         c.g, c.w,))
 
     elif r['move'].match(choice):
         m = r['move'].match(choice)
@@ -730,30 +738,26 @@ def persist_operate(choice):
             txt2 = "Use %sadd N%s to add a track"
 
         P['message'] = "Playlist is empty! " + txt2 % (c.g, c.w)
-        #P['content'] = generate_songlist_display()
 
     elif choice in ("vp") and not P['active'].is_empty:
         P['model'].songs = P['active'].songs
         P['message'] = ("This is the current playlist. Use %ssave <name>%s to "
                         "save it" % (c.g, c.w))
-        #P['content'] = generate_songlist_display()
 
     P['content'] = generate_songlist_display()
 
 
-def play_range(songlist):
+def play_range(songlist, shuffle=False, repeat=False):
     """ Play a range of songs, exit cleanly on keyboard interrupt. """
 
+    if shuffle:
+        random.shuffle(songlist)
+
     for n, song in enumerate(songlist):
-        P['content'] = playback_progress(n, song, songlist)
+        P['content'] = playback_progress(n, song, songlist, repeat=repeat)
         screen_update()
 
-        try:
-            playsong(song)
-
-        except KeyboardInterrupt:
-            P['message'] = c.y + "Playback halted" + c.w
-            break
+        playsong(song)
 
     P['content'] = generate_songlist_display()
 
@@ -800,6 +804,16 @@ def action_operate(userinput):
 def play_operate(userinput):
     """ Receive user input specifying a range or all to play. """
 
+    shuffle = repeat = False
+
+    if "shuffle" in userinput:
+        shuffle = True
+        userinput = userinput.replace("shuffle", "").strip()
+
+    if "repeat" in userinput:
+        repeat = True
+        userinput = userinput.replace("repeat", "").strip()
+
     if not P.get("model").songs:
         P['message'] = c.r + "There are no tracks to select" + c.w
 
@@ -817,14 +831,49 @@ def play_operate(userinput):
                 P['content'] = generate_songlist_display()
                 return
 
-            play_range(songs)
+            if repeat:
 
-        elif userinput in ("all", "playall"):
-            play_range(P['model'].songs)
+                while True:
+
+                    try:
+                        play_range(songs, shuffle=shuffle, repeat=True)
+
+                    except KeyboardInterrupt:
+                        P['message'] = c.y + "Playback halted" + c.w
+                        P['content'] = generate_songlist_display()
+                        break
+
+            else:
+
+                try:
+                    play_range(songs, shuffle=shuffle)
+
+                except KeyboardInterrupt:
+                    P['message'] = c.y + "Playback halted" + c.w
+
+        elif userinput in ("all", "playall") and not repeat:
+            try:
+                play_range(P['model'].songs, shuffle=shuffle)
+            except KeyboardInterrupt:
+                P['message'] = c.y + "Playback halted" + c.w
+                P['content'] = generate_songlist_display()
+
+        elif userinput == "all" and repeat:
+
+            while True:
+
+                try:
+                    play_range(P['model'].songs, shuffle=shuffle, repeat=True)
+
+                except KeyboardInterrupt:
+                    P['message'] = c.y + "Playback halted" + c.w
+                    P['content'] = generate_songlist_display()
+                    break
 
         else:
             P['content'] = generate_songlist_display()
             P['message'] = c.r + "Bad syntax" + c.w
+            print(userinput)
 
 
 def prompt_for_exit():
@@ -835,7 +884,7 @@ def prompt_for_exit():
     screen_update()
 
     try:
-        userinput = compat_input("leaving? >")
+        userinput = compat_input(" > ")
 
     except KeyboardInterrupt:
         sys.exit(EXITMSG)
@@ -851,7 +900,8 @@ def main():
     inp = " ".join(sys.argv[1:])
 
     playlist_operations = ("rm", "mv", "sw", "add")
-    play_operations = tuple([str(x) for x in range(10)] + ["all"])
+    play_operations = tuple([str(x) for x in range(10)] + ["all", "shuffle",
+                                                           "repeat"])
     action_operations = ("d", "q", "exit", "h")
     persist_operations = ("open", "save", "ls", "vp")
     top_operations = "top top3m top6m topyear topall".split()
