@@ -850,10 +850,12 @@ def play_operate(userinput):
 
                 except KeyboardInterrupt:
                     P['message'] = c.y + "Playback halted" + c.w
+                    P['content'] = generate_songlist_display()
 
         elif userinput in ("all", "playall") and not repeat:
             try:
                 play_range(P['model'].songs, shuffle=shuffle)
+
             except KeyboardInterrupt:
                 P['message'] = c.y + "Playback halted" + c.w
                 P['content'] = generate_songlist_display()
