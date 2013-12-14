@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.2"
+__version__ = "0.18.3"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -127,11 +127,11 @@ class Playlist(object):
 
 
 HELP = """
-You can enter an artist / song name to search at any time the program is
-running.
+You can enter an artist/song name to search whenever the program is awaiting
+imput. Searches must be prefixed with a . character
 
-Any time you have a list of songs displayed (except during playback), you can
-use the following functions:
+When a list of songs is displayed, you can use the following commands (except
+during playback):
 
 `all` to play all
 `1,2,3` to play songs 1 2 and 3
@@ -156,11 +156,12 @@ use the following functions:
 `rm <playlist_name>` to remove a playlist from disk
 
 If you remember the name of a playlist, you can call it when starting pms by
-    entering at the command prompt:
+entering the following at the command prompt:
 
     `pms open <playlistname>`
 
 `q` to quit
+
 `h` for help
 
 Have fun!  There is still much work to be done like tidier string formatting,
@@ -581,6 +582,9 @@ def playlist_manipulate(r, choice):
 
         P['message'] = "%s tracks removed" % len(selection)
 
+    else:
+        P['message'] = "%s was not understood" % choice
+
 
 def playlist_operate(choice):
     """ Prompt for user input, return action/value pair. """
@@ -624,6 +628,8 @@ def playlist_operate(choice):
         else:
             P['message'] = "Playlist %s was not found.  Use lp to list" % name
 
+    else:
+        P['message'] = "%s was not understood" % choice
     P['content'] = generate_songlist_display()
 
 
@@ -677,8 +683,8 @@ def persist_operate(choice):
 
     elif choice in ("vp") and not P['active'].is_empty():
         P['model'].songs = P['active'].songs
-        P['message'] = ("This is your playlist. Use %ssave <name>%s to save"
-                        " it" % (c.g, c.w))
+        P['message'] = ("This is the current playlist. Use %ssave <name>%s to "
+                        "save it" % (c.g, c.w))
         #P['content'] = generate_songlist_display()
 
     P['content'] = generate_songlist_display()
@@ -735,7 +741,7 @@ def action_operate(userinput):
         show_help()
 
     else:
-        dosearch(userinput)
+        P['message'] = "%s was not understood" % userinput
 
     P['content'] = generate_songlist_display()
 
@@ -800,7 +806,7 @@ def main():
     persist_operations = ("open", "save", "saveas", "lp", "dp", "vp")
     top_operations = "\\top \\top3m \\top6m \\topyear \\topall".split()
 
-    prompt = "Enter artist/song name to search or [%sh%s]elp > " % (c.g, c.w)
+    prompt = "Enter .artist/song name to search or [%sh%s]elp > " % (c.g, c.w)
 
     while True:
 
@@ -827,9 +833,14 @@ def main():
         elif userinput in top_operations:
             get_top_period(top_operations.index(userinput) + 1)
 
+        elif userinput.startswith("."):
+            dosearch(userinput.lstrip("."))
+
         else:
-            logging.debug("search operation")
-            dosearch(userinput)
+            P['message'] = ("Start your query with a %s.%s to perform a search"
+                            % (c.g, c.w))
+            P['content'] = generate_songlist_display()
+
 
         screen_update()
 
