@@ -67,16 +67,45 @@ or simply:
 
     pms
 
-then follow the interactive prompts, use `\h` to display help or you can
-enter one of the following;
+You can enter an artist / song name to search at any time the program is
+running.
 
-        \top for top tracks this week
-        \top3m for top tracks of the last 3 months
-        \top6m for top tracks of the last 6 months
-        \topyear for top tracks of the last year
-        \topall for all time top tracks
-        \list <playlist_url> to load a playlist created on pleer.com
+Any time you have a list of songs displayed (except during playback), you can
+use the following functions:
 
+```all``` to play all
+```1,2,3``` to play songs 1 2 and 3
+```2-4, 6, 6-3``` to play songs 2, 3, 4, 6, 6, 5, 4, 3
+
+```d 4``` to download song number 4
+```rm 1,3``` to remove songs 1, 2 and 3.  Or use ```rm 1,2,5-7``` to remove a range
+```sw 1,3``` to swap the position of songs 1 and 3
+```mv 1,3``` to move song 1 to postion 3
+```add 1,2,3``` to add songs 1,2 and 3 to the temporary playlist.  Or use 
+```add 1,2,5-7``` to add a range.
+
+```vp``` to view the temp playlist (then rm, mv and sw to modify it)
+
+```save <playlist_name>``` to save the currently displayed songs as a stored
+playlist on disk
+
+```lp``` to view saved playlists
+
+```open <playlist_name>``` to open a saved playlist as the current playlist
+
+```rm <playlist_name>``` to remove a playlist from disk
+
+If you remember the name of a playlist, you can call it when starting pms by
+entering at the command prompt:
+
+```pms open <playlistname>```
+
+```q to quit```
+```h for help```
+
+Have fun!  There is still much work to be done like tidier string formatting,
+context-sensetive help and there are probably still quite a few bugs although 
+it's perfectly usable.  Keep checking back for updates.
 
 # Screenshot
 ![pms running in terminal](http://i.imgur.com/Oqyz5vk.png "pms running in terminal")
@@ -111,19 +140,3 @@ enter one of the following;
     19     3.8 Mb  Richard Wagner Lisa   Now we are free        04:14    128     
     20     8.8 Mb  Wilhelm Richard Wagn  Der Weg in Walghal     06:28    192     
 
-
-    [1-20] to play or [d 1-20] to download or [q]uit or enter new search
-     > 3
-
-      -------------------------------
-      Artist  : Richard Wagner
-      Title   : Ride Of The Valkyries
-      Length  : 10:07
-      Bitrate : 128 Kb/s
-      Size    : 9.274 Mb
-      -------------------------------
-
-    [<-] seek [->]
-    [9] volume [0]
-    [SPACE] pause / resume
-    [q] stop
