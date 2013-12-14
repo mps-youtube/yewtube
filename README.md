@@ -67,52 +67,53 @@ or simply:
 
     pms
 
-You can enter an artist / song name to search at any time the program is
-running.
+You can enter an artist/song name to search whenever the program is awaiting
+imput. Searches must be prefixed with a . character
 
-Any time you have a list of songs displayed (except during playback), you can
-use the following functions:
+When a list of songs is displayed, you can use the following commands (except
+during playback):
 
-```all``` to play all
-```1,2,3``` to play songs 1 2 and 3
-```2-4, 6, 6-3``` to play songs 2, 3, 4, 6, 6, 5, 4, 3
+`all` to play all
 
-```d 4``` to download song number 4
+`1,2,3` to play songs 1 2 and 3
 
-```rm 1,3``` to remove songs 1, 2 and 3.  Or use ```rm 1,2,5-7``` to remove a range
+`2-4, 6, 6-3` to play songs 2, 3, 4, 6, 6, 5, 4, 3
 
-```rm all``` to remove all songs
+`rm 1,3` to remove songs 1, 2 and 3.  Also use rm 1,2,5-7 to remove a range
 
-```sw 1,3``` to swap the position of songs 1 and 3
+`rm all` to remove all songs
 
-```mv 1,3``` to move song 1 to postion 3
+`sw 1,3` to swap the position of songs 1 and 3
 
-```add 1,2,3``` to add songs 1,2 and 3 to the temporary playlist.  Or use 
+`mv 1,3` to move song 1 to postion 3
 
-```add 1,2,5-7``` to add a range.
+`add 1,2,3` to add songs 1,2 and 3 to the temporary playlist.  Also use
+    add 1,2,5-7 to add a range.
 
-```vp``` to view the temp playlist (then rm, mv and sw to modify it)
+`vp` to view the temp playlist (then rm, mv and sw to modify it)
 
-```save <playlist_name>``` to save the currently displayed songs as a stored
-playlist on disk
+`save <playlist_name>` to save the currently displayed songs as a stored
+    playlist on disk
 
-```lp``` to view saved playlists
+`lp` to view your saved playlists
 
-```open <playlist_name>``` to open a saved playlist as the current playlist
+`open <playlist_name>` to open a saved playlist as the current playlist
 
-```rm <playlist_name>``` to remove a playlist from disk
+`rm <playlist_name>` to remove a playlist from disk
 
 If you remember the name of a playlist, you can call it when starting pms by
-entering at the command prompt:
+entering the following at the command prompt:
 
-```pms open <playlistname>```
+    `pms open <playlistname>`
 
-```q to quit```
-```h for help```
+`q` to quit
+
+`h` for help
 
 Have fun!  There is still much work to be done like tidier string formatting,
-context-sensetive help and there are probably still plenty of bugs although 
+context-sensetive help and there are probably still quite a few bugs although
 it's perfectly usable.  Keep checking back for updates.
+
 
 # Screenshot
 ![pms running in terminal](http://i.imgur.com/Oqyz5vk.png "pms running in terminal")
