@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.1"
+__version__ = "0.18.2"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -138,6 +138,7 @@ use the following functions:
 `2-4, 6, 6-3` to play songs 2, 3, 4, 6, 6, 5, 4, 3
 
 `rm 1,3` to remove songs 1, 2 and 3.  Also use rm 1,2,5-7 to remove a range
+`rm all` to remove all songs
 `sw 1,3` to swap the position of songs 1 and 3
 `mv 1,3` to move song 1 to postion 3
 `add 1,2,3` to add songs 1,2 and 3 to the temporary playlist.  Also use
@@ -624,7 +625,6 @@ def playlist_operate(choice):
             P['message'] = "Playlist %s was not found.  Use lp to list" % name
 
     P['content'] = generate_songlist_display()
-    save_to_file()
 
 
 def persist_operate(choice):
@@ -639,11 +639,8 @@ def persist_operate(choice):
         saved = P.get("userpl").get(name)
 
         if saved:
-            print("got saved")
-            P['model'].songs = saved.songs
-            P['model'].name = saved.name
-            P['active'].songs = list(saved.songs)
-            P['active'].name = "temp"
+            P['model'].songs = P['active'].songs = list(saved.songs)
+            #P['active'].songs = list(saved.songs)
             P['message'] = "Loaded playlist: " + saved.name
 
         else:
@@ -654,7 +651,6 @@ def persist_operate(choice):
 
         name = re_save.match(choice).group(1)
         print(name)
-        P['model'].name = name
         P['userpl'] = P.get('userpl') or {}
         P['userpl'][name] = Playlist(name, list(P['model'].songs))
         P['message'] = ("Playlist saved as %s%s%s.  Use %slp%s to list "
