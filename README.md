@@ -78,10 +78,15 @@ use the following functions:
 ```2-4, 6, 6-3``` to play songs 2, 3, 4, 6, 6, 5, 4, 3
 
 ```d 4``` to download song number 4
+
 ```rm 1,3``` to remove songs 1, 2 and 3.  Or use ```rm 1,2,5-7``` to remove a range
+
 ```sw 1,3``` to swap the position of songs 1 and 3
+
 ```mv 1,3``` to move song 1 to postion 3
+
 ```add 1,2,3``` to add songs 1,2 and 3 to the temporary playlist.  Or use 
+
 ```add 1,2,5-7``` to add a range.
 
 ```vp``` to view the temp playlist (then rm, mv and sw to modify it)
@@ -104,7 +109,7 @@ entering at the command prompt:
 ```h for help```
 
 Have fun!  There is still much work to be done like tidier string formatting,
-context-sensetive help and there are probably still quite a few bugs although 
+context-sensetive help and there are probably still plenty of bugs although 
 it's perfectly usable.  Keep checking back for updates.
 
 # Screenshot
