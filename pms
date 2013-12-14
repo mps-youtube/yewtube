@@ -66,7 +66,7 @@ try:
     DDIR = GLib.get_user_special_dir(GLib.USER_DIRECTORY_DOWNLOAD)
     DDIR = py2utf8_decode(DDIR)
 
-except ImportError:
+except (ImportError, AttributeError):
     DDIR = os.path.join(os.path.expanduser("~"), "Downloads")
 
 DDIR = os.path.join(DDIR, "PMS")
