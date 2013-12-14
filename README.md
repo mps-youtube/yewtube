@@ -79,6 +79,9 @@ during playback):
 
 `2-4, 6, 6-3` to play songs 2, 3, 4, 6, 6, 5, 4, 3
 
+Note: The command `shuffle` and `repeat` can be inserted at the start or end of 
+any of the above to enable those mode: eg, `shuffle 1,2,3` and `repeat 2-4, 1`
+
 `rm 1,3` to remove songs 1, 2 and 3.  Also use rm 1,2,5-7 to remove a range
 
 `rm all` to remove all songs
