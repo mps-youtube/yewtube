@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+
 """
 pms.
 
@@ -24,10 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.17.1"
+__version__ = "0.18"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
+import cPickle as pickle
 import subprocess
 import logging
 import time
@@ -66,10 +68,11 @@ try:
     DDIR = GLib.get_user_special_dir(GLib.USER_DIRECTORY_DOWNLOAD)
     DDIR = py2utf8_decode(DDIR)
 
-except (ImportError, AttributeError):
+except ImportError:
     DDIR = os.path.join(os.path.expanduser("~"), "Downloads")
 
 DDIR = os.path.join(DDIR, "PMS")
+PLFILE = os.path.join(os.path.expanduser("~"), ".pms-playlist")
 
 if os.name == "nt":  # Disable colours for Windows
     COLOURS = False
@@ -101,82 +104,110 @@ class c(object):
         hh = red = green = yellow = blue = pink = white = ""
 
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
-    blank = white + "\n" * 200
 
 
-EXITMSG = c.blank + """\n
+class Playlist(object):
+
+    """ Representation of a playist, has list of songs. """
+
+    def __init__(self, name=None, songs=None):
+        self.name = name
+        self.songs = songs or []
+
+    def is_empty(self):
+        """ Return True / False if songs are populated or not. """
+
+        return bool(not self.songs)
+
+    @property
+    def size(self):
+        """ Return number of tracks. """
+
+        return len(self.songs)
+
+
+HELP = """
+You can enter an artist / song name to search at any time the program is
+running.
+
+Any time you have a list of songs displayed (except during playback), you can
+use the following functions:
+
+`all` to play all
+`1,2,3` to play songs 1 2 and 3
+`2-4, 6, 6-3` to play songs 2, 3, 4, 6, 6, 5, 4, 3
+
+`rm 1,3` to remove songs 1, 2 and 3.  Also use rm 1,2,5-7 to remove a range
+`sw 1,3` to swap the position of songs 1 and 3
+`mv 1,3` to move song 1 to postion 3
+`add 1,2,3` to add songs 1,2 and 3 to the temporary playlist.  Also use
+    add 1,2,5-7 to add a range.
+
+`vp` to view the temp playlist (then rm, mv and sw to modify it)
+
+`save <playlist_name>` to save the currently displayed songs as a stored
+    playlist on disk
+
+`lp` to view your saved playlists
+
+`open <playlist_name>` to open a saved playlist as the current playlist
+
+`rm <playlist_name>` to remove a playlist from disk
+
+If you remember the name of a playlist, you can call it when starting pms by
+    entering at the command prompt:
+
+    `pms open <playlistname>`
+
+`q` to quit
+`h` for help
+
+Have fun!  There is still much work to be done like tidier string formatting,
+context-sensetive help and there are probably still quite a few bugs although
+it's perfectly usable.  Keep checking back for updates.
+"""
+
+P["model"] = Playlist(name="model")
+P["active"] = Playlist(name="active")
+
+EXITMSG = """\n
 {0}pms - {1}http://github.com/np1/pms{0}
 Released under the GPLv3 license
 (c) 2013 nagev{2}\n""".format(c.r, c.b, c.w)
 
-#  Help text
 
-HELP_GENERAL = """\
-\t{2}Searching{1}
-\tEnter an artist and/or song title to search or alternatively you
-\tcan enter one of the following:\n
-\t\t{0}\\top{1} for top tracks this week
-\t\t{0}\\top3m{1} for top tracks of the last 3 months
-\t\t{0}\\top6m{1} for top tracks of the last 6 months
-\t\t{0}\\topyear{1} for top tracks of the last year
-\t\t{0}\\topall{1} for all time top tracks\n
-\t\t{0}\\list <playlist_url>{1} to load a playlist\n""".format(c.g, c.w, c.hh)
+def save_to_file():
+    """ Save playlists.  Called each time a playlist is saved or deleted. """
 
-HELP_SEARCH = """\
-\t{2}Searching{1}
-\tEnter an artist name and/or song title to search""".format(c.g, c.w, c.hh)
+    f = open(PLFILE, "w")
+    pickle.dump(P['userpl'], f)
 
-HELP_TRACK_SELECT = """\
-\t{2}Playback{1}
-\tEnter a track number to play a single track or {0}all{1} to play all
-\tdisplayed tracks. Enter {0}n,n{1} and {0}n-n{1} to play multiple tracks
-\teg: {0}5,7,1-3{1} will play tracks 5, 7, 1, 2 and 3\
-""".format(c.g, c.w, c.hh)
 
-HELP_DOWNLOAD = """\
-\t{2}Download{1}
-\tEnter {0}d{1}<{0}N{1}> to download a track.  eg: {0}d4{1}\
-""".format(c.g, c.w, c.hh)
+def open_from_file():
+    """ Open playlists. Called once on script invocation. """
 
-HELP_PLAYLIST_ADD = """\
-\t{2}Add To Playlist{1}
-\tEnter a track number to add to the playlist or {0}all{1} to add all
-\tdisplayed tracks. Enter {0}n,n{1} and {0}n-n{1} to add multiple tracks
-\teg: {0}5,7,1-3{1} will add tracks 5, 7, 1, 2 and 3\
-""".format(c.g, c.w, c.hh)
+    try:
+        f = open(PLFILE, "r")
+        P['userpl'] = pickle.load(f)
+    except IOError:
+        P['userpl'] = {}
+        save_to_file()
 
-HELP_PLAYLIST_VEDIT = """\
-\t{2}View / Edit Playlist{1}
-\tEnter {0}\\vp{1} to view the playlist.\
-""".format(c.g, c.w, c.hh)
 
-HELP_PLAYLIST_LOAD_SAVE = """\
-\t{0}Save / Load a Playlist{1}
-\tSaving / Loading of playlists is currently being implemented and will be
-\tavailable very soon.  Check the README file on GitHub for new features\
-""".format(c.hh, c.w)
+def playlists_display():
+    """ Produce a list of all playlsits. """
 
-HELP_PLAYLIST_MANIPULATE = """\
-\t{2}Manipulate Playlist{1}
-\tTo remove tracks: {0}rm n{1} or {0}rm n,n,..{1} or {0}rm n-n{1} for a range.
-\tTo switch two tracks: {0}sw n n{1} or {0}switch n,n{1}
-\tTo move track n to position k: {0}mv n k{1} or {0}mv n,k{1}\
-""".format(c.g, c.w, c.hh)
+    if not P.get("userpl"):
+        P['message'] = "No playlists created!"
+        return ""
 
-HELP_PLAYLIST_TOGGLE = """\
-\t{2}Toggle Playlist Mode{1}
-\tEnter {0}p{1} to toggle playlist mode.  When active, any tracks chosen are
-\tadded to the playlist instead of being played.  Press {0}h{1} for more help
-\twhen you are in playlist mode.\
-""".format(c.g, c.w, c.hh)
+    out = "{0}Your playlists{1}\n\n".format(c.hh, c.w)
 
-HELP_PLAYLIST_PLAY = """\
-\t{2}Playing a Playlist{1}
-\tTo play a playlist, view it ({0}\\vp{1}) and enter {0}all{1} or the track \
-numbers
-\tyou wish to play.  Ensure playlist mode is disabled when selecting tracks for
-\tplayback (toggle with {0}p{1})\
-""".format(c.g, c.w, c.hh)
+    for n, p in P['userpl'].items():
+        out += "\t%s%s%s: %s songs\n" % (c.g, n, c.w, p.size)
+        out += "\n\nEnter %sopen <name>%s to load a playlist" % (c.g, c.w)
+
+    return out
 
 
 def mplayer_help(short=True):
@@ -255,8 +286,60 @@ def get_tracks_from_page(page):
     return songs
 
 
-def generate_choices(songs):
+def screen_update():
+    """ Display content, show message, blank screen."""
+
+    if not P.get("noblank"):
+        print("\n" * 200)
+
+    if P.get("content"):
+        print(py2utf(P['content']))
+
+    if P.get('message'):
+        print(P['message'])
+
+    P['message'] = P['content'] = False
+    P['noblank'] = False
+
+
+def playback_progress(idx, cursong, allsongs):
+    """ Generate string to show selected tracks, indicate current track. """
+
+    out = "  %s%-31s  %-31s %s   %s\n" % (c.hh, "Artist", "Title", "Time", c.w)
+    multi = len(allsongs) > 1
+
+    for n, song in enumerate(allsongs):
+        i = song['singer'][:30], song['song'][:30], song['duration']
+        rate = song['rate']
+        fmt = (c.w, "  ", c.b, i[0], c.w, c.b, i[1], c.w, c.y, i[2], c.w)
+
+        if n == idx:
+            fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w, c.p, i[2], c.w)
+            r, cur = rate, i
+
+        out += "%s%s%s%-31s%s  %s%-31s%s [%s%s%s]\n" % fmt
+
+    out = out if multi else ""
+    out += "\n" * (3 - len(allsongs))
+    pos = (8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
+    playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
+    keys = mplayer_help(short=not multi)
+
+    if PLAYER == "mplayer":
+        out += "\n" + keys
+
+    fmt = (playing, c.r, c.w, c.r, c.w, r)
+    out += ("{}    {}%s{} by {}%s{} [{}]" % (cur[1], cur[0])).format(*fmt)
+    return out
+
+
+def generate_songlist_display():
     """ Generate list of choices from a song list."""
+
+    songs = P['model'].songs or []
+
+    if not songs:
+        return ""
 
     fmtrow = "%s%-6s %-7s %-21s %-22s %-8s %-8s%s\n"
     head = (c.hh, "Item", "Size", "Artist", "Track", "Length", "Bitrate", c.w)
@@ -272,7 +355,7 @@ def generate_choices(songs):
         out += (fmtrow % (col, str(n + 1), str(size)[:3] + " Mb", artist[:20],
                 title[:21], duration[:8], bitrate[:6], c.w))
 
-    return out + "\n" * (20 - len(songs))
+    return out + "\n" * (5 - len(songs))
 
 
 def get_stream(song):
@@ -311,7 +394,6 @@ def playsong(song):
     except (URLError, HTTPError) as e:
         print("\nProblem fetching this track: " + c.r + str(e) + c.w)
         time.sleep(3)
-        print(c.blank)
         return
 
     try:
@@ -328,7 +410,6 @@ def playsong(song):
         cmd = [PLAYER] + PLAYERARGS.split() + [song['track_url']]
         logging.debug("starting mplayer with " + song['track_url'])
         subprocess.call(cmd)
-        print(c.blank)
 
     except OSError:
         print("{}{}{} not found on this system".format(c.y, PLAYER, c.w))
@@ -342,8 +423,8 @@ def get_top_period(period):
            "page_ru=1&page_en=%s")
     url = url % ("e%s" % period, 1)
     tps = "past week,past 3 months,past 6 months,past year,all time".split(",")
-    print(c.blank)
-    print("%sTop tracks for %s...%s" % (c.y, tps[period - 1], c.w))
+    msg = ("%sTop tracks for %s%s" % (c.y, tps[period - 1], c.w))
+    P['message'] = msg
     logging.debug("[2] fetching " + url)
 
     try:
@@ -352,63 +433,49 @@ def get_top_period(period):
     except (URLError, HTTPError) as e:
         print("Error fetching data: " + "{}{}{}".format(c.r, e, c.w))
         time.sleep(2)
-        return None
 
     logging.debug("fetched " + url)
     match = re.search(r"<ol id=\"search-results\">[\w\W]+?<\/ol>", wdata)
     html_ol = match.group(0)
-    songs = get_tracks_from_page(html_ol)
-    return songs
+    P['model'].songs = get_tracks_from_page(html_ol)
+    P['content'] = generate_songlist_display()
 
 
 def dosearch(term):
-    """ Perform search or fetch playlist, returns songs list."""
+    """ Perform search. """
 
     if not term or len(term) < 2:
-        logging.debug("no search term")
-        return False
-
-    elif term.startswith("\\list"):
-        playlist = re.search(r"(list(\w){8,13})", term)
-
-        if not playlist:
-            print("invalid playlist")
-            return False
-
-        else:
-            url = "http://pleer.com/en/" + playlist.group(1)
-            formatstr = (c.blank, c.y, url, c.w)
-            print("%sImporting playlist from %s%s%s\n" % (formatstr))
+        P['message'] = "Not enough input"
+        P['content'] = generate_songlist_display()
 
     else:
-        print(c.blank + "Searching for '%s%s%s'" % (c.y, term, c.w))
+        print("Searching for '%s%s%s'" % (c.y, term, c.w))
         url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
         url = url % (term.replace(" ", "+"), 1)
 
-    try:
-        logging.debug("[3] fetching " + url)
-        wdata = urlopen(url).read().decode("utf8")
-        logging.debug("fetched" + url)
-        songs = get_tracks_from_page(wdata)
+        try:
+            logging.debug("[3] fetching " + url)
+            wdata = urlopen(url).read().decode("utf8")
+            logging.debug("fetched" + url)
+            P['model'].songs = get_tracks_from_page(wdata)
+            P['message'] = "Search results for %s" % term
 
-    except (URLError, HTTPError) as e:
-        print("Error fetching data from source: %s%s%s" % (c.r, str(e), c.w))
-        time.sleep(2)
-        logging.debug("HTTP Error fetching url:" + url)
-        songs = None
+        except (URLError, HTTPError) as e:
+            P['message'] = "Error fetching data: %s%s%s" % (c.r, str(e), c.w)
+            logging.debug("HTTP Error fetching url:" + url)
 
-    return songs
+        P['content'] = generate_songlist_display()
 
 
 def download(song):
-    """ Download file, shows status. """
+    """ Download file, shows status, return filename. """
 
     if not os.path.exists(DDIR):
         os.makedirs(DDIR)
 
     filename = song['singer'][:30] + " - " + song['song'][:30] + ".mp3"
     filename = os.path.join(DDIR, filename)
-    print(c.blank + "Downloading %s%s%s ..\n" % (c.g, filename, c.w))
+    print("Downloading %s%s%s ..\n" % (c.g, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
     song['track_url'] = get_stream(song)
@@ -436,21 +503,22 @@ def download(song):
         sys.stdout.write("\r" + status + ' ' * 4 + "\r")
         sys.stdout.flush()
 
-    print("\nDone\n")
+    return filename
 
 
-def _bi_range(seq):
+def _bi_range(start, end):
     """
-    Take a two-element seq, returns ascending or descending range.
+    Inclusive range function, works for reverse ranges.
 
-    eg. [5,2] returns [5,4,3,2] and (2, 4) returns [2,3,4]
+    eg. 5,2 returns [5,4,3,2] and 2, 4 returns [2,3,4]
 
     """
-    start, end = seq
     if start == end:
         return start, start
+
     elif end < start:
         return reversed(range(end, start + 1))
+
     else:
         return range(start, end + 1)
 
@@ -461,323 +529,312 @@ def _parse_multi(choice):
     choice = choice.replace(" ", "")
     tracks = choice.split(",")
     alltracks = []
+
     for x in tracks:
+
         if "-" in x:
             nrange = x.split("-")
             startend = map(int, nrange)
-            alltracks += _bi_range(startend)
+            alltracks += _bi_range(*startend)
+
         else:
             alltracks.append(int(x))
+
     return alltracks
 
 
 def playlist_manipulate(r, choice):
-    """Manipulate a playlist."""
+    """Manipulate a playlist.  Called by playlist_operate."""
 
-    if not P.get("pl"):
-        print(c.blank)
-        print("No playlist created!  Add tracks in playlist mode")
-        return (None, None)
+    if r['add'].match(choice):
+        selection = _parse_multi(choice.strip().lstrip("add").strip())
+
+        for songnum in selection:
+            P['active'].songs.append(P['model'].songs[songnum - 1])
+
+        P['message'] = ("%s tracks added (%s total). Use %svp%s to view."
+                        % (len(selection), P['active'].size, c.g, c.w))
 
     elif r['move'].match(choice):
         m = r['move'].match(choice)
-        playlist, a, b = P["pl"], int(m.group(1)) - 1, int(m.group(2)) - 1
-        playlist.insert(b, playlist.pop(a))
-        print(c.blank)
-        print("Moved %s to position %s" % (P['pl'][b]['song'], m.group(2)))
-        return None, None
+        songs = P['model'].songs
+        a, b = int(m.group(1)) - 1, int(m.group(2)) - 1
+        songs.insert(b, songs.pop(a))
+        msg = "Moved %s to position %s" % (songs[b]['song'], m.group(2))
+        P['message'] = msg
 
     elif r['swap'].match(choice):
         m = r['swap'].match(choice)
-        playlist, a, b = P["pl"], int(m.group(1)) - 1, int(m.group(2)) - 1
-        playlist[a], playlist[b] = playlist[b], playlist[a]
-        print(c.blank)
-        print("Switched tracks %s and %s" % (m.group(1), m.group(2)))
-        return(None, None)
+        songs = P['model'].songs
+        a, b = int(m.group(1)) - 1, int(m.group(2)) - 1
+        songs[a], songs[b] = songs[b], songs[a]
+        P['message'] = "Switched tracks %s and %s" % (m.group(1), m.group(2))
 
     elif r['remove'].match(choice):
         selection = _parse_multi(choice.strip().lstrip("rm").strip())
         selection = list(reversed(list(set(selection))))
 
         for x in selection:
-            P['pl'].pop(x - 1)
+            P['model'].songs.pop(x - 1)
 
-        print(c.blank)
-        print("%s tracks removed" % len(selection))
-        return(None, None)
+        P['message'] = "%s tracks removed" % len(selection)
 
 
-def get_input(songs):
+def playlist_operate(choice):
     """ Prompt for user input, return action/value pair. """
 
-    pr = c.r + "PL-Mode " + c.w if P['pmode'] else ""
-    txt = "Enter selection or [{0}h{1}]elp or [{0}q{1}]uit\n {3}{2}> {1}"
-    txt = txt.format(c.g, c.w, c.y, pr)
-    r = {'nil': r'\s*$',
-         'play': r'\s*\d{1,3}\s*(?:[,-]\s*\d{1,3}\s*){0,30}$',
-         'all': r'\s*all\s*$',
-         'dl': r'\s*(?:d|dl|download|down)(?:\s)*(\d{1,3})'}
-    r['remove'] = r'\s*rm\s*(%s)' % r['play']
+    digits = r'\s*\d{1,3}\s*(?:[,-]\s*\d{1,3}\s*){0,30}$'
+    r = {}
+    r['remove'] = r'\s*rm\s*(%s)' % digits
+    r['remove_pl'] = r'\s*rm\s*((?:\w|\ ){0,75})'
+    r['add'] = r'\s*add\s*(%s)' % digits
+    r['addall'] = r'\s*add\s*all\s*'
+    r['rmall'] = r'\s*rm\s*all\s*'
     r['swap'] = r'\s*(?:swap|sw)\s*(\d{1,3})\s*(?:\s+|\,)\s*(\d{1,3})\s*'
     r['move'] = r'\s*(?:move|mv)\s*(\d{1,3})\s*(?:\s+|\,)\s*(\d{1,3})\s*'
 
-    try:
-        choice = compat_input(txt)
-
-    except KeyboardInterrupt:
-        sys.exit(EXITMSG)
-
     r = {a: re.compile(k, re.IGNORECASE) for a, k in r.items()}
 
-    if r['nil'].match(choice):
-        raise IOError
+    if r['rmall'].match(choice):
+        for n in reversed(range(0, len(P['model'].songs))):
+            P['model'].songs.pop(n)
+        P['message'] = "Cleared all"
 
     elif r['swap'].match(choice) or r['remove'].match(choice) or \
-            r['move'].match(choice):
-        retval = playlist_manipulate(r, choice)
+            r['move'].match(choice) or r['add'].match(choice):
+        playlist_manipulate(r, choice)
 
-    elif r['play'].match(choice):
-        selection = _parse_multi(choice)
-        retval = ("select", [songs[x - 1] for x in selection])
+    elif r['addall'].match(choice):
+        P['active'].songs += P['model'].songs
+        sizes = P['model'].size, P['active'].size
+        P['message'] = "%s songs added (%s total)" % (sizes)
 
-    elif r['dl'].match(choice):
-        songnum = int(r['dl'].match(choice).group(1))
-        retval = ("download", songs[songnum - 1])
-
-    elif r['all'].match(choice):
-        retval = ("select", songs)
-
-    else:
-        retval = ("search", choice)
-
-    return retval
-
-
-def playback_progress(idx, cursong, allsongs):
-    """ Generate string to show selected tracks, indicate current track. """
-
-    out = "  %s%-31s  %-31s %s   %s\n" % (c.hh, "Artist", "Title", "Time", c.w)
-    multi = len(allsongs) > 1
-
-    for n, song in enumerate(allsongs):
-        i = song['singer'][:30], song['song'][:30], song['duration']
-        rate = song['rate']
-        fmt = (c.w, "  ", c.b, i[0], c.w, c.b, i[1], c.w, c.y, i[2], c.w)
-
-        if n == idx:
-            fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w, c.p, i[2], c.w)
-            r, cur = rate, i
-
-        out += "%s%s%s%-31s%s  %s%-31s%s [%s%s%s]\n" % fmt
-
-    out = out if multi else ""
-    out += "\n" * (3 - len(allsongs))
-    pos = (8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
-    playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
-    keys = mplayer_help(short=not multi)
-
-    if PLAYER == "mplayer":
-        out += "\n" + keys
-
-    fmt = (playing, c.r, c.w, c.r, c.w, r)
-    out += ("{}    {}%s{} by {}%s{} [{}]" % (cur[1], cur[0])).format(*fmt)
-    return out
-
-
-def playlist_display():
-    """ Show songs in playlist. """
-
-    pl_out = ""
-
-    for n, psong in enumerate(P['pl']):
-        pl_out += "%0s. %s\n" % (n, psong['song'])
-
-    return pl_out
-
-
-def songaction(action, value):
-    """ Play, Download or Add the songs specified in `value`. """
-
-    if action == "download":
-        download(value)
-
-    elif action == "select":
-        print(c.blank)
-
-        if P['pmode']:
-            P['pl'] = value if not P.get("pl") else P['pl'] + value
-            view = "[{0}\\vp{1} to view]".format(c.g, c.w)
-            data = "\t\t", len(value), len(P['pl']), view
-            print("%s%s added to playlist (total %s) %s" % data)
-            #print(py2utf(playlist_display()))
+    elif r['remove_pl'].match(choice):
+        match = r['remove_pl'].match(choice)
+        name = match.group(1)
+        if P['userpl'].get(name):
+            del P['userpl'][name]
+            P['message'] = "Deleted %s" % name
+            P['content'] = playlists_display()
+            save_to_file()
+            return
 
         else:
+            P['message'] = "Playlist %s was not found.  Use lp to list" % name
 
-            #  Play songs, show progress
-
-            for n, song in enumerate(value):
-                print(py2utf(playback_progress(n, song, value)))
-
-                try:
-                    playsong(song)
-
-                except KeyboardInterrupt:
-                    print(c.white)
-                    print(c.blank)
-                    break
-
-                except AssertionError:
-                    print(c.blank)
-                    print("Unable to fetch track")
-                    time.sleep(2)
+    P['content'] = generate_songlist_display()
+    save_to_file()
 
 
-def select_song(songs, message=None):
-    """ Show song list and message if present.
+def persist_operate(choice):
+    """ Perform load / save of playlists. """
 
-    Get user input, call songaction() to perform play / download or return new
-    search query text
+    re_save = re.compile(r'\s*(?:saveas|save)\s*((?:\w|\ ){1,35})')
+    re_open = re.compile(r'\s*open\s*((?:\w|\ ){1,35})')
 
-    """
+    if re_open.match(choice):
+        match = re_open.match(choice)
+        name = match.group(1)
+        saved = P.get("userpl").get(name)
 
-    print(py2utf(generate_choices(songs)))
+        if saved:
+            print("got saved")
+            P['model'].songs = saved.songs
+            P['model'].name = saved.name
+            P['active'].songs = list(saved.songs)
+            P['active'].name = "temp"
+            P['message'] = "Loaded playlist: " + saved.name
 
-    if message:
-        print(message)
+        else:
+            P["message"] = ("Playlist %s not found!  Use lp to list playlists"
+                            % match.group(1))
 
-    try:
-        action, value = get_input(songs)
+    elif re_save.match(choice):
 
-    except IOError:
-        print(c.blank)
-        return ("Error", "Nothing")
+        name = re_save.match(choice).group(1)
+        print(name)
+        P['model'].name = name
+        P['userpl'] = P.get('userpl') or {}
+        P['userpl'][name] = Playlist(name, list(P['model'].songs))
+        P['message'] = ("Playlist saved as %s%s%s.  Use %slp%s to list "
+                        "playlists" % (c.y, name, c.w, c.y, c.w))
+        save_to_file()
 
-    except IndexError as e:
-        print(c.blank)
-        return ("Error", e)
+    # list playlists
 
-    if action == "search":
-        return ("search", value)
+    elif choice == "lp":
 
-    songaction(action, value)
-    return (None, None)
+        if not P['userpl']:
+            P['message'] = "You have no playlists!"
+
+        else:
+            P['content'] = playlists_display()
+            return
+
+    # show playlist
+
+    elif choice == "vp" and P['active'].is_empty():
+        txt = "Playlist is empty! Use %sadd N%s to add a track" % (c.g, c.w)
+        P['message'] = txt
+        #P['content'] = generate_songlist_display()
+
+    elif choice in ("vp") and not P['active'].is_empty():
+        P['model'].songs = P['active'].songs
+        P['message'] = ("This is your playlist. Use %ssave <name>%s to save"
+                        " it" % (c.g, c.w))
+        #P['content'] = generate_songlist_display()
+
+    P['content'] = generate_songlist_display()
 
 
-def get_songs(args="", songs=None):
-    """ Return list of songs based on the search term, or None. """
+def play_range(songlist):
+    """ Play a range of songs, exit cleanly on keyboard interrupt. """
 
-    tops = "\\top \\top3m \\top6m \\topyear \\topall".split()
-    args = args.strip()
+    for n, song in enumerate(songlist):
+        P['content'] = playback_progress(n, song, songlist)
+        screen_update()
 
-    if not args:
-        return None
+        try:
+            playsong(song)
 
-    # return top songs
+        except KeyboardInterrupt:
+            P['message'] = "Playback halted"
+            break
 
-    elif args in tops:
-        return get_top_period(tops.index(args) + 1)
+    P['content'] = generate_songlist_display()
 
-    # show help
 
-    elif args in ("\\h", "h"):
-        show_help(bool(songs))
-        return songs
+def show_help():
+    """ Print help message. """
 
-    # toggle playlist mode
-    elif args in ("\\p", "p"):
-        P['pmode'] = not P['pmode']
-        print(c.blank)
-        return songs
+    print("\n" * 200)
+    print(HELP)
+    print("\n\nPress Enter to continue")
+    b = compat_input("")
+    return b
 
-    elif args in ("\\vp") and P.get("pl"):
-        songs = P['pl']
-        print(c.blank)
-        return songs
 
-    elif args in ("\\vp") and not P.get("pl"):
-        print(c.blank)
-        o = (c.blank, c.g, c.w)
-        txt = "{0}Playlist is empty! Enter {1}h{2} for help about playlists"
-        print(txt.format(*o))
-        return songs
+def action_operate(userinput):
+    """ Handle quit and download actions. """
 
-    # quit option
-
-    elif args in ("\\q", "q", "quit", "exit"):
+    if userinput in ("\\q", "q", "quit", "exit"):
         sys.exit(EXITMSG)
 
-    # have args, do search
+    elif re.match(r'd\s*\d{1,3}', userinput):
+        m = re.match(r'd\s*(\d{1,3})', userinput)
+        songnum = int(m.group(1)) - 1
+
+        try:
+            fname = download(P['model'].songs[songnum])
+
+        except IndexError:
+            P['message'] = "Invalid index"
+            P['content'] = generate_songlist_display()
+            return
+
+        P['message'] = "Downloaded " + fname
+
+    elif userinput == "h":
+        show_help()
+
     else:
-        songs = dosearch(args)
-        if not songs:
-            print(c.blank)
-            print("Sorry, nothing matched %s%s%s" % (c.g, args, c.w))
-            return None
+        dosearch(userinput)
+
+    P['content'] = generate_songlist_display()
+
+
+def range_operate(userinput):
+    """ Receive user input specifying a range or all to play. """
+
+    if not P.get("model").songs:
+        P['message'] = "There are no tracks to select"
+
+    else:
+        digits = re.compile(r'\s*\d{1,3}\s*(?:[,-]\s*\d{1,3}\s*){0,30}$')
+
+        if digits.match(userinput):
+            selection = _parse_multi(userinput)
+
+            try:
+                songs = [P['model'].songs[x - 1] for x in selection]
+
+            except IndexError:
+                P['message'] = "Invalid range!"
+                P['content'] = generate_songlist_display()
+                return
+
+            play_range(songs)
+
+        elif userinput in ("all", "playall"):
+            play_range(P['model'].songs)
+
         else:
-            return songs
+            P['content'] = generate_songlist_display()
+            P['message'] = "Bad syntax"
 
 
-def show_help(songs=None):
-    """  Show context-sensitive help. """
+def prompt_for_exit():
+    """ Ask for exit confirmation. """
 
-    print(c.blank)
-    print("  {}Available choices:{}\n".format(c.hh, c.w))
-
-    if songs and not P['pmode']:
-        print("{}\n\n{}\n\n{}\n\n{}\n".format(HELP_TRACK_SELECT,
-                                              HELP_DOWNLOAD,
-                                              HELP_SEARCH,
-                                              HELP_PLAYLIST_TOGGLE))
-
-    elif songs and P['pmode']:
-        nl = ("{}\n\n" * 5) + "{}\n"
-        print(nl.format(HELP_SEARCH,
-                        HELP_PLAYLIST_ADD,
-                        HELP_PLAYLIST_VEDIT,
-                        HELP_PLAYLIST_PLAY,
-                        HELP_PLAYLIST_MANIPULATE,
-                        HELP_PLAYLIST_LOAD_SAVE))
-
-    else:
-        print(HELP_GENERAL)
+    P['message'] = "Press ctrl-c again to exit"
+    P['content'] = generate_songlist_display()
+    screen_update()
 
     try:
-        compat_input("Press {}Enter{} to continue".format(c.g, c.w))
+        userinput = compat_input("leaving? >")
 
     except KeyboardInterrupt:
-        pass
+        sys.exit(EXITMSG)
 
-    print(c.blank)
+    return userinput
 
 
 def main():
-    """loop forever, branch depending on whether search results are held."""
+    """loop forever."""
 
-    action = message = None
-    songlist = get_songs(" ".join(sys.argv[1:]))
+    # open playlists if they exist
+    open_from_file()
+    inp = " ".join(sys.argv[1:])
+
+    playlist_operations = ("rm", "mv", "sw", "add")
+    range_operations = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+                        "all", "playall")
+    action_operations = ("d", "q", "\\q", "quit", "exit", "h")
+    persist_operations = ("open", "save", "saveas", "lp", "dp", "vp")
+    top_operations = "\\top \\top3m \\top6m \\topyear \\topall".split()
+
+    prompt = "Enter artist/song name to search or [%sh%s]elp > " % (c.g, c.w)
 
     while True:
 
-        if not songlist:
-            pr = "{0}PL-Mode {1}".format(c.r, c.w) if P['pmode'] else ""
-            prompt = ("\nEnter artist and/or song name or {0}h{1} for help "
-                      "or {0}q{1} to quit:\n {3}{2}> {1}")
+        try:
+            userinput = inp or compat_input(prompt)
 
-            try:
-                inp = compat_input(prompt.format(c.g, c.w, c.y, pr))
+        except KeyboardInterrupt:
+            userinput = prompt_for_exit()
 
-            except KeyboardInterrupt:
-                sys.exit(EXITMSG)
+        inp = None  # prevent endless loop
 
-            songlist = get_songs(inp)
+        if userinput.startswith(playlist_operations):
+            playlist_operate(userinput)
+
+        elif userinput.startswith(range_operations):
+            range_operate(userinput)
+
+        elif userinput.startswith(action_operations):
+            action_operate(userinput)
+
+        elif userinput.startswith(persist_operations):
+            persist_operate(userinput)
+
+        elif userinput in top_operations:
+            get_top_period(top_operations.index(userinput) + 1)
 
         else:
-            action, value = select_song(songlist, message)
-            message = None
-            if action == "Error":
-                message = "Invalid entry: " + str(value)
-            elif action == "search":
-                songlist = get_songs(value, songlist)
+            logging.debug("search operation")
+            dosearch(userinput)
+
+        screen_update()
 
 
 if __name__ == "__main__":
