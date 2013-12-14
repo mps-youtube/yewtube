@@ -95,7 +95,7 @@ during playback):
 `save <playlist_name>` to save the currently displayed songs as a stored
     playlist on disk
 
-`lp` to view your saved playlists
+`ls` to list your saved playlists
 
 `open <playlist_name>` to open a saved playlist as the current playlist
 
