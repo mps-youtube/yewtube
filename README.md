@@ -6,6 +6,7 @@ pms
 
  - Search and stream music
  - Download music
+ - Create playlists
  - Works with Python 2.7 and 3.x
  - Works with Windows, Linux and Mac OSX 10.9
  - No Python dependencies
