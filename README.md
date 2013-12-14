@@ -81,6 +81,8 @@ use the following functions:
 
 ```rm 1,3``` to remove songs 1, 2 and 3.  Or use ```rm 1,2,5-7``` to remove a range
 
+```rm all``` to remove all songs
+
 ```sw 1,3``` to swap the position of songs 1 and 3
 
 ```mv 1,3``` to move song 1 to postion 3
