@@ -68,7 +68,7 @@ or simply:
     pms
 
 You can enter an artist/song name to search whenever the program is awaiting
-imput. Searches must be prefixed with a . character
+input. Searches must be prefixed with a . character
 
 When a list of songs is displayed, you can use the following commands (except
 during playback):
