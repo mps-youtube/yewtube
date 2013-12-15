@@ -6,7 +6,7 @@ pms
 
  - Search and stream music
  - Download music
- - Create playlists
+ - Create multiple playlists
  - Works with Python 2.7 and 3.x
  - Works with Windows, Linux and Mac OSX 10.9
  - No Python dependencies
@@ -61,61 +61,75 @@ from within the pms directory;
 
 # Usage
 
-    usage: pms query [query ...]
-
-or simply:
-
+    pms is run on the command line using the command:
+    
     pms
+    
+    or ./pms on Linux/MacOS if you are in the same directory
 
-You can enter an artist/song name to search whenever the program is awaiting
-input. Searches must be prefixed with a . character
 
-When a list of songs is displayed, you can use the following commands (except
-during playback):
+Searching
+---------
 
-`all` to play all
+You can enter an artist/song name to search whenever the program is expecting text
+input. Searches must be prefixed with a . character.
 
-`1,2,3` to play songs 1 2 and 3
+When a list of songs is displayed, you can use the following commands:
 
-`2-4, 6, 6-3` to play songs 2, 3, 4, 6, 6, 5, 4, 3
+Downloading
+-----------
+Enter d 3 to download song 3
 
-Note: The command `shuffle` and `repeat` can be inserted at the start or end of 
-any of the above to enable those mode: eg, `shuffle 1,2,3` and `repeat 2-4, 1`
+Selecting
+---------
 
-`rm 1,3` to remove songs 1, 2 and 3.  Also use rm 1,2,5-7 to remove a range
+```all``` to play all
 
-`rm all` to remove all songs
+```1,2,3``` to play songs 1 2 and 3
 
-`sw 1,3` to swap the position of songs 1 and 3
+```2-4, 6, 6-3``` to play songs 2, 3, 4, 6, 6, 5, 4, 3
 
-`mv 1,3` to move song 1 to postion 3
+Note: The commands ```shuffle``` and ```repeat``` can be inserted at the start or end of 
+any of the above to enable those modes: eg, ```shuffle 1,2,3``` and ```repeat 2-4, 1```
 
-`add 1,2,3` to add songs 1,2 and 3 to the temporary playlist.  Also use
-    add 1,2,5-7 to add a range.
 
-`vp` to view the temp playlist (then rm, mv and sw to modify it)
+Manipulating
+------------
+```rm 1,3``` to remove songs 1, 2 and 3.  Also use rm 1,2,5-7 to remove a range
 
-`save <playlist_name>` to save the currently displayed songs as a stored
+```rm all``` to remove all songs
+
+```sw 1,3``` to swap the position of songs 1 and 3
+
+```mv 1,3``` to move song 1 to postion 3
+
+
+Playlist commands
+-----------------
+
+```add 1,2,3``` to add songs 1,2 and 3 to the temporary playlist.  To add a range,
+ ```add 1,2,5-7```  can be entered
+    
+```add 1,2,3 playlist_name``` to add songs 1,2,3 to a saved playlist.  A new playlist will be created if it doesn't already exist.
+
+```ls``` to list your saved playlists
+
+```open <playlist_name>``` to open a saved playlist as the current playlist
+
+```vp``` to view the working playlist (then use rm, mv and sw to modify it)
+
+```save <playlist_name>``` to save the currently displayed songs as a stored
     playlist on disk
 
-`ls` to list your saved playlists
+```rm <playlist_name>``` to delete a playlist from disk
 
-`open <playlist_name>` to open a saved playlist as the current playlist
+You can load a playlist when invoking pms using the following command:
 
-`rm <playlist_name>` to remove a playlist from disk
+    ```pms open <playlistname>```
 
-If you remember the name of a playlist, you can call it when starting pms by
-entering the following at the command prompt:
+```q``` to quit
 
-    `pms open <playlistname>`
-
-`q` to quit
-
-`h` for help
-
-Have fun!  There is still much work to be done like tidier string formatting,
-context-sensetive help and there are probably still quite a few bugs although
-it's perfectly usable.  Keep checking back for updates.
+```h``` for help
 
 
 # Screenshot
