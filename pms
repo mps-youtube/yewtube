@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.6"
+__version__ = "0.18.7"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -142,50 +142,60 @@ class Playlist(object):
 
 
 HELP = """
-You can enter an artist/song name to search whenever the program is awaiting
-input. Searches must be prefixed with a . character
+Searching
+---------
 
-When a list of songs is displayed, you can use the following commands (except
-during playback):
+You can enter an artist/song name to search whenever the program is expecting
+text input. Searches must be prefixed with a . character.
+
+When a list of songs is displayed, you can use the following commands:
+
+Downloading
+-----------
+Enter d 3 to download song 3
+
+Selecting Songs
+---------------
 
 `all` to play all
 `1,2,3` to play songs 1 2 and 3
 `2-4, 6, 6-3` to play songs 2, 3, 4, 6, 6, 5, 4, 3
 
-Note: The commands `shuffle` and `repeat` can be inserted at the start or end
-of any of the above to enable those mode: eg, `shuffle 1,2,3` and
-`repeat 2-4, 1`
+Note: The commands `shuffle` and `repeat` can be inserted at the start or end of
+any of the above to enable those modes: eg, `shuffle 1,2,3` and `repeat 2-4, 1`
 
+
+Manipulating Songs
+------------------
 `rm 1,3` to remove songs 1, 2 and 3.  Also use rm 1,2,5-7 to remove a range
 `rm all` to remove all songs
 `sw 1,3` to swap the position of songs 1 and 3
 `mv 1,3` to move song 1 to postion 3
-`add 1,2,3` to add songs 1,2 and 3 to the temporary playlist.  Also use
-    add 1,2,5-7 to add a range.
 
-`vp` to view the temp playlist (then rm, mv and sw to modify it)
 
+Playlist commands
+-----------------
+
+`add 1,2,3` to add songs 1,2 and 3 to the temporary playlist.  To add a range,
+ `add 1,2,5-7`  can be entered
+
+`add 1,2,3 playlist_name` to add songs 1,2,3 to a saved playlist.  A new
+playlist will be created if it doesn't already exist.
+
+`ls` to list your saved playlists
+`open <playlist_name>` to open a saved playlist as the current playlist
+`vp` to view the working playlist (then use rm, mv and sw to modify it)
 `save <playlist_name>` to save the currently displayed songs as a stored
     playlist on disk
 
-`ls` to list your saved playlists
-
-`open <playlist_name>` to open a saved playlist as the current playlist
-
-`rm <playlist_name>` to remove a playlist from disk
-
-If you remember the name of a playlist, you can call it when starting pms by
-entering the following at the command prompt:
+`rm <playlist_name>` to delete a playlist from disk
+You can load a playlist when invoking pms using the following command:
 
     `pms open <playlistname>`
 
 `q` to quit
-
 `h` for help
 
-Have fun!  There is still much work to be done like tidier string formatting,
-context-sensetive help and there are probably still quite a few bugs although
-it's perfectly usable.  Keep checking back for updates.
 """
 
 P["model"] = Playlist(name="model")
@@ -226,15 +236,18 @@ def playlists_display():
     maxname = max(len(a) for a in P['userpl'])
     out = "      {0}Saved Playlists{1}\n".format(c.hh, c.w)
     start = "      "
-    fmt = "%s%s%-" + str(maxname + 3) + "s%s %s%-7s%s %-5s%s"
-    head = (start, c.b, "Name", c.b, c.b, "Count", c.b, "Duration", c.w)
+    fmt = "%s%s%-3s %-" + str(maxname + 3) + "s%s %s%-7s%s %-5s%s"
+    head = (start, c.b, "ID", "Name", c.b, c.b, "Count", c.b, "Duration", c.w)
     out += "\n" + fmt % head + "\n\n"
-    for n, p in P['userpl'].items():
-        l = fmt % (start, c.g, n, c.w, c.y, str(p.size), c.y,
+
+    for v, z in enumerate(sorted(P['userpl'])):
+        n, p = z, P['userpl'][z]
+        l = fmt % (start, c.g, v + 1, n, c.w, c.y, str(p.size), c.y,
                    p.duration, c.w) + "\n"
         out += l
 
-    out += "\n\nEnter %sopen <name>%s to load a playlist" % (c.g, c.w)
+    out += "\n\nEnter %sopen <name or ID>%s to load a playlist or %srm <name>"\
+        "%s to delete" % (c.g, c.w, c.g, c.w)
 
     return out
 
@@ -594,6 +607,30 @@ def playlist_manipulate(r, choice):
                                          P['active'].size, c.w, c.y, dur, c.w,
                                          c.g, c.w,))
 
+    elif r['add_to_pl'].match(choice):
+        m = r['add_to_pl'].match(choice)
+
+        if m:
+            selection = _parse_multi(m.group(1).strip())
+            pl = m.group(2).strip()
+
+            print("matched here")
+
+            # create playlist if it doesn't exist
+            if not P['userpl'].get(pl):
+                P['userpl'][pl] = Playlist(pl)
+
+            # append the songs
+            for songnum in selection:
+                P['userpl'][pl].songs.append(P['model'].songs[songnum - 1])
+
+                dur = P['userpl'][pl].duration
+                f = (c.y, len(selection), c.w, c.y, pl, c.w, c.y,
+                     P['userpl'][pl].size, c.w, c.y, dur, c.w)
+                P['message'] = """\
+%s%s%s tracks added to %s%s%s (%s%s%s total [%s%s%s])""" % f
+                save_to_file()
+
     elif r['move'].match(choice):
         m = r['move'].match(choice)
         songs = P['model'].songs
@@ -633,6 +670,7 @@ def playlist_operate(choice):
     r['remove'] = r'\s*rm\s*(%s)' % digits
     r['remove_pl'] = r'\s*rm\s*((?:\w|\ ){0,75})'
     r['add'] = r'\s*add\s*(%s)' % digits
+    r['add_to_pl'] = r'\s*add\s*(%s)\s*((?:\w|\ ){0,75})' % digits[:-1]
     r['addall'] = r'\s*add\s*all\s*'
     r['rmall'] = r'\s*rm\s*all\s*'
     r['swap'] = r'\s*(?:swap|sw)\s*(\d{1,3})\s*(?:\s+|\,)\s*(\d{1,3})\s*'
@@ -643,10 +681,11 @@ def playlist_operate(choice):
     if r['rmall'].match(choice):
         for n in reversed(range(0, len(P['model'].songs))):
             P['model'].songs.pop(n)
-        P['message'] = c.b + "Cleared all" + c.w
+        P['message'] = c.b + "Cleared all songs from playlist" + c.w
 
     elif r['swap'].match(choice) or r['remove'].match(choice) or \
-            r['move'].match(choice) or r['add'].match(choice):
+            r['move'].match(choice) or r['add'].match(choice) or \
+            r['add_to_pl'].match(choice):
 
         try:
             playlist_manipulate(r, choice)
@@ -682,11 +721,21 @@ def persist_operate(choice):
     """ Perform load / save of playlists. """
 
     re_save = re.compile(r'\s*(?:saveas|save)\s*([\_a-zA-Z](?:\w|\ ){,35})')
-    re_open = re.compile(r'\s*open\s*((?:\w|\ ){1,35})')
+    re_open = re.compile(r'\s*open\s*(?:((?:\w|\ ){1,35})|\d{1,3})')
 
     if re_open.match(choice):
         match = re_open.match(choice)
         name = match.group(1)
+
+        # are we trying to open by number?
+        try:
+            idx = int(match.group(1))
+            srt = sorted(P.get("userpl"))
+            name = srt[idx - 1]
+
+        except (ValueError, IndexError):
+            pass
+
         saved = P.get("userpl").get(name)
 
         if saved:
@@ -699,13 +748,11 @@ def persist_operate(choice):
                 " ??" + c.w + " Select from one of the above to open"
             P['content'] = playlists_display()
             return
-            #P["message"] = ("Playlist %s not found!  Use ls to list playlists"
-                            #% match.group(1))
 
     elif re_save.match(choice):
 
         name = re_save.match(choice).group(1)
-        print(name)
+        name = name.strip()
         P['userpl'] = P.get('userpl') or {}
         P['userpl'][name] = Playlist(name, list(P['model'].songs))
         P['message'] = ("Playlist saved as %s%s%s.  Use %sls%s to list "
@@ -756,7 +803,7 @@ def play_range(songlist, shuffle=False, repeat=False):
     if not repeat:
 
         for n, song in enumerate(songlist):
-            P['content'] = playback_progress(n, song, songlist, repeat=repeat)
+            P['content'] = playback_progress(n, song, songlist, repeat=False)
             screen_update()
             try:
                 playsong(song)
@@ -772,7 +819,7 @@ def play_range(songlist, shuffle=False, repeat=False):
 
                 for n, song in enumerate(songlist):
                     P['content'] = playback_progress(n, song, songlist,
-                                                     repeat=repeat)
+                                                     repeat=True)
                     screen_update()
                     playsong(song)
                     P['content'] = generate_songlist_display()
