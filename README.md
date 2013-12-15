@@ -95,7 +95,7 @@ any of the above to enable those modes: eg, ```shuffle 1,2,3``` and ```repeat 2-
 
 Manipulating
 ------------
-```rm 1,3``` to remove songs 1, 2 and 3.  Also use rm 1,2,5-7 to remove a range
+```rm 1,3``` to remove songs 1 and 3.  Also use rm 1,2,5-7 to remove a range
 
 ```rm all``` to remove all songs
 
