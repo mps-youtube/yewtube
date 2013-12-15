@@ -78,7 +78,7 @@ When a list of songs is displayed, you can use the following commands:
 
 Downloading
 -----------
-Enter d 3 to download song 3
+Enter ```d 3``` to download song 3
 
 Selecting
 ---------
