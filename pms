@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.11"
+__version__ = "0.18.12"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -72,12 +72,14 @@ try:
     # pylint: disable=E0611
     from gi.repository import GLib
     DDIR = GLib.get_user_special_dir(GLib.USER_DIRECTORY_DOWNLOAD)
+    DDIR = DDIR or os.path.join(os.path.expanduser("~"), "Downloads")
     DDIR = py2utf8_decode(DDIR)
 
 except (AttributeError, ImportError):
     DDIR = os.path.join(os.path.expanduser("~"), "Downloads")
 
 DDIR = os.path.join(DDIR, "PMS")
+
 PLFILE = os.path.join(os.path.expanduser("~"), ".pms-playlist")
 
 if os.name == "nt":  # Disable colours for Windows
@@ -469,7 +471,7 @@ def generate_songlist_display():
     if not songs:
         return logo(c.g) + "\n\n"
 
-    fmtrow = "%s%-6s %-7s %-21s %-22s %-8s %-8s%s\n"
+    fmtrow = "%s%-6s %-7s %-21s %-22s %-8s %-7s%s\n"
     head = (c.hh, "Item", "Size", "Artist", "Track", "Length", "Bitrate", c.w)
     out = "\n" + fmtrow % head
 
@@ -986,7 +988,7 @@ def prompt_for_exit():
     screen_update()
 
     try:
-        userinput = compat_input(" > ")
+        userinput = compat_input(c.r + " > " + c.w)
 
     except KeyboardInterrupt:
         sys.exit(F("exitmsg", 2))
