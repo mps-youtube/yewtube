@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.10"
+__version__ = "0.18.11"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -37,6 +37,11 @@ import json
 import sys
 import re
 import os
+
+# disable too many local variables pylint warning
+# pylint: disable=R0914
+# disable too many lines in module pylint warning
+# pylint: disable=C0302
 
 # Python 3 compatibility hack
 
@@ -193,11 +198,82 @@ You can load a playlist when invoking pms using the following command:
 
 P["model"] = Playlist(name="model")
 P["active"] = Playlist(name="active")
+P["text"] = {}
 
-EXITMSG = """\n
-{0}pms - {1}http://github.com/np1/pms{0}
+
+def F(key, nb=0, na=0, percent="*", nums="**", textlib=None):
+    """Format text.
+
+    nb, na indicate newlines before and after to return
+    percent is the delimter for %s
+    nums is the delimiter for the str.format command (**1 will become {1})
+    textlib is the dictionary to use (defaults to P["text"] if not given)
+
+    """
+
+    textlib = textlib or P["text"]
+
+    assert key in textlib
+    text = textlib[key]
+    percent_fmt = textlib.get(key + "_")
+    number_fmt = textlib.get("_" + key)
+
+    if number_fmt:
+        text = re.sub(r"(\*\*(\d))", "{\\2}", text)
+        text = text.format(*number_fmt)
+
+    if percent_fmt:
+        text = re.sub(r"\*", r"%s", text)
+        text = text % percent_fmt
+
+    text = re.sub(r"&&", r"%s", text)
+
+    return "\n" * nb + text + c.w + "\n" * na
+
+P["text"] = {
+    "exitmsg": """\
+**0pms - **1http://github.com/np1/pms**0
 Released under the GPLv3 license
-(c) 2013 nagev{2}\n""".format(c.r, c.b, c.w)
+(c) 2013 nagev**2\n""",
+    "_exitmsg": (c.r, c.b, c.w),
+
+    # Error / Warning messages
+
+    'no playlists': "*No saved playlists found!*",
+    'no playlists_': (c.r, c.w),
+    'pl bad name': '*&&* is not valid a valid name. Ensure it starts with a '
+    'letter or _',
+    'pl bad name_': (c.r, c.w),
+    'pl not found': 'Playlist "*&&*" unknown. Saved playlists are shown above',
+    'pl not found_': (c.r, c.w),
+    'pl empty': 'Playlist is empty!',
+    'advise add': 'Use *add N* to add a track',
+    'advise add_': (c.g, c.w),
+    'advise search': 'Search for songs and then use *add* to add them',
+    'advise search_': (c.g, c.w),
+
+    # Info messages
+
+    'pl saved': 'Playlist saved as *&&*.  Use *ls* to list playlists',
+    'pl saved_': (c.y, c.w, c.g, c.w),
+    'pl loaded': 'Loaded playlist *&&* as current playlist',
+    'pl loaded_': (c.y, c.w),
+    'pl help': 'Enter *open <name or ID>* to load a playlist or *rm <name>* to'
+    'delete',
+    'pl help_': (c.g, c.w, c.g, c.w),
+    'added to pl': '*&&* tracks added (*&&* total [*&&*]). Use *vp* to view',
+    'added to pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.g, c.w),
+    'added to saved pl': '*&&* tracks added to *&&* (*&&* total [*&&*])',
+    'added to saved pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.y, c.w),
+    'song move': 'Moved *&&* to position *&&*',
+    'song move_': (c.y, c.w, c.y, c.w),
+    'song sw': ("Switched track *&&* with *&&*"),
+    'song sw_': (c.y, c.w, c.y, c.w),
+    'current pl': "This is the current playlist. Use *save <name>* to save it",
+    'current pl_': (c.g, c.w),
+    'songs rm': '*&&* tracks removed &&',
+    'songs rm_': (c.y, c.w)
+}
 
 
 def save_to_file():
@@ -240,7 +316,7 @@ def playlists_display():
     """ Produce a list of all playlists. """
 
     if not P.get("userpl"):
-        P['message'] = c.r + "No playlists created!" + c.w
+        P['message'] = F("no playlists")
         return ""
 
     maxname = max(len(a) for a in P['userpl'])
@@ -256,9 +332,7 @@ def playlists_display():
                    p.duration, c.w) + "\n"
         out += l
 
-    out += "\n\nEnter %sopen <name or ID>%s to load a playlist or %srm <name>"\
-        "%s to delete" % (c.g, c.w, c.g, c.w)
-
+    out += F('pl help', 2, 1)
     return out
 
 
@@ -502,7 +576,9 @@ def dosearch(term):
         P['content'] = generate_songlist_display()
 
     else:
-        print("Searching for '%s%s%s'" % (c.y, term, c.w))
+        P['message'] = "Searching for '%s%s%s'" % (c.y, term, c.w)
+        P['content'] = generate_songlist_display()
+        screen_update()
         url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
         url = url % (term.replace(" ", "+"), 1)
 
@@ -611,11 +687,8 @@ def playlist_manipulate(r, choice):
         for songnum in selection:
             P['active'].songs.append(P['model'].songs[songnum - 1])
 
-        dur = P['active'].duration
-        P['message'] = ("%s%s%s tracks added (%s%s%s total [%s%s%s]). Use %svp"
-                        "%s to view." % (c.y, len(selection), c.w, c.y,
-                                         P['active'].size, c.w, c.y, dur, c.w,
-                                         c.g, c.w,))
+        d = P['active'].duration
+        P['message'] = F('added to pl') % (len(selection), P['active'].size, d)
 
     elif r['add_to_pl'].match(choice):
         m = r['add_to_pl'].match(choice)
@@ -633,10 +706,8 @@ def playlist_manipulate(r, choice):
                 P['userpl'][pl].songs.append(P['model'].songs[songnum - 1])
 
                 dur = P['userpl'][pl].duration
-                f = (c.y, len(selection), c.w, c.y, pl, c.w, c.y,
-                     P['userpl'][pl].size, c.w, c.y, dur, c.w)
-                P['message'] = """\
-%s%s%s tracks added to %s%s%s (%s%s%s total [%s%s%s])""" % f
+                f = (len(selection), pl, P['userpl'][pl].size, dur)
+                P['message'] = F('added to saved pl') % f
                 save_to_file()
 
     elif r['move'].match(choice):
@@ -644,17 +715,14 @@ def playlist_manipulate(r, choice):
         songs = P['model'].songs
         a, b = int(m.group(1)) - 1, int(m.group(2)) - 1
         songs.insert(b, songs.pop(a))
-        msg = "Moved %s%s%s to position %s%s%s" % (
-            c.y, songs[b]['song'], c.w, c.y, m.group(2), c.w)
-        P['message'] = msg
+        P['message'] = F('song move') % (songs[b]['song'], m.group(2))
 
     elif r['swap'].match(choice):
         m = r['swap'].match(choice)
         songs = P['model'].songs
         a, b = int(m.group(1)) - 1, int(m.group(2)) - 1
         songs[a], songs[b] = songs[b], songs[a]
-        P['message'] = "Switched track %s%s%s and %s%s%s" % (
-            c.y, m.group(1), c.w, c.y, m.group(2), c.w)
+        P['message'] = F('song sw') % m.groups()
 
     elif r['remove'].match(choice):
         selection = _parse_multi(choice.strip().lstrip("rm").strip())
@@ -664,8 +732,7 @@ def playlist_manipulate(r, choice):
         for x in selection:
             P['model'].songs.pop(x - 1)
 
-        P['message'] = "%s%s%s tracks removed %s" % (c.y, len(selection), c.w,
-                                                     removed)
+        P['message'] = F('songs rm') % (len(selection), removed)
 
     else:
         P['message'] = "%s%s%s was not understood" % (c.r, choice, c.w)
@@ -750,12 +817,10 @@ def persist_operate(choice):
 
         if saved:
             P['model'].songs = P['active'].songs = list(saved.songs)
-            P['message'] = ("Loaded playlist %s%s%s as current playlist" %
-                            (c.y, name, c.w))
+            P['message'] = F("pl loaded") % name
 
         else:
-            P['message'] = c.r + choice[4:].strip() + \
-                " ??" + c.w + " Select from one of the above to open"
+            P['message'] = F("pl not found") % choice[4:].strip()
             P['content'] = playlists_display()
             return
 
@@ -765,20 +830,16 @@ def persist_operate(choice):
         name = name.strip()
         P['userpl'] = P.get('userpl') or {}
         P['userpl'][name] = Playlist(name, list(P['model'].songs))
-        P['message'] = ("Playlist saved as %s%s%s.  Use %sls%s to list "
-                        "playlists" % (c.y, name, c.w, c.g, c.w))
+        P['message'] = F('pl saved') % name
         save_to_file()
 
     elif choice.startswith("save"):
-        P['message'] = ("%s%s%s is not a good name for me.  Ensure it starts "
-                        "with a letter or _" % (c.r,
-                                                choice.lstrip("save").strip(),
-                                                c.w))
+        P['message'] = F('pl bad name') % choice.lstrip("save").strip()
 
     elif choice == "ls":
 
         if not P['userpl']:
-            P['message'] = c.r + "You have no playlists!" + c.w
+            P['message'] = F('no playlists')
 
         else:
             P['content'] = playlists_display()
@@ -787,15 +848,12 @@ def persist_operate(choice):
     # show playlist
 
     elif choice == "vp" and P['active'].is_empty:
-        got_model = "Use %sadd N%s to add a track"
-        no_model = "Search for songs and then use %sadd%s to add them"
-        modtext = no_model if P['model'].is_empty else got_model
-        P['message'] = "Playlist is empty! " + modtext % (c.g, c.w)
+        txt = F('advise search') if P['model'].is_empty else F('advise add')
+        P['message'] = F('pl empty') + " " + txt
 
     elif choice in ("vp") and not P['active'].is_empty:
         P['model'].songs = P['active'].songs
-        P['message'] = ("This is the current playlist. Use %ssave <name>%s to "
-                        "save it" % (c.g, c.w))
+        P['message'] = F('current pl')
 
     P['content'] = generate_songlist_display()
 
@@ -851,7 +909,7 @@ def action_operate(userinput):
     """ Handle quit and download actions. """
 
     if userinput in ("q", "quit", "exit"):
-        sys.exit(200 * "\n" + logo(c.r) + EXITMSG)
+        sys.exit(200 * "\n\n" + logo(c.r) + F("exitmsg", 2))
 
     elif re.match(r'd\s*\d{1,3}', userinput):
         m = re.match(r'd\s*(\d{1,3})', userinput)
@@ -928,7 +986,7 @@ def prompt_for_exit():
         userinput = compat_input(" > ")
 
     except KeyboardInterrupt:
-        sys.exit(EXITMSG)
+        sys.exit(F("exitmsg", 2))
 
     return userinput
 
