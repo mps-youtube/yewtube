@@ -259,7 +259,7 @@ Released under the GPLv3 license
     'pl loaded': 'Loaded playlist *&&* as current playlist',
     'pl loaded_': (c.y, c.w),
     'pl help': 'Enter *open <name or ID>* to load a playlist or *rm <name>* to'
-    'delete',
+    ' delete',
     'pl help_': (c.g, c.w, c.g, c.w),
     'added to pl': '*&&* tracks added (*&&* total [*&&*]). Use *vp* to view',
     'added to pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.g, c.w),
@@ -317,7 +317,8 @@ def playlists_display():
 
     if not P.get("userpl"):
         P['message'] = F("no playlists")
-        return ""
+        return logo(c.y) + "\n\n" if P['model'].is_empty else \
+            generate_songlist_display()
 
     maxname = max(len(a) for a in P['userpl'])
     out = "      {0}Saved Playlists{1}\n".format(c.hh, c.w)
@@ -577,7 +578,8 @@ def dosearch(term):
 
     else:
         P['message'] = "Searching for '%s%s%s'" % (c.y, term, c.w)
-        P['content'] = generate_songlist_display()
+        #P['content'] = generate_songlist_display()
+        P['content'] = logo(c.b) + "\n\n"
         screen_update()
         url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
         url = url % (term.replace(" ", "+"), 1)
@@ -741,13 +743,14 @@ def playlist_manipulate(r, choice):
 def playlist_operate(choice):
     """ Prompt for user input, return action/value pair. """
 
-    digits = r'\s*\d{1,3}\s*(?:[,-]\s*\d{1,3}\s*){0,30}$'
+    dig = r'\s*\d{1,3}\s*(?:[,-]\s*\d{1,3}\s*){0,30}$'
     r = {}
-    r['remove'] = r'\s*rm\s*(%s)' % digits
+    r['remove'] = r'\s*rm\s*(%s)' % dig
     r['remove_pl'] = r'\s*rm\s*((?:\w|\ ){0,75})'
-    r['add'] = r'\s*add\s*(%s)' % digits
-    r['add_to_pl'] = r'\s*add\s*(%s)\s*((?:\w|\ ){0,75})' % digits[:-1]
+    r['add'] = r'\s*add\s*(%s)' % dig
+    r['add_to_pl'] = r'\s*add\s*(%s)\s*([\_a-zA-Z](?:\w|\ ){0,35})' % dig[:-1]
     r['addall'] = r'\s*add\s*all\s*'
+    #r['addall_to_pl'] = r['addall'] + r'([\_a-zA-Z](?:\w|\ ){0,35})'
     r['rmall'] = r'\s*rm\s*all\s*'
     r['swap'] = r'\s*(?:swap|sw)\s*(\d{1,3})\s*(?:\s+|\,)\s*(\d{1,3})\s*'
     r['move'] = r'\s*(?:move|mv)\s*(\d{1,3})\s*(?:\s+|\,)\s*(\d{1,3})\s*'
