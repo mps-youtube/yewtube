@@ -1,4 +1,7 @@
 *.py[cod]
+otherstuff/
+pms.py
+MANIFEST
 
 # C extensions
 *.so
