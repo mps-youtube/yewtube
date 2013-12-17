@@ -1,8 +1,5 @@
 pms
 ===
-.. _zip: https://github.com/np1/pms/archive/master.zip
-.. _tar: https://github.com/np1/pms/archive/master.tar.gz
-
 
 .. image:: http://badge.fury.io/py/Poor-Mans-Spotify.png
     :target: https://pypi.python.org/pypi/Poor-Mans-Spotify
@@ -40,6 +37,7 @@ Playlists
 .. image:: http://i.imgur.com/RDEXLPW.png
 
 
+
 Installation
 ------------
 
@@ -50,10 +48,14 @@ Using pip::
 Using git::
 
     git clone https://github.com/np1/pms.git
-    
+   
 Manually::
 
-Download `zip`_ or `tar`_ file and extract.
+    Download zip file or tar.gz and extract:
+
+    https://github.com/np1/pms/archive/master.zip
+
+    https://github.com/np1/pms/archive/master.tar.gz
 
 
 Mac OSX installation notes
@@ -78,7 +80,7 @@ if using MplayerX::
 Upgrading
 ---------
 
-It is recommended you update to the latest version
+It is recommended you update to the latest version.
 
 Upgrade pip installation::
 
@@ -86,10 +88,9 @@ Upgrade pip installation::
 
 Upgrade git clone::
 
-from within the pms directory;
+    (from within the pms directory)
 
     git pull
-
 
 Usage
 -----
@@ -103,7 +104,6 @@ or on Linux/MacOS if you are in the same directory::
     ./pms
     
 Enter `h` from within the program for help.
-
 
 Searching
 ~~~~~~~~~
@@ -130,7 +130,6 @@ Playback
 Note: The commands ``shuffle`` and ``repeat`` can be inserted at the start or
 end of any of the above to enable those play modes: eg, ``shuffle 1-4`` or
 ``2-4,1 repeat`` 
-
 
 Editing
 ~~~~~~~
