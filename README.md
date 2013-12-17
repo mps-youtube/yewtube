@@ -42,7 +42,7 @@ Install X11
     
 if using MplayerX: 
 
-    ln -s /Applications/MPlayerX.app/Contents/Resources/binaries/x86_64/mplayer /usr/local/bin/mplayer# Upgrade
+    ln -s /Applications/MPlayerX.app/Contents/Resources/binaries/x86_64/mplayer /usr/local/bin/mplayer
 
 # Upgrading
 
