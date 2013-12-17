@@ -18,7 +18,7 @@ setup(
     url="http://github.com/np1/pms/",
     download_url="https://github.com/np1/pms/tarball/master",
     scripts=['pms'],
-    package_data={"": ["LICENSE", "README.md"]},
+    package_data={"": ["LICENSE", "README.rst"]},
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: POSIX :: Linux",
@@ -34,35 +34,5 @@ setup(
         "Topic :: Utilities",
         "Topic :: Multimedia :: Sound/Audio :: Players",
         "Topic :: Internet :: WWW/HTTP"],
-    long_description="""
-
-.. image::http://badge.fury.io/py/Poor-Mans-Spotify.png
-.. image::https://pypip.in/d/Poor-Mans-Spotify/badge.png
-
-Description
------------
-
-This is a console based application and requires mplayer to be installed to
-perform the streaming.  It's interactive so no arguments are needed, although
-you can optionally add the search term as an argument. Eg: `pms beethovens 5th`
-
-To install:
-
-::
-
-    sudo pip install Poor-Mans-Spotify
-
-To run:
-
-::
-
-    pms
-
-
-Screenshot
-----------
-
-.. image:: http://i.imgur.com/Oqyz5vk.png
-
-"""
+    long_description=open("README.rst").read()
 )
