@@ -255,6 +255,8 @@ Released under the GPLv3 license
     'advise search_': (c.g, c.w),
     'no data': 'Error fetching data. Perhaps http://pleer.com is down.\n*&&*',
     'no data_': (c.r, c.w),
+    'use dot': 'Start your query with a *.* to perform a search',
+    'use dot_': (c.g, c.w),
 
     # Info messages
 
@@ -1047,8 +1049,7 @@ def main():
             dosearch(userinput.lstrip("."))
 
         else:
-            P['message'] = ("Start your query with a %s.%s to perform a search"
-                            % (c.g, c.w))
+            P['message'] = F('use dot')
             P['content'] = generate_songlist_display()
 
         screen_update()
