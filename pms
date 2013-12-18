@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.14"
+__version__ = "0.18.15"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -251,7 +251,7 @@ Released under the GPLv3 license
     'pl bad name': '*&&* is not valid a valid name. Ensure it starts with a '
     'letter or _',
     'pl bad name_': (c.r, c.w),
-    'pl not found': 'Playlist "*&&*" unknown. Saved playlists are shown above',
+    'pl not found': 'Playlist *&&* unknown. Saved playlists are shown above',
     'pl not found_': (c.r, c.w),
     'pl not found advise ls': 'Playlist "*&&*" not found. Use *ls* to list',
     'pl not found advise ls_': (c.y, c.w, c.g, c.w),
@@ -348,7 +348,7 @@ def playlists_display():
                    p.duration, c.w) + "\n"
         out += l
 
-    out += F('pl help', 1)
+    #out += F('pl help', 1)
     return out
 
 
@@ -846,6 +846,11 @@ def persist_operate(choice):
             g.content = playlists_display()
             return
 
+    elif choice.startswith("open") or choice.startswith("view"):
+        #g.message = "Invalid playlist name or id. Select one from above"
+        g.message = F("pl not found") % choice[4:].strip()
+        g.content = playlists_display()
+
     elif re_save.match(choice):
 
         name = re_save.match(choice).group(1)
@@ -865,6 +870,7 @@ def persist_operate(choice):
 
         else:
             g.content = playlists_display()
+            g.message = F('pl help')
             return
 
     # show playlist
