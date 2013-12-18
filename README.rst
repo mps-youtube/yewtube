@@ -187,4 +187,3 @@ Other Commands
 ``topyear`` show top tracks for last year
 
 ``topall`` show all time top tracks
-
