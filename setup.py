@@ -10,7 +10,7 @@ from distutils.core import setup
 
 setup(
     name="Poor-Mans-Spotify",
-    version="0.18.16",
+    version="0.18.17",
     description="Search, Stream and Download MP3",
     keywords=["MP3", "music", "audio", "search", "stream", "download"],
     author="nagev",
@@ -18,7 +18,7 @@ setup(
     url="http://github.com/np1/pms/",
     download_url="https://github.com/np1/pms/tarball/master",
     scripts=['pms'],
-    package_data={"": ["LICENSE", "README.rst"]},
+    package_data={"": ["LICENSE", "README.rst", "README"]},
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: POSIX :: Linux",
@@ -34,5 +34,5 @@ setup(
         "Topic :: Utilities",
         "Topic :: Multimedia :: Sound/Audio :: Players",
         "Topic :: Internet :: WWW/HTTP"],
-    long_description=open("README.rst").read()
+    long_description=open("README").read()
 )
