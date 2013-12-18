@@ -158,6 +158,8 @@ new playlist will be created if it doesn't already exist.
 
 ``open <playlist_name>`` to open a saved playlist as the current playlist
 
+``view <playlist name>`` to view a playlist (leaves current playlist intact)
+
 ``vp`` to view the current playlist (then use rm, mv and sw to modify it)
 
 ``save <playlist_name>`` to save the currently displayed songs as a stored
