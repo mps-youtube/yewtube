@@ -38,9 +38,6 @@ import sys
 import re
 import os
 
-# disable too many local variables pylint warning
-# disable too many lines in module pylint warning
-
 # Python 3 compatibility hack
 
 if sys.version_info[:2] >= (3, 0):
@@ -1095,13 +1092,11 @@ def main():
     }
 
     # compile regexp's
-    for name, val in regx.items():
-        regx[name] = re.compile(val)
+    regx = {name: re.compile(val) for name, val in regx.items()}
 
     prompt = "Enter .artist/song name to search or [h]elp > %s" % c.y
 
     while True:
-
         try:
             # get user input
             userinput = inp or compat_input(prompt)
