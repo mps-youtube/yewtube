@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.17"
+__version__ = "0.18.18"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -500,10 +500,10 @@ def generate_songlist_display():
     return out + "\n" * (5 - len(songs))
 
 
-def get_stream(song):
+def get_stream(song, force=False):
     """ Return the url for a song. """
 
-    if not "track_url" in song:
+    if not "track_url" in song or force:
         url = 'http://pleer.com/site_api/files/get_url?action=download&id=%s'
         url = url % song['link']
 
@@ -526,7 +526,7 @@ def get_stream(song):
         return song['track_url']
 
 
-def playsong(song):
+def playsong(song, failcount=0):
     """ Play song using PLAYER called with args PLAYERARGS."""
 
     try:
@@ -544,6 +544,14 @@ def playsong(song):
         logging.debug("got CL header")
 
     except IOError:
+        if failcount < 1:
+            track_url = get_stream(song, force=True)
+            logging.debug("refreshing index")
+            time.sleep(1)
+            song['track_url'] = track_url
+            playsong(song, failcount = 1)
+            save_to_file()
+            return
         print("\nSorry, this track no longer exists!")
         time.sleep(3)
         return
