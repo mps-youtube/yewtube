@@ -61,8 +61,6 @@ else:
     py2utf8_decode = lambda x: x.decode("utf8")
     compat_input = raw_input
 
-#logging.basicConfig(level=logging.DEBUG)
-
 PLAYER = "mplayer"
 PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
 COLOURS = True
@@ -80,6 +78,9 @@ except (AttributeError, ImportError):
 
 DDIR = os.path.join(DDIR, "PMS")
 PLFILE = os.path.join(os.path.expanduser("~"), ".pms-playlist")
+
+if os.path.exists(os.path.join(os.path.expanduser("~"), ".pms-debug")):
+    logging.basicConfig(level=logging.DEBUG)
 
 if os.name == "nt":  # Disable colours for Windows
     COLOURS = False
@@ -549,7 +550,7 @@ def playsong(song, failcount=0):
             logging.debug("refreshing index")
             time.sleep(1)
             song['track_url'] = track_url
-            playsong(song, failcount = 1)
+            playsong(song, failcount=1)
             save_to_file()
             return
         print("\nSorry, this track no longer exists!")
