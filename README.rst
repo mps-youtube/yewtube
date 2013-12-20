@@ -167,9 +167,7 @@ playlist on disk
 
 ``rm <playlist_name>`` to delete a playlist from disk
 
-You can load a playlist when invoking pms using the following command:
-
-    ``pms open <playlistname>``
+``mv <old_name> <new_name>`` to rename a playlist
 
 ``q`` to quit
 
@@ -189,3 +187,43 @@ Other Commands
 ``topyear`` show top tracks for last year
 
 ``topall`` show all time top tracks
+
+
+Advanced Tips
+-------------
+
+Playlist Name Completion
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+When using ``open`` or ``view`` to access a playlist, you can type in the first
+few characters instead of the whole name.  The first alphabetically matching
+playlist will be opened / displayed
+
+Playlist Direct Play
+~~~~~~~~~~~~~~~~~~~~
+
+Enter ``play <playlist_name>`` to access and play a playlist directly.
+
+Invocation
+~~~~~~~~~~
+
+To load a saved playlist when invoking pms using the following command:
+
+    ``pms open <playlistname>``
+
+This also works for other commands, eg:
+
+    ``pms .mozart`` to search 
+    ``pms view <playlistname>`` to view a saved playlist
+    ``pms ls`` to list saved playlists
+    ``pms top`` to list top tracks this week
+    ``pms play moz`` to open a saved playlist called mozart and start playing.
+
+
+Specifying Ranges
+~~~~~~~~~~~~~~~~~
+
+When selecting songs for playback, removing, adding you can use `5-` to select
+song 5 upward and `-5` to select up to song 5.  This can be included with other
+choice so for example: `5,3,7-,-2`.  You can also use spaces instead of commas
+eg. `5 3 7- -2` or a combinatin of both eg. `3,4 7-9, 1` 
