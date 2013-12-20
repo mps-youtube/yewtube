@@ -158,7 +158,7 @@ new playlist will be created if it doesn't already exist.
 
 ``open <playlist_name>`` to open a saved playlist as the current playlist
 
-``view <playlist name>`` to view a playlist (leaves current playlist intact)
+``view <playlist_name>`` to view a playlist (leaves current playlist intact)
 
 ``vp`` to view the current playlist (then use rm, mv and sw to modify it)
 
@@ -214,16 +214,20 @@ To load a saved playlist when invoking pms using the following command:
 This also works for other commands, eg:
 
     ``pms .mozart`` to search 
+
     ``pms view <playlistname>`` to view a saved playlist
+
     ``pms ls`` to list saved playlists
+
     ``pms top`` to list top tracks this week
+
     ``pms play moz`` to open a saved playlist called mozart and start playing.
 
 
 Specifying Ranges
 ~~~~~~~~~~~~~~~~~
 
-When selecting songs for playback, removing, adding you can use `5-` to select
-song 5 upward and `-5` to select up to song 5.  This can be included with other
-choice so for example: `5,3,7-,-2`.  You can also use spaces instead of commas
-eg. `5 3 7- -2` or a combinatin of both eg. `3,4 7-9, 1` 
+When selecting songs for playback, removing or adding you can use ``5-`` to 
+select song 5 upward and ``-5`` to select up to song 5.  This can be included
+with other choice so for example: ``5,3,7-,-2``.  You can also use spaces
+instead of commas eg. ``5 3 7- -2`` or a combination of both eg. ``3,4 7-9, 1``
