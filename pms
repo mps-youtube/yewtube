@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.19"
+__version__ = "0.18.20"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -258,9 +258,20 @@ Released under the GPLv3 license
     'no data_': (c.r, c.w),
     'use dot': 'Start your query with a *.* to perform a search',
     'use dot_': (c.g, c.w),
+    'cant get track': 'Problem fetching this track: *&&*',
+    'cant get track_': (c.r, c.w),
+    'track unresolved': 'Sorry, this track is  not available',
+    'no player': '*&&* was not found on this system',
+    'no player_': (c.y, c.w),
+    'no pl match for rename': '*Couldn\'t find matching playlist to rename*',
+    'no pl match for rename_': (c.r, c.w),
+    'invalid range': "*Invalid item / range entered!*",
+    'invalid range_': (c.r, c.w),
 
     # Info messages
 
+    'pl renamed': 'Playlist *&&* renamed to *&&*',
+    'pl renamed_': (c.y, c.w, c.y, c.w),
     'pl saved': 'Playlist saved as *&&*.  Use *ls* to list playlists',
     'pl saved_': (c.y, c.w, c.g, c.w),
     'pl loaded': 'Loaded playlist *&&* as current playlist',
@@ -342,7 +353,6 @@ def playlists_display():
                    p.duration, c.w) + "\n"
         out += l
 
-    #out += F('pl help', 1)
     return out
 
 
@@ -440,7 +450,6 @@ def screen_update():
 def playback_progress(idx, cursong, allsongs, repeat=False):
     """ Generate string to show selected tracks, indicate current track. """
 
-    #pylint: disable=R0914
     out = "  %s%-31s  %-31s %s   %s\n" % (c.hh, "Artist", "Title", "Time", c.w)
     multi = len(allsongs) > 1
 
@@ -529,8 +538,7 @@ def playsong(song, failcount=0):
         song['track_url'] = track_url
 
     except (URLError, HTTPError) as e:
-        print("\nProblem fetching this track: " + c.r + str(e) + c.w)
-        time.sleep(3)
+        g.message = F('cant get track') % str(e)
         return
 
     try:
@@ -541,14 +549,14 @@ def playsong(song, failcount=0):
     except IOError:
         if failcount < 1:
             track_url = get_stream(song, force=True)
-            logging.debug("refreshing index")
+            logging.debug("updating stream url")
             time.sleep(1)
             song['track_url'] = track_url
             playsong(song, failcount=1)
             save_to_file()
             return
-        print("\nSorry, this track no longer exists!")
-        time.sleep(3)
+        g.message = F('track unresolved')
+        #time.sleep(3)
         return
 
     try:
@@ -557,8 +565,7 @@ def playsong(song, failcount=0):
         subprocess.call(cmd)
 
     except OSError:
-        print("{}{}{} not found on this system".format(c.y, PLAYER, c.w))
-        time.sleep(2)
+        g.message = F('no player')
 
 
 def top(period):
@@ -702,7 +709,6 @@ def _parse_multi(choice, end=None):
 
         elif x.endswith("-"):
             x = x + str(end)
-            print(x)
 
         if "-" in x:
             nrange = x.split("-")
@@ -733,9 +739,7 @@ def play_pl(name):
     saved = g.userpl.get(name)
 
     if not saved:
-        print(name)
         name = _get_near_plname(name)
-        print(name)
         saved = g.userpl.get(name)
 
     if saved:
@@ -811,7 +815,6 @@ def songlist_rm_add(action, songrange):
     elif action == "rm":
         selection = list(reversed(sorted(list(set(selection)))))
         removed = str(tuple(reversed(selection))).replace(",", "")
-        print(removed)
 
         for x in selection:
             g.model.songs.pop(x - 1)
@@ -913,14 +916,18 @@ def show_help(helpname=None):
     print("\n" * 200)
     print(HELP)
     print("Press Enter to continue")
-    compat_input("")
+    try:
+        compat_input("")
+    except (KeyboardInterrupt, EOFError):
+        prompt_for_exit()
     g.content = generate_songlist_display()
 
 
-def quits():
+def quits(showlogo=True):
     """ Exit the program. """
 
-    sys.exit(200 * "\n\n" + logo(c.r) + F("exitmsg", 2))
+    msg = ("\n" * 200) + logo(c.r) if showlogo else ""
+    sys.exit(msg + F("exitmsg", 2))
 
 
 def download(num):
@@ -954,8 +961,8 @@ def prompt_for_exit():
     try:
         userinput = compat_input(c.r + " > " + c.w)
 
-    except KeyboardInterrupt:
-        sys.exit(F("exitmsg", 2))
+    except (KeyboardInterrupt, EOFError):
+        quits(showlogo=False)
 
     return userinput
 
@@ -1019,29 +1026,20 @@ def playlist_add(nums, playlist):
 def playlist_rename(playlists):
     """ Rename a playlist using mv command. """
 
+    # Deal with old playlist names that permitted spaces
     a, b = "", playlists.split(" ")
     while a not in g.userpl:
-        print(a, b)
         a = (a + " " + (b.pop(0))).strip()
         if not b and not a in g.userpl:
-            g.message = c.r + "Couldn't find matching playlist to rename" + c.w
-            g.content = playlists_display()
-            return
-
-    a, b = "", playlists.split(" ")
-    while a not in g.userpl:
-        print(a, b)
-        a = (a + " " + (b.pop(0))).strip()
-        if not b and not a in g.userpl:
-            g.message = "------------------bad names"
-            g.content = g.content or generate_songlist_display()
+            g.message = F('no pl match for rename')
+            g.content = g.content or playlists_display()
             return
 
     b = "-".join(b)
     g.userpl[b] = Playlist(b)
     g.userpl[b].songs = list(g.userpl[a].songs)
     playlist_remove(a)
-    g.message = "Playlist %s renamed to %s" % (a, b)
+    g.message = F('pl renamed') % (a, b)
     save_to_file()
 
 
@@ -1103,7 +1101,7 @@ def main():
             userinput = userinput.strip()
             print(c.w)
 
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, EOFError):
             userinput = prompt_for_exit()
 
         inp = None
@@ -1116,7 +1114,8 @@ def main():
                     globals()[func](*matches)
 
                 except IndexError:
-                    g.message = c.r + "Invalid item / range entered!" + c.w
+                    g.message = F('invalid range')
+                    g.content = g.content or generate_songlist_display()
 
                 break
         else:
