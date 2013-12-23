@@ -103,7 +103,7 @@ or on Linux/MacOS if you are in the same directory::
 
     ./pms
     
-Enter `h` from within the program for help.
+Enter ``h`` from within the program for help.
 
 Searching
 ~~~~~~~~~
@@ -152,7 +152,7 @@ Playlist commands
 ``add 1-4,6,8-10`` to add songs 1-4, 6, and 8-10 to the current playlist
     
 ``add 1-4,7 <playlist_name>`` to add songs 1-4 and 7 to a saved playlist.  A
-new playlist will be created if it doesn't already exist.
+    new playlist will be created if it doesn't already exist.
 
 ``ls`` to list your saved playlists
 
@@ -163,7 +163,7 @@ new playlist will be created if it doesn't already exist.
 ``vp`` to view the current playlist (then use rm, mv and sw to modify it)
 
 ``save <playlist_name>`` to save the currently displayed songs as a stored
-playlist on disk
+    playlist on disk
 
 ``rm <playlist_name>`` to delete a playlist from disk
 
@@ -202,7 +202,7 @@ playlist will be opened / displayed
 Playlist Direct Play
 ~~~~~~~~~~~~~~~~~~~~
 
-Enter ``play <playlist_name>`` to access and play a playlist directly.
+Enter ``play <playlist_name>`` to access and play a saved playlist directly.
 
 Invocation
 ~~~~~~~~~~
@@ -231,3 +231,7 @@ When selecting songs for playback, removing or adding you can use ``5-`` to
 select song 5 upward and ``-5`` to select up to song 5.  This can be included
 with other choice so for example: ``5,3,7-,-2``.  You can also use spaces
 instead of commas eg. ``5 3 7- -2`` or a combination of both eg. ``3,4 7-9, 1``
+
+Quality / Bitrate
+~~~~~~~~~~~~~~~~~
+Add ``+best`` to return high bitrate results and ``+good`` to exclude them.
