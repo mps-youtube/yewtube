@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
 
 """
 pms.
@@ -24,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.20"
+__version__ = "0.18.21"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -58,6 +59,7 @@ else:
 
 PLAYER = "mplayer"
 PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
+#PLAYERARGS = "-nolirc -prefer-ipv4 -really-quiet"
 COLOURS = True
 
 
@@ -450,6 +452,8 @@ def screen_update():
 def playback_progress(idx, cursong, allsongs, repeat=False):
     """ Generate string to show selected tracks, indicate current track. """
 
+    # pylint: disable=R0914
+    # pylist - too many local variables
     out = "  %s%-31s  %-31s %s   %s\n" % (c.hh, "Artist", "Title", "Time", c.w)
     multi = len(allsongs) > 1
 
@@ -565,7 +569,7 @@ def playsong(song, failcount=0):
         subprocess.call(cmd)
 
     except OSError:
-        g.message = F('no player')
+        g.message = F('no player') % PLAYER
 
 
 def top(period):
@@ -605,10 +609,19 @@ def search(term):
         g.content = generate_songlist_display()
 
     else:
+        url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
+
+        if "+best" in term:
+            term = term.replace("+best", "")
+            url += "&quality=best"
+
+        elif "+good" in term:
+            term = term.replace("+good", "")
+            url += "&quality=good"
+
         g.message = "Searching for '%s%s%s'" % (c.y, term, c.w)
         g.content = logo(c.b) + "\n\n"
         screen_update()
-        url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
         url = url % (term.replace(" ", "+"), 1)
 
         try:
@@ -685,7 +698,7 @@ def _bi_range(start, end):
 
     """
     if start == end:
-        return start, start
+        return (start,)
 
     elif end < start:
         return reversed(range(end, start + 1))
@@ -725,7 +738,7 @@ def _get_near_plname(begin):
     """ Return the closest matching playlist name that starts with begin. """
 
     for name in sorted(g.userpl):
-        if name.startswith(begin):
+        if name.lower().startswith(begin.lower()):
             break
     else:
         return begin
@@ -749,7 +762,7 @@ def play_pl(name):
     else:
         g.message = F("pl not found") % name
         g.content = playlists_display()
-        return
+        #return
 
 
 def open_save_view(action, name):
@@ -774,7 +787,7 @@ def open_save_view(action, name):
         elif not saved and action in "view open".split():
             g.message = F("pl not found") % name
             g.content = playlists_display()
-            return
+            #return
 
     elif action == "save":
 
@@ -889,6 +902,8 @@ def play_range(songlist, shuffle=False, repeat=False):
             try:
                 playsong(song)
             except KeyboardInterrupt:
+                print("Stopping...")
+                time.sleep(2)
                 g.message = c.y + "Playback halted" + c.w
                 break
 
@@ -904,6 +919,8 @@ def play_range(songlist, shuffle=False, repeat=False):
                     g.content = generate_songlist_display()
 
             except KeyboardInterrupt:
+                print("Stopping...")
+                time.sleep(2)
                 g.message = c.y + "Playback halted" + c.w
                 break
 
@@ -1092,7 +1109,7 @@ def main():
     # compile regexp's
     regx = {name: re.compile(val) for name, val in regx.items()}
 
-    prompt = "Enter .artist/song name to search or [h]elp > %s" % c.y
+    prompt = "Enter .artist/song name to search or [h]elp > " + c.y
 
     while True:
         try:
