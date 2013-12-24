@@ -956,7 +956,7 @@ def show_help(helpname=None):
 
     print("\n" * 200)
     print(HELP)
-    print("Press Enter to continue")
+    print("Press Enter to continue", end="")
     try:
         compat_input("")
     except (KeyboardInterrupt, EOFError):
