@@ -57,8 +57,7 @@ else:
     compat_input = raw_input
 
 PLAYER = "mplayer"
-PLAYERARGS = "-nolirc -nocache -prefer-ipv4"
-#PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
+PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
 COLOURS = True
 
 
@@ -200,7 +199,7 @@ range,
 """.format(c.hh, c.w, c.g, c.r)
 
 
-def F(key, nb=0, na=0, percent="*", nums="**", textlib=None):
+def F(key, nb=0, na=0, percent="\*", nums="\*\*", textlib=None):
     """Format text.
 
     nb, na indicate newlines before and after to return
@@ -218,11 +217,11 @@ def F(key, nb=0, na=0, percent="*", nums="**", textlib=None):
     number_fmt = textlib.get("_" + key)
 
     if number_fmt:
-        text = re.sub(r"(\*\*(\d))", "{\\2}", text)
+        text = re.sub(r"(%s(\d))" % nums, "{\\2}", text)
         text = text.format(*number_fmt)
 
     if percent_fmt:
-        text = re.sub(r"\*", r"%s", text)
+        text = re.sub(r"%s" % percent r"%s", text)
         text = text % percent_fmt
 
     text = re.sub(r"&&", r"%s", text)
@@ -776,13 +775,13 @@ def save_last(args=None):
         #save using artist name in postion 1
         if not g.model.is_empty:
             saveas = g.model.songs[0]['singer'][:15].strip()
-            saveas = re.sub("[^-\w]", "-", saveas, re.UNICODE)
+            saveas = re.sub(r"[^-\w]", "-", saveas, re.UNICODE)
 
         # loop to find next available name
         post = 0
 
         while g.userpl.get(saveas):
-            post+= 1
+            post += 1
             saveas = g.model.songs[0]['singer'][:15].strip() + "-" + str(post)
 
         open_save_view("save", saveas)
@@ -1066,7 +1065,8 @@ def playlist_rename_idx(_id, name):
     """ Rename a playlist by ID. """
 
     _id = int(_id) - 1
-    playlist_rename(sorted(g.userpl)[_id] + " " +  name)
+    playlist_rename(sorted(g.userpl)[_id] + " " + name)
+
 
 def playlist_rename(playlists):
     """ Rename a playlist using mv command. """
@@ -1089,8 +1089,11 @@ def playlist_rename(playlists):
 
 
 def add_rm_all(action):
-    """ Add all displayed songs to current playlist or remove all displayed
-    songs from view. """
+    """ Add all displayed songs to current playlist.
+
+    remove all displayed songs from view.
+
+    """
 
     if action == "rm":
         for n in reversed(range(0, len(g.model.songs))):
@@ -1099,7 +1102,6 @@ def add_rm_all(action):
         g.content = generate_songlist_display()
 
     elif action == "add":
-        # Add all displayed songs to current playlist
         size = g.model.size
         songlist_rm_add("add", "-" + str(size))
 
@@ -1146,7 +1148,7 @@ def main():
     }
 
     # compile regexp's
-    regx = {name: re.compile(val) for name, val in regx.items()}
+    regx = {name: re.compile(val, re.UNICODE) for name, val in regx.items()}
 
     prompt = "Enter .artist/song name to search or [h]elp > " + c.y
 
