@@ -152,7 +152,7 @@ Playlist commands
 ``add 1-4,6,8-10`` to add songs 1-4, 6, and 8-10 to the current playlist
     
 ``add 1-4,7 <playlist_name>`` to add songs 1-4 and 7 to a saved playlist.  A
-    new playlist will be created if it doesn't already exist.
+    new playlist will be created if the given name doesn't already exist.
 
 ``ls`` to list your saved playlists
 
@@ -162,12 +162,12 @@ Playlist commands
 
 ``vp`` to view the current playlist (then use rm, mv and sw to modify it)
 
-``save <playlist_name>`` to save the currently displayed songs as a stored
-    playlist on disk
+``save`` or ``save <playlist_name>`` to save the currently displayed songs as a
+    stored playlist on disk
 
-``rm <playlist_name>`` to delete a playlist from disk
+``rmp <playlist_name or ID>`` to delete a playlist from disk
 
-``mv <old_name> <new_name>`` to rename a playlist
+``mv <old_name or ID> <new_name>`` to rename a playlist
 
 ``q`` to quit
 
