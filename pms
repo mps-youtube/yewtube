@@ -57,8 +57,8 @@ else:
     compat_input = raw_input
 
 PLAYER = "mplayer"
-PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
-#PLAYERARGS = "-nolirc -prefer-ipv4 -really-quiet"
+PLAYERARGS = "-nolirc -nocache -prefer-ipv4"
+#PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
 COLOURS = True
 
 
@@ -544,7 +544,7 @@ def playsong(song, failcount=0):
     try:
         logging.debug("getting content-length header for " + track_url)
         cl = opener.open(track_url, timeout=5).headers['content-length']
-        logging.debug("got CL header:" + cl)
+        logging.debug("got CL header:" + (cl or "none"))
 
     except (IOError, KeyError):
         if failcount < 1:
