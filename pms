@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.22"
+__version__ = "0.18.23"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -199,7 +199,7 @@ range,
 """.format(c.hh, c.w, c.g, c.r)
 
 
-def F(key, nb=0, na=0, percent="\*", nums="\*\*", textlib=None):
+def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
     """Format text.
 
     nb, na indicate newlines before and after to return
@@ -221,7 +221,7 @@ def F(key, nb=0, na=0, percent="\*", nums="\*\*", textlib=None):
         text = text.format(*number_fmt)
 
     if percent_fmt:
-        text = re.sub(r"%s" % percent r"%s", text)
+        text = re.sub(r"%s" % percent, r"%s", text)
         text = text % percent_fmt
 
     text = re.sub(r"&&", r"%s", text)
