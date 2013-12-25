@@ -143,7 +143,6 @@ Editing
 
 ``mv 1,3`` to move song 1 to postion 3
 
-
 Playlist commands
 ~~~~~~~~~~~~~~~~~
 
@@ -152,7 +151,9 @@ Playlist commands
 ``add 1-4,6,8-10`` to add songs 1-4, 6, and 8-10 to the current playlist
     
 ``add 1-4,7 <playlist_name>`` to add songs 1-4 and 7 to a saved playlist.  A
-    new playlist will be created if the given name doesn't already exist.
+new playlist will be created if the given name doesn't already exist.
+
+``vp`` to view the current playlist (then use rm, mv and sw to modify it)
 
 ``ls`` to list your saved playlists
 
@@ -160,10 +161,10 @@ Playlist commands
 
 ``view <playlist_name or ID>`` to view a playlist (leaves current playlist intact)
 
-``vp`` to view the current playlist (then use rm, mv and sw to modify it)
+``play <playlist_name or ID>`` to play a saved playlist directly.
 
 ``save`` or ``save <playlist_name>`` to save the currently displayed songs as a
-    stored playlist on disk
+stored playlist on disk
 
 ``rmp <playlist_name or ID>`` to delete a playlist from disk
 
@@ -172,8 +173,6 @@ Playlist commands
 ``q`` to quit
 
 ``h`` for help
-
-
 
 Other Commands
 --------------
@@ -188,28 +187,22 @@ Other Commands
 
 ``topall`` show all time top tracks
 
-
 Advanced Tips
 -------------
 
 Playlist Name Completion
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-When using ``open`` or ``view`` to access a playlist, you can type in the first
-few characters instead of the whole name.  The first alphabetically matching
-playlist will be opened / displayed
-
-Playlist Direct Play
-~~~~~~~~~~~~~~~~~~~~
-
-Enter ``play <playlist_name>`` to access and play a saved playlist directly.
+When using ``open``, ``view`` or ``play``  to access a playlist, you can enter
+the first few characters instead of the whole name.  The first alphabetically
+matching playlist will be opened / displayed.
 
 Invocation
 ~~~~~~~~~~
 
-To load a saved playlist when invoking pms using the following command:
+To play a saved playlist when invoking pms use the following command:
 
-    ``pms open <playlistname>``
+    ``pms play <playlistname>``
 
 This also works for other commands, eg:
 
@@ -221,8 +214,7 @@ This also works for other commands, eg:
 
     ``pms top`` to list top tracks this week
 
-    ``pms play moz`` to open a saved playlist called mozart and start playing.
-
+    ``pms open moz`` to open a saved playlist called mozart.
 
 Specifying Ranges
 ~~~~~~~~~~~~~~~~~
@@ -234,4 +226,6 @@ instead of commas eg. ``5 3 7- -2`` or a combination of both eg. ``3,4 7-9, 1``
 
 Quality / Bitrate
 ~~~~~~~~~~~~~~~~~
-Add ``+best`` to return high bitrate results and ``+good`` to exclude them.
+
+Add ``+best`` to a search query to return high bitrate results or ``+good`` to
+exclude them.
