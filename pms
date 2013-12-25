@@ -72,7 +72,7 @@ def get_default_ddir():
     return os.path.join(ddir, "PMS")
 
 
-class config(object):
+class Config(object):
 
     """ Holds various configuration values. """
 
@@ -87,7 +87,7 @@ if os.path.exists(os.path.join(os.path.expanduser("~"), ".pms-debug")):
     logging.basicConfig(level=logging.DEBUG)
 
 if os.name == "nt":  # Disable colours for Windows
-    config.COLOURS = False
+    Config.COLOURS = False
 
 else:
     try:
@@ -107,12 +107,18 @@ class c(object):
 
     """ Class for holding colour code values. """
 
-    white = "\x1b[0m"
-    ul = "\x1b[%sm" * 3 % (2, 4, 33)
-    red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
-    if not config.COLOURS:
-        ul = red = green = yellow = blue = pink = white = ""
-    r, g, y, b, p, w = red, green, yellow, blue, pink, white
+    @staticmethod
+    def doset():
+        """ Set colour values. """
+
+        c.white = "\x1b[0m"
+        c.ul = "\x1b[%sm" * 3 % (2, 4, 33)
+        rgybp = ["\x1b[%sm" % n for n in range(91, 96)]
+        c.red, c.green, c.yellow, c.blue, c.pink = rgybp
+        if not Config.COLOURS:
+            c.ul = c.red = c.green = c.yellow = c.blue = c.pink = c.white = ""
+        c.r, c.g, c.y, c.b, c.p, c.w = c.red, \
+            c.green, c.yellow, c.blue, c.pink, c.white
 
 
 class Playlist(object):
@@ -159,6 +165,88 @@ class g(object):
     text = {}
     userpl = {}
     last_opened = message = content = ""
+    config = "COLOURS PLAYER PLAYERARGS DDIR".split()
+    defaults = {setting: Config.__dict__[setting] for setting in config}
+    CFFILE = os.path.join(os.path.expanduser("~"), ".pms-config")
+
+
+def showconfig(_):
+    """ Dump config data. """
+    s = "  %s%-15s%s : \"%s\"\n"
+    out = "  %s%-15s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
+    for setting in g.config:
+        out += s % (c.g, setting, c.w, Config.__dict__[setting])
+
+    g.content = out
+    g.message = "Enter %sset [key] \"value\"%s to change\n" % (c.g, c.w)
+    g.message += "Enter %sset all \"default\"%s to reset all" % (c.g, c.w)
+
+
+def saveconfig():
+    """ Save current config to file. """
+
+    config = {setting: Config.__dict__[setting] for setting in g.config}
+    pickle.dump(config, open(g.CFFILE, "wb"), protocol=2)
+
+
+# override config if config file exists
+if os.path.exists(g.CFFILE):
+    # load and set config
+    saved_config = pickle.load(open(g.CFFILE, "rb"))
+
+    for kk, vv in saved_config.items():
+        setattr(Config, kk, vv)
+        c.doset()
+
+
+def setconfig(key, val):
+    """ Set configuration variable. """
+
+    success_msg = fail_msg = ""
+    key = key.upper()
+
+    if key == "ALL" and val.upper() == "DEFAULT":
+
+        for k, v in g.defaults.items():
+            setattr(Config, k, v)
+            success_msg = "Default configuration reinstated"
+
+    elif key == "DDIR" and not val.upper() == "DEFAULT":
+        valid = os.path.exists(val) and os.path.isdir(val)
+        if valid:
+            setattr(Config, key, val)
+            success_msg = "Downloads will be saved to %s%s%s" % (c.y, val, c.w)
+        else:
+            fail_msg = "Invalid path: %s%s%s" % (c.r, val, c.w)
+
+    elif key == "COLOURS" and not val.upper() == "DEFAULT":
+        if val.upper() in "0 FALSE OFF NO NONE".split():
+            setattr(Config, "COLOURS", False)
+            c.doset()
+            success_msg = "Colours set to disabled"
+        else:
+            setattr(Config, "COLOURS", True)
+            success_msg = "Colours set to enabled"
+        c.doset()
+
+    elif key in g.config:
+        if val.upper() == "DEFAULT":
+            val = g.defaults[key]
+        setattr(Config, key, val)
+        success_msg = "%s has been set to %s" % (key.upper(), val)
+
+    else:
+        fail_msg = "Unknown config item: %s%s%s" % (c.r, key, c.w)
+
+    showconfig(1)
+
+    if success_msg:
+        saveconfig()
+        g.message = success_msg
+
+    elif fail_msg:
+        g.message = fail_msg
+
 
 HELP = """
 Note: More documentation is available at {3}https://github.com/np1/pms{1}
@@ -306,7 +394,7 @@ Released under the GPLv3 license
 def save_to_file():
     """ Save playlists.  Called each time a playlist is saved or deleted. """
 
-    f = open(config.PLFILE, "wb")
+    f = open(Config.PLFILE, "wb")
     pickle.dump(g.userpl, f, protocol=2)
 
 
@@ -314,7 +402,7 @@ def open_from_file():
     """ Open playlists. Called once on script invocation. """
 
     try:
-        f = open(config.PLFILE, "rb")
+        f = open(Config.PLFILE, "rb")
         g.userpl = pickle.load(f)
 
     except IOError:
@@ -479,7 +567,7 @@ def playback_progress(idx, cursong, allsongs, repeat=False):
     playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
     keys = mplayer_help(short=(not multi and not repeat))
 
-    if config.PLAYER == "mplayer":
+    if Config.PLAYER == "mplayer":
         out += "\n" + keys
 
     fmt = (playing, c.r, c.w, c.r, c.w, r)
@@ -567,12 +655,12 @@ def playsong(song, failcount=0):
         return
 
     try:
-        cmd = [config.PLAYER] + config.PLAYERARGS.split() + [song['track_url']]
+        cmd = [Config.PLAYER] + Config.PLAYERARGS.split() + [song['track_url']]
         logging.debug("starting mplayer with " + song['track_url'])
         subprocess.call(cmd)
 
     except OSError:
-        g.message = F('no player') % config.PLAYER
+        g.message = F('no player') % Config.PLAYER
 
 
 def top(period):
@@ -652,11 +740,11 @@ def search(term):
 def _make_fname(song):
     """" Create download directory, generate filename. """
 
-    if not os.path.exists(config.DDIR):
-        os.makedirs(config.DDIR)
+    if not os.path.exists(Config.DDIR):
+        os.makedirs(Config.DDIR)
 
     filename = song['singer'][:49] + " - " + song['song'][:49] + ".mp3"
-    filename = os.path.join(config.DDIR, filename)
+    filename = os.path.join(Config.DDIR, filename)
     return filename
 
 
@@ -1135,6 +1223,8 @@ def main():
     word = r'[^\W\d][-\w\s]{,100}'
     rs = r'(?:repeat\s*|shuffle\s*)'
     regx = {
+        'showconfig': r'(showconfig)',
+        'setconfig': r'set\s*(\w+)\s*"([^"]*)"\s*$',
         'ls': r'ls$',
         'vp': r'vp$',
         'top': r'top(|3m|6m|year|all)',
