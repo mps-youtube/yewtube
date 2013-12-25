@@ -103,25 +103,6 @@ opener.addheaders = [("User Agent", ua)]
 urlopen = opener.open
 
 
-class c(object):
-
-    """ Class for holding colour code values. """
-
-    @staticmethod
-    def doset():
-        """ Set colour values. """
-
-        c.white = "\x1b[0m"
-        c.ul = "\x1b[%sm" * 3 % (2, 4, 33)
-        rgybp = ["\x1b[%sm" % n for n in range(91, 96)]
-        c.red, c.green, c.yellow, c.blue, c.pink = rgybp
-        if not Config.COLOURS:
-            c.ul = c.red = c.green = c.yellow = c.blue = c.pink = c.white = ""
-        c.r, c.g, c.y, c.b, c.p, c.w = c.red, \
-            c.green, c.yellow, c.blue, c.pink, c.white
-
-c.doset()
-
 
 class Playlist(object):
 
@@ -198,7 +179,20 @@ if os.path.exists(g.CFFILE):
 
     for kk, vv in saved_config.items():
         setattr(Config, kk, vv)
-        c.doset()
+
+
+class c(object):
+
+    """ Class for holding colour code values. """
+
+    white = "\x1b[0m"
+    ul = "\x1b[%sm" * 3 % (2, 4, 33)
+    rgybp = ["\x1b[%sm" % n for n in range(91, 96)]
+    red, green, yellow, blue, pink = rgybp
+    if not Config.COLOURS:
+        ul = red = green = yellow = blue = pink = white = ""
+    r, g, y, b, p, w = red, green, yellow, blue, pink, white
+
 
 
 def setconfig(key, val):
@@ -225,12 +219,10 @@ def setconfig(key, val):
     elif key == "COLOURS" and not val.upper() == "DEFAULT":
         if val.upper() in "0 FALSE OFF NO NONE".split():
             setattr(Config, "COLOURS", False)
-            c.doset()
-            success_msg = "Colours set to disabled"
+            success_msg = "Colours set to disabled (restart required)"
         else:
             setattr(Config, "COLOURS", True)
-            success_msg = "Colours set to enabled"
-        c.doset()
+            success_msg = "Colours set to enabled (restart required)"
 
     elif key in g.config:
         if val.upper() == "DEFAULT":
