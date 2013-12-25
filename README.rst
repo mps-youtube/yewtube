@@ -13,7 +13,7 @@ Features
 - Create playlists
 - Download music
 - Works with Python 2.7 and 3.x
-- Works with Windows, Linux and Mac OSX 10.9
+- Works with Windows, Linux and Mac OS X 
 - No Python dependencies
 - Requires mplayer
 
@@ -59,24 +59,12 @@ Manually::
     https://github.com/np1/pms/archive/master.tar.gz
 
 
-Mac OSX installation notes
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mac OS X installation notes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
-Download mplayer::
+Install mplayer with MacPorts::
 
-    https://www.macupdate.com/app/mac/18580/mplayer
-
-Make a link for mplayer::
-
-    ln -s /Applications/MPlayer OSX.app/Contents/Resources/External_Binaries/mplayer.app/Contents/MacOS/mplayer /usr/local/bin/mplayer
-
-Install X11::
-
-    http://xquartz.macosforge.org/landing/
-    
-if using MplayerX::
-
-    ln -s /Applications/MPlayerX.app/Contents/Resources/binaries/x86_64/mplayer /usr/local/bin/mplayer
+    sudo port install MPlayer
 
 Upgrading
 ---------
