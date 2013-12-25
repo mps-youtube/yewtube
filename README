@@ -156,9 +156,9 @@ Playlist commands
 
 ``ls`` to list your saved playlists
 
-``open <playlist_name>`` to open a saved playlist as the current playlist
+``open <playlist_name or ID>`` to open a saved playlist as the current playlist 
 
-``view <playlist_name>`` to view a playlist (leaves current playlist intact)
+``view <playlist_name or ID>`` to view a playlist (leaves current playlist intact)
 
 ``vp`` to view the current playlist (then use rm, mv and sw to modify it)
 
