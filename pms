@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.26"
+__version__ = "0.18.27"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -79,6 +79,7 @@ class Config(object):
     PLAYER = "mplayer"
     PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
     COLOURS = True
+    CHECKUPDATE = True
     DDIR = get_default_ddir()
     PLFILE = os.path.join(os.path.expanduser("~"), ".pms-playlist")
 
@@ -99,9 +100,8 @@ else:
 
 opener = build_opener()
 ua = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)"
-opener.addheaders = [("User Agent", ua)]
+opener.addheaders = [("User-Agent", ua)]
 urlopen = opener.open
-
 
 
 class Playlist(object):
@@ -148,7 +148,7 @@ class g(object):
     text = {}
     userpl = {}
     last_opened = message = content = ""
-    config = "COLOURS PLAYER PLAYERARGS DDIR".split()
+    config = "CHECKUPDATE COLOURS PLAYER PLAYERARGS DDIR".split()
     defaults = {setting: Config.__dict__[setting] for setting in config}
     CFFILE = os.path.join(os.path.expanduser("~"), ".pms-config")
 
@@ -194,7 +194,6 @@ class c(object):
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
 
-
 def setconfig(key, val):
     """ Set configuration variable. """
 
@@ -216,13 +215,13 @@ def setconfig(key, val):
         else:
             fail_msg = "Invalid path: %s%s%s" % (c.r, val, c.w)
 
-    elif key == "COLOURS" and not val.upper() == "DEFAULT":
+    elif key in ["COLOURS", "CHECKUPDATE"] and not val.upper() == "DEFAULT":
         if val.upper() in "0 FALSE OFF NO NONE".split():
-            setattr(Config, "COLOURS", False)
-            success_msg = "Colours set to disabled (restart required)"
+            setattr(Config, key, False)
+            success_msg = "%s set to disabled (restart required)" % key
         else:
-            setattr(Config, "COLOURS", True)
-            success_msg = "Colours set to enabled (restart required)"
+            setattr(Config, key, True)
+            success_msg = "%s set to enabled (restart required)" % key
 
     elif key in g.config:
         if val.upper() == "DEFAULT":
@@ -1060,7 +1059,19 @@ def quits(showlogo=True):
     """ Exit the program. """
 
     msg = ("\n" * 200) + logo(c.r, version=__version__) if showlogo else ""
-    sys.exit(msg + F("exitmsg", 2))
+    vermsg = ""
+    if Config.CHECKUPDATE and showlogo:
+        try:
+            v = urlopen("https://github.com/np1/pms").read().decode("utf8")
+            v = re.search(r"^<p>version\s*([\d\.]+)\s*</p>$", v, re.MULTILINE)
+            if v:
+                v = v.group(1)
+                if v > __version__:
+                    vermsg += "\nA newer version is available (%s)\n" % v
+        except (URLError, HTTPError, socket.timeout):
+            pass
+
+    sys.exit(msg + F("exitmsg", 2) + vermsg)
 
 
 def download(num):
