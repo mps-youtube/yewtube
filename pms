@@ -56,29 +56,38 @@ else:
     py2utf8_decode = lambda x: x.decode("utf8")
     compat_input = raw_input
 
-PLAYER = "mplayer"
-PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
-COLOURS = True
+
+def get_default_ddir():
+    """ Get system default Download directory, append PMS dir. """
+    try:
+        # pylint: disable=E0611
+        from gi.repository import GLib
+        ddir = GLib.get_user_special_dir(GLib.USER_DIRECTORY_DOWNLOAD)
+        ddir = ddir or os.path.join(os.path.expanduser("~"), "Downloads")
+        ddir = py2utf8_decode(ddir)
+
+    except (AttributeError, ImportError):
+        ddir = os.path.join(os.path.expanduser("~"), "Downloads")
+
+    return os.path.join(ddir, "PMS")
 
 
-try:
-    # pylint: disable=E0611
-    from gi.repository import GLib
-    DDIR = GLib.get_user_special_dir(GLib.USER_DIRECTORY_DOWNLOAD)
-    DDIR = DDIR or os.path.join(os.path.expanduser("~"), "Downloads")
-    DDIR = py2utf8_decode(DDIR)
+class config(object):
 
-except (AttributeError, ImportError):
-    DDIR = os.path.join(os.path.expanduser("~"), "Downloads")
+    """ Holds various configuration values. """
 
-DDIR = os.path.join(DDIR, "PMS")
-PLFILE = os.path.join(os.path.expanduser("~"), ".pms-playlist")
+    PLAYER = "mplayer"
+    PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
+    COLOURS = True
+    DDIR = get_default_ddir()
+    PLFILE = os.path.join(os.path.expanduser("~"), ".pms-playlist")
+
 
 if os.path.exists(os.path.join(os.path.expanduser("~"), ".pms-debug")):
     logging.basicConfig(level=logging.DEBUG)
 
 if os.name == "nt":  # Disable colours for Windows
-    COLOURS = False
+    config.COLOURS = False
 
 else:
     try:
@@ -89,8 +98,8 @@ else:
         pass  # no biggie
 
 opener = build_opener()
-opener.addheaders = [("User-Agent", "Mozilla/5.0 (compatible; MSIE 9.0; "
-                      "Windows NT 6.1; WOW64; Trident/5.0)")]
+ua = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)"
+opener.addheaders = [("User Agent", ua)]
 urlopen = opener.open
 
 
@@ -99,12 +108,10 @@ class c(object):
     """ Class for holding colour code values. """
 
     white = "\x1b[0m"
+    ul = "\x1b[%sm" * 3 % (2, 4, 33)
     red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
-    hh = "\x1b[%sm" * 3 % (2, 4, 33)
-
-    if not COLOURS:
-        hh = red = green = yellow = blue = pink = white = ""
-
+    if not config.COLOURS:
+        ul = red = green = yellow = blue = pink = white = ""
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
 
@@ -186,19 +193,20 @@ range,
 {2}add 1,2,5-7{1} can be entered
 {2}add 1,2,3 <playlist_name>{1} to add songs 1,2,3 to a saved playlist.  A new
     playlist will be created if the given name doesn't already exist.
+{2}vp{1} to view the current playlist (then use rm, mv and sw to modify it)
 {2}ls{1} to list your saved playlists
 {2}open <playlist_name or ID>{1} to open a saved playlist as the current \
 playlist
 {2}view <playlist name or ID>{1} to view a playlist (leaves current playlist \
 intact)
-{2}vp{1} to view the current playlist (then use rm, mv and sw to modify it)
+{2}play <playlist name or ID>{1} to play a saved playlist directly
 {2}save{1} or {2}save <playlist_name>{1} to save the currently displayed songs
     as a stored playlist on disk
 {2}mv <old_name or ID> <new_name>{1} to rename a playlist
 {2}rmp <playlist_name or ID>{1} to delete a playlist from disk
 
 {2}q{1} to quit
-""".format(c.hh, c.w, c.g, c.r)
+""".format(c.ul, c.w, c.g, c.r)
 
 
 def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
@@ -298,7 +306,7 @@ Released under the GPLv3 license
 def save_to_file():
     """ Save playlists.  Called each time a playlist is saved or deleted. """
 
-    f = open(PLFILE, "wb")
+    f = open(config.PLFILE, "wb")
     pickle.dump(g.userpl, f, protocol=2)
 
 
@@ -306,7 +314,7 @@ def open_from_file():
     """ Open playlists. Called once on script invocation. """
 
     try:
-        f = open(PLFILE, "rb")
+        f = open(config.PLFILE, "rb")
         g.userpl = pickle.load(f)
 
     except IOError:
@@ -340,7 +348,7 @@ def playlists_display():
             generate_songlist_display()
 
     maxname = max(len(a) for a in g.userpl)
-    out = "      {0}Saved Playlists{1}\n".format(c.hh, c.w)
+    out = "      {0}Saved Playlists{1}\n".format(c.ul, c.w)
     start = "      "
     fmt = "%s%s%-3s %-" + str(maxname + 3) + "s%s %s%-7s%s %-5s%s"
     head = (start, c.b, "ID", "Name", c.b, c.b, "Count", c.b, "Duration", c.w)
@@ -451,7 +459,7 @@ def playback_progress(idx, cursong, allsongs, repeat=False):
 
     # pylint: disable=R0914
     # pylist - too many local variables
-    out = "  %s%-31s  %-31s %s   %s\n" % (c.hh, "Artist", "Title", "Time", c.w)
+    out = "  %s%-31s  %-31s %s   %s\n" % (c.ul, "Artist", "Title", "Time", c.w)
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
@@ -471,7 +479,7 @@ def playback_progress(idx, cursong, allsongs, repeat=False):
     playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
     keys = mplayer_help(short=(not multi and not repeat))
 
-    if PLAYER == "mplayer":
+    if config.PLAYER == "mplayer":
         out += "\n" + keys
 
     fmt = (playing, c.r, c.w, c.r, c.w, r)
@@ -489,7 +497,7 @@ def generate_songlist_display():
         return logo(c.g) + "\n\n"
 
     fmtrow = "%s%-6s %-7s %-21s %-22s %-8s %-7s%s\n"
-    head = (c.hh, "Item", "Size", "Artist", "Track", "Length", "Bitrate", c.w)
+    head = (c.ul, "Item", "Size", "Artist", "Track", "Length", "Bitrate", c.w)
     out = "\n" + fmtrow % head
 
     for n, x in enumerate(songs):
@@ -532,7 +540,7 @@ def get_stream(song, force=False):
 
 
 def playsong(song, failcount=0):
-    """ Play song using PLAYER called with args PLAYERARGS."""
+    """ Play song using config.PLAYER called with args config.PLAYERARGS."""
 
     try:
         track_url = get_stream(song)
@@ -559,12 +567,12 @@ def playsong(song, failcount=0):
         return
 
     try:
-        cmd = [PLAYER] + PLAYERARGS.split() + [song['track_url']]
+        cmd = [config.PLAYER] + config.PLAYERARGS.split() + [song['track_url']]
         logging.debug("starting mplayer with " + song['track_url'])
         subprocess.call(cmd)
 
     except OSError:
-        g.message = F('no player') % PLAYER
+        g.message = F('no player') % config.PLAYER
 
 
 def top(period):
@@ -644,11 +652,11 @@ def search(term):
 def _make_fname(song):
     """" Create download directory, generate filename. """
 
-    if not os.path.exists(DDIR):
-        os.makedirs(DDIR)
+    if not os.path.exists(config.DDIR):
+        os.makedirs(config.DDIR)
 
     filename = song['singer'][:49] + " - " + song['song'][:49] + ".mp3"
-    filename = os.path.join(DDIR, filename)
+    filename = os.path.join(config.DDIR, filename)
     return filename
 
 
