@@ -187,8 +187,10 @@ range,
 {2}add 1,2,3 <playlist_name>{1} to add songs 1,2,3 to a saved playlist.  A new
     playlist will be created if the given name doesn't already exist.
 {2}ls{1} to list your saved playlists
-{2}open <playlist_name>{1} to open a saved playlist as the current playlist
-{2}view <playlist name>{1} to view a playlist (leaves current playlist intact)
+{2}open <playlist_name or ID>{1} to open a saved playlist as the current \
+playlist
+{2}view <playlist name or ID>{1} to view a playlist (leaves current playlist \
+intact)
 {2}vp{1} to view the current playlist (then use rm, mv and sw to modify it)
 {2}save{1} or {2}save <playlist_name>{1} to save the currently displayed songs
     as a stored playlist on disk
