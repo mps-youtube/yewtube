@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.25"
+__version__ = "0.18.26"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -120,6 +120,8 @@ class c(object):
         c.r, c.g, c.y, c.b, c.p, c.w = c.red, \
             c.green, c.yellow, c.blue, c.pink, c.white
 
+c.doset()
+
 
 class Playlist(object):
 
@@ -202,6 +204,7 @@ if os.path.exists(g.CFFILE):
 def setconfig(key, val):
     """ Set configuration variable. """
 
+    # pylint: disable=R0912
     success_msg = fail_msg = ""
     key = key.upper()
 
@@ -546,7 +549,7 @@ def playback_progress(idx, cursong, allsongs, repeat=False):
     """ Generate string to show selected tracks, indicate current track. """
 
     # pylint: disable=R0914
-    # pylist - too many local variables
+    # too many local variables
     out = "  %s%-31s  %-31s %s   %s\n" % (c.ul, "Artist", "Title", "Time", c.w)
     multi = len(allsongs) > 1
 
