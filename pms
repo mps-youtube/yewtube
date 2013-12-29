@@ -614,6 +614,10 @@ def get_stream(song, force=False):
             logging.debug("fetched 2nd attempt" + url)
 
         j = json.loads(wdata)
+
+        if not j.get("track_link"):
+            raise URLError("This track is not accessible")
+
         track_url = j['track_link']
         return track_url
 
