@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.28"
+__version__ = "0.18.29"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -143,6 +143,9 @@ class g(object):
     """ Class for holding globals that are needed throught the module. """
 
     model = Playlist(name="model")
+    last_search_query = ""
+    current_page = 1
+    last_result_count = 0
     active = Playlist(name="active")
     noblank = False
     text = {}
@@ -690,7 +693,7 @@ def top(period):
     g.content = generate_songlist_display()
 
 
-def search(term):
+def search(term, page=1, splash=True):
     """ Perform search. """
 
     if not term or len(term) < 2:
@@ -698,6 +701,7 @@ def search(term):
         g.content = generate_songlist_display()
 
     else:
+        original_term = term
         url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
 
         if "+best" in term:
@@ -709,9 +713,12 @@ def search(term):
             url += "&quality=good"
 
         g.message = "Searching for '%s%s%s'" % (c.y, term, c.w)
-        g.content = logo(c.b) + "\n\n"
-        screen_update()
-        url = url % (term.replace(" ", "+"), 1)
+
+        if splash:
+            g.content = logo(c.b) + "\n\n"
+            screen_update()
+
+        url = url % (term.replace(" ", "+"), page)
 
         try:
             logging.debug("[3] fetching " + url)
@@ -723,9 +730,14 @@ def search(term):
                 g.model.songs = songs
                 g.message = "Search results for %s%s%s" % (c.y, term, c.w)
                 g.last_opened = ""
+                g.last_search_query = original_term
+                g.last_result_count = len(songs)
+                g.current_page = page
 
             else:
                 g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
+                g.current_page = 1
+                g.last_search_query = ""
 
         except (URLError, HTTPError) as e:
             g.message = F('no data') % e
@@ -1216,6 +1228,31 @@ def add_rm_all(action):
         songlist_rm_add("add", "-" + str(size))
 
 
+def nextprev(np):
+    """ Get next / previous search results. """
+
+    if np == "n":
+        if len(g.model.songs) == 20 and g.last_search_query:
+            g.current_page += 1
+            search(g.last_search_query, g.current_page, splash=False)
+            g.message += " : page %s" % g.current_page
+
+        else:
+            g.message = "No more songs to display"
+
+    elif np == "p":
+        if g.current_page > 1 and g.last_search_query:
+            g.current_page -= 1
+            search(g.last_search_query, g.current_page, splash=False)
+            g.message += " : page %s" % g.current_page
+
+        else:
+            g.message = "No previous songs to display"
+
+    g.content = generate_songlist_display()
+
+
+
 def main():
     """ Main control loop. """
 
@@ -1235,6 +1272,7 @@ def main():
     word = r'[^\W\d][-\w\s]{,100}'
     rs = r'(?:repeat\s*|shuffle\s*)'
     regx = {
+        'nextprev': r'(n|p)',
         'showconfig': r'(showconfig)',
         'setconfig': r'set\s*(\w+)\s*"([^"]*)"\s*$',
         'ls': r'ls$',
