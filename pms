@@ -665,7 +665,7 @@ def playsong(song, failcount=0):
         g.message = F('no player') % Config.PLAYER
 
 
-def top(period):
+def top(period, page=1):
     """ Get top music for period, returns songs list."""
 
     period = period or "w"
@@ -673,24 +673,30 @@ def top(period):
     period = periods.index(period)
     url = ("http://pleer.com/en/gettopperiod?target1=%s&target2=r1&select=e&"
            "page_ru=1&page_en=%s")
-    url = url % ("e%s" % period, 1)
+    url = url % ("e%s" % period, page)
     tps = "past week,past 3 months,past 6 months,past year,all time".split(",")
     msg = ("%sTop tracks for %s%s" % (c.y, tps[period - 1], c.w))
     g.message = msg
     logging.debug("[2] fetching " + url)
 
-    try:
-        wdata = urlopen(url).read().decode("utf8")
+    if g.url_memo.get(url):
+        g.model.songs = g.url_memo[url]
 
-    except (URLError, HTTPError) as e:
-        g.message = F('no data') % e
-        g.content = logo(c.r)
-        return
+    else:
+        try:
+            wdata = urlopen(url).read().decode("utf8")
 
-    logging.debug("fetched " + url)
-    match = re.search(r"<ol id=\"search-results\">[\w\W]+?<\/ol>", wdata)
-    html_ol = match.group(0)
-    g.model.songs = get_tracks_from_page(html_ol)
+        except (URLError, HTTPError) as e:
+            g.message = F('no data') % e
+            g.content = logo(c.r)
+            return
+
+        logging.debug("fetched " + url)
+        match = re.search(r"<ol id=\"search-results\">[\w\W]+?<\/ol>", wdata)
+        html_ol = match.group(0)
+        g.model.songs = get_tracks_from_page(html_ol)
+        g.url_memo[url] = g.model.songs if g.model.songs else None
+
     g.content = generate_songlist_display()
 
 
@@ -742,13 +748,14 @@ def search(term, page=1, splash=True):
             g.last_opened = ""
             g.last_search_query = original_term
             g.current_page = page
+            g.content = generate_songlist_display()
 
         else:
             g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
+            g.content = logo(c.r)
             g.current_page = 1
             g.last_search_query = ""
 
-        g.content = generate_songlist_display()
 
 
 def _make_fname(song):
