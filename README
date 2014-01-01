@@ -1,6 +1,6 @@
 pms
 ===
-version 0.18.28
+version 0.18.29
 
 .. image:: http://badge.fury.io/py/Poor-Mans-Spotify.png
     :target: https://pypi.python.org/pypi/Poor-Mans-Spotify
@@ -99,6 +99,8 @@ Searching
 
 You can enter an artist/song name to search whenever the program is expecting
 text input. Searches must be prefixed with a . (dot) character.
+
+Enter ``n`` or ``p`` to go to the next / previous page of results
 
 When a list of songs is displayed, such as search results or a playlist, you
 can use the following commands:
