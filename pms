@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.29"
+__version__ = "0.18.30"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -142,6 +142,7 @@ class g(object):
 
     """ Class for holding globals that are needed throught the module. """
 
+    url_memo = {}
     model = Playlist(name="model")
     last_search_query = ""
     current_page = 1
@@ -158,6 +159,7 @@ class g(object):
 
 def showconfig(_):
     """ Dump config data. """
+
     s = "  %s%-15s%s : \"%s\"\n"
     out = "  %s%-15s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
     for setting in g.config:
@@ -722,9 +724,17 @@ def search(term, page=1, splash=True):
 
         try:
             logging.debug("[3] fetching " + url)
-            wdata = urlopen(url).read().decode("utf8")
-            logging.debug("fetched" + url)
-            songs = get_tracks_from_page(wdata)
+
+            if url in g.url_memo:
+                songs = g.url_memo[url]
+
+            else:
+                wdata = urlopen(url).read().decode("utf8")
+                logging.debug("fetched" + url)
+                songs = get_tracks_from_page(wdata)
+
+                if songs:
+                    g.url_memo[url] = songs
 
             if songs:
                 g.model.songs = songs
@@ -1250,7 +1260,6 @@ def nextprev(np):
             g.message = "No previous songs to display"
 
     g.content = generate_songlist_display()
-
 
 
 def main():
