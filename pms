@@ -146,7 +146,6 @@ class g(object):
     model = Playlist(name="model")
     last_search_query = ""
     current_page = 1
-    last_result_count = 0
     active = Playlist(name="active")
     noblank = False
     text = {}
@@ -716,43 +715,38 @@ def search(term, page=1, splash=True):
 
         g.message = "Searching for '%s%s%s'" % (c.y, term, c.w)
 
-        if splash:
-            g.content = logo(c.b) + "\n\n"
-            screen_update()
 
         url = url % (term.replace(" ", "+"), page)
 
-        try:
-            logging.debug("[3] fetching " + url)
+        if url in g.url_memo:
+            songs = g.url_memo[url]
 
-            if url in g.url_memo:
-                songs = g.url_memo[url]
+        else:
+            if splash:
+                g.content = logo(c.b) + "\n\n"
+                screen_update()
 
-            else:
+            try:
                 wdata = urlopen(url).read().decode("utf8")
-                logging.debug("fetched" + url)
                 songs = get_tracks_from_page(wdata)
 
-                if songs:
-                    g.url_memo[url] = songs
+            except (URLError, HTTPError) as e:
+                g.message = F('no data') % e
+                g.content = logo(c.r)
+                return
 
-            if songs:
-                g.model.songs = songs
-                g.message = "Search results for %s%s%s" % (c.y, term, c.w)
-                g.last_opened = ""
-                g.last_search_query = original_term
-                g.last_result_count = len(songs)
-                g.current_page = page
+        if songs:
+            g.url_memo[url] = songs
+            g.model.songs = songs
+            g.message = "Search results for %s%s%s" % (c.y, term, c.w)
+            g.last_opened = ""
+            g.last_search_query = original_term
+            g.current_page = page
 
-            else:
-                g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
-                g.current_page = 1
-                g.last_search_query = ""
-
-        except (URLError, HTTPError) as e:
-            g.message = F('no data') % e
-            g.content = logo(c.r)
-            return
+        else:
+            g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
+            g.current_page = 1
+            g.last_search_query = ""
 
         g.content = generate_songlist_display()
 
@@ -1281,7 +1275,7 @@ def main():
     word = r'[^\W\d][-\w\s]{,100}'
     rs = r'(?:repeat\s*|shuffle\s*)'
     regx = {
-        'nextprev': r'(n|p)',
+        'nextprev': r'(n|p)$',
         'showconfig': r'(showconfig)',
         'setconfig': r'set\s*(\w+)\s*"([^"]*)"\s*$',
         'ls': r'ls$',
