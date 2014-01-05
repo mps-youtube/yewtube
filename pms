@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.30"
+__version__ = "0.18.31"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -371,9 +371,8 @@ Released under the GPLv3 license
     'pl loaded_': (c.y, c.w),
     'pl viewed': 'Showing playlist *&&*',
     'pl viewed_': (c.y, c.w),
-    'pl help': 'Enter *open <name or ID>* to load a playlist or *rmp <name or'
-    ' ID>* to delete\nEnter *view <name or ID>* to view a playlist',
-    'pl help_': (c.g, c.w, c.g, c.w, c.g, c.w),
+    'pl help': 'Enter *open <name or ID>* to load a playlist',
+    'pl help_': (c.g, c.w),
     'added to pl': '*&&* tracks added (*&&* total [*&&*]). Use *vp* to view',
     'added to pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.g, c.w),
     'added to saved pl': '*&&* tracks added to *&&* (*&&* total [*&&*])',
@@ -1044,7 +1043,7 @@ def play_range(songlist, shuffle=False, repeat=False):
                 playsong(song)
             except KeyboardInterrupt:
                 print("Stopping...")
-                time.sleep(2)
+                time.sleep(1)
                 g.message = c.y + "Playback halted" + c.w
                 break
 
