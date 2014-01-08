@@ -451,10 +451,10 @@ def playlists_display():
 def mplayer_help(short=True):
     """ Mplayer help.  """
 
-    seek = "[{0}<-{1}] seek [{0}->{1}]"
+    seek = u"[{0}\u2190{1}] seek [{0}\u2192{1}]"
     volume = "[{0}9{1}] volume [{0}0{1}]"
     volume = volume if short else volume + "      [{0}ctrl-c{1}] return"
-    pause = "[{0}DN{1}] SEEK [{0}UP{1}]       [{0}space{1}] pause"
+    pause = u"[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
     ret = "[{0}q{1}] %s" % ("return" if short else "next track")
     fmt = "    %-20s       %-20s"
     lines = fmt % (seek, volume) + "\n" + fmt % (pause, ret)
