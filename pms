@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.31"
+__version__ = "0.18.32"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -756,7 +756,6 @@ def search(term, page=1, splash=True):
             g.last_search_query = ""
 
 
-
 def _make_fname(song):
     """" Create download directory, generate filename. """
 
@@ -1262,6 +1261,24 @@ def nextprev(np):
     g.content = generate_songlist_display()
 
 
+def plist(parturl):
+    """ Import playlist created on website. """
+
+    url = "http://pleer.com/en/" + parturl
+
+    try:
+        page = urlopen(url).read().decode("utf8")
+        songs = get_tracks_from_page(page)
+        g.model.songs = songs
+        g.active.songs = songs
+        g.message = c.y + "Playlist imported" + c.w
+
+    except Exception:
+        g.message = "Problem fetching that list."
+
+    g.content = generate_songlist_display()
+
+
 def main():
     """ Main control loop. """
 
@@ -1281,21 +1298,22 @@ def main():
     word = r'[^\W\d][-\w\s]{,100}'
     rs = r'(?:repeat\s*|shuffle\s*)'
     regx = {
-        'nextprev': r'(n|p)$',
-        'showconfig': r'(showconfig)',
-        'setconfig': r'set\s*(\w+)\s*"([^"]*)"\s*$',
         'ls': r'ls$',
         'vp': r'vp$',
         'top': r'top(|3m|6m|year|all)\s*$',
+        'plist': r'.*(list[\da-zA-Z]{8,14})$',
         'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,2})$' % (rs, rs),
         'quits': r'(?:q|quit|exit)$',
         'search': r'(?:search|\.)\s*(.{2,500})',
         'play_pl': r'play\s*(%s|\d+)$' % word,
         'download': r'(?:d|dl|download)\s*(\d{1,4})$',
+        'nextprev': r'(n|p)$',
         'play_all': r'(%s{0,3})all\s*(%s{0,3})$' % (rs, rs),
         'save_last': r'(save)\s*$',
-        'show_help': r'(?:help|h)(\s*\w{0,20})$',
+        'setconfig': r'set\s*(\w+)\s*"([^"]*)"\s*$',
+        'show_help': r'(?:help|h)$',
         'add_rm_all': r'(rm|add)\s*all$',
+        'showconfig': r'(showconfig)',
         'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
         'open_save_view': r'(open|save|view)\s*(%s)$' % word,
         'songlist_mv_sw': r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})$',
@@ -1342,6 +1360,7 @@ def main():
                 g.message = c.b + "Bad syntax. Enter h for help" + c.w
 
         screen_update()
+
 
 if __name__ == "__main__":
     main()
