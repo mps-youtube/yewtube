@@ -1,6 +1,6 @@
 pms
 ===
-version 0.18.31
+version 0.18.32
 
 .. image:: http://badge.fury.io/py/Poor-Mans-Spotify.png
     :target: https://pypi.python.org/pypi/Poor-Mans-Spotify
@@ -177,6 +177,8 @@ Other Commands
 ``topyear`` show top tracks for last year
 
 ``topall`` show all time top tracks
+
+``list [pleer playlist url]``` to import a playlist from the web.
 
 Advanced Tips
 -------------
