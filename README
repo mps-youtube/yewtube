@@ -1,6 +1,6 @@
 pms
 ===
-version 0.18.32
+version 0.18.33
 
 .. image:: http://badge.fury.io/py/Poor-Mans-Spotify.png
     :target: https://pypi.python.org/pypi/Poor-Mans-Spotify
