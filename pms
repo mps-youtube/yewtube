@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.33"
+__version__ = "0.18.34"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -640,15 +640,8 @@ def playsong(song, failcount=0):
         return
 
     except ValueError:
-        track_url = get_stream(song, force=True)
-
-        if not song['track_url'] == track_url:
-            song['track_url'] = track_url
-            save_to_file()
-
-        else:
-            g.message = F('track unresolved')
-            return
+        g.message = F('track unresolved')
+        return
 
     try:
         logging.debug("getting content-length header for " + track_url)
