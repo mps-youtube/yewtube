@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.32"
+__version__ = "0.18.33"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -353,7 +353,7 @@ Released under the GPLv3 license
     'use dot_': (c.g, c.w),
     'cant get track': 'Problem fetching this track: *&&*',
     'cant get track_': (c.r, c.w),
-    'track unresolved': 'Sorry, this track is  not available',
+    'track unresolved': 'Sorry, this track is not available',
     'no player': '*&&* was not found on this system',
     'no player_': (c.y, c.w),
     'no pl match for rename': '*Couldn\'t find matching playlist to rename*',
@@ -638,6 +638,17 @@ def playsong(song, failcount=0):
     except (URLError, HTTPError) as e:
         g.message = F('cant get track') % str(e)
         return
+
+    except ValueError:
+        track_url = get_stream(song, force=True)
+
+        if not song['track_url'] == track_url:
+            song['track_url'] = track_url
+            save_to_file()
+
+        else:
+            g.message = F('track unresolved')
+            return
 
     try:
         logging.debug("getting content-length header for " + track_url)
