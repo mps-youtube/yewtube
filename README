@@ -66,6 +66,15 @@ Install mplayer with MacPorts::
 
     sudo port install MPlayer
 
+
+Windows installation notes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Install the python colorama module to get colors::
+
+    pip install colorama
+
+
 Upgrading
 ---------
 
