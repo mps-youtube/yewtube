@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.34"
+__version__ = "0.18.35"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -762,7 +762,7 @@ def _make_fname(song):
         os.makedirs(Config.DDIR)
 
     filename = song['singer'][:49] + " - " + song['song'][:49] + ".mp3"
-    filename = os.path.join(Config.DDIR, filename)
+    filename = os.path.join(Config.DDIR, filename.replace("/", "-"))
     return filename
 
 
