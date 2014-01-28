@@ -37,6 +37,12 @@ import json
 import sys
 import re
 import os
+try:
+    from colorama import init as init_colorama, Fore, Style
+    has_colorama = True
+except ImportError:
+    has_colorama = False
+
 
 # Python 3 compatibility hack
 
@@ -87,10 +93,10 @@ class Config(object):
 if os.path.exists(os.path.join(os.path.expanduser("~"), ".pms-debug")):
     logging.basicConfig(level=logging.DEBUG)
 
-if os.name == "nt":  # Disable colours for Windows
+if os.name == "nt" and not has_colorama:  # Disable colours for Windows if colorama isn't installed
     Config.COLOURS = False
 
-else:
+if os.name != "nt":
     try:
         import readline  # import readline if not running on windows
         readline.get_history_length()  # redundant, prevents unused import warn
@@ -189,10 +195,15 @@ class c(object):
 
     """ Class for holding colour code values. """
 
-    white = "\x1b[0m"
-    ul = "\x1b[%sm" * 3 % (2, 4, 33)
-    rgybp = ["\x1b[%sm" % n for n in range(91, 96)]
-    red, green, yellow, blue, pink = rgybp
+    if os.name == "nt" and has_colorama:
+        white = Style.RESET_ALL
+        ul = Style.DIM + Fore.YELLOW
+        red, green, yellow, blue, pink = Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.CYAN, Fore.MAGENTA
+    else:
+        white = "\x1b[0m"
+        ul = "\x1b[%sm" * 3 % (2, 4, 33)
+        red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
+
     if not Config.COLOURS:
         ul = red = green = yellow = blue = pink = white = ""
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
@@ -1362,4 +1373,6 @@ def main():
 
 
 if __name__ == "__main__":
+    if has_colorama:
+        init_colorama()
     main()
