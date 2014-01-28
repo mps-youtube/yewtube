@@ -250,7 +250,8 @@ HELP = """
 Note: More documentation is available at {3}https://github.com/np1/pms{1}
 {0}Searching{1}
 You can enter an artist/song name to search whenever the program is expecting
-text input. Searches must be prefixed with a {2}.{1} character.
+text input. Searches must be prefixed with either a {2}.{1} or {2}/{1} \
+character.
 
 When a list of songs is displayed, you can use the following commands:
 
@@ -1303,7 +1304,7 @@ def main():
         'plist': r'.*(list[\da-zA-Z]{8,14})$',
         'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,2})$' % (rs, rs),
         'quits': r'(?:q|quit|exit)$',
-        'search': r'(?:search|\.)\s*(.{2,500})',
+        'search': r'(?:search|\.|/)\s*(.{2,500})',
         'play_pl': r'play\s*(%s|\d+)$' % word,
         'download': r'(?:d|dl|download)\s*(\d{1,4})$',
         'nextprev': r'(n|p)$',

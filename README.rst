@@ -98,7 +98,7 @@ Searching
 ~~~~~~~~~
 
 You can enter an artist/song name to search whenever the program is expecting
-text input. Searches must be prefixed with a . (dot) character.
+text input. Searches must be prefixed with either a . or / character.
 
 Enter ``n`` or ``p`` to go to the next / previous page of results
 
