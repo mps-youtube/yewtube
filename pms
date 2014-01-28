@@ -1285,7 +1285,8 @@ def main():
     # update screen
     g.content = generate_songlist_display()
     g.content = logo(col=c.g, version=__version__) + "\n"
-    g.message = "Welcome!"
+    #g.message = "Welcome!"
+    g.message = "Enter .artist/song name to search or [h]elp"
     screen_update()
 
     # open playlists from file
@@ -1327,7 +1328,8 @@ def main():
     # compile regexp's
     regx = {name: re.compile(val, re.UNICODE) for name, val in regx.items()}
 
-    prompt = "Enter .artist/song name to search or [h]elp > " + c.y
+    #prompt = "Enter .artist/song name to search or [h]elp > " + c.y
+    prompt = "> " + c.y
 
     while True:
         try:
