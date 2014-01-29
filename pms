@@ -1369,9 +1369,7 @@ def main():
 
     # compile regexp's
     regx = {name: re.compile(val, re.UNICODE) for name, val in regx.items()}
-
-    #prompt = "Enter .artist/song name to search or [h]elp > " + c.y
-    prompt = "> " + c.y
+    prompt = "> " + c.y if not mswin else "> "
 
     while True:
         try:
