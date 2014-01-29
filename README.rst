@@ -1,6 +1,6 @@
 pms
 ===
-version 0.18.36
+version 0.18.37
 
 .. image:: http://badge.fury.io/py/Poor-Mans-Spotify.png
     :target: https://pypi.python.org/pypi/Poor-Mans-Spotify
@@ -42,11 +42,11 @@ Playlists
 Installation
 ------------
 
-Using pip::
+Using `pip <http://www.pip-installer.org>`_::
     
     sudo pip install Poor-Mans-Spotify
 
-Using git::
+Using `git <http://www.git-scm.com>`_::
 
     git clone https://github.com/np1/pms.git
    
@@ -62,7 +62,7 @@ Manually::
 Mac OS X installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
-Install mplayer with MacPorts::
+Install mplayer with `MacPorts <http://www.macports.org>`_::
 
     sudo port install MPlayer
 
@@ -70,7 +70,15 @@ Install mplayer with MacPorts::
 Windows installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to get colors::
+Install pms using pip or git or by downloading and extracting the zip file as
+listed above.
+
+Download mplayer for your CPU type from the "Build Selection table" `here
+<http://oss.netfarm.it/mplayer-win32.php>`_. 
+
+Extract the mplayer.exe file, saving it to your pms directory
+
+Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to get colors (optional)::
 
     pip install colorama
 
