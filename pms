@@ -37,12 +37,16 @@ import json
 import sys
 import re
 import os
+
 try:
+    # pylint: disable=F0401
     from colorama import init as init_colorama, Fore, Style
     has_colorama = True
+
 except ImportError:
     has_colorama = False
 
+mswin = os.name == "nt"
 
 # Python 3 compatibility hack
 
@@ -61,6 +65,26 @@ else:
     py2utf = lambda x: x.encode("utf8")
     py2utf8_decode = lambda x: x.decode("utf8")
     compat_input = raw_input
+
+def mswinenc(txt):
+    """ Encoding for Windows. """
+
+    if mswin:
+        sse = sys.stdout.encoding
+        txt = txt.encode(sse, "replace").decode("utf8", "ignore")
+
+    return txt
+
+
+def mswinfn(filename):
+    """ Fix filename for Windows. """
+
+    if mswin:
+        filename = mswinenc(filename)
+        ok = re.compile(r'[^\\/?*$\'"%&:<>|]')
+        filename = "".join(x if ok.match(x) else "_" for x in filename)
+
+    return filename
 
 
 def get_default_ddir():
@@ -93,10 +117,10 @@ class Config(object):
 if os.path.exists(os.path.join(os.path.expanduser("~"), ".pms-debug")):
     logging.basicConfig(level=logging.DEBUG)
 
-if os.name == "nt" and not has_colorama:  # Disable colours for Windows if colorama isn't installed
+if mswin and not has_colorama:  # Disable colours for Windows if no colorama
     Config.COLOURS = False
 
-if os.name != "nt":
+if not mswin:
     try:
         import readline  # import readline if not running on windows
         readline.get_history_length()  # redundant, prevents unused import warn
@@ -195,14 +219,16 @@ class c(object):
 
     """ Class for holding colour code values. """
 
-    if os.name == "nt" and has_colorama:
+    if mswin and has_colorama:
         white = Style.RESET_ALL
         ul = Style.DIM + Fore.YELLOW
-        red, green, yellow, blue, pink = Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.CYAN, Fore.MAGENTA
+        red, green, yellow = Fore.RED, Fore.GREEN, Fore.YELLOW
+        blue, pink = Fore.CYAN, Fore.MAGENTA
     else:
-        white = "\x1b[0m"
-        ul = "\x1b[%sm" * 3 % (2, 4, 33)
-        red, green, yellow, blue, pink = ["\x1b[%sm" % n for n in range(91, 96)]
+        CC = "\x1b[%sm"
+        white = CC % 0
+        ul = CC * 3 % (2, 4, 33)
+        red, green, yellow, blue, pink = [CC % n for n in range(91, 96)]
 
     if not Config.COLOURS:
         ul = red = green = yellow = blue = pink = white = ""
@@ -458,13 +484,12 @@ def playlists_display():
 def mplayer_help(short=True):
     """ Mplayer help.  """
 
-
     seek = u"[{0}\u2190{1}] seek [{0}\u2192{1}]"
     volume = "[{0}9{1}] volume [{0}0{1}]"
     volume = volume if short else volume + "      [{0}ctrl-c{1}] return"
     pause = u"[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
 
-    if os.name == "nt":
+    if mswin:
         seek = "[{0}<-{1}] seek [{0}->{1}]"
         pause = "[{0}DN{1}] SEEK [{0}UP{1}]       [{0}space{1}] pause"
 
@@ -543,6 +568,7 @@ def screen_update():
         print("\n" * 200)
 
     if g.content:
+        g.content = mswinenc(g.content)
         print(py2utf(g.content))
 
     if g.message:
@@ -675,7 +701,8 @@ def playsong(song, failcount=0):
     try:
         cmd = [Config.PLAYER] + Config.PLAYERARGS.split() + [song['track_url']]
         logging.debug("starting mplayer with " + song['track_url'])
-        subprocess.call(cmd)
+        with open(os.devnull, "w") as fnull:
+            subprocess.call(cmd, stdout=fnull, stderr=fnull)
 
     except OSError:
         g.message = F('no player') % Config.PLAYER
@@ -736,8 +763,6 @@ def search(term, page=1, splash=True):
             url += "&quality=good"
 
         g.message = "Searching for '%s%s%s'" % (c.y, term, c.w)
-
-
         url = url % (term.replace(" ", "+"), page)
 
         if url in g.url_memo:
@@ -780,7 +805,7 @@ def _make_fname(song):
         os.makedirs(Config.DDIR)
 
     filename = song['singer'][:49] + " - " + song['song'][:49] + ".mp3"
-    filename = os.path.join(Config.DDIR, filename.replace("/", "-"))
+    filename = os.path.join(Config.DDIR, mswinfn(filename.replace("/", "-")))
     return filename
 
 
@@ -1290,7 +1315,7 @@ def plist(parturl):
         g.active.songs = songs
         g.message = c.y + "Playlist imported" + c.w
 
-    except Exception:
+    except IOError:
         g.message = "Problem fetching that list."
 
     g.content = generate_songlist_display()
