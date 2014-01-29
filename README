@@ -70,17 +70,14 @@ Install mplayer with `MacPorts <http://www.macports.org>`_::
 Windows installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Install pms using pip or git or by downloading and extracting the zip file as
-listed above.
+Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to get colors (optional)::
+
+    pip install colorama
 
 Download mplayer for your CPU type from the "Build Selection table" `here
 <http://oss.netfarm.it/mplayer-win32.php>`_. 
 
 Extract the mplayer.exe file, saving it to your pms directory
-
-Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to get colors (optional)::
-
-    pip install colorama
 
 
 Upgrading
