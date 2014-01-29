@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.36"
+__version__ = "0.18.37"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -65,6 +65,7 @@ else:
     py2utf = lambda x: x.encode("utf8")
     py2utf8_decode = lambda x: x.decode("utf8")
     compat_input = raw_input
+
 
 def mswinenc(txt):
     """ Encoding for Windows. """
@@ -224,11 +225,15 @@ class c(object):
         ul = Style.DIM + Fore.YELLOW
         red, green, yellow = Fore.RED, Fore.GREEN, Fore.YELLOW
         blue, pink = Fore.CYAN, Fore.MAGENTA
+
+    elif mswin:
+        Config.COLOURS = False
+
     else:
-        CC = "\x1b[%sm"
-        white = CC % 0
-        ul = CC * 3 % (2, 4, 33)
-        red, green, yellow, blue, pink = [CC % n for n in range(91, 96)]
+        white = "\x1b[%sm" % 0
+        ul = "\x1b[%sm" * 3 % (2, 4, 33)
+        cols = ["\x1b[%sm" % n for n in range(91, 96)]
+        red, green, yellow, blue, pink = cols
 
     if not Config.COLOURS:
         ul = red = green = yellow = blue = pink = white = ""
@@ -361,7 +366,7 @@ g.text = {
     "exitmsg": """\
 **0pms - **1http://github.com/np1/pms**0
 Released under the GPLv3 license
-(c) 2013 nagev**2\n""",
+(c) 2013-2014 nagev**2\n""",
     "_exitmsg": (c.r, c.b, c.w),
 
     # Error / Warning messages
@@ -1158,7 +1163,12 @@ def download(num):
 
     except KeyboardInterrupt:
         g.message = c.r + "Download halted!" + c.w
-        os.remove(filename)
+
+        try:
+            os.remove(filename)
+
+        except IOError:
+            pass
 
     finally:
         g.content = generate_songlist_display()
