@@ -55,14 +55,14 @@ if sys.version_info[:2] >= (3, 0):
     import pickle
     from urllib.request import build_opener
     from urllib.error import HTTPError, URLError
-    py2utf = lambda x: x
+    py2utf8_encode = lambda x: x
     py2utf8_decode = lambda x: x
     compat_input = input
 
 else:
     from urllib2 import build_opener, HTTPError, URLError
     import cPickle as pickle
-    py2utf = lambda x: x.encode("utf8")
+    py2utf8_encode = lambda x: x.encode("utf8")
     py2utf8_decode = lambda x: x.decode("utf8")
     compat_input = raw_input
 
@@ -585,7 +585,7 @@ def screen_update():
 
     if g.content:
         g.content = mswinenc(g.content)
-        print(py2utf(g.content))
+        print(py2utf8_encode(g.content))
 
     if g.message:
         print(g.message)
