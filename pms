@@ -111,6 +111,7 @@ class Config(object):
     PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
     COLOURS = True
     CHECKUPDATE = True
+    SHOW_MPLAYER_KEYS = True
     DDIR = get_default_ddir()
     PLFILE = os.path.join(os.path.expanduser("~"), ".pms-playlist")
 
@@ -182,7 +183,7 @@ class g(object):
     text = {}
     userpl = {}
     last_opened = message = content = ""
-    config = "CHECKUPDATE COLOURS PLAYER PLAYERARGS DDIR".split()
+    config = "CHECKUPDATE COLOURS PLAYER PLAYERARGS DDIR SHOW_MPLAYER_KEYS".split()
     defaults = {setting: Config.__dict__[setting] for setting in config}
     CFFILE = os.path.join(os.path.expanduser("~"), ".pms-config")
 
@@ -190,8 +191,8 @@ class g(object):
 def showconfig(_):
     """ Dump config data. """
 
-    s = "  %s%-15s%s : \"%s\"\n"
-    out = "  %s%-15s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
+    s = "  %s%-17s%s : \"%s\"\n"
+    out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
     for setting in g.config:
         out += s % (c.g, setting, c.w, Config.__dict__[setting])
 
@@ -265,7 +266,7 @@ def setconfig(key, val):
 
     elif key in ["COLOURS", "CHECKUPDATE"] and not val.upper() == "DEFAULT":
 
-        if val.upper() in "0 FALSE OFF NO NONE".split():
+        if val.upper() in "0 FALSE OFF NO".split():
             setattr(Config, key, False)
             success_msg = "%s set to disabled (restart required)" % key
 
@@ -277,8 +278,11 @@ def setconfig(key, val):
             success_msg = "%s set to enabled (restart required)" % key
 
     elif key in g.config:
+
         if val.upper() == "DEFAULT":
             val = g.defaults[key]
+
+        val = False if val.upper() in "0 FALSE OFF NO".split() else True
         setattr(Config, key, val)
         success_msg = "%s has been set to %s" % (key.upper(), val)
 
@@ -615,8 +619,12 @@ def playback_progress(idx, cursong, allsongs, repeat=False):
     playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
     keys = mplayer_help(short=(not multi and not repeat))
 
-    if Config.PLAYER == "mplayer":
+    if Config.PLAYER == "mplayer" and Config.SHOW_MPLAYER_KEYS:
         out += "\n" + keys
+
+    else:
+        playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
+        out += "\n" + " " * 58
 
     fmt = (playing, c.r, c.w, c.r, c.w, r)
     out += ("{}    {}%s{} by {}%s{} [{}]" % (cur[1], cur[0])).format(*fmt)
