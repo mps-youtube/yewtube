@@ -183,8 +183,8 @@ class g(object):
     text = {}
     userpl = {}
     last_opened = message = content = ""
-    config = "CHECKUPDATE COLOURS PLAYER PLAYERARGS DDIR SHOW_MPLAYER_KEYS".split()
     configbool = "COLOURS CHECKUPDATE SHOW_MPLAYER_KEYS".split()
+    config = configbool + "PLAYER PLAYERARGS DDIR".split()
     defaults = {setting: Config.__dict__[setting] for setting in config}
     CFFILE = os.path.join(os.path.expanduser("~"), ".pms-config")
 
@@ -615,7 +615,7 @@ def playback_progress(idx, cursong, allsongs, repeat=False):
         out += "%s%s%s%-31s%s  %s%-31s%s [%s%s%s]\n" % fmt
 
     out += "\n" * (3 - len(allsongs))
-    pos = (8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
+    pos = 8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w
     playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
     keys = mplayer_help(short=(not multi and not repeat))
     out = out if multi else generate_songlist_display(playing=True)
