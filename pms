@@ -620,11 +620,11 @@ def playback_progress(idx, cursong, allsongs, repeat=False):
     out = out if multi else generate_songlist_display(playing=True)
 
     if Config.PLAYER == "mplayer" and Config.SHOW_MPLAYER_KEYS:
-        out += "\n" + keys
+        out += "\n" + keys if multi else ""
 
     else:
         playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
-        out += "\n" + " " * 58
+        out += "\n" + " " * 58 if multi else ""
 
     fmt = (playing, c.r, c.w, c.r, c.w, r)
     out += ("{}    {}%s{} by {}%s{} [{}]" % (cur[1], cur[0])).format(*fmt)
