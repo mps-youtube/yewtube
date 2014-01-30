@@ -46,7 +46,6 @@ try:
 except ImportError:
     has_colorama = False
 
-mswin = os.name == "nt"
 
 # Python 3 compatibility hack
 
@@ -66,6 +65,8 @@ else:
     py2utf8_decode = lambda x: x.decode("utf8")
     compat_input = raw_input
 
+mswin = os.name == "nt"
+
 
 def mswinenc(txt):
     """ Encoding for Windows. """
@@ -82,14 +83,15 @@ def mswinfn(filename):
 
     if mswin:
         filename = mswinenc(filename)
-        ok = re.compile(r'[^\\/?*$\'"%&:<>|]')
-        filename = "".join(x if ok.match(x) else "_" for x in filename)
+        allowed = re.compile(r'[^\\/?*$\'"%&:<>|]')
+        filename = "".join(x if allowed.match(x) else "_" for x in filename)
 
     return filename
 
 
 def get_default_ddir():
     """ Get system default Download directory, append PMS dir. """
+
     try:
         # pylint: disable=E0611
         from gi.repository import GLib
@@ -109,7 +111,7 @@ class Config(object):
 
     PLAYER = "mplayer"
     PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
-    COLOURS = True
+    COLOURS = False if mswin and not has_colorama else True
     CHECKUPDATE = True
     SHOW_MPLAYER_KEYS = True
     DDIR = get_default_ddir()
@@ -118,9 +120,6 @@ class Config(object):
 
 if os.path.exists(os.path.join(os.path.expanduser("~"), ".pms-debug")):
     logging.basicConfig(level=logging.DEBUG)
-
-if mswin and not has_colorama:  # Disable colours for Windows if no colorama
-    Config.COLOURS = False
 
 if not mswin:
     try:
@@ -194,6 +193,7 @@ def showconfig(_):
 
     s = "  %s%-17s%s : \"%s\"\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
+
     for setting in g.config:
         out += s % (c.g, setting, c.w, Config.__dict__[setting])
 
@@ -256,6 +256,7 @@ def setconfig(key, val):
             success_msg = "Default configuration reinstated"
 
     elif key == "DDIR" and not val.upper() == "DEFAULT":
+
         valid = os.path.exists(val) and os.path.isdir(val)
 
         if valid:
