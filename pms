@@ -600,6 +600,7 @@ def playback_progress(idx, cursong, allsongs, repeat=False):
     # pylint: disable=R0914
     # too many local variables
     out = "  %s%-31s  %-31s %s   %s\n" % (c.ul, "Artist", "Title", "Time", c.w)
+    show_key_help = Config.PLAYER == "mplayer" and Config.SHOW_MPLAYER_KEYS
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
@@ -619,15 +620,15 @@ def playback_progress(idx, cursong, allsongs, repeat=False):
     keys = mplayer_help(short=(not multi and not repeat))
     out = out if multi else generate_songlist_display(playing=True)
 
-    if Config.PLAYER == "mplayer" and Config.SHOW_MPLAYER_KEYS:
-        out += "\n" + keys if multi else ""
+    if show_key_help:
+        out += "\n" + keys
 
     else:
         playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
         out += "\n" + " " * 58 if multi else ""
 
-    fmt = (playing, c.r, c.w, c.r, c.w, r)
-    out += ("{}    {}%s{} by {}%s{} [{}]" % (cur[1], cur[0])).format(*fmt)
+    fmt = playing, c.r, cur[1], c.w, c.r, cur[0], c.w, r, cur[2]
+    out += "%s    %s%s%s by %s%s%s [%s] [%s]" % fmt
     out += "    REPEAT MODE" if repeat else ""
     return out
 
