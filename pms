@@ -613,11 +613,11 @@ def playback_progress(idx, cursong, allsongs, repeat=False):
 
         out += "%s%s%s%-31s%s  %s%-31s%s [%s%s%s]\n" % fmt
 
-    out = out if multi else logo(c.p)
     out += "\n" * (3 - len(allsongs))
     pos = (8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w)
     playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
     keys = mplayer_help(short=(not multi and not repeat))
+    out = out if multi else generate_songlist_display(playing=True)
 
     if Config.PLAYER == "mplayer" and Config.SHOW_MPLAYER_KEYS:
         out += "\n" + keys
@@ -632,7 +632,7 @@ def playback_progress(idx, cursong, allsongs, repeat=False):
     return out
 
 
-def generate_songlist_display():
+def generate_songlist_display(playing=False):
     """ Generate list of choices from a song list."""
 
     songs = g.model.songs or []
@@ -654,7 +654,7 @@ def generate_songlist_display():
         out += (fmtrow % (col, str(n + 1), str(size)[:3] + " Mb", artist[:20],
                 title[:21], duration[:8], bitrate[:6], c.w))
 
-    return out + "\n" * (5 - len(songs))
+    return out + "\n" * (5 - len(songs)) if not playing else out
 
 
 def get_stream(song, force=False):
