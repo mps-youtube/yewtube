@@ -30,8 +30,6 @@ Playback
 
 .. image:: http://i.imgur.com/3sYlktI.png
 
-.. image:: http://i.imgur.com/yzgQBmx.png
-
 Playlists
 ~~~~~~~~~
 
@@ -228,8 +226,8 @@ Specifying Ranges
 
 When selecting songs for playback, removing or adding you can use ``5-`` to 
 select song 5 upward and ``-5`` to select up to song 5.  This can be included
-with other choice so for example: ``5,3,7-,-2``.  You can also use spaces
-instead of commas eg. ``5 3 7- -2`` or a combination of both eg. ``3,4 7-9, 1``
+with other choices so for example: ``5,3,7-,-2``.  You can also use spaces
+instead of commas eg. ``5 3 7- -2``.
 
 Quality / Bitrate
 ~~~~~~~~~~~~~~~~~
