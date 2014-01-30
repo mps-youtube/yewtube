@@ -5,7 +5,7 @@ pms.
 
 https://github.com/np1/pms
 
-Copyright (C)  2013 nagev
+Copyright (C)  2013-2014 nagev
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -184,6 +184,7 @@ class g(object):
     userpl = {}
     last_opened = message = content = ""
     config = "CHECKUPDATE COLOURS PLAYER PLAYERARGS DDIR SHOW_MPLAYER_KEYS".split()
+    configbool = "COLOURS CHECKUPDATE SHOW_MPLAYER_KEYS".split()
     defaults = {setting: Config.__dict__[setting] for setting in config}
     CFFILE = os.path.join(os.path.expanduser("~"), ".pms-config")
 
@@ -264,25 +265,24 @@ def setconfig(key, val):
         else:
             fail_msg = "Invalid path: %s%s%s" % (c.r, val, c.w)
 
-    elif key in ["COLOURS", "CHECKUPDATE"] and not val.upper() == "DEFAULT":
+    elif key in g.configbool and not val.upper() == "DEFAULT":
 
         if val.upper() in "0 FALSE OFF NO".split():
             setattr(Config, key, False)
-            success_msg = "%s set to disabled (restart required)" % key
+            success_msg = "%s set to disabled (restart may be required)" % key
 
         elif key == "COLOURS" and mswin and not has_colorama:
             fail_msg = "Can't enable colours, colorama not found"
 
         else:
             setattr(Config, key, True)
-            success_msg = "%s set to enabled (restart required)" % key
+            success_msg = "%s set to enabled (restart may be required)" % key
 
     elif key in g.config:
 
         if val.upper() == "DEFAULT":
             val = g.defaults[key]
 
-        val = False if val.upper() in "0 FALSE OFF NO".split() else True
         setattr(Config, key, val)
         success_msg = "%s has been set to %s" % (key.upper(), val)
 
