@@ -628,8 +628,8 @@ def playback_progress(idx, allsongs, repeat=False):
         playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
         out += "\n" + " " * 58 if multi else ""
 
-    fmt = playing, c.r, cur[1], c.w, c.r, cur[0], c.w, r, cur[2]
-    out += "%s    %s%s%s by %s%s%s [%s] [%s]" % fmt
+    fmt = playing, c.r, cur[1], c.w, c.r, cur[0], c.w, r
+    out += "%s    %s%s%s by %s%s%s [%s]" % fmt
     out += "    REPEAT MODE" if repeat else ""
     return out
 
