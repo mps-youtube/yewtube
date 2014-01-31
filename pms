@@ -619,7 +619,7 @@ def playback_progress(idx, allsongs, repeat=False):
     pos = 8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w
     playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
     keys = mplayer_help(short=(not multi and not repeat))
-    out = out if multi else generate_songlist_display(playing=True)
+    out = out if multi else generate_songlist_display(song=allsongs[0])
 
     if show_key_help:
         out += "\n" + keys
@@ -634,7 +634,7 @@ def playback_progress(idx, allsongs, repeat=False):
     return out
 
 
-def generate_songlist_display(playing=False):
+def generate_songlist_display(song=False):
     """ Generate list of choices from a song list."""
 
     songs = g.model.songs or []
@@ -647,16 +647,23 @@ def generate_songlist_display(playing=False):
     out = "\n" + fmtrow % head
 
     for n, x in enumerate(songs):
-        col = c.r if n % 2 == 0 else c.p
+        col = (c.r if n % 2 == 0 else c.p) if not song else c.b
         size = x.get('size') or 0
         title = x.get('song') or "unknown title"
         artist = x.get('singer') or "unknown artist"
         bitrate = x.get('listrate') or "unknown"
         duration = x.get('duration') or "unknown length"
-        out += (fmtrow % (col, str(n + 1), str(size)[:3] + " Mb", artist[:20],
-                title[:21], duration[:8], bitrate[:6], c.w))
 
-    return out + "\n" * (5 - len(songs)) if not playing else out
+        if not song or song != songs[n]:
+            out += (fmtrow % (col, str(n + 1), str(size)[:3] + " Mb",
+                              artist[:20], title[:21], duration[:8],
+                              bitrate[:6], c.w))
+        else:
+            out += (fmtrow % (c.p, str(n + 1), str(size)[:3] + " Mb",
+                              artist[:20], title[:21], duration[:8],
+                              bitrate[:6], c.w))
+
+    return out + "\n" * (5 - len(songs)) if not song else out
 
 
 def get_stream(song, force=False):
