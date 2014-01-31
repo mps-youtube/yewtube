@@ -182,9 +182,8 @@ class g(object):
     text = {}
     userpl = {}
     last_opened = message = content = ""
-    member_var = lambda x: not(x.startswith("__") or callable(x))
-    config = filter(member_var, dir(Config))
-    configbool = [x for x in config if type(getattr(Config, x)) is bool]
+    configbool = "COLOURS CHECKUPDATE SHOW_MPLAYER_KEYS".split()
+    config = configbool + "PLAYER PLAYERARGS DDIR".split()
     defaults = {setting: Config.__dict__[setting] for setting in config}
     CFFILE = os.path.join(os.path.expanduser("~"), ".pms-config")
 
