@@ -66,6 +66,7 @@ else:
     compat_input = raw_input
 
 mswin = os.name == "nt"
+member_var = lambda x: not(x.startswith("__") or callable(x))
 
 
 def mswinenc(txt):
@@ -182,8 +183,7 @@ class g(object):
     text = {}
     userpl = {}
     last_opened = message = content = ""
-    member_var = lambda x: not(x.startswith("__") or callable(x))
-    config = filter(member_var, dir(Config))
+    config = [x for x in dir(Config) if member_var(x)]
     configbool = [x for x in config if type(getattr(Config, x)) is bool]
     defaults = {setting: Config.__dict__[setting] for setting in config}
     CFFILE = os.path.join(os.path.expanduser("~"), ".pms-config")
