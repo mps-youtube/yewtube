@@ -595,7 +595,7 @@ def screen_update():
     g.noblank = False
 
 
-def playback_progress(idx, cursong, allsongs, repeat=False):
+def playback_progress(idx, allsongs, repeat=False):
     """ Generate string to show selected tracks, indicate current track. """
 
     # pylint: disable=R0914
@@ -1100,7 +1100,7 @@ def play_range(songlist, shuffle=False, repeat=False):
     if not repeat:
 
         for n, song in enumerate(songlist):
-            g.content = playback_progress(n, song, songlist, repeat=False)
+            g.content = playback_progress(n, songlist, repeat=False)
             screen_update()
             try:
                 playsong(song)
@@ -1115,8 +1115,7 @@ def play_range(songlist, shuffle=False, repeat=False):
         while True:
             try:
                 for n, song in enumerate(songlist):
-                    g.content = playback_progress(n, song, songlist,
-                                                  repeat=True)
+                    g.content = playback_progress(n, songlist, repeat=True)
                     screen_update()
                     playsong(song)
                     g.content = generate_songlist_display()
