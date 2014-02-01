@@ -1,6 +1,6 @@
 pms
 ===
-version 0.18.38
+version 0.18.39
 
 .. image:: https://pypip.in/d/Poor-Mans-Spotify/badge.png
     :target: https://pypi.python.org/pypi/Poor-Mans-Spotify
@@ -232,6 +232,16 @@ Quality / Bitrate
 
 Add ``+best`` to a search query to return high bitrate results or ``+good`` to
 exclude them.
+
+Using MPV instead of MPlayer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you have `mpv <http://mpv.io>`_ installed and want to use that instead of mplayer;
+
+From within pms::
+
+    set PLAYER "mpv"
+    set PLAYERARGS "-really-quiet"
 
 Other Configuration
 ~~~~~~~~~~~~~~~~~~~
