@@ -1171,8 +1171,9 @@ def quits(showlogo=True):
 
     if Config.CHECKUPDATE and showlogo:
         try:
-            v = urlopen("https://github.com/np1/pms").read().decode("utf8")
-            v = re.search(r"^<p>version\s*([\d\.]+)\s*</p>$", v, re.MULTILINE)
+            url = "https://github.com/np1/pms/raw/master/VERSION"
+            v = urlopen(url).read().decode("utf8")
+            v = re.search(r"^version\s*([\d\.]+)\s*$", v, re.MULTILINE)
             if v:
                 v = v.group(1)
                 if v > __version__:
