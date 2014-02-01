@@ -182,7 +182,7 @@ class g(object):
     text = {}
     userpl = {}
     last_opened = message = content = ""
-    config = [x for x in dir(Config) if member_var(x)]
+    config = [x for x in sorted(dir(Config)) if member_var(x)]
     configbool = [x for x in config if type(getattr(Config, x)) is bool]
     defaults = {setting: getattr(Config, setting) for setting in config}
     CFFILE = os.path.join(os.path.expanduser("~"), ".pms-config")
@@ -602,7 +602,8 @@ def playback_progress(idx, allsongs, repeat=False):
     # pylint: disable=R0914
     # too many local variables
     out = "  %s%-31s  %-31s %s   %s\n" % (c.ul, "Artist", "Title", "Time", c.w)
-    show_key_help = Config.PLAYER == "mplayer" and Config.SHOW_MPLAYER_KEYS
+    show_key_help = (Config.PLAYER == "mplayer" or Config.PLAYER == "mpv")\
+        and Config.SHOW_MPLAYER_KEYS
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
@@ -731,8 +732,19 @@ def playsong(song, failcount=0):
     try:
         cmd = [Config.PLAYER] + Config.PLAYERARGS.split() + [song['track_url']]
         logging.debug("starting mplayer with " + song['track_url'])
+
+        stdout = stderr = None
+
         with open(os.devnull, "w") as fnull:
-            subprocess.call(cmd, stdout=fnull, stderr=fnull)
+
+            if "mpv" in Config.PLAYER:
+                stderr = fnull
+
+            if mswin:
+                stdout = stderr = fnull
+
+            subprocess.call(cmd, stdout=stdout, stderr=stderr)
+
 
     except OSError:
         g.message = F('no player') % Config.PLAYER
