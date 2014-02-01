@@ -116,7 +116,6 @@ class Config(object):
     CHECKUPDATE = True
     SHOW_MPLAYER_KEYS = True
     DDIR = get_default_ddir()
-    PLFILE = os.path.join(os.path.expanduser("~"), ".pms-playlist")
 
 
 if os.path.exists(os.path.join(os.path.expanduser("~"), ".pms-debug")):
@@ -187,6 +186,7 @@ class g(object):
     configbool = [x for x in config if type(getattr(Config, x)) is bool]
     defaults = {setting: Config.__dict__[setting] for setting in config}
     CFFILE = os.path.join(os.path.expanduser("~"), ".pms-config")
+    PLFILE = os.path.join(os.path.expanduser("~"), ".pms-playlist")
 
 
 def showconfig(_):
@@ -442,7 +442,7 @@ Released under the GPLv3 license
 def save_to_file():
     """ Save playlists.  Called each time a playlist is saved or deleted. """
 
-    f = open(Config.PLFILE, "wb")
+    f = open(g.PLFILE, "wb")
     pickle.dump(g.userpl, f, protocol=2)
 
 
@@ -450,7 +450,7 @@ def open_from_file():
     """ Open playlists. Called once on script invocation. """
 
     try:
-        f = open(Config.PLFILE, "rb")
+        f = open(g.PLFILE, "rb")
         g.userpl = pickle.load(f)
 
     except IOError:
