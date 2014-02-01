@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.38"
+__version__ = "0.18.39"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -184,7 +184,7 @@ class g(object):
     last_opened = message = content = ""
     config = [x for x in dir(Config) if member_var(x)]
     configbool = [x for x in config if type(getattr(Config, x)) is bool]
-    defaults = {setting: Config.__dict__[setting] for setting in config}
+    defaults = {setting: getattr(Config, setting) for setting in config}
     CFFILE = os.path.join(os.path.expanduser("~"), ".pms-config")
     PLFILE = os.path.join(os.path.expanduser("~"), ".pms-playlist")
 
@@ -196,7 +196,7 @@ def showconfig(_):
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
 
     for setting in g.config:
-        out += s % (c.g, setting, c.w, Config.__dict__[setting])
+        out += s % (c.g, setting, c.w, getattr(Config, setting))
 
     g.content = out
     g.message = "Enter %sset [key] \"value\"%s to change\n" % (c.g, c.w)
@@ -206,7 +206,7 @@ def showconfig(_):
 def saveconfig():
     """ Save current config to file. """
 
-    config = {setting: Config.__dict__[setting] for setting in g.config}
+    config = {setting: getattr(Config, setting) for setting in g.config}
     pickle.dump(config, open(g.CFFILE, "wb"), protocol=2)
 
 
