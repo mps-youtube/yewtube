@@ -3,9 +3,9 @@
 """
 pms.
 
-https://github.com/np1/pms
+https://github.com/np1/pms-youtube
 
-Copyright (C)  2013-2014 nagev
+Copyright (C) 2014 nagev
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.18.39"
+__version__ = "0.01.01"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -117,7 +117,10 @@ class Config(object):
     COLOURS = False if mswin and not has_colorama else True
     CHECKUPDATE = True
     SHOW_MPLAYER_KEYS = True
+    SHOW_STATUS = True
     DDIR = get_default_ddir()
+    SHOW_VIDEO = False
+    SEARCH_MUSIC = True
 
 
 if os.path.exists(os.path.join(os.path.expanduser("~"), ".pms-debug")):
@@ -198,7 +201,7 @@ def showconfig(_):
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
 
     for setting in g.config:
-        out += s % (c.g, setting, c.w, getattr(Config, setting))
+        out += s % (c.g, setting.lower(), c.w, getattr(Config, setting))
 
     g.content = out
     g.message = "Enter %sset [key] \"value\"%s to change\n" % (c.g, c.w)
@@ -381,7 +384,7 @@ g.text = {
     "exitmsg": """\
 **0pms - **1http://github.com/np1/pms**0
 Released under the GPLv3 license
-(c) 2013-2014 nagev**2\n""",
+(c) 2014 nagev**2\n""",
     "_exitmsg": (c.r, c.b, c.w),
 
     # Error / Warning messages
@@ -398,7 +401,7 @@ Released under the GPLv3 license
     'pl empty': 'Playlist is empty!',
     'advise add': 'Use *add N* to add a track',
     'advise add_': (c.g, c.w),
-    'advise search': 'Search for songs and then use *add* to add them',
+    'advise search': 'Search for items and then use *add* to add them',
     'advise search_': (c.g, c.w),
     'no data': 'Error fetching data. Perhaps http://pleer.com is down.\n*&&*',
     'no data_': (c.r, c.w),
@@ -432,7 +435,7 @@ Released under the GPLv3 license
     'added to saved pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.y, c.w),
     'song move': 'Moved *&&* to position *&&*',
     'song move_': (c.y, c.w, c.y, c.w),
-    'song sw': ("Switched track *&&* with *&&*"),
+    'song sw': ("Switched item *&&* with *&&*"),
     'song sw_': (c.y, c.w, c.y, c.w),
     'current pl': "This is the current playlist. Use *save <name>* to save it",
     'current pl_': (c.g, c.w),
@@ -473,7 +476,8 @@ def logo(col=None, version=""):
       888        888  Y8P  888       "888
       888        888   "   888 Y88b  d88P
       888        888       888  "Y8888P"  %s
-      """ % (c.w + "v" + version if version else "")
+      """ % (c.w + "v" + version + " (YouTube)" if version else "")
+
     return LOGO + c.w
 
 
@@ -531,22 +535,6 @@ def tidy(raw, field):
             raw = raw.replace(r[0], r[1])
 
     return raw
-
-
-def get_average_bitrate(song):
-    """ Calculate average bitrate of VBR tracks. """
-
-    if song["rate"] == "VBR":
-        vbrsize = float(song["Rsize"][:-3]) * 10000
-        vbrlen = float(song["Rduration"])
-        vbrabr = str(int(vbrsize / vbrlen))
-        song["listrate"] = vbrabr + " v"  # for display in list
-        song["rate"] = vbrabr + " Kb/s VBR"  # for playback display
-
-    else:
-        song["listrate"] = song["rate"][:3]  # not vbr list display
-
-    return song
 
 
 def get_tracks_from_json(json):
@@ -637,8 +625,8 @@ def generate_songlist_display(song=False):
     if not songs:
         return logo(c.g) + "\n\n"
 
-    fmtrow = "%s%-5s %-7s %-61s%s\n"
-    head = (c.ul, "Item", "Length", "Title", c.w)
+    fmtrow = "%s%-5s %-61s %-7s%s\n"
+    head = (c.ul, "Item", "Title", "Length", c.w)
     out = "\n" + fmtrow % head
 
     for n, x in enumerate(songs):
@@ -647,12 +635,17 @@ def generate_songlist_display(song=False):
         title = x.get('title') or "unknown title"
 
         if not song or song != songs[n]:
-            out += (fmtrow % (col, str(n + 1), str(length), title[:50] , c.w))
+            out += (fmtrow % (col, str(n + 1), title[:60], str(length), c.w))
 
         else:
-            out += (fmtrow % (c.p, str(n + 1), str(length), title[:50] , c.w))
+            out += (fmtrow % (c.p, str(n + 1), title[:60], str(length), c.w))
 
     return out + "\n" * (5 - len(songs)) if not song else out
+
+
+def writestatus(text):
+    if Config.SHOW_STATUS:
+        writeline(text)
 
 
 def writeline(text):
@@ -666,11 +659,12 @@ def get_stream(song, force=True):
 
     if not "track_url" in song or force:
 
-        writeline("getting link for %s\r" % song['link'])
+        statusline = "getting stream url for %s..." % song['link']
+        writestatus(statusline)
         p = pafy.new(song['link'])
 
         try:
-            track = p.getbestaudio()
+            track = p.getbest() if Config.SHOW_VIDEO else p.getbestaudio()
 
         except ValueError:
             track = p.allstreams[0]
@@ -684,7 +678,7 @@ def get_stream(song, force=True):
         l = song['link']
 
         filesize = filesize / (1024 ** 2)
-        writeline("%s : %s : %s Mb" % (l, extension, filesize))
+        writestatus("%s : %s : %s Mb" % (l, extension, filesize))
 
         return track.url
 
@@ -733,7 +727,7 @@ def playsong(song, failcount=0):
 
         with open(os.devnull, "w") as fnull:
 
-            if "mpv" in Config.PLAYER:
+            if "mpv" in Config.PLAYER or "mplayer" in Config.PLAYER:
                 stderr = fnull
 
             if mswin:
@@ -747,7 +741,8 @@ def playsong(song, failcount=0):
             failed = fin - now < 1 and song['duration'] > 10
 
             if failed and failcount < 4:
-                writeline("trying again (attempt %s)" % failcount)
+
+                writestatus("trying again (attempt %s)" % 1 + failcount)
                 time.sleep(1)
                 failcount += 1
                 playsong(song, failcount=failcount)
@@ -811,7 +806,8 @@ def search(term, page=1, splash=True):
             'v': 2,
             'alt': 'jsonc',
             'start-index': page * 20,
-            'category': "Music",
+            'category': "Music" if Config.SEARCH_MUSIC else "All",
+            'safeSearch': "none",
             'max-results': 20,
             'orderby': 'relevance'
         }
@@ -858,7 +854,12 @@ def _make_fname(song):
     if not os.path.exists(Config.DDIR):
         os.makedirs(Config.DDIR)
 
-    extension = pafy.new(song['link']).getbestaudio().extension
+    if not Config.SHOW_VIDEO:
+        extension = pafy.new(song['link']).getbestaudio().extension
+
+    else:
+        extension = pafy.new(song['link']).getbest().extension
+
     filename = song['title'][:59] + "." + extension
 
     filename = os.path.join(Config.DDIR, mswinfn(filename.replace("/", "-")))
