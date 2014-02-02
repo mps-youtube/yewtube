@@ -1,15 +1,15 @@
-pms
-===
-version 0.18.39
+pms-youtube
+===========
+version 0.01.01
 
 .. image:: https://pypip.in/d/Poor-Mans-Spotify/badge.png
     :target: https://pypi.python.org/pypi/Poor-Mans-Spotify
 
 Features
 --------
-- Search and stream music
-- Create playlists
-- Download music
+- Search YouTube
+- Create playlists (locally)
+- Download Audio/Video
 - Works with Python 2.7 and 3.x
 - Works with Windows, Linux and Mac OS X 
 - No Python dependencies
@@ -40,19 +40,19 @@ Installation
 
 Using `pip <http://www.pip-installer.org>`_::
     
-    sudo pip install Poor-Mans-Spotify
+    sudo pip install Poor-Mans-Spotify-YT
 
 Using `git <http://www.git-scm.com>`_::
 
-    git clone https://github.com/np1/pms.git
+    git clone https://github.com/np1/pms-youtube.git
    
 Manually::
 
     Download zip file or tar.gz and extract:
 
-    https://github.com/np1/pms/archive/master.zip
+    https://github.com/np1/pms-youtube/archive/master.zip
 
-    https://github.com/np1/pms/archive/master.tar.gz
+    https://github.com/np1/pms-youtube/archive/master.tar.gz
 
 
 Mac OS X installation notes
@@ -117,16 +117,16 @@ can use the following commands:
 
 Downloading
 ~~~~~~~~~~~
-``d 3`` to download song 3
+``d 3`` to download song/video 3
 
 Playback
 ~~~~~~~~
 
-``all`` to play all displayed tracks
+``all`` to play all displayed items
 
-``1,2,3`` to play songs 1 2 and 3
+``1,2,3`` to play items 1 2 and 3
 
-``2-4,6,6-3`` to play songs 2, 3, 4, 6, 6, 5, 4, 3
+``2-4,6,6-3`` to play items 2, 3, 4, 6, 6, 5, 4, 3
 
 Note: The commands ``shuffle`` and ``repeat`` can be inserted at the start or
 end of any of the above to enable those play modes: eg, ``shuffle 1-4`` or
@@ -134,24 +134,24 @@ end of any of the above to enable those play modes: eg, ``shuffle 1-4`` or
 
 Editing
 ~~~~~~~
-``rm 1,5`` to remove songs 1 and 5.
+``rm 1,5`` to remove items 1 and 5.
 
-``rm 1,2,5-7`` to remove songs 1,2 and 5-7.
+``rm 1,2,5-7`` to remove items 1,2 and 5-7.
 
-``rm all`` to remove all songs
+``rm all`` to remove all items
 
-``sw 1,3`` to swap the position of songs 1 and 3
+``sw 1,3`` to swap the position of items 1 and 3
 
-``mv 1,3`` to move song 1 to postion 3
+``mv 1,3`` to move items 1 to postion 3
 
 Playlist commands
 ~~~~~~~~~~~~~~~~~
 
-``add 1,2,3`` to add songs 1,2 and 3 to the current playlist. 
+``add 1,2,3`` to add items 1,2 and 3 to the current playlist. 
 
-``add 1-4,6,8-10`` to add songs 1-4, 6, and 8-10 to the current playlist
+``add 1-4,6,8-10`` to add items 1-4, 6, and 8-10 to the current playlist
     
-``add 1-4,7 <playlist_name>`` to add songs 1-4 and 7 to a saved playlist.  A
+``add 1-4,7 <playlist_name>`` to add items 1-4 and 7 to a saved playlist.  A
 new playlist will be created if the given name doesn't already exist.
 
 ``vp`` to view the current playlist (then use rm, mv and sw to modify it)
@@ -175,20 +175,6 @@ stored playlist on disk
 
 ``h`` for help
 
-Other Commands
---------------
-
-``top`` show top tracks this week
-
-``top3m`` show top tracks for last 3 months
-
-``top6m`` show top tracks for last 6 months
-
-``topyear`` show top tracks for last year
-
-``topall`` show all time top tracks
-
-``list [pleer playlist url]``` to import a playlist from the web.
 
 Advanced Tips
 -------------
@@ -223,15 +209,14 @@ Specifying Ranges
 ~~~~~~~~~~~~~~~~~
 
 When selecting songs for playback, removing or adding you can use ``5-`` to 
-select song 5 upward and ``-5`` to select up to song 5.  This can be included
+select items 5 upward and ``-5`` to select up to item 5.  This can be included
 with other choices so for example: ``5,3,7-,-2``.  You can also use spaces
 instead of commas eg. ``5 3 7- -2``.
 
 Quality / Bitrate
 ~~~~~~~~~~~~~~~~~
 
-Add ``+best`` to a search query to return high bitrate results or ``+good`` to
-exclude them.
+Not yet implemented
 
 Using MPV instead of MPlayer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -250,3 +235,17 @@ To view configuration, enter ``showconfig`` and to change any item enter:
 ``set <item> "value"``.  This can be used to change the download path (DDIR)
 and will persist after exiting the program.  To reset all settings to default,
 use ``set all "default"`` or for a single item, ``set <item> "default"``
+
+Search All Categories
+~~~~~~~~~~~~~~~~~~~~~
+
+To search all of YouTube, enter:: 
+    
+    set search_music "false"
+
+Show Video Content
+~~~~~~~~~~~~~~~~~~
+
+To view/download video instead of audio, enter::
+
+    set show_video "true"
