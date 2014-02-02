@@ -30,9 +30,11 @@ __license__ = "GPLv3"
 
 import subprocess
 import logging
+import urllib
 import random
 import socket
 import time
+import pafy
 import json
 import sys
 import re
@@ -163,7 +165,7 @@ class Playlist(object):
         duration = 0
 
         for song in self.songs:
-            duration += int(song['Rduration'])
+            duration += int(song['duration'])
 
         duration = time.strftime('%H:%M:%S', time.gmtime(int(duration)))
         return duration
@@ -185,8 +187,8 @@ class g(object):
     config = [x for x in sorted(dir(Config)) if member_var(x)]
     configbool = [x for x in config if type(getattr(Config, x)) is bool]
     defaults = {setting: getattr(Config, setting) for setting in config}
-    CFFILE = os.path.join(os.path.expanduser("~"), ".pms-config")
-    PLFILE = os.path.join(os.path.expanduser("~"), ".pms-playlist")
+    CFFILE = os.path.join(os.path.expanduser("~"), ".pms-yt-config")
+    PLFILE = os.path.join(os.path.expanduser("~"), ".pms-yt-playlist")
 
 
 def showconfig(_):
@@ -547,33 +549,25 @@ def get_average_bitrate(song):
     return song
 
 
-def get_tracks_from_page(page):
+def get_tracks_from_json(json):
     """ Get search results from web page. """
 
-    fields = "duration file_id singer song link rate size source".split()
-    matches = re.findall(r"\<li.(duration[^>]+)\>", page)
+    items = json['data']['items']
     songs = []
 
-    if matches:
+    for item in items:
+        cursong = dict(
+            title=item['title'].strip(),
+            duration=item['duration'],
+            length=tidy(item['duration'], "duration"),
+            link=item['id'],
+            rating=item.get('rating')
+        )
 
-        for song in matches:
-            cursong = {}
+        songs.append(cursong)
 
-            for f in fields:
-                v = re.search(r'%s=\"([^"]+)"' % f, song)
-
-                if v:
-                    cursong[f] = tidy(v.group(1), f)
-                    cursong["R" + f] = v.group(1)
-
-                else:
-                    raise Exception("problem with field " + f)
-
-            cursong = get_average_bitrate(cursong)
-            songs.append(cursong)
-
-    else:
-        logging.debug("got unexpected webpage or no search results")
+    if not items:
+        logging.debug("got unexpected data or no search results")
         return False
 
     return songs
@@ -601,21 +595,20 @@ def playback_progress(idx, allsongs, repeat=False):
 
     # pylint: disable=R0914
     # too many local variables
-    out = "  %s%-31s  %-31s %s   %s\n" % (c.ul, "Artist", "Title", "Time", c.w)
+    out = "  %s%-64s %s   %s\n" % (c.ul, "Title", "Time", c.w)
     show_key_help = (Config.PLAYER == "mplayer" or Config.PLAYER == "mpv")\
         and Config.SHOW_MPLAYER_KEYS
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
-        i = song['singer'][:30], song['song'][:30], song['duration']
-        rate = song['rate']
-        fmt = (c.w, "  ", c.b, i[0], c.w, c.b, i[1], c.w, c.y, i[2], c.w)
+        i = song['title'][:61], song['length']
+        fmt = (c.w, "  ", c.b, i[0], c.w, c.y, i[1], c.w)
 
         if n == idx:
-            fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w, c.p, i[2], c.w)
-            r, cur = rate, i
+            fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w)
+            cur = i
 
-        out += "%s%s%s%-31s%s  %s%-31s%s [%s%s%s]\n" % fmt
+        out += "%s%s%s%-64s%s [%s%s%s]\n" % fmt
 
     out += "\n" * (3 - len(allsongs))
     pos = 8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w
@@ -630,8 +623,8 @@ def playback_progress(idx, allsongs, repeat=False):
         playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
         out += "\n" + " " * 58 if multi else ""
 
-    fmt = playing, c.r, cur[1], c.w, c.r, cur[0], c.w, r
-    out += "%s    %s%s%s by %s%s%s [%s]" % fmt
+    fmt = playing, c.r, cur[1], c.w, c.r, cur[0], c.w
+    out += "%s    %s%s%s by %s%s%s" % fmt
     out += "    REPEAT MODE" if repeat else ""
     return out
 
@@ -644,55 +637,56 @@ def generate_songlist_display(song=False):
     if not songs:
         return logo(c.g) + "\n\n"
 
-    fmtrow = "%s%-6s %-7s %-21s %-22s %-8s %-7s%s\n"
-    head = (c.ul, "Item", "Size", "Artist", "Track", "Length", "Bitrate", c.w)
+    fmtrow = "%s%-5s %-7s %-61s%s\n"
+    head = (c.ul, "Item", "Length", "Title", c.w)
     out = "\n" + fmtrow % head
 
     for n, x in enumerate(songs):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
-        size = x.get('size') or 0
-        title = x.get('song') or "unknown title"
-        artist = x.get('singer') or "unknown artist"
-        bitrate = x.get('listrate') or "unknown"
-        duration = x.get('duration') or "unknown length"
+        length = x.get('length') or 0
+        title = x.get('title') or "unknown title"
 
         if not song or song != songs[n]:
-            out += (fmtrow % (col, str(n + 1), str(size)[:3] + " Mb",
-                              artist[:20], title[:21], duration[:8],
-                              bitrate[:6], c.w))
+            out += (fmtrow % (col, str(n + 1), str(length), title[:50] , c.w))
+
         else:
-            out += (fmtrow % (c.p, str(n + 1), str(size)[:3] + " Mb",
-                              artist[:20], title[:21], duration[:8],
-                              bitrate[:6], c.w))
+            out += (fmtrow % (c.p, str(n + 1), str(length), title[:50] , c.w))
 
     return out + "\n" * (5 - len(songs)) if not song else out
 
 
-def get_stream(song, force=False):
+def writeline(text):
+    spaces = 75 - len(text)
+    sys.stdout.write(text + (" " * spaces) + "\r")
+    sys.stdout.flush()
+
+
+def get_stream(song, force=True):
     """ Return the url for a song. """
 
     if not "track_url" in song or force:
-        url = 'http://pleer.com/site_api/files/get_url?action=download&id=%s'
-        url = url % song['link']
+
+        writeline("getting link for %s\r" % song['link'])
+        p = pafy.new(song['link'])
 
         try:
-            logging.debug("[0] fetching " + url)
-            wdata = urlopen(url, timeout=7).read().decode("utf8")
-            logging.debug("fetched " + url)
+            track = p.getbestaudio()
 
-        except (HTTPError, socket.timeout):
-            time.sleep(2)  # try again
-            logging.debug("[1] fetching 2nd attempt ")
-            wdata = urlopen(url, timeout=7).read().decode("utf8")
-            logging.debug("fetched 2nd attempt" + url)
+        except ValueError:
+            track = p.allstreams[0]
 
-        j = json.loads(wdata)
+        finally:
+            track = p.allstreams[0] if not track else track
 
-        if not j.get("track_link"):
-            raise URLError("This track is not accessible")
+        extension = track.extension
+        filesize = track.get_filesize()
+        quality = track.rawbitrate
+        l = song['link']
 
-        track_url = j['track_link']
-        return track_url
+        filesize = filesize / (1024 ** 2)
+        writeline("%s : %s : %s Mb" % (l, extension, filesize))
+
+        return track.url
 
     else:
         return song['track_url']
@@ -730,6 +724,8 @@ def playsong(song, failcount=0):
         return
 
     try:
+        import urllib2
+        song['track_url'] = urllib2.urlopen(song['track_url']).url
         cmd = [Config.PLAYER] + Config.PLAYERARGS.split() + [song['track_url']]
         logging.debug("starting mplayer with " + song['track_url'])
 
@@ -743,7 +739,20 @@ def playsong(song, failcount=0):
             if mswin:
                 stdout = stderr = fnull
 
+
+
+            now = time.time()
             subprocess.call(cmd, stdout=stdout, stderr=stderr)
+            fin = time.time()
+            failed = fin - now < 1 and song['duration'] > 10
+
+            if failed and failcount < 4:
+                writeline("trying again (attempt %s)" % failcount)
+                time.sleep(1)
+                failcount += 1
+                playsong(song, failcount=failcount)
+
+
 
 
     except OSError:
@@ -794,18 +803,21 @@ def search(term, page=1, splash=True):
 
     else:
         original_term = term
-        url = "http://pleer.com/search?q=%s&target=tracks&page=%s"
+        url = "https://gdata.youtube.com/feeds/api/videos"
 
-        if "+best" in term:
-            term = term.replace("+best", "")
-            url += "&quality=best"
+        term = term.replace(" ", "+")
+        query = {
+            'q': term,
+            'v': 2,
+            'alt': 'jsonc',
+            'start-index': page * 20,
+            'category': "Music",
+            'max-results': 20,
+            'orderby': 'relevance'
+        }
 
-        elif "+good" in term:
-            term = term.replace("+good", "")
-            url += "&quality=good"
-
-        g.message = "Searching for '%s%s%s'" % (c.y, term, c.w)
-        url = url % (term.replace(" ", "+"), page)
+        g.message = "Searching for '%s%s%s'" % (c.y, original_term, c.w)
+        url = url + "?" + urllib.urlencode(query)
 
         if url in g.url_memo:
             songs = g.url_memo[url]
@@ -816,8 +828,8 @@ def search(term, page=1, splash=True):
                 screen_update()
 
             try:
-                wdata = urlopen(url).read().decode("utf8")
-                songs = get_tracks_from_page(wdata)
+                wdata = json.load(urlopen(url))
+                songs = get_tracks_from_json(wdata)
 
             except (URLError, HTTPError) as e:
                 g.message = F('no data') % e
@@ -827,7 +839,7 @@ def search(term, page=1, splash=True):
         if songs:
             g.url_memo[url] = songs
             g.model.songs = songs
-            g.message = "Search results for %s%s%s" % (c.y, term, c.w)
+            g.message = "Search results for %s%s%s" % (c.y, original_term, c.w)
             g.last_opened = ""
             g.last_search_query = original_term
             g.current_page = page
@@ -846,7 +858,9 @@ def _make_fname(song):
     if not os.path.exists(Config.DDIR):
         os.makedirs(Config.DDIR)
 
-    filename = song['singer'][:49] + " - " + song['song'][:49] + ".mp3"
+    extension = pafy.new(song['link']).getbestaudio().extension
+    filename = song['title'][:59] + "." + extension
+
     filename = os.path.join(Config.DDIR, mswinfn(filename.replace("/", "-")))
     return filename
 
@@ -1437,7 +1451,8 @@ def main():
                 try:
                     globals()[func](*matches)
 
-                except IndexError:
+                #except IndexError:
+                except IOError:
                     g.message = F('invalid range')
                     g.content = g.content or generate_songlist_display()
 
