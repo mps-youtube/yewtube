@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-""" setup.py for pms.
+""" setup.py for pms-youtube.
 
-https://np1.github.com/pms
+https://np1.github.com/pms-youtube
 
 """
 
@@ -13,15 +13,16 @@ except ImportError:
     from distutils.core import setup
 
 setup(
-    name="Poor-Mans-Spotify",
-    version="0.18.39",
-    description="Search, Stream and Download MP3",
-    keywords=["MP3", "music", "audio", "search", "stream", "download"],
+    name="pms-youtube",
+    py_modules=['pafy'],
+    version="0.01.01",
+    description="Terminal based YouTube jukebox with playlist management",
+    keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="nagev",
     author_email="np1nagev@gmail.com",
-    url="http://github.com/np1/pms/",
-    download_url="https://github.com/np1/pms/tarball/master",
-    scripts=['pms'],
+    url="http://github.com/np1/pms-youtube",
+    download_url="https://github.com/np1/pms-youtube/tarball/master",
+    scripts=['pms-yt'],
     package_data={"": ["LICENSE", "README.rst", "README"]},
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
