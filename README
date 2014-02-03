@@ -2,12 +2,12 @@ pms-youtube
 ===========
 version 0.01.01
 
-.. image:: https://pypip.in/d/mps-youtube.png
+.. image:: https://pypip.in/d/pms-youtube.png
     :target: https://pypi.python.org/pypi/pms-youtube
 
 Features
 --------
-- Search and play audio / video
+- Search and play audio/video
 - Create local playlists
 - Download audio/video
 - Works with Python 2.7 and 3.x
@@ -15,6 +15,10 @@ Features
 - No Python dependencies
 - Requires mplayer
 
+This project is based on `pms <https://github.com/np1/pms>`_, which is a terminal based program
+to search, stream and download music.  This implementation uses YouTube as a 
+source of content and can play and download video as well as audio.  The `pafy <https://github.com/np1/pafy`_
+library handles interfacing with YouTube.
 
 Installation
 ------------
@@ -200,11 +204,6 @@ select items 5 upward and ``-5`` to select up to item 5.  This can be included
 with other choices so for example: ``5,3,7-,-2``.  You can also use spaces
 instead of commas eg. ``5 3 7- -2``.
 
-Quality / Bitrate
-~~~~~~~~~~~~~~~~~
-
-Not yet implemented
-
 Using MPV instead of MPlayer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -212,8 +211,8 @@ If you have `mpv <http://mpv.io>`_ installed and want to use that instead of mpl
 
 From within pms-youtube::
 
-    set PLAYER "mpv"
-    set PLAYERARGS "-really-quiet"
+    set player "mpv"
+    set playerargs "-really-quiet"
 
 Other Configuration
 ~~~~~~~~~~~~~~~~~~~
@@ -226,7 +225,7 @@ use ``set all "default"`` or for a single item, ``set <item> "default"``
 Search All Categories
 ~~~~~~~~~~~~~~~~~~~~~
 
-To search all of YouTube, enter:: 
+To search all YouTube categories (instead of just music), enter:: 
     
     set search_music "false"
 
