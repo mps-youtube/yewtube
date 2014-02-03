@@ -67,12 +67,12 @@ Enter ``h`` from within the program for help.
 Searching
 ~~~~~~~~~
 
-You can enter an artist/song name to search whenever the program is expecting
+You can enter an search term name to search whenever the program is expecting
 text input. Searches must be prefixed with either a . or / character.
 
 Enter ``n`` or ``p`` to go to the next / previous page of results
 
-When a list of songs is displayed, such as search results or a playlist, you
+When a list of items is displayed, such as search results or a playlist, you
 can use the following commands:
 
 Information
@@ -130,7 +130,7 @@ new playlist will be created if the given name doesn't already exist.
 
 ``play <playlist_name or ID>`` to play a saved playlist directly.
 
-``save`` or ``save <playlist_name>`` to save the currently displayed songs as a
+``save`` or ``save <playlist_name>`` to save the currently displayed items as a
 stored playlist on disk
 
 ``rmp <playlist_name or ID>`` to delete a playlist from disk
@@ -174,7 +174,7 @@ This also works for other commands, eg:
 Specifying Ranges
 ~~~~~~~~~~~~~~~~~
 
-When selecting songs for playback, removing or adding you can use ``5-`` to 
+When selecting items for playback, removing or adding you can use ``5-`` to 
 select items 5 upward and ``-5`` to select up to item 5.  This can be included
 with other choices so for example: ``5,3,7-,-2``.  You can also use spaces
 instead of commas eg. ``5 3 7- -2``.
@@ -204,9 +204,13 @@ To search all YouTube categories (instead of just music), enter::
     
     set search_music "false"
 
-Show Video Content
-~~~~~~~~~~~~~~~~~~
+Show Video Content / Fullscreen Mode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To view/download video instead of audio, enter::
+To view and download video instead of audio, enter::
 
     set show_video "true"
+
+To play video content in fullscreen mode::
+
+    set playerargs "-really-quiet -fs"
