@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.01.02"
+__version__ = "0.01.03"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -782,7 +782,7 @@ def search(term, page=1, splash=True):
             'q': term,
             'v': 2,
             'alt': 'jsonc',
-            'start-index': page * g.max_results,
+            'start-index': ((page - 1)* g.max_results + 1) or 1,
             'category': "Music" if Config.SEARCH_MUSIC else "All",
             'safeSearch': "none",
             'max-results': g.max_results,
@@ -791,6 +791,7 @@ def search(term, page=1, splash=True):
 
         g.message = "Searching for '%s%s%s'" % (c.y, original_term, c.w)
         url = url + "?" + urlencode(query)
+        print(url)
 
         memokey = str(Config.SEARCH_MUSIC) + url
         if memokey in g.url_memo:
