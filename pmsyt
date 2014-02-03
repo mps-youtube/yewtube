@@ -791,9 +791,8 @@ def search(term, page=1, splash=True):
 
         g.message = "Searching for '%s%s%s'" % (c.y, original_term, c.w)
         url = url + "?" + urlencode(query)
-        print(url)
-
         memokey = str(Config.SEARCH_MUSIC) + url
+
         if memokey in g.url_memo:
             songs = g.url_memo[memokey]
 
