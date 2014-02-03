@@ -22,7 +22,7 @@ setup(
     url="http://github.com/np1/pms-youtube",
     download_url="https://github.com/np1/pms-youtube/tarball/master",
     scripts=['pmsyt'],
-    install_requires['Pafy']
+    install_requires=['Pafy'],
     package_data={"": ["LICENSE", "README.rst", "README"]},
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
