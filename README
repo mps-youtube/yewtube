@@ -1,8 +1,7 @@
 pms-youtube
 ===========
-version 0.01.01
 
-.. image:: https://pypip.in/d/pms-youtube.png
+.. image:: https://pypip.in/d/pms-youtube/badge.png
     :target: https://pypi.python.org/pypi/pms-youtube
 
 Features
