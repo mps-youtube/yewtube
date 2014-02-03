@@ -27,19 +27,6 @@ Using `pip <http://www.pip-installer.org>`_::
     
     sudo pip install pms-youtube
 
-Using `git <http://www.git-scm.com>`_::
-
-    git clone https://github.com/np1/pms-youtube.git
-   
-Manually::
-
-    Download zip file or tar.gz and extract:
-
-    https://github.com/np1/pms-youtube/archive/master.zip
-
-    https://github.com/np1/pms-youtube/archive/master.tar.gz
-
-
 Mac OS X installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
@@ -70,22 +57,12 @@ Upgrade pip installation::
 
     sudo pip install pms-youtube --upgrade
 
-Upgrade git clone::
-
-    (from within the pms directory)
-
-    git pull
-
 Usage
 -----
 
 pms-youtube is run on the command line using the command::
     
     pmsyt
-    
-or on Linux/MacOS if you are in the same directory::
-
-    ./pmsyt
     
 Enter ``h`` from within the program for help.
 
