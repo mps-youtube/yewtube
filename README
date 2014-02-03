@@ -1,6 +1,8 @@
 pms-youtube
 ===========
 
+.. image:: http://badge.fury.io/py/pms-youtube.png
+    :target: https://pypi.python.org/pypi/pms-youtube
 .. image:: https://pypip.in/d/pms-youtube/badge.png
     :target: https://pypi.python.org/pypi/pms-youtube
 

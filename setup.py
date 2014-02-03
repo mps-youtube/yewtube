@@ -14,7 +14,7 @@ except ImportError:
 
 setup(
     name="pms-youtube",
-    version="0.01.04",
+    version="0.01.05",
     description="Terminal based YouTube jukebox with playlist management",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="nagev",

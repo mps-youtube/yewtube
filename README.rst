@@ -1,6 +1,8 @@
 pms-youtube
 ===========
 
+.. image:: http://badge.fury.io/py/pms-youtube.png
+    :target: https://pypi.python.org/pypi/pms-youtube
 .. image:: https://pypip.in/d/pms-youtube/badge.png
     :target: https://pypi.python.org/pypi/pms-youtube
 
@@ -184,31 +186,31 @@ If you have `mpv <http://mpv.io>`_ installed and want to use that instead of mpl
 
 From within pms-youtube::
 
-    set player "mpv"
-    set playerargs "-really-quiet"
+    set player mpv
+    set playerargs -really-quiet
 
 Other Configuration
 ~~~~~~~~~~~~~~~~~~~
 
-To view configuration, enter ``showconfig`` and to change any item enter: 
-``set <item> "value"``.  This can be used to change the download path (DDIR)
+To view configuration, enter ``set`` and to change any item enter: 
+``set <item> <value>``.  This can be used to change the download path (DDIR)
 and will persist after exiting the program.  To reset all settings to default,
-use ``set all "default"`` or for a single item, ``set <item> "default"``
+use ``set all default`` or for a single item, ``set <item> default``
 
 Search All Categories
 ~~~~~~~~~~~~~~~~~~~~~
 
 To search all YouTube categories (instead of just music), enter:: 
     
-    set search_music "false"
+    set search_music false
 
 Show Video Content / Fullscreen Mode
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To view and download video instead of audio, enter::
 
-    set show_video "true"
+    set show_video true
 
 To play video content in fullscreen mode::
 
-    set playerargs "-really-quiet -fs"
+    set playerargs -really-quiet -fs
