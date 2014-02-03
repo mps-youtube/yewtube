@@ -12,7 +12,6 @@ Features
 - Download audio/video
 - Works with Python 2.7 and 3.x
 - Works with Windows, Linux and Mac OS X 
-- No Python dependencies
 - Requires mplayer
 
 This project is based on `pms <https://github.com/np1/pms>`_, which is a terminal based program
