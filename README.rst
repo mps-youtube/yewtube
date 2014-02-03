@@ -2,37 +2,18 @@ pms-youtube
 ===========
 version 0.01.01
 
-.. image:: https://pypip.in/d/Poor-Mans-Spotify/badge.png
-    :target: https://pypi.python.org/pypi/Poor-Mans-Spotify
+.. image:: https://pypip.in/d/mps-youtube.png
+    :target: https://pypi.python.org/pypi/pms-youtube
 
 Features
 --------
-- Search YouTube
-- Create playlists (locally)
-- Download Audio/Video
+- Search and play audio / video
+- Create local playlists
+- Download audio/video
 - Works with Python 2.7 and 3.x
 - Works with Windows, Linux and Mac OS X 
 - No Python dependencies
 - Requires mplayer
-
-Screenshots
------------
-
-Search
-~~~~~~
-
-.. image:: http://i.imgur.com/SnqxqZz.png
-
-Playback
-~~~~~~~~
-
-.. image:: http://i.imgur.com/3sYlktI.png
-
-Playlists
-~~~~~~~~~
-
-.. image:: http://i.imgur.com/RDEXLPW.png
-
 
 
 Installation
@@ -40,7 +21,7 @@ Installation
 
 Using `pip <http://www.pip-installer.org>`_::
     
-    sudo pip install Poor-Mans-Spotify-YT
+    sudo pip install pms-youtube
 
 Using `git <http://www.git-scm.com>`_::
 
@@ -83,7 +64,7 @@ It is recommended you update to the latest version.
 
 Upgrade pip installation::
 
-    sudo pip install Poor-Mans-Spotify --upgrade
+    sudo pip install pms-youtube --upgrade
 
 Upgrade git clone::
 
@@ -94,13 +75,13 @@ Upgrade git clone::
 Usage
 -----
 
-pms is run on the command line using the command::
+pms-youtube is run on the command line using the command::
     
-    pms
+    pmsyt
     
 or on Linux/MacOS if you are in the same directory::
 
-    ./pms
+    ./pmsyt
     
 Enter ``h`` from within the program for help.
 
@@ -115,9 +96,15 @@ Enter ``n`` or ``p`` to go to the next / previous page of results
 When a list of songs is displayed, such as search results or a playlist, you
 can use the following commands:
 
+Information
+~~~~~~~~~~~
+
+``i 3`` to view info on item 3
+
 Downloading
 ~~~~~~~~~~~
-``d 3`` to download song/video 3
+
+``d 3`` to download item 3
 
 Playback
 ~~~~~~~~
@@ -191,19 +178,19 @@ Invocation
 
 To play a saved playlist when invoking pms use the following command:
 
-    ``pms play <playlistname>``
+    ``pmsyt play <playlistname>``
 
 This also works for other commands, eg:
 
-    ``pms .mozart`` to search 
+    ``pmsyt .mozart`` to search 
 
-    ``pms view <playlistname>`` to view a saved playlist
+    ``pmsyt view <playlistname>`` to view a saved playlist
 
-    ``pms ls`` to list saved playlists
+    ``pmsyt ls`` to list saved playlists
 
-    ``pms top`` to list top tracks this week
+    ``pmsyt top`` to list top tracks this week
 
-    ``pms open moz`` to open a saved playlist called mozart.
+    ``pmsyt open moz`` to open a saved playlist called mozart.
 
 Specifying Ranges
 ~~~~~~~~~~~~~~~~~
@@ -223,7 +210,7 @@ Using MPV instead of MPlayer
 
 If you have `mpv <http://mpv.io>`_ installed and want to use that instead of mplayer;
 
-From within pms::
+From within pms-youtube::
 
     set PLAYER "mpv"
     set PLAYERARGS "-really-quiet"
