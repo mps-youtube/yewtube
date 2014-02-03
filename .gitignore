@@ -1,6 +1,7 @@
 *.py[cod]
 otherstuff/
 pms.py
+pmsyt.py
 MANIFEST
 
 # C extensions
