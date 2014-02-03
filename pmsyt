@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.01.03"
+__version__ = "0.01.04"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -783,14 +783,17 @@ def search(term, page=1, splash=True):
             'v': 2,
             'alt': 'jsonc',
             'start-index': ((page - 1)* g.max_results + 1) or 1,
-            'category': "Music" if Config.SEARCH_MUSIC else "All",
+            #'category': "Music" if Config.SEARCH_MUSIC else "All",
             'safeSearch': "none",
             'max-results': g.max_results,
             'orderby': 'relevance'
         }
+        if Config.SEARCH_MUSIC:
+            query['category'] = "Music"
 
         g.message = "Searching for '%s%s%s'" % (c.y, original_term, c.w)
         url = url + "?" + urlencode(query)
+        logging.debug(url)
         memokey = str(Config.SEARCH_MUSIC) + url
 
         if memokey in g.url_memo:
@@ -971,7 +974,7 @@ def save_last(args=None):
 
         #save using artist name in postion 1
         if not g.model.is_empty:
-            saveas = g.model.songs[0]['singer'][:15].strip()
+            saveas = g.model.songs[0]['title'][:18].strip()
             saveas = re.sub(r"[^-\w]", "-", saveas, re.UNICODE)
 
         # loop to find next available name
@@ -979,7 +982,7 @@ def save_last(args=None):
 
         while g.userpl.get(saveas):
             post += 1
-            saveas = g.model.songs[0]['singer'][:15].strip() + "-" + str(post)
+            saveas = g.model.songs[0]['title'][:18].strip() + "-" + str(post)
 
         open_save_view("save", saveas)
 
@@ -1248,7 +1251,7 @@ def songlist_mv_sw(action, a, b):
 
     if action == "mv":
         g.model.songs.insert(j, g.model.songs.pop(i))
-        g.message = F('song move') % (g.model.songs[j]['song'], b)
+        g.message = F('song move') % (g.model.songs[j]['title'], b)
 
     elif action == "sw":
         g.model.songs[i], g.model.songs[j] = g.model.songs[j], g.model.songs[i]
@@ -1358,9 +1361,12 @@ def info(num):
     out = c.ul + "Video Info" + c.w + "\n\n"
     out += p.description
     out += "\n\nAuthor: " + py2utf8_decode(p.author)
+    out += "\nViewcount: " + str(p.viewcount)
+    out += "\nRating: " + str(p.rating)[:4]
     out += "\nCategory: " + p.category
     out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y,c.w)
     g.content = out
+
 
 def plist(parturl):
     """ Import playlist created on website. """
@@ -1369,6 +1375,7 @@ def plist(parturl):
 
     try:
         page = urlopen(url).read().decode("utf8")
+        logging.debug(page)
         songs = get_tracks_from_page(page)
         g.model.songs = songs
         g.active.songs = songs
