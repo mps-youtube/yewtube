@@ -16,7 +16,7 @@ Features
 
 This project is based on `pms <https://github.com/np1/pms>`_, which is a terminal based program
 to search, stream and download music.  This implementation uses YouTube as a 
-source of content and can play and download video as well as audio.  The `pafy <https://github.com/np1/pafy`_
+source of content and can play and download video as well as audio.  The `pafy <https://github.com/np1/pafy>`_
 library handles interfacing with YouTube.
 
 Installation
