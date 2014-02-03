@@ -568,7 +568,12 @@ def tidy(raw, field):
 def get_tracks_from_json(json):
     """ Get search results from web page. """
 
-    items = json['data']['items']
+    try:
+        items = json['data']['items']
+
+    except KeyError:
+        items = []
+
     songs = []
 
     for item in items:
@@ -1359,7 +1364,7 @@ def info(num):
 
     p = item['pafy']
     out = c.ul + "Video Info" + c.w + "\n\n"
-    out += p.description
+    out += p.description or ""
     out += "\n\nAuthor: " + py2utf8_decode(p.author)
     out += "\nViewcount: " + str(p.viewcount)
     out += "\nRating: " + str(p.rating)[:4]
