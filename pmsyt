@@ -109,6 +109,31 @@ def get_default_ddir():
     return os.path.join(ddir, "PMS")
 
 
+def get_config_dir():
+    """ Get user's configuration directory. """
+
+    if mswin:
+        confdir = os.environ["APPDATA"]
+
+    else:
+        if 'XDG_CONFIG_HOME' in os.environ:
+            confdir = os.environ['XDG_CONFIG_HOME']
+
+        else:
+            print("XDG not found")
+            confdir = os.path.join(os.path.expanduser("~"), '.config')
+
+    if not os.path.exists(confdir):
+        os.mkdir(confdir)
+
+    confdir = os.path.join(confdir, "pms-youtube")
+
+    if not os.path.exists(confdir):
+        os.mkdir(confdir)
+
+    return confdir
+
+
 class Config(object):
 
     """ Holds various configuration values. """
@@ -192,8 +217,8 @@ class g(object):
     config = [x for x in sorted(dir(Config)) if member_var(x)]
     configbool = [x for x in config if type(getattr(Config, x)) is bool]
     defaults = {setting: getattr(Config, setting) for setting in config}
-    CFFILE = os.path.join(os.path.expanduser("~"), ".pms-yt-config")
-    PLFILE = os.path.join(os.path.expanduser("~"), ".pms-yt-playlist")
+    CFFILE = os.path.join(get_config_dir(), "config")
+    PLFILE = os.path.join(get_config_dir(), "playlist")
 
 
 def showconfig(_):
@@ -1152,7 +1177,6 @@ def quits(showlogo=True):
         except (URLError, HTTPError, socket.timeout):
             pass
 
-    #sys.exit(msg + F("exitmsg", 2) + vermsg)
     sys.exit(vermsg)
 
 
