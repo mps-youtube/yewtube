@@ -231,8 +231,8 @@ def showconfig(_):
         out += s % (c.g, setting.lower(), c.w, getattr(Config, setting))
 
     g.content = out
-    g.message = "Enter %sset [key] \"value\"%s to change\n" % (c.g, c.w)
-    g.message += "Enter %sset all \"default\"%s to reset all" % (c.g, c.w)
+    g.message = "Enter %sset <key> <value>%s to change\n" % (c.g, c.w)
+    g.message += "Enter %sset all default%s to reset all" % (c.g, c.w)
 
 
 def saveconfig():
@@ -1423,10 +1423,12 @@ def main():
         'nextprev': r'(n|p)$',
         'play_all': r'(%s{0,3})all\s*(%s{0,3})$' % (rs, rs),
         'save_last': r'(save)\s*$',
-        'setconfig': r'set\s*(\w+)\s*"([^"]*)"\s*$',
+        #'setconfig': r'set\s*(\w+)\s*"([^"]*)"\s*$',
+        'setconfig': r'set\s*(\w+)\s*"?([^"]*)"?\s*$',
         'show_help': r'(?:help|h)$',
         'add_rm_all': r'(rm|add)\s*all$',
-        'showconfig': r'(showconfig)',
+        #'showconfig': r'(showconfig)',
+        'showconfig': r'(set|showconfig)\s*$',
         'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
         'open_save_view': r'(open|save|view)\s*(%s)$' % word,
         'songlist_mv_sw': r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})$',
