@@ -167,8 +167,6 @@ This also works for other commands, eg:
 
     ``pmsyt ls`` to list saved playlists
 
-    ``pmsyt top`` to list top tracks this week
-
     ``pmsyt open moz`` to open a saved playlist called mozart.
 
 Specifying Ranges
