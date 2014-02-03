@@ -14,7 +14,6 @@ except ImportError:
 
 setup(
     name="pms-youtube",
-    py_modules=['pafy'],
     version="0.01.01",
     description="Terminal based YouTube jukebox with playlist management",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
@@ -22,7 +21,8 @@ setup(
     author_email="np1nagev@gmail.com",
     url="http://github.com/np1/pms-youtube",
     download_url="https://github.com/np1/pms-youtube/tarball/master",
-    scripts=['pms-yt'],
+    scripts=['pmsyt'],
+    install_requires['Pafy']
     package_data={"": ["LICENSE", "README.rst", "README"]},
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
