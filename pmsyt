@@ -96,15 +96,28 @@ def mswinfn(filename):
 def get_default_ddir():
     """ Get system default Download directory, append PMS dir. """
 
-    try:
-        # pylint: disable=E0611
-        from gi.repository import GLib
-        ddir = GLib.get_user_special_dir(GLib.USER_DIRECTORY_DOWNLOAD)
-        ddir = ddir or os.path.join(os.path.expanduser("~"), "Downloads")
-        ddir = py2utf8_decode(ddir)
+    if mswin:
+        return os.path.join(os.path.expanduser("~"), "Downloads", "PMS")
 
-    except (AttributeError, ImportError):
-        ddir = os.path.join(os.path.expanduser("~"), "Downloads")
+    USER_DIRS = os.path.join(os.path.expanduser("~"), ".config", "user-dirs.dirs")
+    DOWNLOAD_HOME = os.path.join(os.path.expanduser("~"), "Downloads")
+
+    if 'XDG_DOWNLOAD_DIR' in os.environ:
+        ddir = os.environ['XDG_DOWNLOAD_DIR']
+    elif os.path.exists(USER_DIRS):
+        lines = open(USER_DIRS).readlines()
+        defn = [x for x in lines if x.startswith("XDG_DOWNLOAD_DIR")]
+
+        if len(defn) == 0:
+            ddir = os.path.expanduser("~")
+        else:
+            ddir = defn[0].split("=")[1]\
+                    .replace('"', '')\
+                    .replace("$HOME", os.path.expanduser("~"))
+    elif os.path.exists(DOWNLOAD_HOME):
+        ddir = DOWNLOAD_HOME
+    else:
+        ddir = os.path.expanduser("~")
 
     return os.path.join(ddir, "PMS")
 
