@@ -1392,14 +1392,16 @@ def info(num):
     writestatus("Fetching video metadata..")
     item['pafy'] = pafy.new(item['link'])
     p = item['pafy']
+    i = py2utf8_decode
     out = c.ul + "Video Info" + c.w + "\n\n"
-    out += p.description or ""
-    out += "\n\nAuthor     : " + py2utf8_decode(p.author)
-    out += "\nView count : " + str(p.viewcount)
-    out += "\nRating     : " + str(p.rating)[:4]
-    out += "\nCategory   : " + p.category
-    out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
-    out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y,c.w)
+    out += py2utf8_decode(p.title or "")
+    out += "\n" + (p.description or "")
+    out += py2utf8_decode("\n\nAuthor     : " + str(p.author))
+    out += py2utf8_decode("\nView count : " + str(p.viewcount))
+    out += i("\nRating     : " + str(p.rating)[:4])
+    out += i("\nCategory   : " + p.category)
+    out += i("\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid)
+    out += i("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y,c.w))
     g.content = out
 
 
@@ -1415,7 +1417,7 @@ def main():
 
     g.content = generate_songlist_display()
     g.content = logo(col=c.g, version=__version__) + "\n"
-    g.message = "Enter .artist/song name to search or [h]elp"
+    g.message = "Enter /search-term to search or [h]elp"
     screen_update()
 
     # open playlists from file
@@ -1441,11 +1443,9 @@ def main():
         'nextprev': r'(n|p)$',
         'play_all': r'(%s{0,3})all\s*(%s{0,3})$' % (rs, rs),
         'save_last': r'(save)\s*$',
-        #'setconfig': r'set\s*(\w+)\s*"([^"]*)"\s*$',
         'setconfig': r'set\s*(\w+)\s*"?([^"]*)"?\s*$',
         'show_help': r'(?:help|h)$',
         'add_rm_all': r'(rm|add)\s*all$',
-        #'showconfig': r'(showconfig)',
         'showconfig': r'(set|showconfig)\s*$',
         'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
         'open_save_view': r'(open|save|view)\s*(%s)$' % word,
