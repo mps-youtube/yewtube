@@ -730,7 +730,7 @@ def playsong(song, failcount=0):
         track_url = get_stream(song)
         song['track_url'] = track_url
 
-    except (URLError, HTTPError, socket.timeout) as e:
+    except (IOError, URLError, HTTPError, socket.timeout) as e:
         g.message = F('cant get track') % str(e)
         return
 
@@ -752,8 +752,6 @@ def playsong(song, failcount=0):
             if mswin:
                 stdout = stderr = fnull
 
-
-
             now = time.time()
             subprocess.call(cmd, stdout=stdout, stderr=stderr)
             fin = time.time()
@@ -762,13 +760,27 @@ def playsong(song, failcount=0):
             if failed and failcount < 4:
 
                 writestatus("trying again (attempt %s)" % (2 + failcount))
-                time.sleep(1)
+                time.sleep(0.2)
                 failcount += 1
                 playsong(song, failcount=failcount)
 
-
     except OSError:
         g.message = F('no player') % Config.PLAYER
+
+
+def _uploads(userterm, query):
+    term = userterm.strip()
+    term = term.replace("-user", "")
+    term = term.strip()
+    oo = "1%s1" % term
+    print(oo)
+    if " " in term:
+        return {}, ""
+    else:
+        del(query['q'])
+        del(query['category'])
+        query['orderby'] = 'published'
+    return query, term
 
 
 def search(term, page=1, splash=True):
@@ -782,7 +794,7 @@ def search(term, page=1, splash=True):
         original_term = term
         url = "https://gdata.youtube.com/feeds/api/videos"
 
-        term = term.replace(" ", "+")
+        #term = term.replace(" ", "+")
         query = {
             'q': term,
             'v': 2,
@@ -795,6 +807,13 @@ def search(term, page=1, splash=True):
         }
         if Config.SEARCH_MUSIC:
             query['category'] = "Music"
+
+        if "-user" in term:
+            query, user = _uploads(term, query)
+            if not user:
+                return False
+            url = "https://gdata.youtube.com/feeds/api/users/%s/uploads"
+            url = url % user
 
         g.message = "Searching for '%s%s%s'" % (c.y, original_term, c.w)
         url = url + "?" + urlencode(query)
@@ -862,6 +881,10 @@ def _download(song, filename):
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
     song['track_url'] = get_stream(song)
+
+    if not song['track_url']:
+        return None
+
     logging.debug("[4] fetching url " + song['track_url'])
     resp = urlopen(song['track_url'])
     logging.debug("fetched url " + song['track_url'])
@@ -1357,7 +1380,7 @@ def info(num):
     """ Get video description """
 
     item = (g.model.songs[int(num) - 1])
-    writestatus("Fetching Description..")
+    writestatus("Fetching description..")
 
     #if not "pafy" in item:
     item['pafy'] = pafy.new(item['link'])
@@ -1376,19 +1399,7 @@ def info(num):
 def plist(parturl):
     """ Import playlist created on website. """
 
-    url = "http://pleer.com/en/" + parturl
-
-    try:
-        page = urlopen(url).read().decode("utf8")
-        logging.debug(page)
-        songs = get_tracks_from_page(page)
-        g.model.songs = songs
-        g.active.songs = songs
-        g.message = c.y + "Playlist imported" + c.w
-
-    except IOError:
-        g.message = "Problem fetching that list."
-
+    # not implemented
     g.content = generate_songlist_display()
 
 
@@ -1464,6 +1475,10 @@ def main():
 
                 except IndexError:
                     g.message = F('invalid range')
+                    g.content = g.content or generate_songlist_display()
+
+                except IOError as e:
+                    g.message = F('cant get track') % str(e)
                     g.content = g.content or generate_songlist_display()
 
                 break
