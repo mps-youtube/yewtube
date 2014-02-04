@@ -769,17 +769,23 @@ def playsong(song, failcount=0):
 
 
 def _uploads(userterm, query):
+    """ Modify query dict for user uploaded videos. """
+
     term = userterm.strip()
     term = term.replace("-user", "")
     term = term.strip()
-    oo = "1%s1" % term
-    print(oo)
+
     if " " in term:
         return {}, ""
+
     else:
         del(query['q'])
-        del(query['category'])
+
+        if query.get('category'):
+            del(query['category'])
+
         query['orderby'] = 'published'
+
     return query, term
 
 
@@ -794,13 +800,11 @@ def search(term, page=1, splash=True):
         original_term = term
         url = "https://gdata.youtube.com/feeds/api/videos"
 
-        #term = term.replace(" ", "+")
         query = {
             'q': term,
             'v': 2,
             'alt': 'jsonc',
             'start-index': ((page - 1)* g.max_results + 1) or 1,
-            #'category': "Music" if Config.SEARCH_MUSIC else "All",
             'safeSearch': "none",
             'max-results': g.max_results,
             'orderby': 'relevance'
@@ -810,8 +814,10 @@ def search(term, page=1, splash=True):
 
         if "-user" in term:
             query, user = _uploads(term, query)
+
             if not user:
                 return False
+
             url = "https://gdata.youtube.com/feeds/api/users/%s/uploads"
             url = url % user
 
@@ -842,6 +848,9 @@ def search(term, page=1, splash=True):
             g.url_memo[memokey] = songs
             g.model.songs = songs
             g.message = "Search results for %s%s%s" % (c.y, original_term, c.w)
+
+            if "/users/" in url:
+                g.message = "Video uploads by %s%s%s" % (c.y, user, c.w)
             g.last_opened = ""
             g.last_search_query = original_term
             g.current_page = page
@@ -1380,18 +1389,16 @@ def info(num):
     """ Get video description """
 
     item = (g.model.songs[int(num) - 1])
-    writestatus("Fetching description..")
-
-    #if not "pafy" in item:
+    writestatus("Fetching video metadata..")
     item['pafy'] = pafy.new(item['link'])
-
     p = item['pafy']
     out = c.ul + "Video Info" + c.w + "\n\n"
     out += p.description or ""
-    out += "\n\nAuthor: " + py2utf8_decode(p.author)
-    out += "\nViewcount: " + str(p.viewcount)
-    out += "\nRating: " + str(p.rating)[:4]
-    out += "\nCategory: " + p.category
+    out += "\n\nAuthor     : " + py2utf8_decode(p.author)
+    out += "\nView count : " + str(p.viewcount)
+    out += "\nRating     : " + str(p.rating)[:4]
+    out += "\nCategory   : " + p.category
+    out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
     out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y,c.w)
     g.content = out
 
