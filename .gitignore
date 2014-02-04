@@ -1,5 +1,6 @@
 *.py[cod]
 otherstuff/
+pafy.py
 pms.py
 pmsyt.py
 MANIFEST
