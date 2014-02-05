@@ -691,11 +691,28 @@ def writeline(text):
     sys.stdout.flush()
 
 
-def get_stream(song, force=True):
+def has_valid_link(song):
+    """ Check whether song has an unexpired link. """
+
+    if "track_url" in song:
+        now = time.time()
+        lastfetch = song.get('lastfetch')
+
+        if lastfetch and now - song['lastfetch'] < 60 * 60 * 4.9:  # 5 hours
+            logging.debug("found valid link")
+            rem = 60 * 60 * 4.9 - (now - song['lastfetch'])
+            logging.debug("link valid for another %s seconds" % rem)
+
+            return True
+
+    logging.debug("\nno valid link")
+    return False
+
+
+def get_stream(song, force=False):
     """ Return the url for a song. """
 
-    if not "track_url" in song or force:
-
+    if force or not has_valid_link(song):
         statusline = "getting stream url for %s..." % song['link']
         writestatus(statusline)
         p = pafy.new(song['link'], callback=writestatus)  # if not "pafy" in song else song['pafy']
@@ -711,11 +728,11 @@ def get_stream(song, force=True):
 
         extension = track.extension
         filesize = track.get_filesize()
-        quality = track.rawbitrate
         l = song['link']
 
         filesize = int(filesize / (1024 ** 2))
-        writestatus("%s : %s : %s Mb" % (l, extension, filesize))
+        songdata = l, extension, filesize
+        song['link'], song['extension'], song['filesize'] = songdata
 
         return track.url
 
@@ -727,7 +744,7 @@ def playsong(song, failcount=0):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
 
     try:
-        track_url = get_stream(song)
+        track_url = get_stream(song, force=failcount)
         song['track_url'] = track_url
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
@@ -740,8 +757,6 @@ def playsong(song, failcount=0):
 
     try:
         cmd = [Config.PLAYER] + Config.PLAYERARGS.split() + [song['track_url']]
-        logging.debug("starting player with " + song['track_url'])
-
         stdout = stderr = None
 
         with open(os.devnull, "w") as fnull:
@@ -753,16 +768,22 @@ def playsong(song, failcount=0):
                 stdout = stderr = fnull
 
             now = time.time()
+            songdata = song['link'], song['extension'], song['filesize']
+            writestatus("id: %s; type: %s; size: %s Mb" % songdata)
             subprocess.call(cmd, stdout=stdout, stderr=stderr)
             fin = time.time()
             failed = fin - now < 1 and song['duration'] > 10
 
             if failed and failcount < 4:
 
+                del(song['track_url'])
                 writestatus("trying again (attempt %s)" % (2 + failcount))
-                time.sleep(0.2)
                 failcount += 1
                 playsong(song, failcount=failcount)
+
+            if not failed:
+                song['lastfetch'] = time.time()
+                save_to_file()
 
     except OSError:
         g.message = F('no player') % Config.PLAYER
@@ -1158,6 +1179,7 @@ def play_range(songlist, shuffle=False, repeat=False):
         for n, song in enumerate(songlist):
             g.content = playback_progress(n, songlist, repeat=False)
             screen_update()
+
             try:
                 playsong(song)
             except KeyboardInterrupt:
