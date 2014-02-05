@@ -29,6 +29,7 @@ __author__ = "nagev"
 __license__ = "GPLv3"
 
 import subprocess
+import threading
 import logging
 import random
 import socket
@@ -730,7 +731,7 @@ def get_streams(song, force=False):
 
     if not force and "pafy" in song and song['pafy'].expires > time.time():
         valid = time.ctime(song['pafy'].expires)
-        logging.debug("re-using existing - valid for %s" % valid)
+        logging.debug("link valid until %s" % valid)
         return song['pafy']
 
     else:
@@ -742,8 +743,6 @@ def get_streams(song, force=False):
 
 def playsong(song, failcount=0, video=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
-
-    video = video or Config.SHOW_VIDEO
 
     try:
         song['pafy'] = get_streams(song, force=failcount)
@@ -758,43 +757,44 @@ def playsong(song, failcount=0, video=False):
         g.message = F('track unresolved')
         return
 
+    video = video or Config.SHOW_VIDEO
     stream = paf.getbest() if video else paf.getbestaudio()
     size = get_stream_size(song, video=video)
-
     key = "audiosize" if not video else "videosize"
     song[key] = size
+    songdata = song['link'], stream.extension, int(size / (1024 ** 2))
+    cmd = [Config.PLAYER] + Config.PLAYERARGS.split() + [stream.url]
+    stdout = stderr = None
+    now = time.time()
+    writestatus("id: %s; type: %s; size: %s Mb" % songdata)
 
-    try:
-        cmd = [Config.PLAYER] + Config.PLAYERARGS.split() + [stream.url]
-        stdout = stderr = None
+    with open(os.devnull, "w") as fnull:
 
-        with open(os.devnull, "w") as fnull:
+        if "mpv" in Config.PLAYER or "mplayer" in Config.PLAYER:
+            stderr = fnull
 
-            if "mpv" in Config.PLAYER or "mplayer" in Config.PLAYER:
-                stderr = fnull
+        if mswin:
+            stdout = stderr = fnull
 
-            if mswin:
-                stdout = stderr = fnull
-
-            now = time.time()
-            songdata = song['link'], stream.extension, int(size / (1024 ** 2))
-            writestatus("id: %s; type: %s; size: %s Mb" % songdata)
+        try:
             subprocess.call(cmd, stdout=stdout, stderr=stderr)
-            fin = time.time()
-            failed = fin - now < 1 and paf.duration > 10
 
-            if failed and failcount < 4:
+        except OSError:
+            # TODO - propogate to caller
+            g.message = F('no player') % Config.PLAYER
+            return
 
-                del(song['pafy'])
-                writestatus("trying again (attempt %s)" % (2 + failcount))
-                failcount += 1
-                playsong(song, failcount=failcount)
+    fin = time.time()
+    failed = fin - now < 1 and paf.duration > 10
 
-            if not failed:
-                save_to_file()
+    if failed and failcount < 4:
+        del(song['pafy'])
+        writestatus("trying again (attempt %s)" % (2 + failcount))
+        failcount += 1
+        playsong(song, failcount=failcount)
 
-    except OSError:
-        g.message = F('no player') % Config.PLAYER
+    if not failed:
+        save_to_file()
 
 
 def _uploads(userterm, query):
@@ -898,7 +898,8 @@ def _make_fname(song):
     if not os.path.exists(Config.DDIR):
         os.makedirs(Config.DDIR)
 
-    p = pafy.new(song['link'])  # if not 'pafy' in song else song['pafy']
+    #p = pafy.new(song['link'])  # if not 'pafy' in song else song['pafy']
+    p = get_streams(song)
 
     if not Config.SHOW_VIDEO:
         extension = p.getbestaudio().extension
@@ -918,14 +919,12 @@ def _download(song, filename):
     print("Downloading %s%s%s ..\n" % (c.g, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
-    song['track_url'] = get_stream(song)
-
-    if not song['track_url']:
-        return None
-
-    logging.debug("[4] fetching url " + song['track_url'])
-    resp = urlopen(song['track_url'])
-    logging.debug("fetched url " + song['track_url'])
+    paf = get_streams(song)
+    video = Config.SHOW_VIDEO
+    url = paf.getbest().url if video else paf.getbestaudio().url
+    logging.debug("fetching url " + url)
+    resp = urlopen(url)
+    logging.debug("fetched url " + url)
     total = int(resp.info()['Content-Length'].strip())
     chunksize, bytesdone, t0 = 16384, 0, time.time()
     outfh = open(filename, 'wb')
