@@ -1060,11 +1060,13 @@ def open_save_view(action, name):
             g.model.songs = g.active.songs = list(saved.songs)
             g.message = F("pl loaded") % name
             g.last_opened = name
+            g.content = generate_songlist_display()
 
         elif saved and action == "view":
             g.model.songs = list(saved.songs)
             g.message = F("pl viewed") % name
             g.last_opened = ""
+            g.content = generate_songlist_display()
 
         elif not saved and action in "view open".split():
             g.message = F("pl not found") % name
@@ -1074,14 +1076,14 @@ def open_save_view(action, name):
 
         if not g.model.songs:
             g.message = "Nothing to save. " + F('advise search')
+            g.content = generate_songlist_display()
 
         else:
             name = name.replace(" ", "-")
             g.userpl[name] = Playlist(name, list(g.model.songs))
             g.message = F('pl saved') % name
             save_to_file()
-
-    g.content = generate_songlist_display()
+            g.content = generate_songlist_display()
 
 
 def open_view_bynum(action, num):
