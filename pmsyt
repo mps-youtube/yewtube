@@ -24,12 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.01.06"
+__version__ = "0.01.07"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
 import subprocess
 import threading
+import tempfile
 import logging
 import random
 import socket
@@ -163,8 +164,11 @@ class Config(object):
     SEARCH_MUSIC = True
 
 
+
 if os.path.exists(os.path.join(os.path.expanduser("~"), ".pmsyt-debug")):
-    logging.basicConfig(level=logging.DEBUG)
+    logfile = os.path.join(tempfile.gettempdir(), "pmsyt.log")
+    logging.basicConfig(level=logging.INFO, filename=logfile)
+    logging.getLogger("pafy").setLevel(logging.ERROR)
 
 if not mswin:
     try:
@@ -231,8 +235,9 @@ class g(object):
     config = [x for x in sorted(dir(Config)) if member_var(x)]
     configbool = [x for x in config if type(getattr(Config, x)) is bool]
     defaults = {setting: getattr(Config, setting) for setting in config}
+    suffix = "3" if sys.version_info[:2] >= (3, 0) else ""
     CFFILE = os.path.join(get_config_dir(), "config")
-    PLFILE = os.path.join(get_config_dir(), "playlist")
+    PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
 
 
 def showconfig(_):
@@ -701,7 +706,7 @@ def writeline(text):
     """ Print text on same line. """
 
     spaces = 75 - len(text)
-    sys.stdout.write(text + (" " * spaces) + "\r")
+    sys.stdout.write(" " + text + (" " * spaces) + "\r")
     sys.stdout.flush()
 
 
@@ -717,27 +722,32 @@ def get_stream_size(song, video=False):
         key = "videosize"
 
     if song.get(key):
-        logging.debug("file size known")
         return song[key]
 
     else:
         size = stream.get_filesize()
-        logging.debug("file size fetched")
         return size
 
 
-def get_streams(song, force=False):
+def get_streams(song, force=False, future=False):
     """ Return the pafy object for a song. """
 
     if not force and "pafy" in song and song['pafy'].expires > time.time():
-        valid = time.ctime(song['pafy'].expires)
-        logging.debug("link valid until %s" % valid)
+        logging.info("cache hit for %s", song['title'])
         return song['pafy']
 
     else:
         statusline = "getting stream url for %s..." % song['link']
-        writestatus(statusline)
-        p = pafy.new(song['link'], callback=writestatus)
+
+        if not future:
+            writestatus(statusline)
+            p = pafy.new(song['link'], callback=writestatus)
+            logging.info("resolving url stream for %s", song['title'])
+
+        else:
+            p = pafy.new(song['link'])
+            logging.info("--prefetched url for %s", song['title'])
+
         return p
 
 
@@ -766,7 +776,7 @@ def playsong(song, failcount=0, video=False):
     cmd = [Config.PLAYER] + Config.PLAYERARGS.split() + [stream.url]
     stdout = stderr = None
     now = time.time()
-    writestatus("id: %s; type: %s; size: %s Mb" % songdata)
+    writestatus("%s; %s; %s Mb" % songdata)
 
     with open(os.devnull, "w") as fnull:
 
@@ -777,6 +787,7 @@ def playsong(song, failcount=0, video=False):
             stdout = stderr = fnull
 
         try:
+            logging.info("playing %s (%s)", paf.title, failcount)
             subprocess.call(cmd, stdout=stdout, stderr=stderr)
 
         except OSError:
@@ -785,10 +796,11 @@ def playsong(song, failcount=0, video=False):
             return
 
     fin = time.time()
-    failed = fin - now < 1 and paf.duration > 10
+    failed = fin - now < 1 and int(paf.length) > 10
 
     if failed and failcount < 4:
         del(song['pafy'])
+        logging.warn("stream failed to open")
         writestatus("trying again (attempt %s)" % (2 + failcount))
         failcount += 1
         playsong(song, failcount=failcount)
@@ -827,6 +839,7 @@ def search(term, page=1, splash=True):
 
     else:
         original_term = term
+        logging.info("search for %s", original_term)
         url = "https://gdata.youtube.com/feeds/api/videos"
 
         query = {
@@ -852,7 +865,6 @@ def search(term, page=1, splash=True):
 
         g.message = "Searching for '%s%s%s'" % (c.y, original_term, c.w)
         url = url + "?" + urlencode(query)
-        logging.debug(url)
         memokey = str(Config.SEARCH_MUSIC) + url
 
         if memokey in g.url_memo:
@@ -874,6 +886,9 @@ def search(term, page=1, splash=True):
                 return
 
         if songs:
+            # preload first result
+            t = threading.Thread(target=preload, args=(songs[0], 0))
+            t.start()
             g.url_memo[memokey] = songs
             g.model.songs = songs
             g.message = "Search results for %s%s%s" % (c.y, original_term, c.w)
@@ -922,9 +937,7 @@ def _download(song, filename):
     paf = get_streams(song)
     video = Config.SHOW_VIDEO
     url = paf.getbest().url if video else paf.getbestaudio().url
-    logging.debug("fetching url " + url)
     resp = urlopen(url)
-    logging.debug("fetched url " + url)
     total = int(resp.info()['Content-Length'].strip())
     chunksize, bytesdone, t0 = 16384, 0, time.time()
     outfh = open(filename, 'wb')
@@ -1137,10 +1150,17 @@ def play(pre, choice, post=""):
         shuffle = "shuffle" in pre + post
         repeat = "repeat" in pre + post
         selection = _parse_multi(choice)
-        debug = ("shuffle=" + str(shuffle) + " : repeat=" +
-                 str(repeat) + " : " + str(selection))
-        logging.debug(debug)
         songlist = [g.model.songs[x - 1] for x in selection]
+
+        # cache next result of displayed items
+        if len(songlist) == 1:
+            chosen = selection[0] - 1
+
+            if len(g.model.songs) > chosen + 1:
+                nx = g.model.songs[chosen + 1]
+                t = threading.Thread(target=preload, args=(nx,))
+                t.start()
+
         play_range(songlist, shuffle, repeat)
 
 
@@ -1177,6 +1197,19 @@ def vp():
     g.content = generate_songlist_display()
 
 
+def preload(song, delay=1):
+    time.sleep(delay)
+    song['pafy'] = get_streams(song, future=True)
+    video=Config.SHOW_VIDEO
+    size = get_stream_size(song, video=video)
+
+    if video:
+        song['videosize'] = size
+
+    else:
+        song['audiosize'] = size
+
+
 def play_range(songlist, shuffle=False, repeat=False):
     """ Play a range of songs, exit cleanly on keyboard interrupt. """
 
@@ -1190,8 +1223,17 @@ def play_range(songlist, shuffle=False, repeat=False):
             screen_update()
 
             try:
+                hasnext = len(songlist) > n + 1
+
+                if hasnext:
+                    nex = songlist[n+1]
+                    t = threading.Thread(target=preload, args=(nex,))
+                    t.start()
+
                 playsong(song)
+
             except KeyboardInterrupt:
+                logging.info("Keyboard Interrupt")
                 print("Stopping...")
                 time.sleep(1)
                 g.message = c.y + "Playback halted" + c.w
@@ -1419,11 +1461,12 @@ def nextprev(np):
 def info(num):
     """ Get video description """
 
-    item = (g.model.songs[int(num) - 1])
     writestatus("Fetching video metadata..")
-    item['pafy'] = pafy.new(item['link'])
-    p = item['pafy']
+    item = (g.model.songs[int(num) - 1])
+    p = get_streams(item)
+    item['pafy'] = p
     i = py2utf8_decode
+    writestatus("Fetched")
     out = c.ul + "Video Info" + c.w + "\n\n"
     out += py2utf8_decode(p.title or "")
     out += "\n" + (p.description or "")
