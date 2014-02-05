@@ -113,7 +113,7 @@ def get_default_ddir():
         else:
             ddir = defn[0].split("=")[1]\
                     .replace('"', '')\
-                    .replace("$HOME", os.path.expanduser("~"))
+                    .replace("$HOME", os.path.expanduser("~")).strip()
     elif os.path.exists(DOWNLOAD_HOME):
         ddir = DOWNLOAD_HOME
     else:
