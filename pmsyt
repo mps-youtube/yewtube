@@ -704,61 +704,51 @@ def writeline(text):
     sys.stdout.flush()
 
 
-def has_valid_link(song):
-    """ Check whether song has an unexpired link. """
+def get_stream_size(song, video=False):
+    """ Get size of stream. """
 
-    if "track_url" in song:
-        now = time.time()
-        lastfetch = song.get('lastfetch')
-
-        if lastfetch and now - song['lastfetch'] < 60 * 60 * 4.9:  # 5 hours
-            logging.debug("found valid link")
-            rem = 60 * 60 * 4.9 - (now - song['lastfetch'])
-            logging.debug("link valid for another %s seconds" % rem)
-
-            return True
-
-    logging.debug("\nno valid link")
-    return False
-
-
-def get_stream(song, force=False):
-    """ Return the url for a song. """
-
-    if force or not has_valid_link(song):
-        statusline = "getting stream url for %s..." % song['link']
-        writestatus(statusline)
-        p = pafy.new(song['link'], callback=writestatus)  # if not "pafy" in song else song['pafy']
-
-        try:
-            track = p.getbest() if Config.SHOW_VIDEO else p.getbestaudio()
-
-        except ValueError:
-            track = p.allstreams[0]
-
-        finally:
-            track = p.allstreams[0] if not track else track
-
-        extension = track.extension
-        filesize = track.get_filesize()
-        l = song['link']
-
-        filesize = int(filesize / (1024 ** 2))
-        songdata = l, extension, filesize
-        song['link'], song['extension'], song['filesize'] = songdata
-
-        return track.url
+    if not video:
+        stream = song['pafy'].getbestaudio()
+        key = "audiosize"
 
     else:
-        return song['track_url']
+        stream = song['pafy'].getbest()
+        key = "videosize"
+
+    if song.get(key):
+        logging.debug("file size known")
+        return song[key]
+
+    else:
+        size = stream.get_filesize()
+        logging.debug("file size fetched")
+        return size
 
 
-def playsong(song, failcount=0):
+def get_streams(song, force=False):
+    """ Return the pafy object for a song. """
+
+    if not force and "pafy" in song and song['pafy'].expires > time.time():
+        valid = time.ctime(song['pafy'].expires)
+        logging.debug("re-using existing - valid for %s" % valid)
+        return song['pafy']
+
+    else:
+        statusline = "getting stream url for %s..." % song['link']
+        writestatus(statusline)
+        p = pafy.new(song['link'], callback=writestatus)
+        return p
+
+
+def playsong(song, failcount=0, video=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
 
+    video = video or Config.SHOW_VIDEO
+
     try:
-        track_url = get_stream(song, force=failcount)
-        song['track_url'] = track_url
+        song['pafy'] = get_streams(song, force=failcount)
+        paf = song['pafy']
+
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
         g.message = F('cant get track') % str(e)
@@ -768,8 +758,14 @@ def playsong(song, failcount=0):
         g.message = F('track unresolved')
         return
 
+    stream = paf.getbest() if video else paf.getbestaudio()
+    size = get_stream_size(song, video=video)
+
+    key = "audiosize" if not video else "videosize"
+    song[key] = size
+
     try:
-        cmd = [Config.PLAYER] + Config.PLAYERARGS.split() + [song['track_url']]
+        cmd = [Config.PLAYER] + Config.PLAYERARGS.split() + [stream.url]
         stdout = stderr = None
 
         with open(os.devnull, "w") as fnull:
@@ -781,21 +777,20 @@ def playsong(song, failcount=0):
                 stdout = stderr = fnull
 
             now = time.time()
-            songdata = song['link'], song['extension'], song['filesize']
+            songdata = song['link'], stream.extension, int(size / (1024 ** 2))
             writestatus("id: %s; type: %s; size: %s Mb" % songdata)
             subprocess.call(cmd, stdout=stdout, stderr=stderr)
             fin = time.time()
-            failed = fin - now < 1 and song['duration'] > 10
+            failed = fin - now < 1 and paf.duration > 10
 
             if failed and failcount < 4:
 
-                del(song['track_url'])
+                del(song['pafy'])
                 writestatus("trying again (attempt %s)" % (2 + failcount))
                 failcount += 1
                 playsong(song, failcount=failcount)
 
             if not failed:
-                song['lastfetch'] = time.time()
                 save_to_file()
 
     except OSError:
