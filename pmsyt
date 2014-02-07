@@ -168,7 +168,7 @@ class Config(object):
 if os.path.exists(os.path.join(os.path.expanduser("~"), ".pmsyt-debug")):
     logfile = os.path.join(tempfile.gettempdir(), "pmsyt.log")
     logging.basicConfig(level=logging.INFO, filename=logfile)
-    logging.getLogger("pafy").setLevel(logging.ERROR)
+    logging.getLogger("pafy").setLevel(logging.DEBUG)
 else:
     logging.basicConfig(level=logging.FATAL)
 
@@ -1517,11 +1517,11 @@ def main():
         'play_pl': r'play\s*(%s|\d+)$' % word,
         'download': r'(?:d|dl|download)\s*(\d{1,4})$',
         'nextprev': r'(n|p)$',
-        'play_all': r'(%s{0,3})(?:*:all)\s*(%s{0,3})$' % (rs, rs),
+        'play_all': r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
         'save_last': r'(save)\s*$',
         'setconfig': r'set\s*(\w+)\s*"?([^"]*)"?\s*$',
         'show_help': r'(?:help|h)$',
-        'add_rm_all': r'(rm|add)\s(?:*|all)$',
+        'add_rm_all': r'(rm|add)\s(?:\*|all)$',
         'showconfig': r'(set|showconfig)\s*$',
         'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
         'open_save_view': r'(open|save|view)\s*(%s)$' % word,
