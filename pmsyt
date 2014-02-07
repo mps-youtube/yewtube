@@ -164,9 +164,9 @@ class Config(object):
     SEARCH_MUSIC = True
 
 
-if os.path.exists(os.path.join(os.path.expanduser("~"), ".pmsyt-debug")):
+if os.environ.get("pmsytdebug"):
     logfile = os.path.join(tempfile.gettempdir(), "pmsyt.log")
-    logging.basicConfig(level=logging.INFO, filename=logfile)
+    logging.basicConfig(level=logging.DEBUG, filename=logfile)
     logging.getLogger("pafy").setLevel(logging.DEBUG)
 else:
     logging.basicConfig(level=logging.FATAL)
