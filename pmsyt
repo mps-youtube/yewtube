@@ -164,9 +164,9 @@ class Config(object):
     SEARCH_MUSIC = True
 
 
-if os.path.exists(os.path.join(os.path.expanduser("~"), ".pmsyt-debug")):
+if os.environ.get("pmsytdebug"):
     logfile = os.path.join(tempfile.gettempdir(), "pmsyt.log")
-    logging.basicConfig(level=logging.INFO, filename=logfile)
+    logging.basicConfig(level=logging.DEBUG, filename=logfile)
     logging.getLogger("pafy").setLevel(logging.DEBUG)
 else:
     logging.basicConfig(level=logging.FATAL)
@@ -224,6 +224,7 @@ class g(object):
     """ Class for holding globals that are needed throught the module. """
 
     max_results = 19
+    max_retries = 8
     url_memo = {}
     model = Playlist(name="model")
     last_search_query = ""
@@ -600,10 +601,17 @@ def tidy(raw, field):
     """ Tidy HTML entities, format songlength if field is duration.  """
 
     if field == "duration":
-        if len(str(raw)) > 4:
-            raw = time.strftime('%H:%M:%S', time.gmtime(int(raw)))
-        else:
-            raw = time.strftime('%M:%S', time.gmtime(int(raw)))
+        raw = time.strftime('%H:%M:%S', time.gmtime(int(raw)))
+        H, M, S = raw.split(":")
+
+        if H == "00":
+            raw = "   " + M + ":" + S
+
+        elif H == "01" and int(M) < 40:
+            raw = "   " + str(int(M) + 60) + ":" + S
+
+        elif H.startswith("0"):
+            raw = " " + ":".join([H[1], M, S])
 
     else:
         for r in (("&#039;", "'"), ("&amp;#039;", "'"), ("&amp;amp;", "&"),
@@ -706,8 +714,8 @@ def generate_songlist_display(song=False):
     if not songs:
         return logo(c.g) + "\n\n"
 
-    fmtrow = "%s%-5s %-63s %-7s%s\n"
-    head = (c.ul, "Item", "Title", "Length", c.w)
+    fmtrow = "%s%-5s %-63s %-6s%s\n"
+    head = (c.ul, "Item", "Title", " Length ", c.w)
     out = "\n" + fmtrow % head
 
     for n, x in enumerate(songs):
@@ -828,7 +836,7 @@ def playsong(song, failcount=0, video=False):
     fin = time.time()
     failed = fin - now < 1 and int(paf.length) > 10
 
-    if failed and failcount < 4:
+    if failed and failcount < g.max_retries:
         del song['pafy']
         logging.warn("stream failed to open")
         writestatus("trying again (attempt %s)" % (2 + failcount))
