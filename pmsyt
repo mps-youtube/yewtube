@@ -605,13 +605,13 @@ def tidy(raw, field):
         H, M, S = raw.split(":")
 
         if H == "00":
-            raw = M + ":" + S
+            raw = "   " + M + ":" + S
 
         elif H == "01" and int(M) < 40:
-            raw = str(int(M) + 60) + ":" + S
+            raw = "   " + str(int(M) + 60) + ":" + S
 
         elif H.startswith("0"):
-            raw = ":".join([H[1], M, S])
+            raw = " " + ":".join([H[1], M, S])
 
     else:
         for r in (("&#039;", "'"), ("&amp;#039;", "'"), ("&amp;amp;", "&"),
@@ -714,8 +714,8 @@ def generate_songlist_display(song=False):
     if not songs:
         return logo(c.g) + "\n\n"
 
-    fmtrow = "%s%-5s %-63s %-7s%s\n"
-    head = (c.ul, "Item", "Title", "Length", c.w)
+    fmtrow = "%s%-5s %-63s %-6s%s\n"
+    head = (c.ul, "Item", "Title", " Length ", c.w)
     out = "\n" + fmtrow % head
 
     for n, x in enumerate(songs):
