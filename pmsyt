@@ -392,6 +392,7 @@ When a list of items is displayed, you can use the following commands:
 {2}d 3{1} to download item 3
 
 {0}Selecting Items{1}
+{2}i 1{1} to display information about item 1
 {2}all{1} to play all
 {2}1 2 3{1} to play items 1 2 and 3
 {2}2-4 6 7-3{1} to play items 2 3 4 6 7 6 5 4 3
