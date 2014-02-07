@@ -164,7 +164,6 @@ class Config(object):
     SEARCH_MUSIC = True
 
 
-
 if os.path.exists(os.path.join(os.path.expanduser("~"), ".pmsyt-debug")):
     logfile = os.path.join(tempfile.gettempdir(), "pmsyt.log")
     logging.basicConfig(level=logging.INFO, filename=logfile)
@@ -245,7 +244,7 @@ class g(object):
 def check_mpv():
     """ Look for mpv. Set it if no config file exists and mpv exists. """
 
-    if mswin:
+    if mswin or os.path.exists(g.CFFILE):
         return
 
     paths = "/usr/bin/ /usr/local/bin/".split()
@@ -259,6 +258,8 @@ def check_mpv():
                 if os.access(mpvpath, os.X_OK):
                     Config.PLAYER = "mpv"
                     Config.PLAYERARGS = "-really-quiet"
+                    g.defaults['PLAYER'] = "mpv"
+                    g.defaults['PLAYERARGS'] = "-really-quiet"
                     return
 
 
@@ -608,11 +609,11 @@ def tidy(raw, field):
     return raw
 
 
-def get_tracks_from_json(json):
+def get_tracks_from_json(jsons):
     """ Get search results from web page. """
 
     try:
-        items = json['data']['items']
+        items = jsons['data']['items']
 
     except KeyError:
         items = []
@@ -720,7 +721,7 @@ def generate_songlist_display(song=False):
 
 
 def writestatus(text):
-    """ Update status line """
+    """ Update status linei. """
 
     if Config.SHOW_STATUS:
         writeline(text)
@@ -777,11 +778,12 @@ def get_streams(song, force=False, future=False):
 
 def playsong(song, failcount=0, video=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
+    # pylint: disable=R0914
+    # too many local variables
 
     try:
         song['pafy'] = get_streams(song, force=failcount)
         paf = song['pafy']
-
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
         g.message = F('cant get track') % str(e)
@@ -823,7 +825,7 @@ def playsong(song, failcount=0, video=False):
     failed = fin - now < 1 and int(paf.length) > 10
 
     if failed and failcount < 4:
-        del(song['pafy'])
+        del song['pafy']
         logging.warn("stream failed to open")
         writestatus("trying again (attempt %s)" % (2 + failcount))
         failcount += 1
@@ -844,10 +846,10 @@ def _uploads(userterm, query):
         return {}, ""
 
     else:
-        del(query['q'])
+        del query['q']
 
         if query.get('category'):
-            del(query['category'])
+            del query['category']
 
         query['orderby'] = 'published'
 
@@ -870,7 +872,7 @@ def search(term, page=1, splash=True):
             'q': term,
             'v': 2,
             'alt': 'jsonc',
-            'start-index': ((page - 1)* g.max_results + 1) or 1,
+            'start-index': ((page - 1) * g.max_results + 1) or 1,
             'safeSearch': "none",
             'max-results': g.max_results,
             'orderby': 'relevance'
@@ -954,6 +956,8 @@ def _make_fname(song):
 
 def _download(song, filename):
     """ Download file, show status, return filename. """
+    # pylint: disable=R0914
+    # too many local variables
 
     print("Downloading %s%s%s ..\n" % (c.g, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
@@ -1222,9 +1226,11 @@ def vp():
 
 
 def preload(song, delay=1):
+    """  Get streams (runs in separate thread). """
+
     time.sleep(delay)
     song['pafy'] = get_streams(song, future=True)
-    video=Config.SHOW_VIDEO
+    video = Config.SHOW_VIDEO
     size = get_stream_size(song, video=video)
 
     if video:
@@ -1250,7 +1256,7 @@ def play_range(songlist, shuffle=False, repeat=False):
                 hasnext = len(songlist) > n + 1
 
                 if hasnext:
-                    nex = songlist[n+1]
+                    nex = songlist[n + 1]
                     t = threading.Thread(target=preload, args=(nex,))
                     t.start()
 
@@ -1483,7 +1489,7 @@ def nextprev(np):
 
 
 def info(num):
-    """ Get video description """
+    """ Get video description. """
 
     writestatus("Fetching video metadata..")
     item = (g.model.songs[int(num) - 1])
@@ -1499,7 +1505,7 @@ def info(num):
     out += i("\nRating     : " + str(p.rating)[:4])
     out += i("\nCategory   : " + p.category)
     out += i("\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid)
-    out += i("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y,c.w))
+    out += i("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
     g.content = out
 
 
