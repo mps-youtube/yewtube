@@ -224,6 +224,7 @@ class g(object):
     """ Class for holding globals that are needed throught the module. """
 
     max_results = 19
+    max_retries = 8
     url_memo = {}
     model = Playlist(name="model")
     last_search_query = ""
@@ -834,7 +835,7 @@ def playsong(song, failcount=0, video=False):
     fin = time.time()
     failed = fin - now < 1 and int(paf.length) > 10
 
-    if failed and failcount < 4:
+    if failed and failcount < g.max_retries:
         del song['pafy']
         logging.warn("stream failed to open")
         writestatus("trying again (attempt %s)" % (2 + failcount))
