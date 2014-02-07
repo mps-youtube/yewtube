@@ -600,7 +600,10 @@ def tidy(raw, field):
     """ Tidy HTML entities, format songlength if field is duration.  """
 
     if field == "duration":
-        raw = time.strftime('%M:%S', time.gmtime(int(raw)))
+        if len(str(raw)) > 4:
+            raw = time.strftime('%H:%M:%S', time.gmtime(int(raw)))
+        else:
+            raw = time.strftime('%M:%S', time.gmtime(int(raw)))
 
     else:
         for r in (("&#039;", "'"), ("&amp;#039;", "'"), ("&amp;amp;", "&"),
