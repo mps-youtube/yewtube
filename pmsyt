@@ -242,6 +242,26 @@ class g(object):
     PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
 
 
+def check_mpv():
+    """ Look for mpv. Set it if no config file exists and mpv exists. """
+
+    if mswin:
+        return
+
+    paths = "/usr/bin/ /usr/local/bin/".split()
+    paths += os.environ.get("PATH", []).split(os.pathsep)
+
+    for path in paths:
+        mpvpath = os.path.join(path, "mpv")
+        if os.path.exists(mpvpath):
+            if os.path.isfile(mpvpath):
+
+                if os.access(mpvpath, os.X_OK):
+                    Config.PLAYER = "mpv"
+                    Config.PLAYERARGS = "-really-quiet"
+                    return
+
+
 def showconfig(_):
     """ Dump config data. """
 
@@ -262,6 +282,8 @@ def saveconfig():
     config = {setting: getattr(Config, setting) for setting in g.config}
     pickle.dump(config, open(g.CFFILE, "wb"), protocol=2)
 
+
+check_mpv()
 
 # override config if config file exists
 if os.path.exists(g.CFFILE):
