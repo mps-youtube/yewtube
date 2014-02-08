@@ -406,7 +406,7 @@ Use {2}/{1} or {2}.{1} to prefix your search query.
 {2}n{1} and {2}p{1} to continue search to next/previous pages.
 {2}rm <number(s)>{1} to remove items from displayed results.
 {2}sw <number>,<number>{1} to swap two items.
-{2}mv <number>,<number>{1} to move the first number to the 
+{2}mv <number>,<number>{1} to move the first number to the
     second number's position.
 """.format(c.ul, c.w, c.g, c.r)
 
@@ -449,17 +449,17 @@ This also works for other commands:
 
 HELP_ADVANCED = """
 {0}Advanced Tips{1}
-When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you 
-can enter the first few characters instead of the whole name. The first 
+When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you
+can enter the first few characters instead of the whole name. The first
 alphabetically matching playlist will be opened/displayed.
 
 When selecting items you can use {2}5-{1} to select items 5 upward and {2}-5{1}
-to select up to item 5. This can be included with other choices: 5,3,7-,-2. 
+to select up to item 5. This can be included with other choices: 5,3,7-,-2.
 You can also use spaces instead of commas: 5 3 7- -2.
 
 {2}set show_video true{1} to view or download video instead of audio.
 {2}set playerargs -really-quiet -fs{1} to play video content in fullscreen mode.
-{2}set search_music false{1} to search all YouTube categories (instead 
+{2}set search_music false{1} to search all YouTube categories (instead
     of just music).
 {2}set player mpv{1} and {2}set playerargs -really-quiet{1} to use mpv
     as your player instead of mplayer.
@@ -1346,25 +1346,25 @@ def show_help(helpname=None):
 
     print("\n" * 200)
     print(HELP_OVERVIEW, end='')
-    input = True
-    while input:
+    inp = True
+    while inp:
         try:
             print(HELP_LIST)
-            input = compat_input("> " + c.y)
+            inp = compat_input("> " + c.y)
             screen_update()
-            if input == '1': 
+            if inp == '1':
                 print(HELP_SEARCHING, end='')
-            elif input == '2': 
+            elif inp == '2':
                 print(HELP_DOWNLOAD_AND_PLAYBACK, end='')
-            elif input == '3': 
+            elif inp == '3':
                 print(HELP_PLAYLISTS, end='')
-            elif input == '4': 
+            elif inp == '4':
                 print(HELP_INVOCATION, end='')
-            elif input == '5': 
+            elif inp == '5':
                 print(HELP_ADVANCED, end='')
-            elif input == '6' or input == 'q': 
-                input=False  
-            else: 
+            elif inp == '6' or inp == 'q':
+                inp=False
+            else:
                 print(HELP_OVERVIEW, end='')
         except (KeyboardInterrupt, EOFError):
             userinput = prompt_for_exit()
