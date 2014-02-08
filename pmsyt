@@ -377,53 +377,83 @@ def setconfig(key, val):
     elif fail_msg:
         g.message = fail_msg
 
+HELP_OVERVIEW = """
+{0}Basic Usage{1}
+Use {2}/{1} or {2}.{1} to prefix your search query.
+    Example: {2}/{1}classical music
+{2}i <number>{1} to view information on specified item.
+{2}<number(s)>{1} to choose which item(s) to play, separated by commas.
+    Example: {2}1-3,5{1} to play items 1, 2, 3, and 5
+{2}d <number>{1} to download the specified item to your Downloads folder.
 
-HELP = """
-Note: More documentation is available at {3}https://github.com/np1/pms-youtube\
-{1}
-{0}Searching{1}
-You can enter a search term to search whenever the program is expecting
-text input. Searches must be prefixed with either a {2}.{1} or {2}/{1} \
-character.
-
-When a list of items is displayed, you can use the following commands:
-
-{0}Downloading{1}
-{2}d 3{1} to download item 3
-
-{0}Selecting Items{1}
-{2}i 1{1} to display information about item 1
-{2}all{1} to play all
-{2}1 2 3{1} to play items 1 2 and 3
-{2}2-4 6 7-3{1} to play items 2 3 4 6 7 6 5 4 3
-{2}3-6 9-12 shuffle{1} to play selected items in random order
-{2}3-6 9-12 repeat{1} to play selected items continuously
-
-{0}Manipulating Items{1}
-{2}rm 1 3{1} to remove items 1 and 3.  Also use rm 1 2 5-7 to remove a range
-{2}rm all{1} to remove all items
-{2}sw 1 3{1} to swap the position of items 1 and 3
-{2}mv 1 3{1} to move items 1 to postion 3
-
-{0}Playlist commands{1}
-{2}add 1 2 5-7{1} to add items 1 2 5 6 and 7 to the current playlist.
-{2}add 1 2 3 <playlist_name>{1} to add items 1,2,3 to a saved playlist.  A new
-    playlist will be created if the given name doesn't already exist.
-{2}vp{1} to view the current playlist (then use rm, mv and sw to modify it)
-{2}ls{1} to list your saved playlists
-{2}open <playlist_name or ID>{1} to open a saved playlist as the current \
-playlist
-{2}view <playlist name or ID>{1} to view a playlist (leaves current playlist \
-intact)
-{2}play <playlist name or ID>{1} to play a saved playlist directly
-{2}save{1} or {2}save <playlist_name>{1} to save the currently displayed items
-    as a stored playlist on disk
-{2}mv <old_name or ID> <new_name>{1} to rename a playlist
-{2}rmp <playlist_name or ID>{1} to delete a playlist from disk
-
-{2}q{1} to quit
+For a more complete usage of the program, refer to the specified topics.
 """.format(c.ul, c.w, c.g, c.r)
 
+HELP_LIST = """
+1) Searching and Editing Results
+2) Downloading and Playback
+3) Playlists
+4) Advanced
+5) Return to the program
+"""
+
+HELP_SEARCHING = """
+{0}Searching and Editing Results{1}
+Use {2}/{1} or {2}.{1} to prefix your search query.
+    Example: {2}/{1}classical music
+{2}/<username> -user{1} to list Youtube User Uploads.
+{2}n{1} and {2}p{1} to continue search to next/previous pages.
+{2}rm <number(s)>{1} to remove items from displayed results.
+{2}sw <number>,<number>{1} to swap two items.
+{2}mv <number>,<number>{1} to move the first number to the 
+    second number's position.
+""".format(c.ul, c.w, c.g, c.r)
+
+HELP_DOWNLOAD_AND_PLAYBACK = """
+{0}Downloading and Playback{1}
+{2}d <number>{1} to download the specified item to your Downloads folder.
+{2}i <number>{1} to view information on specified item.
+{2}<number(s)>{1} to choose which item(s) to play, separated by commas.
+    Example: {2}1-3,5{1} to play items 1, 2, 3, and 5
+{2}all{1} to play all displayed items.
+{2}shuffle <items>{1} to play specified items in random order.
+{2}repeat <items>{1} to play and repeat the specified items.
+
+Note: {2}all{1} can be used as an argument (e.g., {2}shuffle all{1})
+""".format(c.ul, c.w, c.g, c.r)
+
+HELP_PLAYLISTS = """
+{0}Playlist Commands{1}
+{2}add <number(s)>{1} to add items to the current playlist.
+{2}add <number(s)>{1} <playlist> to add items to the specified playlist.
+{2}vp{1} to view current playlist.
+{2}ls{1} to list your saved playlists.
+{2}open <name or ID>{1} to open a saved playlist as the current playlist.
+{2}view <name or ID>{1} to view a playlist (current playlist left intact)
+{2}play <name or ID>{1} to play a saved playlist directly.
+{2}save{1} or {2}save <name>{1} to save the displayed items as a playlist.
+{2}rmp <playlist_name or ID>{1} to delete a playlist from disk.
+{2}mv <old name or ID> <new name>{1} to rename a playlist.
+""".format(c.ul, c.w, c.g, c.r)
+
+HELP_ADVANCED = """
+{0}Advanced Tips{1}
+When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you 
+can enter the first few characters instead of the whole name. The first 
+alphabetically matching playlist will be opened/displayed.
+
+When selecting items for playback, removing or adding you can use {2}5-{1}
+to select items 5 upward and {2}-5{1} to select up to item 5. This
+can be included with other choices so for example: 5,3,7-,-2. 
+You can also use spaces instead of commas eg. 5 3 7- -2.
+
+{2}set show_video true{1} to view or download video instead of audio.
+
+{2}set playerargs -really-quiet -fs{1} to play video content in fullscreen mode.
+
+{2}set search_Music false{1} to search all YouTube categories (instead 
+of just music).
+""".format(c.ul, c.w, c.g, c.r)
 
 def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
     """Format text.
@@ -1304,12 +1334,27 @@ def show_help(helpname=None):
     """ Print help message. """
 
     print("\n" * 200)
-    print(HELP)
-    print("Press Enter to continue", end="")
-    try:
-        compat_input("")
-    except (KeyboardInterrupt, EOFError):
-        prompt_for_exit()
+    print(HELP_OVERVIEW, end='')
+    input = True
+    while input:
+        try:
+            print(HELP_LIST)
+            input = compat_input("> " + c.y)
+            screen_update()
+            if input == '1': 
+                print(HELP_SEARCHING, end='')
+            elif input == '2': 
+                print(HELP_DOWNLOAD_AND_PLAYBACK, end='')
+            elif input == '3': 
+                print(HELP_PLAYLISTS, end='')
+            elif input == '4': 
+                print(HELP_ADVANCED, end='')
+            elif input == '5' or input == 'q': 
+                input=False  
+            else: 
+                print(HELP_OVERVIEW, end='')
+        except (KeyboardInterrupt, EOFError):
+            userinput = prompt_for_exit()
     g.content = generate_songlist_display()
 
 
