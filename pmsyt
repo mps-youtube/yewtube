@@ -807,6 +807,7 @@ def playsong(song, failcount=0, video=False):
 
     video = video or Config.SHOW_VIDEO
     stream = paf.getbest() if video else paf.getbestaudio()
+    stream.url = stream.url.replace("https://", "http://")
     size = get_stream_size(song, video=video)
     key = "audiosize" if not video else "videosize"
     song[key] = size
