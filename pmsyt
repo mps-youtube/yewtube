@@ -464,6 +464,11 @@ def setconfig(key, val):
         fail_msg = "Unknown player %s, set fullscreen manually."
         fail_msg = fail_msg % Config.PLAYER
 
+    elif key == "FULLSCREEN" and val == "DEFAULT":
+        s(*FALSE)
+        set_playerargs()
+        success_msg = "FULLSCREEN set to disabled (default)"
+
     elif key == "DDIR" and not val == "DEFAULT":
         valid = os.path.exists(val_orig) and os.path.isdir(val_orig)
 
