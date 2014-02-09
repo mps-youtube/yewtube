@@ -377,8 +377,10 @@ def setconfig(key, val):
     elif fail_msg:
         g.message = fail_msg
 
-HELP_OVERVIEW = """
+
+HELP_BASIC = "Basic Usage", """
 {0}Basic Usage{1}
+
 Use {2}/{1} or {2}.{1} to prefix your search query.
     Example: {2}/{1}classical music
 {2}i <number>{1} to view information on specified item.
@@ -389,17 +391,9 @@ Use {2}/{1} or {2}.{1} to prefix your search query.
 For a more complete usage of the program, refer to the specified topics.
 """.format(c.ul, c.w, c.g, c.r)
 
-HELP_LIST = """
-1) Searching and Editing Results
-2) Downloading and Playback
-3) Using Playlists
-4) Invocation Parameters
-5) Advanced Tips
-6) Return to the program
-"""
-
-HELP_SEARCHING = """
+HELP_SEARCHING = "Searching and Editing Results", """
 {0}Searching and Editing Results{1}
+
 Use {2}/{1} or {2}.{1} to prefix your search query.
     Example: {2}/{1}classical music
 {2}/<username> -user{1} to list Youtube User Uploads.
@@ -410,8 +404,9 @@ Use {2}/{1} or {2}.{1} to prefix your search query.
     second number's position.
 """.format(c.ul, c.w, c.g, c.r)
 
-HELP_DOWNLOAD_AND_PLAYBACK = """
+HELP_DOWNLOAD_AND_PLAYBACK = "Downloading and Playback", """
 {0}Downloading and Playback{1}
+
 {2}d <number>{1} to download the specified item to your Downloads folder.
 {2}i <number>{1} to view information on specified item.
 {2}<number(s)>{1} to choose which item(s) to play, separated by commas.
@@ -423,10 +418,11 @@ HELP_DOWNLOAD_AND_PLAYBACK = """
 Note: {2}all{1} can be used as an argument (e.g., {2}shuffle all{1})
 """.format(c.ul, c.w, c.g, c.r)
 
-HELP_PLAYLISTS = """
+HELP_PLAYLISTS = "Using Playlists", """
 {0}Using Playlists{1}
+
 {2}add <number(s)>{1} to add items to the current playlist.
-{2}add <number(s)>{1} <playlist> to add items to the specified playlist.
+{2}add <number(s)> <playlist>{1} to add items to the specified playlist.
 {2}vp{1} to view current playlist.
 {2}ls{1} to list your saved playlists.
 {2}open <name or ID>{1} to open a saved playlist as the current playlist.
@@ -437,8 +433,9 @@ HELP_PLAYLISTS = """
 {2}mv <old name or ID> <new name>{1} to rename a playlist.
 """.format(c.ul, c.w, c.g, c.r)
 
-HELP_INVOCATION = """
+HELP_INVOCATION = "Invocation Parameters", """
 {0}Invocation{1}
+
 To play a saved playlist when invoking pms use {2}pmsyt play <playlistname>{1}
 This also works for other commands:
 {2}pmsyt .mozart{1} to search
@@ -447,7 +444,7 @@ This also works for other commands:
 {2}pmsyt open mozart{1} to open a saved playlist called mozart.
 """.format(c.ul, c.w, c.g, c.r)
 
-HELP_ADVANCED = """
+HELP_ADVANCED = "Advanced Tips", """
 {0}Advanced Tips{1}
 When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you
 can enter the first few characters instead of the whole name. The first
@@ -1341,46 +1338,35 @@ def play_range(songlist, shuffle=False, repeat=False):
     g.content = generate_songlist_display()
 
 
-def show_help(helpname=None):
+def show_help(option="1"):
     """ Print help message. """
 
-    print("\n" * 200)
-    print(HELP_OVERVIEW, end='')
+    helps = (HELP_BASIC,
+             HELP_SEARCHING,
+             HELP_DOWNLOAD_AND_PLAYBACK,
+             HELP_PLAYLISTS,
+             HELP_INVOCATION,
+             HELP_ADVANCED
+             )
 
-    inp = True
+    HELP_LIST = ["\n%s) %s" % (n + 1, x[0]) for n, x in enumerate(helps)]
+    HELP_LIST = "".join(HELP_LIST)
 
-    while inp:
+    if option.isdigit() and int(option) <= len(helps):
+        g.content = helps[int(option) - 1][1] + HELP_LIST
+        g.message = "[{0}1-%s{1} for more or {0}ENTER{1} to return]"
+        g.message = " " * 23 + g.message.format(c.y, c.w) % len(helps)
+        screen_update()
+
         try:
-
-            print(HELP_LIST)
-            inp = compat_input("> " + c.y)
-            screen_update()
-
-            if inp == '1':
-                print(HELP_SEARCHING, end='')
-
-            elif inp == '2':
-                print(HELP_DOWNLOAD_AND_PLAYBACK, end='')
-
-            elif inp == '3':
-                print(HELP_PLAYLISTS, end='')
-
-            elif inp == '4':
-                print(HELP_INVOCATION, end='')
-
-            elif inp == '5':
-                print(HELP_ADVANCED, end='')
-
-            elif inp == '6' or inp == 'q':
-                inp=False
-
-            else:
-                print(HELP_OVERVIEW, end='')
+            inp = compat_input("help > " + c.y)
+            show_help(inp)
 
         except (KeyboardInterrupt, EOFError):
-           prompt_for_exit()
+            prompt_for_exit()
 
-    g.content = generate_songlist_display()
+        g.content = generate_songlist_display()
+
 
 
 def quits(showlogo=True):
