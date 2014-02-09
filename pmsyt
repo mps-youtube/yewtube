@@ -427,7 +427,6 @@ def setconfig(key, val):
     val = val.upper()
     TRUE = (Config, key, True)
     FALSE = (Config, key, False)
-    VAL = (Config, key, val)
     falses = "0 FALSE OFF NO".split()
 
     # set all default
@@ -501,13 +500,13 @@ def setconfig(key, val):
 
     elif key in g.config:
 
-        if val.upper() == "DEFAULT":
+        if val == "DEFAULT":
             val = g.defaults[key]
 
             if key == "FULLSCREEN":
                 set_playerargs(default=False)
 
-        setattr(*VAL)
+        setattr(Config, key, val)
         success_msg = "%s has been set to %s" % (key.upper(), val)
 
     else:
