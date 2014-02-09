@@ -179,15 +179,16 @@ select items 5 upward and ``-5`` to select up to item 5.  This can be included
 with other choices so for example: ``5,3,7-,-2``.  You can also use spaces
 instead of commas eg. ``5 3 7- -2``.
 
-Using MPV instead of MPlayer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Changing Player Application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you have `mpv <http://mpv.io>`_ installed and want to use that instead of mplayer;
-
-From within pms-youtube::
+To set a different player, from within pms-youtube::
 
     set player mpv
-    set playerargs -really-quiet
+
+or::
+
+    set player mplayer
 
 Other Configuration
 ~~~~~~~~~~~~~~~~~~~
@@ -220,4 +221,4 @@ To view and download video instead of audio, enter::
 
 To play video content in fullscreen mode::
 
-    set playerargs -really-quiet -fs
+    set fullscreen true
