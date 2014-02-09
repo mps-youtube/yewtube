@@ -135,7 +135,6 @@ def get_config_dir():
             confdir = os.environ['XDG_CONFIG_HOME']
 
         else:
-            print("XDG not found")
             confdir = os.path.join(os.path.expanduser("~"), '.config')
 
     if not os.path.exists(confdir):
@@ -154,35 +153,15 @@ class Config(object):
     """ Holds various configuration values. """
 
     PLAYER = "mplayer"
-    PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet"
+    PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet".split()
     COLOURS = False if mswin and not has_colorama else True
     CHECKUPDATE = True
     SHOW_MPLAYER_KEYS = True
+    FULLSCREEN = False
     SHOW_STATUS = True
     DDIR = get_default_ddir()
-    SHOW_VIDEO = False
+    SHOW_VIDEO = True
     SEARCH_MUSIC = True
-
-
-if os.environ.get("pmsytdebug"):
-    logfile = os.path.join(tempfile.gettempdir(), "pmsyt.log")
-    logging.basicConfig(level=logging.DEBUG, filename=logfile)
-    logging.getLogger("pafy").setLevel(logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.FATAL)
-
-if not mswin:
-    try:
-        import readline  # import readline if not running on windows
-        readline.get_history_length()  # redundant, prevents unused import warn
-
-    except ImportError:
-        pass  # no biggie
-
-opener = build_opener()
-ua = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)"
-opener.addheaders = [("User-Agent", ua)]
-urlopen = opener.open
 
 
 class Playlist(object):
@@ -223,6 +202,7 @@ class g(object):
 
     """ Class for holding globals that are needed throught the module. """
 
+    urlopen = None
     helptext = []
     max_results = 19
     max_retries = 8
@@ -241,28 +221,135 @@ class g(object):
     suffix = "3" if sys.version_info[:2] >= (3, 0) else ""
     CFFILE = os.path.join(get_config_dir(), "config")
     PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
+    playerargs_defaults = {
+        "mplayer": {"def": ("-nocache -prefer-ipv4 -nolirc "
+                             "-really-quiet").split(),
+                    "fs": "-fs"
+                    },
+        "mpv": {"def": "--really-quiet".split(),
+                "fs": "--fs"
+                }
+    }
 
 
-def check_mpv():
-    """ Look for mpv. Set it if no config file exists and mpv exists. """
+def init():
+    init_debug()
+    init_readline()
+    init_opener()
 
-    if mswin or os.path.exists(g.CFFILE):
-        return
+    if not has_config() and has_mpv():
+        Config.PLAYER = "mpv"
+        set_playerargs(default=True)
+        saveconfig()
+
+    else:
+        import_config()
+
+    # setup colorama
+    if has_colorama and mswin:
+        init_colorama()
+
+
+def init_debug():
+    """ Enable debug logging if pmsytdebug env var exists. """
+    if os.environ.get("pmsytdebug"):
+        logfile = os.path.join(tempfile.gettempdir(), "pmsyt.log")
+        logging.basicConfig(level=logging.DEBUG, filename=logfile)
+        logging.getLogger("pafy").setLevel(logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.FATAL)
+
+
+def init_readline():
+    """ Enable readline for input history. """
+
+    if not mswin:
+        try:
+            import readline  # import readline if not running on windows
+            readline.get_history_length()  # redundant, prevents unused import warn
+
+        except ImportError:
+            pass  # no biggie
+
+
+def init_opener():
+    """ Set up url opener. """
+
+    opener = build_opener()
+    ua = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)"
+    opener.addheaders = [("User-Agent", ua)]
+    g.urlopen = opener.open
+
+
+def set_playerargs(playername=None, default=True):
+    """ Set default arguments for player. """
+
+    if not playername:
+        playername = Config.PLAYER
+
+    gpd = g.playerargs_defaults
+    for player in gpd:
+
+        # set player defaults
+        if player in playername and default:
+            Config.PLAYERARGS = gpd[player]["def"]
+
+        # set fullscreen
+        fsarg = gpd[player]["fs"]
+        if player in playername:
+            if Config.FULLSCREEN:
+
+                if not fsarg in Config.PLAYERARGS:
+                    Config.PLAYERARGS.append(fsarg)
+
+            else:
+                if fsarg in Config.PLAYERARGS:
+                    Config.PLAYERARGS.pop(Config.PLAYERARGS.index(fsarg))
+
+            break
+
+    else:
+        Config.PLAYERARGS = []
+
+
+def has_config():
+    """ Has config been saved? """
+
+    return os.path.exists(g.CFFILE)
+
+
+def has_known_player():
+    """ Return true if the set player is known. """
+
+    for allowed_player in g.playerargs_defaults:
+        regex = r'(?:^%s$)|(?:\b%s$)' % ((allowed_player,) * 2)
+        match = re.search(regex, Config.PLAYER)
+
+        if mswin:
+            match = re.search(regex, Config.Player, re.IGNORECASE)
+
+        if match:
+            return True
+
+    return False
+
+
+def has_mpv():
+    """ Is mpv present? """
+
+    if mswin:
+        return False
 
     paths = "/usr/bin/ /usr/local/bin/".split()
     paths += os.environ.get("PATH", []).split(os.pathsep)
 
     for path in paths:
         mpvpath = os.path.join(path, "mpv")
+
         if os.path.exists(mpvpath):
             if os.path.isfile(mpvpath):
-
                 if os.access(mpvpath, os.X_OK):
-                    Config.PLAYER = "mpv"
-                    Config.PLAYERARGS = "-really-quiet"
-                    g.defaults['PLAYER'] = "mpv"
-                    g.defaults['PLAYERARGS'] = "-really-quiet"
-                    return
+                    return True
 
 
 def showconfig(_):
@@ -272,7 +359,17 @@ def showconfig(_):
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
 
     for setting in g.config:
-        out += s % (c.g, setting.lower(), c.w, getattr(Config, setting))
+        val = getattr(Config, setting)
+
+        # don't show playerargs as a list
+        if setting == "PLAYERARGS":
+            val = " ".join(val)
+
+        # don't show fullscreen if unknown player
+        if not has_known_player() and setting == "FULLSCREEN":
+            continue
+
+        out += s % (c.g, setting.lower(), c.w, val)
 
     g.content = out
     g.message = "Enter %sset <key> <value>%s to change\n" % (c.g, c.w)
@@ -286,15 +383,14 @@ def saveconfig():
     pickle.dump(config, open(g.CFFILE, "wb"), protocol=2)
 
 
-check_mpv()
+def import_config():
+    """ Override config if config file exists. """
 
-# override config if config file exists
-if os.path.exists(g.CFFILE):
-    # load and set config
-    saved_config = pickle.load(open(g.CFFILE, "rb"))
+    if os.path.exists(g.CFFILE):
+        saved_config = pickle.load(open(g.CFFILE, "rb"))
 
-    for kk, vv in saved_config.items():
-        setattr(Config, kk, vv)
+        for k, v in saved_config.items():
+            setattr(Config, k, v)
 
 
 class c(object):
@@ -327,19 +423,52 @@ def setconfig(key, val):
     # pylint: disable=R0912
     success_msg = fail_msg = ""
     key = key.upper()
+    val_orig = val
+    val = val.upper()
+    TRUE = (Config, key, True)
+    FALSE = (Config, key, False)
+    VAL = (Config, key, val)
+    s = setattr
+    falses = "0 FALSE OFF NO".split()
 
-    if key == "ALL" and val.upper() == "DEFAULT":
+    # set all default
+    if key == "ALL" and val == "DEFAULT":
 
         for k, v in g.defaults.items():
-            setattr(Config, k, v)
+            s(Config, k, v)
             success_msg = "Default configuration reinstated"
 
-    elif key == "DDIR" and not val.upper() == "DEFAULT":
+    elif key == "PLAYER" and val == "DEFAULT":
+        player = "mpv" if has_mpv() else g.defaults['PLAYER']
+        setattr(Config, key, player)
+        set_playerargs()
+        success_msg = "PLAYER has been set to %s" % val
 
-        valid = os.path.exists(val) and os.path.isdir(val)
+    elif key == "COLOURS" and mswin and not has_colorama:
+        fail_msg = "Can't enable colours, colorama not found"
+
+    elif key == "PLAYER":
+        setattr(Config, key, val_orig)
+        set_playerargs(default=True)
+        success_msg = "PLAYER has been set to %s" % val_orig
+
+    elif key == "PLAYERARGS" and not val == "DEFAULT":
+        setattr(Config, key, val_orig.split())
+        success_msg = "PLAYERARGS set to %s" % val_orig
+
+    elif key == "PLAYERARGS" and val == "DEFAULT":
+        set_playerargs(default=True)
+        success_msg = "PLAYERARGS set to %s" % val
+
+    elif key == "FULLSCREEN" and not has_known_player():
+        fail_msg = "Unknown player %s, set fullscreen manually."
+        fail_msg = fail_msg % Config.PLAYER
+
+    elif key == "DDIR" and not val == "DEFAULT":
+        valid = os.path.exists(val_orig) and os.path.isdir(val_orig)
 
         if valid:
-            setattr(Config, key, val)
+            setattr(Config, key, val_orig)
             success_msg = "Downloads will be saved to %s%s%s" % (c.y, val, c.w)
 
         else:
@@ -347,23 +476,31 @@ def setconfig(key, val):
 
     elif key in g.configbool and not val.upper() == "DEFAULT":
 
-        if val.upper() in "0 FALSE OFF NO".split():
-            setattr(Config, key, False)
+        boolval = val not in falses
+
+        if key == "FULLSCREEN":
+            s(*TRUE) if boolval else s(*FALSE)
+            set_playerargs(default=False)
+            success_msg = "FULLSCREEN set to %s" % boolval
+
+
+        elif not boolval:
+            s(*FALSE)
             success_msg = "%s set to disabled (restart may be required)" % key
-
-        elif key == "COLOURS" and mswin and not has_colorama:
-            fail_msg = "Can't enable colours, colorama not found"
-
         else:
-            setattr(Config, key, True)
+            s(*TRUE)
             success_msg = "%s set to enabled (restart may be required)" % key
+
 
     elif key in g.config:
 
         if val.upper() == "DEFAULT":
             val = g.defaults[key]
 
-        setattr(Config, key, val)
+            if key == "FULLSCREEN":
+                set_playerargs(default=False)
+
+        s(*VAL)
         success_msg = "%s has been set to %s" % (key.upper(), val)
 
     else:
@@ -453,8 +590,7 @@ This also works for other commands:
 
 ("Advanced Tips", """
 {0}Advanced Tips{1}
-
-When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you can\
+When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you\
 can enter the
 first few characters instead of the whole name. The first alphabetically
 matching playlist will be opened/displayed/played.
@@ -464,11 +600,13 @@ This can be
 included with other choices. e.g., 5,3,7-,-2
 You can use spaces instead of commas: 5 3 7- -2
 
+Use {2}-w{1}, {2}-f{1} or {2}-a{1} with your choice to override the configured\
+ setting and
+play items in windowed, fullscreen or audio modes respectively.
+
 {2}set{1} to view current configuration.
-{2}set playerargs -really-quiet -fs{1} to play video content in fullscreen \
-mode.
-{2}set player mpv{1} and {2}set playerargs -really-quiet{1} to use mpv as your
-    player instead of mplayer.
+{2}set fullscreen true{1} to play video content in fullscreen mode.
+{2}set player mpv{1} or {2}set player mplayer{1} to set a player
 """.format(c.ul, c.w, c.g, c.r))
 ]
 
@@ -836,7 +974,7 @@ def get_streams(song, force=False, future=False):
         return p
 
 
-def playsong(song, failcount=0, video=False):
+def playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
     # pylint: disable=R0914
     # too many local variables
@@ -853,14 +991,34 @@ def playsong(song, failcount=0, video=False):
         g.message = F('track unresolved')
         return
 
-    video = video or Config.SHOW_VIDEO
+    video = Config.SHOW_VIDEO
+
+    if override == "fullscreen" or override == "window":
+        video = True
+
+    elif override == "audio":
+        video = False
+
     stream = paf.getbest() if video else paf.getbestaudio()
     stream.url = stream.url.replace("https://", "http://")
     size = get_stream_size(song, video=video)
     key = "audiosize" if not video else "videosize"
     song[key] = size
     songdata = song['link'], stream.extension, int(size / (1024 ** 2))
-    cmd = [Config.PLAYER] + Config.PLAYERARGS.split() + [stream.url]
+    args = Config.PLAYERARGS[::]
+
+    if override == "fullscreen" and not Config.FULLSCREEN:
+
+        if Config.PLAYER in g.playerargs_defaults:
+            args.append(g.playerargs_defaults[Config.PLAYER]["fs"])
+
+    elif override == "window" and Config.FULLSCREEN:
+
+        if Config.PLAYER in g.playerargs_defaults:
+            fsarg = g.playerargs_defaults[Config.PLAYER]["fs"]
+            args.pop(args.index(fsarg))
+
+    cmd = [Config.PLAYER] + args + [stream.url]
     stdout = stderr = None
     now = time.time()
     writestatus("%s; %s; %s Mb" % songdata)
@@ -963,7 +1121,7 @@ def search(term, page=1, splash=True):
                 screen_update()
 
             try:
-                wdata = urlopen(url).read().decode("utf8")
+                wdata = g.urlopen(url).read().decode("utf8")
                 wdata = json.loads(wdata)
                 songs = get_tracks_from_json(wdata)
 
@@ -974,7 +1132,9 @@ def search(term, page=1, splash=True):
 
         if songs:
             # preload first result
-            t = threading.Thread(target=preload, args=(songs[0], 0))
+            kwa = {"song": songs[0], "delay": 0}
+            t = threading.Thread(target=preload, kwargs=kwa)
+            #t = threading.Thread(target=preload, args=(songs[0], 0))
             t.start()
             g.url_memo[memokey] = songs
             g.model.songs = songs
@@ -1026,7 +1186,7 @@ def _download(song, filename):
     paf = get_streams(song)
     video = Config.SHOW_VIDEO
     url = paf.getbest().url if video else paf.getbestaudio().url
-    resp = urlopen(url)
+    resp = g.urlopen(url)
     total = int(resp.info()['Content-Length'].strip())
     chunksize, bytesdone, t0 = 16384, 0, time.time()
     outfh = open(filename, 'wb')
@@ -1238,6 +1398,18 @@ def play(pre, choice, post=""):
     else:
         shuffle = "shuffle" in pre + post
         repeat = "repeat" in pre + post
+        novid = "-a" in pre + post
+        fs = "-f" in pre + post
+        nofs = "-w" in pre + post
+
+        if (novid and fs) or (novid and nofs) or (nofs and fs):
+            raise IOError("Conflicting override options specified")
+
+        override = False
+        override = "audio" if novid else override
+        override = "fullscreen" if fs else override
+        override = "window" if nofs else override
+
         selection = _parse_multi(choice)
         songlist = [g.model.songs[x - 1] for x in selection]
 
@@ -1247,10 +1419,13 @@ def play(pre, choice, post=""):
 
             if len(g.model.songs) > chosen + 1:
                 nx = g.model.songs[chosen + 1]
-                t = threading.Thread(target=preload, args=(nx,))
+                kwa = {"song": nx, "override": override}
+                t = threading.Thread(target=preload, kwargs=kwa)
+                #t = threading.Thread(target=preload, args=(nx, override))
                 t.start()
 
-        play_range(songlist, shuffle, repeat)
+        logging.debug("calling play range with override set to %s", override)
+        play_range(songlist, shuffle, repeat, override)
 
 
 def play_all(pre, choice, post=""):
@@ -1286,12 +1461,19 @@ def vp():
     g.content = generate_songlist_display()
 
 
-def preload(song, delay=1):
+def preload(song, delay=1, override=False):
     """  Get streams (runs in separate thread). """
 
     time.sleep(delay)
     song['pafy'] = get_streams(song, future=True)
     video = Config.SHOW_VIDEO
+
+    if override == "fullscreen" or override=="window":
+        video = True
+
+    elif override == "audio":
+        video = False
+
     size = get_stream_size(song, video=video)
 
     if video:
@@ -1301,7 +1483,7 @@ def preload(song, delay=1):
         song['audiosize'] = size
 
 
-def play_range(songlist, shuffle=False, repeat=False):
+def play_range(songlist, shuffle=False, repeat=False, override=False):
     """ Play a range of songs, exit cleanly on keyboard interrupt. """
 
     if shuffle:
@@ -1318,10 +1500,11 @@ def play_range(songlist, shuffle=False, repeat=False):
 
                 if hasnext:
                     nex = songlist[n + 1]
-                    t = threading.Thread(target=preload, args=(nex,))
+                    kwa = {"song": nex, "override": override}
+                    t = threading.Thread(target=preload, kwargs=kwa)
                     t.start()
 
-                playsong(song)
+                playsong(song, override=override)
 
             except KeyboardInterrupt:
                 logging.info("Keyboard Interrupt")
@@ -1337,7 +1520,7 @@ def play_range(songlist, shuffle=False, repeat=False):
                 for n, song in enumerate(songlist):
                     g.content = playback_progress(n, songlist, repeat=True)
                     screen_update()
-                    playsong(song)
+                    playsong(song, override=override)
                     g.content = generate_songlist_display()
 
             except KeyboardInterrupt:
@@ -1372,7 +1555,6 @@ def show_help(option="1"):
         g.content = generate_songlist_display()
 
 
-
 def quits(showlogo=True):
     """ Exit the program. """
 
@@ -1383,7 +1565,7 @@ def quits(showlogo=True):
     if Config.CHECKUPDATE and showlogo:
         try:
             url = "https://github.com/np1/pms-youtube/raw/master/VERSION"
-            v = urlopen(url).read().decode("utf8")
+            v = g.urlopen(url).read().decode("utf8")
             v = re.search(r"^version\s*([\d\.]+)\s*$", v, re.MULTILINE)
             if v:
                 v = v.group(1)
@@ -1604,13 +1786,13 @@ def main():
 
     # input types
     word = r'[^\W\d][-\w\s]{,100}'
-    rs = r'(?:repeat\s*|shuffle\s*)'
+    rs = r'(?:repeat\s*|shuffle\s*|-a\s*|-f\s*|-w\s*)'
     regx = {
         'ls': r'ls$',
         'vp': r'vp$',
         'top': r'top(|3m|6m|year|all)\s*$',
         'plist': r'.*(list[\da-zA-Z]{8,14})$',
-        'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,2})$' % (rs, rs),
+        'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
         'info': r'i\s*(\d{1,4})$',
         'quits': r'(?:q|quit|exit)$',
         'search': r'(?:search|\.|/)\s*(.{2,500})',
@@ -1675,7 +1857,5 @@ def main():
 
 
 if __name__ == "__main__":
-    if has_colorama:
-        init_colorama()
-
+    init()
     main()
