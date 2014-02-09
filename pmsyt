@@ -428,14 +428,13 @@ def setconfig(key, val):
     TRUE = (Config, key, True)
     FALSE = (Config, key, False)
     VAL = (Config, key, val)
-    s = setattr
     falses = "0 FALSE OFF NO".split()
 
     # set all default
     if key == "ALL" and val == "DEFAULT":
 
         for k, v in g.defaults.items():
-            s(Config, k, v)
+            setattr(Config, k, v)
             success_msg = "Default configuration reinstated"
 
     elif key == "PLAYER" and val == "DEFAULT":
@@ -465,7 +464,7 @@ def setconfig(key, val):
         fail_msg = fail_msg % Config.PLAYER
 
     elif key == "FULLSCREEN" and val == "DEFAULT":
-        s(*FALSE)
+        setattr(*FALSE)
         set_playerargs()
         success_msg = "FULLSCREEN set to disabled (default)"
 
@@ -484,20 +483,20 @@ def setconfig(key, val):
         boolval = val not in falses
 
         if key == "FULLSCREEN":
-            s(*TRUE) if boolval else s(*FALSE)
+            setattr(*TRUE) if boolval else setattr(*FALSE)
             set_playerargs(default=False)
             success_msg = "FULLSCREEN set to %s" % boolval
 
         elif not boolval:
-            s(*FALSE)
+            setattr(*FALSE)
             success_msg = "%s set to disabled (restart may be required)" % key
         else:
-            s(*TRUE)
+            setattr(*TRUE)
             success_msg = "%s set to enabled (restart may be required)" % key
 
     elif key in g.configbool and val == "DEFAULT":
         boolval = val not in falses
-        s(Config, key, boolval)
+        setattr(Config, key, boolval)
         success_msg = "%s set to %s (restart may be required)" % (key, boolval)
 
     elif key in g.config:
@@ -508,7 +507,7 @@ def setconfig(key, val):
             if key == "FULLSCREEN":
                 set_playerargs(default=False)
 
-        s(*VAL)
+        setattr(*VAL)
         success_msg = "%s has been set to %s" % (key.upper(), val)
 
     else:
