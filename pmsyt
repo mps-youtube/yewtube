@@ -1346,28 +1346,40 @@ def show_help(helpname=None):
 
     print("\n" * 200)
     print(HELP_OVERVIEW, end='')
+
     inp = True
+
     while inp:
         try:
+
             print(HELP_LIST)
             inp = compat_input("> " + c.y)
             screen_update()
+
             if inp == '1':
                 print(HELP_SEARCHING, end='')
+
             elif inp == '2':
                 print(HELP_DOWNLOAD_AND_PLAYBACK, end='')
+
             elif inp == '3':
                 print(HELP_PLAYLISTS, end='')
+
             elif inp == '4':
                 print(HELP_INVOCATION, end='')
+
             elif inp == '5':
                 print(HELP_ADVANCED, end='')
+
             elif inp == '6' or inp == 'q':
                 inp=False
+
             else:
                 print(HELP_OVERVIEW, end='')
+
         except (KeyboardInterrupt, EOFError):
-            userinput = prompt_for_exit()
+           prompt_for_exit()
+
     g.content = generate_songlist_display()
 
 
