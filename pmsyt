@@ -223,6 +223,7 @@ class g(object):
 
     """ Class for holding globals that are needed throught the module. """
 
+    helptext = []
     max_results = 19
     max_retries = 8
     url_memo = {}
@@ -378,7 +379,7 @@ def setconfig(key, val):
         g.message = fail_msg
 
 
-HELP_BASIC = "Basic Usage", """
+g.helptext = [("Basic Usage", """
 {0}Basic Usage{1}
 
 Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/pink floyd{1}
@@ -391,9 +392,9 @@ Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/pink floyd{1}
 {2}d <number>{1} to download the specified item.
 
 [For further help, enter a number from the list below]
-""".format(c.ul, c.w, c.g, c.r)
+""".format(c.ul, c.w, c.g, c.r)),
 
-HELP_SEARCHING = "Searching and Editing Results", """
+("Searching and Editing Results", """
 {0}Searching and Editing Results{1}
 
 Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
@@ -405,9 +406,9 @@ Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
 {2}rm <number(s)>{1} to remove items from displayed results.
 {2}sw <number>,<number>{1} to swap two items.
 {2}mv <number>,<number>{1} to move item <number> to position <number>.
-""".format(c.ul, c.w, c.g, c.r)
+""".format(c.ul, c.w, c.g, c.r)),
 
-HELP_DOWNLOAD_AND_PLAYBACK = "Downloading and Playback", """
+("Downloading and Playback", """
 {0}Downloading and Playback{1}
 
 {2}set show_video true{1} to view and download video instead of audio.
@@ -422,9 +423,9 @@ HELP_DOWNLOAD_AND_PLAYBACK = "Downloading and Playback", """
 {2}repeat <number(s)>{1} to play and repeat the specified items.
 
 Note: {2}all{1} can be used as an argument (e.g., {2}shuffle all{1})
-""".format(c.ul, c.w, c.g, c.r)
+""".format(c.ul, c.w, c.g, c.r)),
 
-HELP_PLAYLISTS = "Using Playlists", """
+("Using Playlists", """
 {0}Using Playlists{1}
 
 {2}add <number(s)>{1} to add items to the current playlist.
@@ -437,9 +438,9 @@ HELP_PLAYLISTS = "Using Playlists", """
 {2}save{1} or {2}save <name>{1} to save the displayed items as a playlist.
 {2}rmp <playlist_name or ID>{1} to delete a playlist from disk.
 {2}mv <old name or ID> <new name>{1} to rename a playlist.
-""".format(c.ul, c.w, c.g, c.r)
+""".format(c.ul, c.w, c.g, c.r)),
 
-HELP_INVOCATION = "Invocation Parameters", """
+("Invocation Parameters", """
 {0}Invocation{1}
 
 To play a saved playlist when invoking pms use {2}pmsyt play <playlistname>{1}
@@ -448,10 +449,11 @@ This also works for other commands:
 {2}pmsyt /mozart{1} to search
 {2}pmsyt open <playlistname>{1} to open a saved playlist
 {2}pmsyt ls{1} to list saved playlists
-""".format(c.ul, c.w, c.g, c.r)
+""".format(c.ul, c.w, c.g, c.r)),
 
-HELP_ADVANCED = "Advanced Tips", """
+("Advanced Tips", """
 {0}Advanced Tips{1}
+
 When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you can\
 can enter the
 first few characters instead of the whole name. The first alphabetically
@@ -467,7 +469,8 @@ You can use spaces instead of commas: 5 3 7- -2
 mode.
 {2}set player mpv{1} and {2}set playerargs -really-quiet{1} to use mpv as your
     player instead of mplayer.
-""".format(c.ul, c.w, c.g, c.r)
+""".format(c.ul, c.w, c.g, c.r))
+]
 
 def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
     """Format text.
@@ -756,6 +759,7 @@ def generate_songlist_display(song=False):
     songs = g.model.songs or []
 
     if not songs:
+        g.message = "Enter /search-term to search or [h]elp"
         return logo(c.g) + "\n\n"
 
     fmtrow = "%s%-5s %-63s %-6s%s\n"
@@ -1348,21 +1352,14 @@ def play_range(songlist, shuffle=False, repeat=False):
 def show_help(option="1"):
     """ Print help message. """
 
-    helps = (HELP_BASIC,
-             HELP_SEARCHING,
-             HELP_DOWNLOAD_AND_PLAYBACK,
-             HELP_PLAYLISTS,
-             HELP_INVOCATION,
-             HELP_ADVANCED
-             )
+    all_help = g.helptext
+    help_titles = ["\n[%s] %s" % (n + 1, x[0]) for n, x in enumerate(all_help)]
+    help_titles = "".join(help_titles)
 
-    HELP_LIST = ["\n[%s] %s" % (n + 1, x[0]) for n, x in enumerate(helps)]
-    HELP_LIST = "".join(HELP_LIST)
-
-    if option.isdigit() and int(option) <= len(helps):
-        g.content = helps[int(option) - 1][1] + HELP_LIST
+    if option.isdigit() and int(option) <= len(all_help):
+        g.content = all_help[int(option) - 1][1] + help_titles
         g.message = "[{0}1-%s{1} for more or {0}ENTER{1} to return]"
-        g.message = " " * 23 + g.message.format(c.y, c.w) % len(helps)
+        g.message = " " * 23 + g.message.format(c.y, c.w) % len(all_help)
         screen_update()
 
         try:
