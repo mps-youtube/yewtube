@@ -381,39 +381,45 @@ def setconfig(key, val):
 HELP_BASIC = "Basic Usage", """
 {0}Basic Usage{1}
 
-Use {2}/{1} or {2}.{1} to prefix your search query.
-    Example: {2}/{1}classical music
-{2}i <number>{1} to view information on specified item.
-{2}<number(s)>{1} to choose which item(s) to play, separated by commas.
-    Example: {2}1-3,5{1} to play items 1, 2, 3, and 5
-{2}d <number>{1} to download the specified item to your Downloads folder.
+Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/pink floyd{1}
 
-For a more complete usage of the program, refer to the specified topics.
+{2}<number(s)>{1} to play specified items, separated by commas.
+            e.g., {2}1-3,5{1} to play items 1, 2, 3 and 5.
+
+{2}i <number>{1} to view information on the specified item.
+
+{2}d <number>{1} to download the specified item.
+
+[For further help, enter a number from the list below]
 """.format(c.ul, c.w, c.g, c.r)
 
 HELP_SEARCHING = "Searching and Editing Results", """
 {0}Searching and Editing Results{1}
 
-Use {2}/{1} or {2}.{1} to prefix your search query.
-    Example: {2}/{1}classical music
-{2}/<username> -user{1} to list Youtube User Uploads.
+Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
+{2}set search_music false{1} to search all YouTube categories.
+{2}set search_music true{1} to search only YouTube music category.
 {2}n{1} and {2}p{1} to continue search to next/previous pages.
+{2}/<username> -user{1} to list YouTube uploads by <username>.
+
 {2}rm <number(s)>{1} to remove items from displayed results.
 {2}sw <number>,<number>{1} to swap two items.
-{2}mv <number>,<number>{1} to move the first number to the
-    second number's position.
+{2}mv <number>,<number>{1} to move item <number> to position <number>.
 """.format(c.ul, c.w, c.g, c.r)
 
 HELP_DOWNLOAD_AND_PLAYBACK = "Downloading and Playback", """
 {0}Downloading and Playback{1}
 
-{2}d <number>{1} to download the specified item to your Downloads folder.
-{2}i <number>{1} to view information on specified item.
-{2}<number(s)>{1} to choose which item(s) to play, separated by commas.
-    Example: {2}1-3,5{1} to play items 1, 2, 3, and 5
+{2}set show_video true{1} to view and download video instead of audio.
+
+{2}i <number>{1} to view information on the specified item.
+{2}d <number>{1} to download the specified items.
+{2}<number(s)>{1} to play specified items, separated by commas.
+            e.g., {2}1-3,5{1} to play items 1, 2, 3 and 5
+
 {2}all{1} to play all displayed items.
-{2}shuffle <items>{1} to play specified items in random order.
-{2}repeat <items>{1} to play and repeat the specified items.
+{2}shuffle <number(s)>{1} to play specified items in random order.
+{2}repeat <number(s)>{1} to play and repeat the specified items.
 
 Note: {2}all{1} can be used as an argument (e.g., {2}shuffle all{1})
 """.format(c.ul, c.w, c.g, c.r)
@@ -438,28 +444,29 @@ HELP_INVOCATION = "Invocation Parameters", """
 
 To play a saved playlist when invoking pms use {2}pmsyt play <playlistname>{1}
 This also works for other commands:
-{2}pmsyt .mozart{1} to search
-{2}pmsyt view <playlistname>{1} to view a saved playlist
+
+{2}pmsyt /mozart{1} to search
+{2}pmsyt open <playlistname>{1} to open a saved playlist
 {2}pmsyt ls{1} to list saved playlists
-{2}pmsyt open mozart{1} to open a saved playlist called mozart.
 """.format(c.ul, c.w, c.g, c.r)
 
 HELP_ADVANCED = "Advanced Tips", """
 {0}Advanced Tips{1}
-When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you
-can enter the first few characters instead of the whole name. The first
-alphabetically matching playlist will be opened/displayed.
+When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you can\
+can enter the
+first few characters instead of the whole name. The first alphabetically
+matching playlist will be opened/displayed/played.
 
-When selecting items you can use {2}5-{1} to select items 5 upward and {2}-5{1}
-to select up to item 5. This can be included with other choices: 5,3,7-,-2.
-You can also use spaces instead of commas: 5 3 7- -2.
+Use {2}5-{1} to select items 5 upward and {2}-5{1} to select up to item 5. \
+This can be
+included with other choices. e.g., 5,3,7-,-2
+You can use spaces instead of commas: 5 3 7- -2
 
-{2}set show_video true{1} to view or download video instead of audio.
-{2}set playerargs -really-quiet -fs{1} to play video content in fullscreen mode.
-{2}set search_music false{1} to search all YouTube categories (instead
-    of just music).
-{2}set player mpv{1} and {2}set playerargs -really-quiet{1} to use mpv
-    as your player instead of mplayer.
+{2}set{1} to view current configuration.
+{2}set playerargs -really-quiet -fs{1} to play video content in fullscreen \
+mode.
+{2}set player mpv{1} and {2}set playerargs -really-quiet{1} to use mpv as your
+    player instead of mplayer.
 """.format(c.ul, c.w, c.g, c.r)
 
 def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
@@ -1349,7 +1356,7 @@ def show_help(option="1"):
              HELP_ADVANCED
              )
 
-    HELP_LIST = ["\n%s) %s" % (n + 1, x[0]) for n, x in enumerate(helps)]
+    HELP_LIST = ["\n[%s] %s" % (n + 1, x[0]) for n, x in enumerate(helps)]
     HELP_LIST = "".join(HELP_LIST)
 
     if option.isdigit() and int(option) <= len(helps):
