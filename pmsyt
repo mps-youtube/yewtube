@@ -790,13 +790,13 @@ def tidy(raw, field):
         H, M, S = raw.split(":")
 
         if H == "00":
-            raw = "   " + M + ":" + S
+            raw = M + ":" + S
 
         elif H == "01" and int(M) < 40:
-            raw = "   " + str(int(M) + 60) + ":" + S
+            raw = str(int(M) + 60) + ":" + S
 
         elif H.startswith("0"):
-            raw = " " + ":".join([H[1], M, S])
+            raw = ":".join([H[1], M, S])
 
     else:
         for r in (("&#039;", "'"), ("&amp;#039;", "'"), ("&amp;amp;", "&"),
@@ -857,20 +857,21 @@ def playback_progress(idx, allsongs, repeat=False):
 
     # pylint: disable=R0914
     # too many local variables
-    out = "  %s%-66s %s   %s\n" % (c.ul, "Title", "Time", c.w)
+    out = "  %s%-71s%s%s\n" % (c.ul, "Title", "Time", c.w)
     show_key_help = (Config.PLAYER == "mplayer" or Config.PLAYER == "mpv")\
         and Config.SHOW_MPLAYER_KEYS
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
-        i = song['title'][:64], song['length']
+        length = " " * (8 - len(song['length'])) + song['length']
+        i = song['title'][:64], length, song['length']
         fmt = (c.w, "  ", c.b, i[0], c.w, c.y, i[1], c.w)
 
         if n == idx:
             fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w)
             cur = i
 
-        out += "%s%s%s%-66s%s [%s%s%s]\n" % fmt
+        out += "%s%s%s%-66s%s %s%s%s\n" % fmt
 
     out += "\n" * (3 - len(allsongs))
     pos = 8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w
@@ -885,7 +886,7 @@ def playback_progress(idx, allsongs, repeat=False):
         playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
         out += "\n" + " " * 58 if multi else ""
 
-    fmt = playing, c.r, cur[0], c.w, c.w, cur[1], c.w
+    fmt = playing, c.r, cur[0], c.w, c.w, cur[2], c.w
     out += "%s    %s%s%s %s[%s]%s" % fmt
     out += "    REPEAT MODE" if repeat else ""
     return out
@@ -900,13 +901,16 @@ def generate_songlist_display(song=False):
         g.message = "Enter /search-term to search or [h]elp"
         return logo(c.g) + "\n\n"
 
-    fmtrow = "%s%-5s %-63s %-6s%s\n"
-    head = (c.ul, "Item", "Title", " Length ", c.w)
-    out = "\n" + fmtrow % head
+    fmtrow = "%s%-5s %-63s %-6s  %s\n"
+    fmthd = "%s%-5s %-65s %-6s%s\n"
+    head = (c.ul, "Item", "Title", "Length", c.w)
+    out = "\n" + fmthd % head
 
     for n, x in enumerate(songs):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
         length = x.get('length') or 0
+        print(length, type(length))
+        length = " " * (8 - len(length)) + length
         title = x.get('title') or "unknown title"
 
         if not song or song != songs[n]:
