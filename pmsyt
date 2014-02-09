@@ -1004,6 +1004,8 @@ def playsong(song, failcount=0, override=False):
 
     video = Config.SHOW_VIDEO
 
+    # handle audio / video override
+
     if override == "fullscreen" or override == "window":
         video = True
 
@@ -1018,14 +1020,14 @@ def playsong(song, failcount=0, override=False):
     songdata = song['link'], stream.extension, int(size / (1024 ** 2))
     args = Config.PLAYERARGS[::]
 
-    if override == "fullscreen" and not Config.FULLSCREEN:
+    if has_known_player():
 
-        if Config.PLAYER in g.playerargs_defaults:
+        # handle fullscreen / window overrides
+
+        if override == "fullscreen" and not Config.FULLSCREEN:
             args.append(g.playerargs_defaults[Config.PLAYER]["fs"])
 
-    elif override == "window" and Config.FULLSCREEN:
-
-        if Config.PLAYER in g.playerargs_defaults:
+        elif override == "window" and Config.FULLSCREEN:
             fsarg = g.playerargs_defaults[Config.PLAYER]["fs"]
             args.pop(args.index(fsarg))
 
