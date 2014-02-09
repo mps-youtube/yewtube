@@ -479,7 +479,7 @@ def setconfig(key, val):
         else:
             fail_msg = "Invalid path: %s%s%s" % (c.r, val, c.w)
 
-    elif key in g.configbool and not val.upper() == "DEFAULT":
+    elif key in g.configbool and not val == "DEFAULT":
 
         boolval = val not in falses
 
@@ -488,7 +488,6 @@ def setconfig(key, val):
             set_playerargs(default=False)
             success_msg = "FULLSCREEN set to %s" % boolval
 
-
         elif not boolval:
             s(*FALSE)
             success_msg = "%s set to disabled (restart may be required)" % key
@@ -496,6 +495,10 @@ def setconfig(key, val):
             s(*TRUE)
             success_msg = "%s set to enabled (restart may be required)" % key
 
+    elif key in g.configbool and val == "DEFAULT":
+        boolval = val not in falses
+        s(Config, key, boolval)
+        success_msg = "%s set to %s (restart may be required)" % (key, boolval)
 
     elif key in g.config:
 
