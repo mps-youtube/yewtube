@@ -574,12 +574,13 @@ Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
     ("Downloading and Playback", """
 {0}Downloading and Playback{1}
 
-{2}set show_video true{1} to view and download video instead of audio.
-
-{2}i <number>{1} to view information on the specified item.
-{2}d <number>{1} to download the specified items.
+{2}set show_video true{1} to play video instead of audio.
 {2}<number(s)>{1} to play specified items, separated by commas.
             e.g., {2}1-3,5{1} to play items 1, 2, 3 and 5
+{2}i <number>{1} to view information on the specified item.
+{2}d <number>{1} to view downloads available for an item.
+{2}da <number>{1} to download best available audio file.
+{2}dv <number>{1} to download best available video file.
 
 {2}all{1} to play all displayed items.
 {2}shuffle <number(s)>{1} to play specified items in random order.
@@ -1185,7 +1186,7 @@ def search(term, page=1, splash=True):
             g.last_search_query = ""
 
 
-def _make_fname(song, ext=None):
+def _make_fname(song, ext=None, av=None):
     """" Create download directory, generate filename. """
 
     if not os.path.exists(Config.DDIR):
@@ -1196,19 +1197,18 @@ def _make_fname(song, ext=None):
     if ext:
         extension = ext
 
-    elif not Config.SHOW_VIDEO:
+    elif av == "audio":
         extension = p.getbestaudio().extension
 
     else:
         extension = p.getbest().extension
 
     filename = song['title'][:59] + "." + extension
-
     filename = os.path.join(Config.DDIR, mswinfn(filename.replace("/", "-")))
     return filename
 
 
-def _download(song, filename, url=None):
+def _download(song, filename, url=None, audio=False):
     """ Download file, show status, return filename. """
     # pylint: disable=R0914
     # too many local variables
@@ -1219,7 +1219,7 @@ def _download(song, filename, url=None):
 
     if not url:
         paf = get_streams(song)
-        video = Config.SHOW_VIDEO
+        video = not audio
         url = paf.getbest().url if video else paf.getbestaudio().url
 
     resp = g.urlopen(url)
@@ -1714,21 +1714,35 @@ def gen_dl_text(ddata, song):
     return(content, hdr, heading, footer)
 
 
-def download(num):
+def download(dltype, num):
     """ Download a track. """
 
     song = (g.model.songs[int(num) - 1])
+    best = dltype.startswith("dv") or dltype.startswith("da")
 
-    url, ext = prompt_dl(song)
+    if not best:
+        url, ext = prompt_dl(song)
 
-    if not url:
-        g.content = generate_songlist_display()
-        return
+        if not url:
+            g.content = generate_songlist_display()
+            g.message = "%sNo download selected%s" % (c.y, c.w)
+            return
 
-    filename = _make_fname(song, ext)
+        else:
+            filename = _make_fname(song, ext)
+            args = (song, filename, url)
+            kwargs = (),
+
+    elif best:
+        av = "audio" if dltype.startswith("da") else "video"
+        audio = av == "audio"
+        filename = _make_fname(song, None, av=av)
+        args = (song, filename)
+        kwargs = dict(url=None, audio=audio)
+
 
     try:
-        f = _download(song, filename, url)
+        f = _download(*args, **kwargs)
         g.message = "Downloaded " + c.g + f + c.w
 
     except IndexError:
@@ -1935,13 +1949,13 @@ def main():
         'ls': r'ls$',
         'vp': r'vp$',
         'top': r'top(|3m|6m|year|all)\s*$',
-        'plist': r'.*(list[\da-zA-Z]{8,14})$',
+        #'plist': r'.*(list[\da-zA-Z]{8,14})$',
         'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
         'info': r'i\s*(\d{1,4})$',
         'quits': r'(?:q|quit|exit)$',
         'search': r'(?:search|\.|/)\s*(.{2,500})',
         'play_pl': r'play\s*(%s|\d+)$' % word,
-        'download': r'(?:d|dl|download)\s*(\d{1,4})$',
+        'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
         'nextprev': r'(n|p)$',
         'play_all': r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
         'save_last': r'(save)\s*$',
