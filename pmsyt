@@ -1213,7 +1213,7 @@ def _download(song, filename, url=None):
     # pylint: disable=R0914
     # too many local variables
 
-    print("Downloading %s%s%s ..\n" % (c.g, filename, c.w))
+    print("Downloading to %s%s%s ..\n" % (c.r, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
 
@@ -1622,7 +1622,7 @@ def get_dl_data(song):
     p = get_streams(song)
     song['pafy'] = p
     dldata = []
-    text = " [Fetching stream info]      >"
+    text = " [Fetching stream info] >"
     l = len(p.allstreams)
     for n, stream in enumerate(p.allstreams):
         sys.stdout.write(text + "-" * n + ">" + " " * (l - n - 1) + "<\r")
