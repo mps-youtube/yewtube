@@ -164,7 +164,7 @@ class Config(object):
     FULLSCREEN = False
     SHOW_STATUS = True
     DDIR = get_default_ddir()
-    SHOW_VIDEO = True
+    SHOW_VIDEO = False
     SEARCH_MUSIC = True
 
 
