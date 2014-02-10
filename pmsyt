@@ -229,10 +229,12 @@ class g(object):
     playerargs_defaults = {
         "mplayer": {"def": ("-nocache -prefer-ipv4 -nolirc "
                             "-really-quiet").split(),
-                    "fs": "-fs"
+                    "fs": "-fs",
+                    "novid": "-novideo"
                     },
         "mpv": {"def": "--really-quiet".split(),
-                "fs": "--fs"
+                "fs": "--fs",
+                "novid": "--no-video"
                 }
     }
 
@@ -978,6 +980,9 @@ def get_stream_size(song, video=False):
     if song.get(key):
         return song[key]
 
+    if not stream:
+        return 0
+
     else:
         size = stream.get_filesize()
         return size
@@ -1033,6 +1038,13 @@ def playsong(song, failcount=0, override=False):
         video = False
 
     stream = paf.getbest() if video else paf.getbestaudio()
+
+    # handle no audio stream found
+    if not stream and not video:
+        override = "a-v"
+        video = True  # to display correct status info
+        stream = paf.getbest()
+
     stream.url = stream.url.replace("https://", "http://")
     size = get_stream_size(song, video=video)
     key = "audiosize" if not video else "videosize"
@@ -1042,9 +1054,12 @@ def playsong(song, failcount=0, override=False):
 
     if has_known_player():
 
-        # handle fullscreen / window overrides
+        # handle no audio stream available
+        if override == "a-v":
+            args.append(g.playerargs_defaults[Config.PLAYER]["novid"])
 
-        if override == "fullscreen" and not Config.FULLSCREEN:
+        # handle fullscreen / window overrides
+        elif override == "fullscreen" and not Config.FULLSCREEN:
             args.append(g.playerargs_defaults[Config.PLAYER]["fs"])
 
         elif override == "window" and Config.FULLSCREEN:
