@@ -87,7 +87,7 @@ Downloading
 
 ``d 3`` to download item 3 (will open new menu)
 ``da 3`` to download audio stream of item 3
-``dv 3`` to download video stream if otem 3
+``dv 3`` to download video stream of item 3
 
 Playback
 ~~~~~~~~
