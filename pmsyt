@@ -617,7 +617,7 @@ This also works for other commands:
 
     ("Advanced Tips", """
 {0}Advanced Tips{1}
-When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you\
+When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you \
 can enter the
 first few characters instead of the whole name. The first alphabetically
 matching playlist will be opened/displayed/played.
@@ -1739,7 +1739,6 @@ def download(dltype, num):
         filename = _make_fname(song, None, av=av)
         args = (song, filename)
         kwargs = dict(url=None, audio=audio)
-
 
     try:
         f = _download(*args, **kwargs)
