@@ -1731,7 +1731,7 @@ def download(dltype, num):
         else:
             filename = _make_fname(song, ext)
             args = (song, filename, url)
-            kwargs = (),
+            kwargs = {}
 
     elif best:
         av = "audio" if dltype.startswith("da") else "video"
