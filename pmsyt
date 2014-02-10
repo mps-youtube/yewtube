@@ -392,6 +392,11 @@ def import_config():
         for k, v in saved_config.items():
             setattr(Config, k, v)
 
+        # Update config files from versions <= 0.01.08
+        if type(Config.PLAYERARGS) == str:
+            Config.PLAYERARGS = Config.PLAYERARGS.split(" ")
+            saveconfig()
+
 
 class c(object):
 
@@ -1507,6 +1512,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             g.content = playback_progress(n, songlist, repeat=False)
             screen_update()
 
+            try:
                 hasnext = len(songlist) > n + 1
 
                 if hasnext:
@@ -1515,7 +1521,6 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
                     t = threading.Thread(target=preload, kwargs=kwa)
                     t.start()
 
-            try:
                 playsong(song, override=override)
 
             except KeyboardInterrupt:
