@@ -1512,15 +1512,15 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             g.content = playback_progress(n, songlist, repeat=False)
             screen_update()
 
+            hasnext = len(songlist) > n + 1
+
+            if hasnext:
+                nex = songlist[n + 1]
+                kwa = {"song": nex, "override": override}
+                t = threading.Thread(target=preload, kwargs=kwa)
+                t.start()
+
             try:
-                hasnext = len(songlist) > n + 1
-
-                if hasnext:
-                    nex = songlist[n + 1]
-                    kwa = {"song": nex, "override": override}
-                    t = threading.Thread(target=preload, kwargs=kwa)
-                    t.start()
-
                 playsong(song, override=override)
 
             except KeyboardInterrupt:
