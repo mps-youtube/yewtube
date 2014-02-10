@@ -101,23 +101,27 @@ def get_default_ddir():
     if mswin:
         return os.path.join(os.path.expanduser("~"), "Downloads", "PMS")
 
-    USER_DIRS = os.path.join(os.path.expanduser("~"), ".config", "user-dirs.dirs")
+    USER_DIRS = os.path.join(os.path.expanduser("~"),
+                             ".config", "user-dirs.dirs")
     DOWNLOAD_HOME = os.path.join(os.path.expanduser("~"), "Downloads")
 
     if 'XDG_DOWNLOAD_DIR' in os.environ:
         ddir = os.environ['XDG_DOWNLOAD_DIR']
+
     elif os.path.exists(USER_DIRS):
         lines = open(USER_DIRS).readlines()
         defn = [x for x in lines if x.startswith("XDG_DOWNLOAD_DIR")]
 
         if len(defn) == 0:
             ddir = os.path.expanduser("~")
+
         else:
-            ddir = defn[0].split("=")[1]\
-                    .replace('"', '')\
-                    .replace("$HOME", os.path.expanduser("~")).strip()
+            ddir = defn[0].split("=")[1].replace('"', '')\
+                .replace("$HOME", os.path.expanduser("~")).strip()
+
     elif os.path.exists(DOWNLOAD_HOME):
         ddir = DOWNLOAD_HOME
+
     else:
         ddir = os.path.expanduser("~")
 
@@ -224,7 +228,7 @@ class g(object):
     PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
     playerargs_defaults = {
         "mplayer": {"def": ("-nocache -prefer-ipv4 -nolirc "
-                             "-really-quiet").split(),
+                            "-really-quiet").split(),
                     "fs": "-fs"
                     },
         "mpv": {"def": "--really-quiet".split(),
@@ -234,6 +238,8 @@ class g(object):
 
 
 def init():
+    """ Initial setup. """
+
     init_debug()
     init_readline()
     init_opener()
@@ -268,7 +274,7 @@ def init_readline():
     if not mswin:
         try:
             import readline  # import readline if not running on windows
-            readline.get_history_length()  # redundant, prevents unused import warn
+            readline.get_history_length()  # redundant, prevents import warning
 
         except ImportError:
             pass  # no biggie
@@ -278,7 +284,8 @@ def init_opener():
     """ Set up url opener. """
 
     opener = build_opener()
-    ua = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)"
+    ua = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; "
+    ua += "Trident/5.0)"
     opener.addheaders = [("User-Agent", ua)]
     g.urlopen = opener.open
 
@@ -315,7 +322,7 @@ def set_playerargs(playername=None, default=True):
 
 
 def has_config():
-    """ Has config been saved? """
+    """ Check whether config file has been saved before. """
 
     return os.path.exists(g.CFFILE)
 
@@ -337,7 +344,7 @@ def has_known_player():
 
 
 def has_mpv():
-    """ Is mpv present? """
+    """ Check whether mpv is available. """
 
     if mswin:
         return False
@@ -395,6 +402,7 @@ def import_config():
             setattr(Config, k, v)
 
         # Update config files from versions <= 0.01.08
+        # pylint: disable=E1103
         if type(Config.PLAYERARGS) == str:
             Config.PLAYERARGS = Config.PLAYERARGS.split(" ")
             saveconfig()
@@ -490,7 +498,12 @@ def setconfig(key, val):
         boolval = val not in falses
 
         if key == "FULLSCREEN":
-            setattr(*TRUE) if boolval else setattr(*FALSE)
+            if boolval:
+                setattr(*TRUE)
+
+            else:
+                setattr(*FALSE)
+
             set_playerargs(default=False)
             success_msg = "FULLSCREEN set to %s" % boolval
 
@@ -544,8 +557,7 @@ Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/pink floyd{1}
 
 [For further help, enter a number from the list below]
 """.format(c.ul, c.w, c.g, c.r)),
-
-("Searching and Editing Results", """
+    ("Searching and Editing Results", """
 {0}Searching and Editing Results{1}
 
 Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
@@ -559,7 +571,7 @@ Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
 {2}mv <number>,<number>{1} to move item <number> to position <number>.
 """.format(c.ul, c.w, c.g, c.r)),
 
-("Downloading and Playback", """
+    ("Downloading and Playback", """
 {0}Downloading and Playback{1}
 
 {2}set show_video true{1} to view and download video instead of audio.
@@ -576,7 +588,7 @@ Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
 Note: {2}all{1} can be used as an argument (e.g., {2}shuffle all{1})
 """.format(c.ul, c.w, c.g, c.r)),
 
-("Using Playlists", """
+    ("Using Playlists", """
 {0}Using Playlists{1}
 
 {2}add <number(s)>{1} to add items to the current playlist.
@@ -591,7 +603,7 @@ Note: {2}all{1} can be used as an argument (e.g., {2}shuffle all{1})
 {2}mv <old name or ID> <new name>{1} to rename a playlist.
 """.format(c.ul, c.w, c.g, c.r)),
 
-("Invocation Parameters", """
+    ("Invocation Parameters", """
 {0}Invocation{1}
 
 To play a saved playlist when invoking pms use {2}pmsyt play <playlistname>{1}
@@ -602,7 +614,7 @@ This also works for other commands:
 {2}pmsyt ls{1} to list saved playlists
 """.format(c.ul, c.w, c.g, c.r)),
 
-("Advanced Tips", """
+    ("Advanced Tips", """
 {0}Advanced Tips{1}
 When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you\
 can enter the
@@ -623,6 +635,7 @@ play items in windowed, fullscreen or audio modes respectively.
 {2}set player mpv{1} or {2}set player mplayer{1} to set a player
 """.format(c.ul, c.w, c.g, c.r))
 ]
+
 
 def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
     """Format text.
@@ -1055,7 +1068,6 @@ def playsong(song, failcount=0, override=False):
             subprocess.call(cmd, stdout=stdout, stderr=stderr)
 
         except OSError:
-            # TODO - propogate to caller
             g.message = F('no player') % Config.PLAYER
             return
 
@@ -1414,6 +1426,8 @@ def songlist_rm_add(action, songrange):
 
 def play(pre, choice, post=""):
     """ Play choice.  Use repeat/random if appears in pre/post. """
+    # pylint: disable=R0914
+    # too many local variables
 
     if not g.model.songs:
         g.message = c.r + "There are no tracks to select" + c.w
@@ -1492,7 +1506,7 @@ def preload(song, delay=1, override=False):
     song['pafy'] = get_streams(song, future=True)
     video = Config.SHOW_VIDEO
 
-    if override == "fullscreen" or override=="window":
+    if override == "fullscreen" or override == "window":
         video = True
 
     elif override == "audio":
@@ -1602,23 +1616,21 @@ def quits(showlogo=True):
 
 
 def get_dl_data(song):
-    """ Get filesize for all streams. """
+    """ Get filesize and metadata for all streams, return dict. """
 
     mbsize = lambda x: str(int(x / (1024 ** 2)))
     p = get_streams(song)
     song['pafy'] = p
-    status =  "Fetching filesizes"
-    writestatus(status)
     dldata = []
-
-    for stream in p.allstreams:
-        status += "."
-        writestatus(status)
+    text = " [Fetching stream info]      >"
+    l = len(p.allstreams)
+    for n, stream in enumerate(p.allstreams):
+        sys.stdout.write(text + "-" * n + ">" + " " * (l - n - 1) + "<\r")
+        sys.stdout.flush()
         size = mbsize(stream.get_filesize())
 
         item = {'mediatype': stream.mediatype,
                 'size': size,
-                'quality': stream.quality,
                 'ext': stream.extension,
                 'quality': stream.quality,
                 'url': stream.url}
@@ -1629,13 +1641,21 @@ def get_dl_data(song):
     return dldata
 
 
-def menu_prompt(model, prompt=" > ", rows=[], header=[], theading=[],
-                footer=[], force=0):
+def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
+                footer=None, force=0):
     """ Generate a list of choice, returns item from model. """
 
     content = ""
-    for x in (header + theading + rows + footer):
-        content += x + "\n"
+
+    for x in header, theading, rows, footer:
+        if type(x) == list:
+
+            for line in x:
+                content += line + "\n"
+
+        elif type(x) == str:
+            content += x + "\n"
+
     g.content = content
     screen_update()
 
@@ -1646,13 +1666,14 @@ def menu_prompt(model, prompt=" > ", rows=[], header=[], theading=[],
 
     else:
         if force:
-            return menu_prompt(model, prompt, rows, headers, theading, footer,
+            return menu_prompt(model, prompt, rows, header, theading, footer,
                                force)
 
-    return
+    return False, False
 
 
 def prompt_dl(song):
+    """ Prompt user do choose a stream to dl.  Return (url, extension). """
 
     dl_data = get_dl_data(song)
     dl_text = gen_dl_text(dl_data, song)
@@ -1660,9 +1681,8 @@ def prompt_dl(song):
     model = [x['url'] for x in dl_data]
     ed = enumerate(dl_data)
     model = {str(n + 1): (x['url'], x['ext']) for n, x in ed}
-    url_ext = menu_prompt(model, "Download > ", *dl_text)
-
-    return url_ext
+    url, ext = menu_prompt(model, "Download number: ", *dl_text)
+    return url, ext
 
 
 def gen_dl_text(ddata, song):
@@ -1671,7 +1691,8 @@ def gen_dl_text(ddata, song):
     hdr = []
     hdr.append("  %s%s%s [%s]" % (c.r, song['title'], c.w,
                                   song['pafy'].duration))
-    hdr.append(c.r + "  Uploaded by " + song['pafy'].author + c.w)
+    author = py2utf8_decode(song['pafy'].author)
+    hdr.append(c.r + "  Uploaded by " + author + c.w)
     hdr.append("")
 
     heading = tuple("Item Format Quality Media Size".split())
@@ -1698,13 +1719,12 @@ def download(num):
 
     song = (g.model.songs[int(num) - 1])
 
-    pd = prompt_dl(song)
+    url, ext = prompt_dl(song)
 
-    if not pd:
+    if not url:
         g.content = generate_songlist_display()
         return
 
-    url, ext = pd
     filename = _make_fname(song, ext)
 
     try:
