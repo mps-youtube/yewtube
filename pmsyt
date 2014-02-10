@@ -203,6 +203,7 @@ class g(object):
     """ Class for holding globals that are needed throught the module. """
 
     urlopen = None
+    blank_text = "\n" * 200
     helptext = []
     max_results = 19
     max_retries = 8
@@ -253,6 +254,7 @@ def init():
 def init_debug():
     """ Enable debug logging if pmsytdebug env var exists. """
     if os.environ.get("pmsytdebug"):
+        g.blank_text = "--\n"
         logfile = os.path.join(tempfile.gettempdir(), "pmsyt.log")
         logging.basicConfig(level=logging.DEBUG, filename=logfile)
         logging.getLogger("pafy").setLevel(logging.DEBUG)
@@ -477,7 +479,8 @@ def setconfig(key, val):
 
         if valid:
             setattr(Config, key, val_orig)
-            success_msg = "Downloads will be saved to %s%s%s" % (c.y, val, c.w)
+            success_msg = "Downloads will be saved to %s%s%s"
+            success_msg = success_msg % (c.y, val_orig, c.w)
 
         else:
             fail_msg = "Invalid path: %s%s%s" % (c.r, val, c.w)
@@ -850,7 +853,7 @@ def screen_update():
     """ Display content, show message, blank screen."""
 
     if not g.noblank:
-        print("\n" * 200)
+        print(g.blank_text)
 
     if g.content:
         g.content = mswinenc(g.content)
@@ -903,13 +906,13 @@ def playback_progress(idx, allsongs, repeat=False):
     return out
 
 
-def generate_songlist_display(song=False):
+def generate_songlist_display(song=False, zeromsg=None):
     """ Generate list of choices from a song list."""
 
     songs = g.model.songs or []
 
     if not songs:
-        g.message = "Enter /search-term to search or [h]elp"
+        g.message = zeromsg or "Enter /search-term to search or [h]elp"
         return logo(c.g) + "\n\n"
 
     fmtrow = "%s%-5s %-63s %-6s  %s\n"
@@ -1170,16 +1173,18 @@ def search(term, page=1, splash=True):
             g.last_search_query = ""
 
 
-def _make_fname(song):
+def _make_fname(song, ext=None):
     """" Create download directory, generate filename. """
 
     if not os.path.exists(Config.DDIR):
         os.makedirs(Config.DDIR)
 
-    #p = pafy.new(song['link'])  # if not 'pafy' in song else song['pafy']
     p = get_streams(song)
 
-    if not Config.SHOW_VIDEO:
+    if ext:
+        extension = ext
+
+    elif not Config.SHOW_VIDEO:
         extension = p.getbestaudio().extension
 
     else:
@@ -1191,7 +1196,7 @@ def _make_fname(song):
     return filename
 
 
-def _download(song, filename):
+def _download(song, filename, url=None):
     """ Download file, show status, return filename. """
     # pylint: disable=R0914
     # too many local variables
@@ -1199,9 +1204,12 @@ def _download(song, filename):
     print("Downloading %s%s%s ..\n" % (c.g, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
-    paf = get_streams(song)
-    video = Config.SHOW_VIDEO
-    url = paf.getbest().url if video else paf.getbestaudio().url
+
+    if not url:
+        paf = get_streams(song)
+        video = Config.SHOW_VIDEO
+        url = paf.getbest().url if video else paf.getbestaudio().url
+
     resp = g.urlopen(url)
     total = int(resp.info()['Content-Length'].strip())
     chunksize, bytesdone, t0 = 16384, 0, time.time()
@@ -1456,7 +1464,7 @@ def ls():
 
     if not g.userpl:
         g.message = F('no playlists')
-        g.content = g.content or generate_songlist_display()
+        g.content = g.content or generate_songlist_display(zeromsg=g.message)
 
     else:
         g.content = playlists_display()
@@ -1574,7 +1582,7 @@ def show_help(option="1"):
 def quits(showlogo=True):
     """ Exit the program. """
 
-    msg = ("\n" * 200) + logo(c.r, version=__version__) if showlogo else ""
+    msg = g.blank_text + logo(c.r, version=__version__) if showlogo else ""
     vermsg = ""
     print(msg + F("exitmsg", 2))
 
@@ -1593,14 +1601,114 @@ def quits(showlogo=True):
     sys.exit(vermsg)
 
 
+def get_dl_data(song):
+    """ Get filesize for all streams. """
+
+    mbsize = lambda x: str(int(x / (1024 ** 2)))
+    p = get_streams(song)
+    song['pafy'] = p
+    status =  "Fetching filesizes"
+    writestatus(status)
+    dldata = []
+
+    for stream in p.allstreams:
+        status += "."
+        writestatus(status)
+        size = mbsize(stream.get_filesize())
+
+        item = {'mediatype': stream.mediatype,
+                'size': size,
+                'quality': stream.quality,
+                'ext': stream.extension,
+                'quality': stream.quality,
+                'url': stream.url}
+
+        dldata.append(item)
+
+    writestatus("")
+    return dldata
+
+
+def menu_prompt(model, prompt=" > ", rows=[], header=[], theading=[],
+                footer=[], force=0):
+    """ Generate a list of choice, returns item from model. """
+
+    content = ""
+    for x in (header + theading + rows + footer):
+        content += x + "\n"
+    g.content = content
+    screen_update()
+
+    choice = compat_input(prompt)
+
+    if choice in model:
+        return model[choice]
+
+    else:
+        if force:
+            return menu_prompt(model, prompt, rows, headers, theading, footer,
+                               force)
+
+    return
+
+
+def prompt_dl(song):
+
+    dl_data = get_dl_data(song)
+    dl_text = gen_dl_text(dl_data, song)
+
+    model = [x['url'] for x in dl_data]
+    ed = enumerate(dl_data)
+    model = {str(n + 1): (x['url'], x['ext']) for n, x in ed}
+    url_ext = menu_prompt(model, "Download > ", *dl_text)
+
+    return url_ext
+
+
+def gen_dl_text(ddata, song):
+    """ Generate text for dl screen. """
+
+    hdr = []
+    hdr.append("  %s%s%s [%s]" % (c.r, song['title'], c.w,
+                                  song['pafy'].duration))
+    hdr.append(c.r + "  Uploaded by " + song['pafy'].author + c.w)
+    hdr.append("")
+
+    heading = tuple("Item Format Quality Media Size".split())
+    fmt = "  {0}%-6s %-8s %-13s %-7s   %-4s{1}"
+    heading = [fmt.format(c.w, c.w) % heading]
+    heading.append("")
+
+    content = []
+    for n, d in enumerate(ddata):
+        row = n + 1, d['ext'], d['quality'], d['mediatype'], d['size']
+        fmt = "  {0}%-6s %-8s %-13s %-7s %3s Mb{1}"
+        row = fmt.format(c.g, c.w) % row
+        content.append(row)
+
+    content.append("")
+
+    footer = "Select [%s1-%s%s] to download or [%sEnter%s] to return"
+    footer = [footer % (c.y, len(content) - 1, c.w, c.y, c.w)]
+    return(content, hdr, heading, footer)
+
+
 def download(num):
     """ Download a track. """
 
     song = (g.model.songs[int(num) - 1])
-    filename = _make_fname(song)
+
+    pd = prompt_dl(song)
+
+    if not pd:
+        g.content = generate_songlist_display()
+        return
+
+    url, ext = pd
+    filename = _make_fname(song, ext)
 
     try:
-        f = _download(song, filename)
+        f = _download(song, filename, url)
         g.message = "Downloaded " + c.g + f + c.w
 
     except IndexError:
