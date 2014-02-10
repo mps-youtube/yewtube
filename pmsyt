@@ -920,7 +920,6 @@ def generate_songlist_display(song=False):
     for n, x in enumerate(songs):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
         length = x.get('length') or 0
-        print(length, type(length))
         length = " " * (8 - len(length)) + length
         title = x.get('title') or "unknown title"
 
