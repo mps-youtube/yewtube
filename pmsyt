@@ -243,6 +243,7 @@ def init():
     """ Initial setup. """
 
     init_debug()
+    init_text()
     init_readline()
     init_opener()
 
@@ -669,68 +670,78 @@ def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
 
     return "\n" * nb + text + c.w + "\n" * na
 
-g.text = {
-    "exitmsg": """\
-**0pms - **1http://github.com/np1/pms-youtube**0
-Released under the GPLv3 license
-(c) 2014 nagev**2\n""",
-    "_exitmsg": (c.r, c.b, c.w),
 
-    # Error / Warning messages
+def init_text():
+    """ Set up text. """
 
-    'no playlists': "*No saved playlists found!*",
-    'no playlists_': (c.r, c.w),
-    'pl bad name': '*&&* is not valid a valid name. Ensure it starts with a '
-    'letter or _',
-    'pl bad name_': (c.r, c.w),
-    'pl not found': 'Playlist *&&* unknown. Saved playlists are shown above',
-    'pl not found_': (c.r, c.w),
-    'pl not found advise ls': 'Playlist "*&&*" not found. Use *ls* to list',
-    'pl not found advise ls_': (c.y, c.w, c.g, c.w),
-    'pl empty': 'Playlist is empty!',
-    'advise add': 'Use *add N* to add a track',
-    'advise add_': (c.g, c.w),
-    'advise search': 'Search for items and then use *add* to add them',
-    'advise search_': (c.g, c.w),
-    'no data': 'Error fetching data. Perhaps http://pleer.com is down.\n*&&*',
-    'no data_': (c.r, c.w),
-    'use dot': 'Start your query with a *.* to perform a search',
-    'use dot_': (c.g, c.w),
-    'cant get track': 'Problem fetching this track: *&&*',
-    'cant get track_': (c.r, c.w),
-    'track unresolved': 'Sorry, this track is not available',
-    'no player': '*&&* was not found on this system',
-    'no player_': (c.y, c.w),
-    'no pl match for rename': '*Couldn\'t find matching playlist to rename*',
-    'no pl match for rename_': (c.r, c.w),
-    'invalid range': "*Invalid item / range entered!*",
-    'invalid range_': (c.r, c.w),
+    g.text = {
 
-    # Info messages
+        "exitmsg": ("**0pms - **1http://github.com/np1/pms-youtube**0\n"
+                    "Released under the GPLv3 license\n"
+                    "(c) 2014 nagev**2\n"""),
+        "_exitmsg": (c.r, c.b, c.w),
 
-    'pl renamed': 'Playlist *&&* renamed to *&&*',
-    'pl renamed_': (c.y, c.w, c.y, c.w),
-    'pl saved': 'Playlist saved as *&&*.  Use *ls* to list playlists',
-    'pl saved_': (c.y, c.w, c.g, c.w),
-    'pl loaded': 'Loaded playlist *&&* as current playlist',
-    'pl loaded_': (c.y, c.w),
-    'pl viewed': 'Showing playlist *&&*',
-    'pl viewed_': (c.y, c.w),
-    'pl help': 'Enter *open <name or ID>* to load a playlist',
-    'pl help_': (c.g, c.w),
-    'added to pl': '*&&* tracks added (*&&* total [*&&*]). Use *vp* to view',
-    'added to pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.g, c.w),
-    'added to saved pl': '*&&* tracks added to *&&* (*&&* total [*&&*])',
-    'added to saved pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.y, c.w),
-    'song move': 'Moved *&&* to position *&&*',
-    'song move_': (c.y, c.w, c.y, c.w),
-    'song sw': ("Switched item *&&* with *&&*"),
-    'song sw_': (c.y, c.w, c.y, c.w),
-    'current pl': "This is the current playlist. Use *save <name>* to save it",
-    'current pl_': (c.g, c.w),
-    'songs rm': '*&&* tracks removed &&',
-    'songs rm_': (c.y, c.w)
-}
+        # Error / Warning messages
+
+        'no playlists': "*No saved playlists found!*",
+        'no playlists_': (c.r, c.w),
+        'pl bad name': '*&&* is not valid a valid name. Ensure it starts with'
+        ' a letter or _',
+        'pl bad name_': (c.r, c.w),
+        'pl not found': 'Playlist *&&* unknown. Saved playlists are shown '
+        'above',
+        'pl not found_': (c.r, c.w),
+        'pl not found advise ls': 'Playlist "*&&*" not found. Use *ls* to '
+        'list',
+        'pl not found advise ls_': (c.y, c.w, c.g, c.w),
+        'pl empty': 'Playlist is empty!',
+        'advise add': 'Use *add N* to add a track',
+        'advise add_': (c.g, c.w),
+        'advise search': 'Search for items and then use *add* to add them',
+        'advise search_': (c.g, c.w),
+        'no data': 'Error fetching data. Perhaps http://pleer.com is down.'
+        '\n*&&*',
+        'no data_': (c.r, c.w),
+        'use dot': 'Start your query with a *.* to perform a search',
+        'use dot_': (c.g, c.w),
+        'cant get track': 'Problem fetching this track: *&&*',
+        'cant get track_': (c.r, c.w),
+        'track unresolved': 'Sorry, this track is not available',
+        'no player': '*&&* was not found on this system',
+        'no player_': (c.y, c.w),
+        'no pl match for rename': '*Couldn\'t find matching playlist to '
+        'rename*',
+        'no pl match for rename_': (c.r, c.w),
+        'invalid range': "*Invalid item / range entered!*",
+        'invalid range_': (c.r, c.w),
+
+        # Info messages
+
+        'pl renamed': 'Playlist *&&* renamed to *&&*',
+        'pl renamed_': (c.y, c.w, c.y, c.w),
+        'pl saved': 'Playlist saved as *&&*.  Use *ls* to list playlists',
+        'pl saved_': (c.y, c.w, c.g, c.w),
+        'pl loaded': 'Loaded playlist *&&* as current playlist',
+        'pl loaded_': (c.y, c.w),
+        'pl viewed': 'Showing playlist *&&*',
+        'pl viewed_': (c.y, c.w),
+        'pl help': 'Enter *open <name or ID>* to load a playlist',
+        'pl help_': (c.g, c.w),
+        'added to pl': '*&&* tracks added (*&&* total [*&&*]). Use *vp* to '
+        'view',
+        'added to pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.g, c.w),
+        'added to saved pl': '*&&* tracks added to *&&* (*&&* total [*&&*])',
+        'added to saved pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.y, c.w),
+        'song move': 'Moved *&&* to position *&&*',
+        'song move_': (c.y, c.w, c.y, c.w),
+        'song sw': ("Switched item *&&* with *&&*"),
+        'song sw_': (c.y, c.w, c.y, c.w),
+        'current pl': "This is the current playlist. Use *save <name>* to save"
+        " it",
+        'current pl_': (c.g, c.w),
+        'songs rm': '*&&* tracks removed &&',
+        'songs rm_': (c.y, c.w)
+        }
 
 
 def save_to_file():
