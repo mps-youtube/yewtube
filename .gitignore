@@ -1,4 +1,5 @@
 *.py[cod]
+*.py
 yt.py
 otherstuff/
 pafy.py
