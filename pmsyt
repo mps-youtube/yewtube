@@ -1133,6 +1133,49 @@ def _uploads(userterm, query):
     return query, term
 
 
+def _search(url, progtext, qs=None, splash=True):
+    """ Perform memoized url fetch, display progtext. """
+
+    g.message = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
+
+    # attach query string if supplied
+    url = url + "?" + urlencode(qs) if qs else url
+
+    # use cached value if exists
+    if url in g.url_memo:
+        songs = g.url_memo[url]
+
+    # show splash screen during fetch
+    else:
+        if splash:
+            g.content = logo(c.b) + "\n\n"
+            screen_update()
+
+        # perform fetch
+        try:
+            wdata = g.urlopen(url).read().decode("utf8")
+            wdata = json.loads(wdata)
+            songs = get_tracks_from_json(wdata)
+
+        except (URLError, HTTPError) as e:
+            g.message = F('no data') % e
+            g.content = logo(c.r)
+            return
+
+    if songs:
+        # preload first result url
+        kwa = {"song": songs[0], "delay": 0}
+        t = threading.Thread(target=preload, kwargs=kwa)
+        t.start()
+
+        # cache resuls
+        g.url_memo[url] = songs
+        g.model.songs = songs
+        return True
+
+    return False
+
+
 def search(term, page=1, splash=True):
     """ Perform search. """
 
@@ -1166,40 +1209,14 @@ def search(term, page=1, splash=True):
             url = "https://gdata.youtube.com/feeds/api/users/%s/uploads"
             url = url % user
 
-        g.message = "Searching for '%s%s%s'" % (c.y, original_term, c.w)
-        url = url + "?" + urlencode(query)
-        memokey = str(Config.SEARCH_MUSIC) + url
+        have_results = _search(url, original_term, query)
 
-        if memokey in g.url_memo:
-            songs = g.url_memo[memokey]
-
-        else:
-            if splash:
-                g.content = logo(c.b) + "\n\n"
-                screen_update()
-
-            try:
-                wdata = g.urlopen(url).read().decode("utf8")
-                wdata = json.loads(wdata)
-                songs = get_tracks_from_json(wdata)
-
-            except (URLError, HTTPError) as e:
-                g.message = F('no data') % e
-                g.content = logo(c.r)
-                return
-
-        if songs:
-            # preload first result
-            kwa = {"song": songs[0], "delay": 0}
-            t = threading.Thread(target=preload, kwargs=kwa)
-            #t = threading.Thread(target=preload, args=(songs[0], 0))
-            t.start()
-            g.url_memo[memokey] = songs
-            g.model.songs = songs
+        if have_results:
             g.message = "Search results for %s%s%s" % (c.y, original_term, c.w)
 
             if "/users/" in url:
                 g.message = "Video uploads by %s%s%s" % (c.y, user, c.w)
+
             g.last_opened = ""
             g.last_search_query = original_term
             g.current_page = page
