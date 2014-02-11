@@ -1713,7 +1713,7 @@ def gen_dl_text(ddata, song):
     hdr.append("")
 
     heading = tuple("Item Format Quality Media Size Notes".split())
-    fmt = "  {0}%-6s %-8s %-13s %-7s   %-4s  %-16s{1}"
+    fmt = "  {0}%-6s %-8s %-13s %-7s   %-5s   %-16s{1}"
     heading = [fmt.format(c.w, c.w) % heading]
     heading.append("")
 
@@ -1721,7 +1721,7 @@ def gen_dl_text(ddata, song):
     for n, d in enumerate(ddata):
         row = (n + 1, d['ext'], d['quality'], d['mediatype'], d['size'],
                d['notes'])
-        fmt = "  {0}%-6s %-8s %-13s %-7s %3s Mb  %-16s{1}"
+        fmt = "  {0}%-6s %-8s %-13s %-7s %5s Mb   %-16s{1}"
         row = fmt.format(c.g, c.w) % row
         content.append(row)
 
