@@ -125,6 +125,7 @@ def get_default_ddir():
     else:
         ddir = os.path.expanduser("~")
 
+    ddir = py2utf8_decode(ddir)
     return os.path.join(ddir, "PMS")
 
 
