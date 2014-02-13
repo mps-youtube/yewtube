@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 """
-pms-youtube.
+mps-youtube.
 
-https://github.com/np1/pms-youtube
+https://github.com/np1/mps-youtube
 
 Copyright (C) 2014 nagev
 
@@ -611,7 +611,7 @@ Note: {2}all{1} can be used as an argument (e.g., {2}shuffle all{1})
     ("Invocation Parameters", """
 {0}Invocation{1}
 
-To play a saved playlist when invoking pms use {2}pmsyt play <name>{1}
+To play a saved playlist when invoking pmsyt use {2}pmsyt play <name>{1}
 This also works for other commands:
 
 {2}pmsyt /mozart{1} to search
@@ -677,7 +677,7 @@ def init_text():
 
     g.text = {
 
-        "exitmsg": ("**0pms - **1http://github.com/np1/pms-youtube**0\n"
+        "exitmsg": ("**0mps - **1http://github.com/np1/mps-youtube**0\n"
                     "Released under the GPLv3 license\n"
                     "(c) 2014 nagev**2\n"""),
         "_exitmsg": (c.r, c.b, c.w),
@@ -700,7 +700,7 @@ def init_text():
         'advise add_': (c.g, c.w),
         'advise search': 'Search for items and then use *add* to add them',
         'advise search_': (c.g, c.w),
-        'no data': 'Error fetching data. Perhaps http://pleer.com is down.'
+        'no data': 'Error fetching data. Possible network issue.'
         '\n*&&*',
         'no data_': (c.r, c.w),
         'use dot': 'Start your query with a *.* to perform a search',
@@ -769,15 +769,16 @@ def logo(col=None, version=""):
 
     col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
     LOGO = col + """\
-      8888888b.  888b     d888  .d8888b.
-      888   Y88b 8888b   d8888 d88P  Y88b
-      888    888 88888b.d88888 Y88b.
-      888   d88P 888Y88888P888  "Y888b.
-      8888888P"  888 Y888P 888     "Y88b.
-      888        888  Y8P  888       "888
-      888        888   "   888 Y88b  d88P
-      888        888       888  "Y8888P"  %s
-      """ % (c.w + "v" + version + " (YouTube)" if version else "")
+
+                88888b.d88b.  88888b.  .d8888b
+                888 "888 "88b 888 "88b 88K
+                888  888  888 888  888 "Y8888b.
+                888  888  888 888 d88P      X88
+                888  888  888 88888P"   88888P'
+                              888
+                              888   %s%s
+                              888%s%s
+""" % (c.w + "v" + version + " (YouTube)" if version else "", c.g, c.w, "\n\n")
 
     return LOGO + c.w
 
@@ -1026,6 +1027,8 @@ def playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
     # pylint: disable=R0914
     # too many local variables
+    # pylint: disable=R0912
+    # too many branches
 
     try:
         song['pafy'] = get_streams(song, force=failcount)
@@ -1646,7 +1649,7 @@ def quits(showlogo=True):
 
     if Config.CHECKUPDATE and showlogo:
         try:
-            url = "https://github.com/np1/pms-youtube/raw/master/VERSION"
+            url = "https://github.com/np1/mps-youtube/raw/master/VERSION"
             v = g.urlopen(url).read().decode("utf8")
             v = re.search(r"^version\s*([\d\.]+)\s*$", v, re.MULTILINE)
             if v:
