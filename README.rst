@@ -1,15 +1,11 @@
 mps-youtube
 ===========
 
-.. image:: http://badge.fury.io/py/pms-youtube.png
-    :target: https://pypi.python.org/pypi/pms-youtube
-.. image:: https://pypip.in/d/pms-youtube/badge.png
-    :target: https://pypi.python.org/pypi/pms-youtube
+.. image:: http://badge.fury.io/py/mps-youtube.png
+    :target: https://pypi.python.org/pypi/mps-youtube
+.. image:: https://pypip.in/d/mps-youtube/badge.png
+    :target: https://pypi.python.org/pypi/mps-youtube
 
-
-[UPDATE 13/Feb/2014: To assist with packaging and resolve a nameclash with
-other software (pms), this program is being renamed to mps-youtube.  The 
-rebranding is underway and partially complete, sorry for any confusion!]
 
 Features
 --------
@@ -30,7 +26,7 @@ Installation
 
 Using `pip <http://www.pip-installer.org>`_::
     
-    sudo pip install pms-youtube
+    sudo pip install mps-youtube
 
 Mac OS X installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,7 +46,7 @@ Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to
 Download mplayer for your CPU type from the "Build Selection table" `here
 <http://oss.netfarm.it/mplayer-win32.php>`_. 
 
-Extract the mplayer.exe file, saving it to your pms directory
+Extract the mplayer.exe file, saving it to your mpsyt folder
 
 
 Upgrading
@@ -60,14 +56,14 @@ It is recommended you update to the latest version.
 
 Upgrade pip installation::
 
-    sudo pip install pms-youtube --upgrade
+    sudo pip install mps-youtube --upgrade
 
 Usage
 -----
 
 mps-youtube is run on the command line using the command::
     
-    pmsyt
+    mpsyt
     
 Enter ``h`` from within the program for help.
 
@@ -166,17 +162,17 @@ Invocation
 
 To play a saved playlist when invoking mps-youtube use the following command:
 
-    ``pmsyt play <playlistname>``
+    ``mpsyt play <playlistname>``
 
 This also works for other commands, eg:
 
-    ``pmsyt .mozart`` to search 
+    ``mpsyt .mozart`` to search 
 
-    ``pmsyt view <playlistname>`` to view a saved playlist
+    ``mpsyt view <playlistname>`` to view a saved playlist
 
-    ``pmsyt ls`` to list saved playlists
+    ``mpsyt ls`` to list saved playlists
 
-    ``pmsyt open moz`` to open a saved playlist called mozart.
+    ``mpsyt open moz`` to open a saved playlist called mozart.
 
 Specifying Ranges
 ~~~~~~~~~~~~~~~~~
