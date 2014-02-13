@@ -1,10 +1,11 @@
 mps-youtube
 ===========
 
-.. image:: http://badge.fury.io/py/pms-youtube.png
-    :target: https://pypi.python.org/pypi/pms-youtube
-.. image:: https://pypip.in/d/pms-youtube/badge.png
-    :target: https://pypi.python.org/pypi/pms-youtube
+.. image:: http://badge.fury.io/py/mps-youtube.png
+    :target: https://pypi.python.org/pypi/mps-youtube
+.. image:: https://pypip.in/d/mps-youtube/badge.png
+    :target: https://pypi.python.org/pypi/mps-youtube
+
 
 Features
 --------
@@ -25,7 +26,7 @@ Installation
 
 Using `pip <http://www.pip-installer.org>`_::
     
-    sudo pip install pms-youtube
+    sudo pip install mps-youtube
 
 Mac OS X installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -45,7 +46,7 @@ Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to
 Download mplayer for your CPU type from the "Build Selection table" `here
 <http://oss.netfarm.it/mplayer-win32.php>`_. 
 
-Extract the mplayer.exe file, saving it to your pms directory
+Extract the mplayer.exe file, saving it to your mpsyt folder
 
 
 Upgrading
@@ -55,7 +56,7 @@ It is recommended you update to the latest version.
 
 Upgrade pip installation::
 
-    sudo pip install pms-youtube --upgrade
+    sudo pip install mps-youtube --upgrade
 
 Usage
 -----
