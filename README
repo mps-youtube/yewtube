@@ -6,6 +6,11 @@ mps-youtube
 .. image:: https://pypip.in/d/pms-youtube/badge.png
     :target: https://pypi.python.org/pypi/pms-youtube
 
+
+[UPDATE 13/Feb/2014: To assist with packaging and resolve a nameclash with
+other software (pms), this program is being renamed to mps-youtube.  The 
+rebranding is underway and partially complete, sorry for any confusion!]
+
 Features
 --------
 - Search and play audio/video
