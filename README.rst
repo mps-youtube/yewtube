@@ -68,7 +68,7 @@ Usage
 
 mps-youtube is run on the command line using the command::
     
-    pmsyt
+    mpsyt
     
 Enter ``h`` from within the program for help.
 
@@ -167,17 +167,17 @@ Invocation
 
 To play a saved playlist when invoking mps-youtube use the following command:
 
-    ``pmsyt play <playlistname>``
+    ``mpsyt play <playlistname>``
 
 This also works for other commands, eg:
 
-    ``pmsyt .mozart`` to search 
+    ``mpsyt .mozart`` to search 
 
-    ``pmsyt view <playlistname>`` to view a saved playlist
+    ``mpsyt view <playlistname>`` to view a saved playlist
 
-    ``pmsyt ls`` to list saved playlists
+    ``mpsyt ls`` to list saved playlists
 
-    ``pmsyt open moz`` to open a saved playlist called mozart.
+    ``mpsyt open moz`` to open a saved playlist called mozart.
 
 Specifying Ranges
 ~~~~~~~~~~~~~~~~~
