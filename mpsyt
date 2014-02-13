@@ -96,10 +96,10 @@ def mswinfn(filename):
 
 
 def get_default_ddir():
-    """ Get system default Download directory, append PMS dir. """
+    """ Get system default Download directory, append mps dir. """
 
     if mswin:
-        return os.path.join(os.path.expanduser("~"), "Downloads", "PMS")
+        return os.path.join(os.path.expanduser("~"), "Downloads", "mps")
 
     USER_DIRS = os.path.join(os.path.expanduser("~"),
                              ".config", "user-dirs.dirs")
@@ -126,31 +126,31 @@ def get_default_ddir():
         ddir = os.path.expanduser("~")
 
     ddir = py2utf8_decode(ddir)
-    return os.path.join(ddir, "PMS")
+    return os.path.join(ddir, "mps")
 
 
 def get_config_dir():
-    """ Get user's configuration directory. """
+    """ Get user's configuration directory. Migrate to new mps name if old."""
 
     if mswin:
         confdir = os.environ["APPDATA"]
 
+    elif 'XDG_CONFIG_HOME' in os.environ:
+        confdir = os.environ['XDG_CONFIG_HOME']
+
     else:
-        if 'XDG_CONFIG_HOME' in os.environ:
-            confdir = os.environ['XDG_CONFIG_HOME']
+        confdir = os.path.join(os.path.expanduser("~"), '.config')
 
-        else:
-            confdir = os.path.join(os.path.expanduser("~"), '.config')
+    mps_confdir = os.path.join(confdir, "mps-youtube")
+    old_confdir = os.path.join(confdir, "pms-youtube")
 
-    if not os.path.exists(confdir):
-        os.mkdir(confdir)
+    if os.path.exists(old_confdir) and not os.path.exists(mps_confdir):
+        os.rename(old_confdir, mps_confdir)
 
-    confdir = os.path.join(confdir, "pms-youtube")
+    elif not os.path.exists(mps_confdir):
+        os.makedirs(mps_confdir)
 
-    if not os.path.exists(confdir):
-        os.mkdir(confdir)
-
-    return confdir
+    return mps_confdir
 
 
 class Config(object):
@@ -262,10 +262,10 @@ def init():
 
 
 def init_debug():
-    """ Enable debug logging if pmsytdebug env var exists. """
-    if os.environ.get("pmsytdebug"):
+    """ Enable debug logging if mpsyt-debug var is set. """
+    if os.environ.get("mpsyt-debug") == "1":
         g.blank_text = "--\n"
-        logfile = os.path.join(tempfile.gettempdir(), "pmsyt.log")
+        logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
         logging.basicConfig(level=logging.DEBUG, filename=logfile)
         logging.getLogger("pafy").setLevel(logging.DEBUG)
     else:
