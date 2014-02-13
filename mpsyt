@@ -611,12 +611,12 @@ Note: {2}all{1} can be used as an argument (e.g., {2}shuffle all{1})
     ("Invocation Parameters", """
 {0}Invocation{1}
 
-To play a saved playlist when invoking pmsyt use {2}pmsyt play <name>{1}
+To play a saved playlist when invoking mpsyt use {2}mpsyt play <name>{1}
 This also works for other commands:
 
-{2}pmsyt /mozart{1} to search
-{2}pmsyt open <name or ID>{1} to open a saved playlist
-{2}pmsyt ls{1} to list saved playlists
+{2}mpsyt /mozart{1} to search
+{2}mpsyt open <name or ID>{1} to open a saved playlist
+{2}mpsyt ls{1} to list saved playlists
 """.format(c.ul, c.w, c.g, c.r)),
 
     ("Advanced Tips", """

@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-""" setup.py for pms-youtube.
+""" setup.py for mps-youtube.
 
-https://np1.github.com/pms-youtube
+https://np1.github.com/mps-youtube
 
 """
 
@@ -19,8 +19,8 @@ setup(
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="nagev",
     author_email="np1nagev@gmail.com",
-    url="http://github.com/np1/pms-youtube",
-    download_url="https://github.com/np1/pms-youtube/tarball/master",
+    url="http://github.com/np1/mps-youtube",
+    download_url="https://github.com/np1/mps-youtube/tarball/master",
     scripts=['mpsyt'],
     install_requires=['Pafy'],
     package_data={"": ["LICENSE", "README.rst", "README"]},
