@@ -1,4 +1,4 @@
-pms-youtube
+mps-youtube
 ===========
 
 .. image:: http://badge.fury.io/py/pms-youtube.png
@@ -15,7 +15,7 @@ Features
 - Works with Windows, Linux and Mac OS X 
 - Requires mplayer
 
-This project is based on `pms <https://github.com/np1/pms>`_, which is a terminal based program
+This project is based on `mps <https://github.com/np1/mps>`_, which is a terminal based program
 to search, stream and download music.  This implementation uses YouTube as a 
 source of content and can play and download video as well as audio.  The `pafy <https://github.com/np1/pafy>`_
 library handles interfacing with YouTube.
@@ -60,7 +60,7 @@ Upgrade pip installation::
 Usage
 -----
 
-pms-youtube is run on the command line using the command::
+mps-youtube is run on the command line using the command::
     
     pmsyt
     
@@ -159,7 +159,7 @@ matching playlist will be opened / displayed.
 Invocation
 ~~~~~~~~~~
 
-To play a saved playlist when invoking pms use the following command:
+To play a saved playlist when invoking mps-youtube use the following command:
 
     ``pmsyt play <playlistname>``
 
@@ -184,7 +184,7 @@ instead of commas eg. ``5 3 7- -2``.
 Changing Player Application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To set a different player, from within pms-youtube::
+To set a different player, from within mps-youtube::
 
     set player mpv
 

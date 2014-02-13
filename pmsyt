@@ -778,7 +778,7 @@ def logo(col=None, version=""):
                               888
                               888   %s%s
                               888%s%s
-""" % (c.w + "v" + version + " (YouTube)" if version else "", c.g, c.w, "\n\n")
+""" % (c.w + "v" + version + " (YouTube)" if version else "", col, c.w, "\n\n")
 
     return LOGO + c.w
 
