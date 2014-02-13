@@ -1,11 +1,5 @@
-                88888b.d88b.  88888b.  .d8888b
-                888 "888 "88b 888 "88b 88K
-                888  888  888 888  888 "Y8888b.
-                888  888  888 888 d88P      X88
-                888  888  888 88888P"   88888P'
-                              888
-                              888   (YouTube)
-                              888
+mps-youtube
+===========
 
 .. image:: http://badge.fury.io/py/pms-youtube.png
     :target: https://pypi.python.org/pypi/pms-youtube
