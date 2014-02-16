@@ -339,7 +339,7 @@ def has_known_player():
         match = re.search(regex, Config.PLAYER)
 
         if mswin:
-            match = re.search(regex, Config.Player, re.IGNORECASE)
+            match = re.search(regex, Config.PLAYER, re.IGNORECASE)
 
         if match:
             return True
