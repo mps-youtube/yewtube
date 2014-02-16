@@ -909,11 +909,11 @@ def playback_progress(idx, allsongs, repeat=False):
 
     for n, song in enumerate(allsongs):
         length = " " * (8 - len(song['length'])) + song['length']
-        i = uea_rpad(66, song['title']), length, song['length']
+        i = uea_rpad(64, song['title']), length, song['length']
         fmt = (c.w, "  ", c.b, i[0], c.w, c.y, i[1], c.w)
 
         if n == idx:
-            fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w)
+            fmt = (c.y, "> ", c.p, uea_rpad(66, i[0]), c.w, c.p, i[1], c.w)
             cur = i
 
         out += "%s%s%s%s%s %s%s%s\n" % fmt
@@ -1093,7 +1093,7 @@ def playsong(song, failcount=0, override=False):
         video = True  # to display correct status info
         stream = paf.getbest()
 
-    stream.url = stream.url.replace("https://", "http://")
+    url = stream.url.replace("https://", "http://")
     size = get_stream_size(song, video=video)
     key = "audiosize" if not video else "videosize"
     song[key] = size
@@ -1114,7 +1114,7 @@ def playsong(song, failcount=0, override=False):
             fsarg = g.playerargs_defaults[Config.PLAYER]["fs"]
             args.pop(args.index(fsarg))
 
-    cmd = [Config.PLAYER] + args + [stream.url]
+    cmd = [Config.PLAYER] + args + [url]
     stdout = stderr = None
     now = time.time()
     writestatus("%s; %s; %s Mb" % songdata)
