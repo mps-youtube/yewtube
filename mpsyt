@@ -28,6 +28,7 @@ __version__ = "0.01.31"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
+import unicodedata
 import subprocess
 import threading
 import tempfile
@@ -908,14 +909,14 @@ def playback_progress(idx, allsongs, repeat=False):
 
     for n, song in enumerate(allsongs):
         length = " " * (8 - len(song['length'])) + song['length']
-        i = song['title'][:64], length, song['length']
+        i = uea_rpad(66, song['title']), length, song['length']
         fmt = (c.w, "  ", c.b, i[0], c.w, c.y, i[1], c.w)
 
         if n == idx:
             fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w)
             cur = i
 
-        out += "%s%s%s%-66s%s %s%s%s\n" % fmt
+        out += "%s%s%s%s%s %s%s%s\n" % fmt
 
     out += "\n" * (3 - len(allsongs))
     pos = 8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w
@@ -936,6 +937,36 @@ def playback_progress(idx, allsongs, repeat=False):
     return out
 
 
+def real_len(u):
+    """ Try to determine width of strings displayed with monospace font. """
+
+    ueaw = unicodedata.east_asian_width
+    widths = dict(W=2, F=2, A=0.5, N=0.75, H=0.5)
+    return int(round(sum(widths.get(ueaw(char), 1) for char in u)))
+
+
+def uea_trunc(num, t):
+    """ Truncate to num chars taking into account East Asian width chars. """
+
+    ueaw = unicodedata.east_asian_width
+
+    while real_len(t) > num:
+        t = t[:-1]
+
+    return t
+
+
+def uea_rpad(num, t):
+    """ Right pad with spaces taking into account East Asian width chars. """
+
+    t = uea_trunc(num, t)
+
+    if real_len(t) < num:
+        t = t + (" " * (num - real_len(t)))
+
+    return t
+
+
 def generate_songlist_display(song=False, zeromsg=None):
     """ Generate list of choices from a song list."""
 
@@ -945,7 +976,7 @@ def generate_songlist_display(song=False, zeromsg=None):
         g.message = zeromsg or "Enter /search-term to search or [h]elp"
         return logo(c.g) + "\n\n"
 
-    fmtrow = "%s%-5s %-63s %-6s  %s\n"
+    fmtrow = "%s%-5s %s %-6s  %s\n"
     fmthd = "%s%-5s %-65s %-6s%s\n"
     head = (c.ul, "Item", "Title", "Length", c.w)
     out = "\n" + fmthd % head
@@ -955,12 +986,13 @@ def generate_songlist_display(song=False, zeromsg=None):
         length = x.get('length') or 0
         length = " " * (8 - len(length)) + length
         title = x.get('title') or "unknown title"
+        title = uea_rpad(63, title)
 
         if not song or song != songs[n]:
-            out += (fmtrow % (col, str(n + 1), title[:63], str(length), c.w))
+            out += (fmtrow % (col, str(n + 1), title, str(length), c.w))
 
         else:
-            out += (fmtrow % (c.p, str(n + 1), title[:63], str(length), c.w))
+            out += (fmtrow % (c.p, str(n + 1), title, str(length), c.w))
 
     return out + "\n" * (5 - len(songs)) if not song else out
 
