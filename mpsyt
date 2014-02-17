@@ -742,8 +742,7 @@ def init_text():
         " it",
         'current pl_': (c.g, c.w),
         'songs rm': '*&&* tracks removed &&',
-        'songs rm_': (c.y, c.w)
-        }
+        'songs rm_': (c.y, c.w)}
 
 
 def save_to_file():
@@ -947,8 +946,6 @@ def real_len(u):
 
 def uea_trunc(num, t):
     """ Truncate to num chars taking into account East Asian width chars. """
-
-    ueaw = unicodedata.east_asian_width
 
     while real_len(t) > num:
         t = t[:-1]
@@ -1269,6 +1266,8 @@ def search(term, page=1, splash=True):
 def _make_fname(song, ext=None, av=None):
     """" Create download directory, generate filename. """
 
+    # pylint: disable=E1103
+    # Instance of 'bool' has no 'extension' member (some types not inferable)
     if not os.path.exists(Config.DDIR):
         os.makedirs(Config.DDIR)
 
@@ -1292,6 +1291,8 @@ def _download(song, filename, url=None, audio=False):
     """ Download file, show status, return filename. """
     # pylint: disable=R0914
     # too many local variables
+    # pylint: disable=E1103
+    # Instance of 'bool' has no 'url' member (some types not inferable)
 
     print("Downloading to %s%s%s ..\n" % (c.r, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
