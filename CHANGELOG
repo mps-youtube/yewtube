@@ -1,0 +1,14 @@
+Version 0.01.32
+Feb 17 2014
+
+ - Improve display alignment with certain unicode characters
+ - Fix crash when using 'set' command on Windows (thomasleveil)
+
+-------------------------------------------------------------------------------
+
+Version 0.01.31
+Feb 13 2014
+
+ - Migrate location of config directory to reflect new name
+   (~/.config/mps-youtube)
+
