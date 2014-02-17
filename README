@@ -218,10 +218,14 @@ To list the uploaded videos of a YouTube user:
 Show Video Content / Fullscreen Mode
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To view and download video instead of audio, enter::
+To view video instead of audio, enter::
 
     set show_video true
 
 To play video content in fullscreen mode::
 
     set fullscreen true
+
+Note: The above two settings can be overridden on a per-case basis by adding
+`-w`, `-f` or `-a` to your selection to play the items in windowed, fullscreen
+or audio-only modes.  E.g., `1,4,7 -f`
