@@ -1,6 +1,7 @@
 Version 0.01.33 (Develop branch - Not yet released)
 
  - Improve display alignment for Russian text
+ - Preload of url now fails silently on unobtainable items
 
 -------------------------------------------------------------------------------
 

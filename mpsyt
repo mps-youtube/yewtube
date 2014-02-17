@@ -1583,7 +1583,13 @@ def preload(song, delay=1, override=False):
     """  Get streams (runs in separate thread). """
 
     time.sleep(delay)
-    song['pafy'] = get_streams(song, future=True)
+
+    try:
+        song['pafy'] = get_streams(song, future=True)
+
+    except IOError:
+        return None  # fail silently on preload
+
     video = Config.SHOW_VIDEO
 
     if override == "fullscreen" or override == "window":
