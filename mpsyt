@@ -361,7 +361,7 @@ def init():
     init_readline()
     init_opener()
 
-    if not has_config() and has_mpv():
+    if not has_config() and has_exefile("mpv"):
         Config.PLAYER = "mpv"
         set_playerargs(default=True)
         saveconfig()
@@ -378,7 +378,7 @@ def init_debug():
     """ Enable debug logging if mpsytdebug var is set. """
 
     if os.environ.get("mpsytdebug") == "1":
-        #g.blank_text = "--\n"
+        g.blank_text = "--\n"
         logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
         logging.basicConfig(level=logging.DEBUG, filename=logfile)
         logging.getLogger("pafy").setLevel(logging.CRITICAL)
@@ -462,22 +462,22 @@ def has_known_player():
     return False
 
 
-def has_mpv():
+def has_exefile(filename):
     """ Check whether mpv is available. """
 
-    if mswin:
-        return False
-
-    paths = "/usr/bin/ /usr/local/bin/".split()
-    paths += os.environ.get("PATH", []).split(os.pathsep)
+    paths = os.environ.get("PATH", []).split(os.pathsep)
+    dbg("searching path for %s", filename)
 
     for path in paths:
-        mpvpath = os.path.join(path, "mpv")
+        exepath = os.path.join(path, filename)
 
-        if os.path.exists(mpvpath):
-            if os.path.isfile(mpvpath):
-                if os.access(mpvpath, os.X_OK):
+        if os.path.exists(exepath):
+            if os.path.isfile(exepath):
+                if os.access(exepath, os.X_OK):
+                    dbg("found at %s", exepath)
                     return True
+
+    return False
 
 
 def showconfig(_):
@@ -571,7 +571,7 @@ def setconfig(key, val):
             success_msg = "Default configuration reinstated"
 
     elif key == "PLAYER" and val == "DEFAULT":
-        player = "mpv" if has_mpv() else g.defaults['PLAYER']
+        player = "mpv" if has_exefile("mpv") else g.defaults['PLAYER']
         setattr(Config, key, player)
         set_playerargs()
         success_msg = "PLAYER has been set to %s" % val
@@ -1789,7 +1789,7 @@ def quits(showlogo=True):
     sys.exit(vermsg)
 
 
-def get_dl_data(song):
+def get_dl_data(song, mediatype="any"):
     """ Get filesize and metadata for all streams, return dict. """
 
     mbsize = lambda x: str(int(x / (1024 ** 2)))
@@ -1797,8 +1797,13 @@ def get_dl_data(song):
     p = get_pafy(song)
     dldata = []
     text = " [Fetching stream info] >"
-    l = len(p.allstreams)
-    for n, stream in enumerate(p.allstreams):
+    streams = [x for x in p.allstreams]
+
+    if mediatype == "audio":
+        streams = [x for x in p.audiostreams]
+
+    l = len(streams)
+    for n, stream in enumerate(streams):
         sys.stdout.write(text + "-" * n + ">" + " " * (l - n - 1) + "<\r")
         sys.stdout.flush()
         size = mbsize(stream.get_filesize())
@@ -1858,7 +1863,19 @@ def prompt_dl(song):
     ed = enumerate(dl_data)
     model = {str(n + 1): (x['url'], x['ext']) for n, x in ed}
     url, ext = menu_prompt(model, "Download number: ", *dl_text)
-    return url, ext
+    url2 = ext2 = None
+
+    if ext == "m4v" and has_exefile("ffmpeg"):
+        dl_data, p = get_dl_data(song, mediatype="audio")
+        dl_text = gen_dl_text(dl_data, song, p)
+        aext = ("ogg", "m4a")
+        model = [x['url'] for x in dl_data if x['ext'] in aext]
+        ed = enumerate(dl_data)
+        model = {str(n+1): (x['url'], x['ext']) for n, x in ed}
+        prompt = "Select audio to mux or press Enter to download with no audio: "
+        url2, ext2 = menu_prompt(model, prompt, *dl_text)
+
+    return url, ext, url2, ext2
 
 
 def gen_dl_text(ddata, song, p):
@@ -1900,7 +1917,7 @@ def download(dltype, num):
     best = dltype.startswith("dv") or dltype.startswith("da")
 
     if not best:
-        url, ext = prompt_dl(song)
+        url, ext, url_au, ext_au = prompt_dl(song)
 
         if not url:
             g.content = generate_songlist_display()
@@ -1912,6 +1929,10 @@ def download(dltype, num):
             args = (song, filename, url)
             kwargs = {}
 
+            if url_au and ext_au:
+                filename_au = _make_fname(song, ext_au)
+                args_au = (song, filename_au, url_au)
+
     elif best:
         av = "audio" if dltype.startswith("da") else "video"
         audio = av == "audio"
@@ -1922,21 +1943,40 @@ def download(dltype, num):
     try:
         f = _download(*args, **kwargs)
         g.message = "Downloaded " + c.g + f + c.w
+        dlfn = [args[1]]
+        if url_au:
+            f_au = _download(*args_au, **kwargs)
+            dlfn += [args_au[1]]
 
     except IndexError:
         g.message = c.r + "Invalid index" + c.w
+        return
 
     except KeyboardInterrupt:
         g.message = c.r + "Download halted!" + c.w
 
         try:
-            os.remove(filename)
+            for fff in dlfn:
+                os.remove(fff)
 
         except IOError:
             pass
 
-    finally:
-        g.content = generate_songlist_display()
+        finally:
+            g.content = generate_songlist_display()
+            return
+
+    if url_au:  # multiplex
+        ffmux_cmd = "ffmpeg -i BISH -i BASH -threads 2 BOSH"
+        ffmux_cmd = ffmux_cmd.split()
+        ffmux_cmd[2], ffmux_cmd[4] = args[1], args_au[1]
+        ffmux_cmd[7] = args[1][:-3] + "mp4"
+        subprocess.call(ffmux_cmd)
+        g.message = "Saved to:" + c.g + ffmux_cmd[7] + c.w
+        os.remove(args[1])
+        os.remove(args_au[1])
+
+    g.content = generate_songlist_display()
 
 
 def prompt_for_exit():
