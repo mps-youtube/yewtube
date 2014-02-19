@@ -29,6 +29,7 @@ __author__ = "nagev"
 __license__ = "GPLv3"
 
 import unicodedata
+import collections
 import subprocess
 import threading
 import tempfile
@@ -154,6 +155,116 @@ def get_config_dir():
     return mps_confdir
 
 
+class Video(object):
+
+    """ Class to represent a YouTube video. """
+
+    def __init__(self, ytid=None, title=None, length=None):
+        self.ytid = ytid
+        self.title = title
+        self.length = int(length)
+        self.urls = dict(v={}, a={})
+
+
+def is_valid(video):
+    """ Check with Video object has unexpired links. """
+
+    last = video.urls['v'].get("last")  # 'v' and 'a' are fetched together
+    valid = last and time.time() < last + g.expiry
+    return valid  # bool
+
+
+def reset_video(video):
+    """ Clear url data of a Video object. """
+
+    video.urls = dict(v={}, a={})
+
+
+def populate_video(video, callback=None):
+    """ Populate Video object with pafy data.  Fetches new Pafy object. """
+
+    nullf = lambda x: None
+    callback = callback if callback else nullf
+    callback("Fetching video...")
+
+    try:
+        g.pafs[video.ytid] = pafy.new(video.ytid, callback=callback)
+        p = g.pafs[video.ytid]
+        logging.debug("pafy fetch for %s", video.title)
+
+    except IndexError:
+        raise IOError("Can't fetch this stream")
+
+    while len(g.pafs) > g.max_pafy_objects:
+        g.pafs.popitem(last=False)  # store maximum 500 objects
+
+    v = p.getbest()
+    a = p.getbestaudio()
+    video.urls['v'] = dict(url=v.url, last=time.time(), ext=v.extension)
+
+    if a:  # audio streams may not be available
+        video.urls['a'] = dict(url=a.url, last=time.time(), ext=a.extension)
+
+
+def get_streams(video, force=False, future=False):
+    """ Check a video is valid, if not fetch new data. Return video. """
+
+    if force or not is_valid(video):
+        nullf = lambda x: None
+        callback = nullf if future else writestatus
+        populate_video(video, callback=callback)
+
+    return video
+
+
+def get_content_length(url):
+    """ Return content length of a url. """
+
+    response = g.urlopen(url)
+    headers = response.headers
+    cl = headers['content-length']
+    return int(cl)
+
+
+def get_pafy(video):
+    """ Get valid pafy object for song. """
+
+    p = g.pafs.get(video.ytid)  # try to get pafy object from memory
+
+    if not p or not is_valid(video):
+        # fetch new pafy object if links expired or no pafy available
+        populate_video(video)
+
+    return g.pafs.get(video.ytid)
+
+
+def get_size(video, is_video):
+    """ Get size of item.  Store it in Video object. """
+
+    key = "v" if is_video else "a"
+    size = video.urls[key].get('size')
+
+    if size:
+        pass
+
+    elif not is_valid(video):
+        populate_video(video)
+
+        if is_video:
+            size = g.pafs[video.ytid].getbest().get_filesize()
+
+        else:
+            a = g.pafs[video.ytid].getbestaudio()
+            size = a.get_filesize() if a else 0
+
+    else:
+        url = video.urls[key].get("url")
+        size = get_content_length(url) if url else 0
+
+    video.urls[key]['size'] = size
+    return size
+
+
 class Config(object):
 
     """ Holds various configuration values. """
@@ -195,11 +306,7 @@ class Playlist(object):
     def duration(self):
         """ Sum duration of the playlist. """
 
-        duration = 0
-
-        for song in self.songs:
-            duration += int(song['duration'])
-
+        duration = sum(s.length for s in self.songs)
         duration = time.strftime('%H:%M:%S', time.gmtime(int(duration)))
         return duration
 
@@ -209,10 +316,12 @@ class g(object):
     """ Class for holding globals that are needed throught the module. """
 
     urlopen = None
+    expiry = 5 * 60 * 60  # 5 hours
     blank_text = "\n" * 200
     helptext = []
     max_results = 19
     max_retries = 8
+    max_pafy_objects = 500
     url_memo = {}
     model = Playlist(name="model")
     last_search_query = ""
@@ -221,13 +330,15 @@ class g(object):
     noblank = False
     text = {}
     userpl = {}
+    pafs = collections.OrderedDict()
     last_opened = message = content = ""
     config = [x for x in sorted(dir(Config)) if member_var(x)]
     configbool = [x for x in config if type(getattr(Config, x)) is bool]
     defaults = {setting: getattr(Config, setting) for setting in config}
     suffix = "3" if sys.version_info[:2] >= (3, 0) else ""
     CFFILE = os.path.join(get_config_dir(), "config")
-    PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
+    OLD_PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
+    PLFILE = os.path.join(get_config_dir(), "playlist_v2")
     playerargs_defaults = {
         "mplayer": {"def": ("-nocache -prefer-ipv4 -nolirc "
                             "-really-quiet").split(),
@@ -264,11 +375,13 @@ def init():
 
 def init_debug():
     """ Enable debug logging if mpsytdebug var is set. """
+
     if os.environ.get("mpsytdebug") == "1":
         g.blank_text = "--\n"
         logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
         logging.basicConfig(level=logging.DEBUG, filename=logfile)
-        logging.getLogger("pafy").setLevel(logging.DEBUG)
+        logging.getLogger("pafy").setLevel(logging.CRITICAL)
+
     else:
         logging.basicConfig(level=logging.FATAL)
 
@@ -756,12 +869,51 @@ def open_from_file():
     """ Open playlists. Called once on script invocation. """
 
     try:
-        f = open(g.PLFILE, "rb")
-        g.userpl = pickle.load(f)
+        with open(g.PLFILE, "rb") as plf:
+            g.userpl = pickle.load(plf)
 
     except IOError:
-        g.userpl = {}
-        save_to_file()
+        # no playlist found, create a blank one
+        if not os.path.isfile(g.PLFILE):
+            g.userpl = {}
+            save_to_file()
+
+
+def convert_playlist_to_v2():
+    """ Convert previous playlist file to v2 playlist. """
+
+    # skip if previously done
+    if os.path.isfile(g.PLFILE):
+        return
+
+    try:
+        with open(g.OLD_PLFILE, "rb") as plf:
+            old_playlists = pickle.load(plf)
+
+    except IOError:
+        sys.exit("Couldn't open old playlist file")
+
+    #rename old playlist file
+    backup = g.OLD_PLFILE + "_v1_backup"
+
+    if os.path.isfile(backup):
+        sys.exit("Error, backup exists but new playlist exists not!")
+
+    os.rename(g.OLD_PLFILE, backup)
+
+    # do the conversion
+    for plname, plitem in old_playlists.items():
+
+        songs = []
+
+        for video in plitem.songs:
+            v = Video(video['link'], video['title'], video['duration'])
+            songs.append(v)
+
+        g.userpl[plname] = Playlist(plname, songs)
+
+    # save as v2
+    save_to_file()
 
 
 def logo(col=None, version=""):
@@ -826,28 +978,22 @@ def mplayer_help(short=True):
     return lines.format(c.g, c.w)
 
 
-def tidy(raw, field):
-    """ Tidy HTML entities, format songlength if field is duration.  """
+def fmt_time(seconds):
+    """ Format number of seconds to %H:%M:%S. """
 
-    if field == "duration":
-        raw = time.strftime('%H:%M:%S', time.gmtime(int(raw)))
-        H, M, S = raw.split(":")
+    hms = time.strftime('%H:%M:%S', time.gmtime(int(seconds)))
+    H, M, S = hms.split(":")
 
-        if H == "00":
-            raw = M + ":" + S
+    if H == "00":
+        hms = M + ":" + S
 
-        elif H == "01" and int(M) < 40:
-            raw = str(int(M) + 60) + ":" + S
+    elif H == "01" and int(M) < 40:
+        hms = str(int(M) + 60) + ":" + S
 
-        elif H.startswith("0"):
-            raw = ":".join([H[1], M, S])
+    elif H.startswith("0"):
+        hms = ":".join([H[1], M, S])
 
-    else:
-        for r in (("&#039;", "'"), ("&amp;#039;", "'"), ("&amp;amp;", "&"),
-                 ("  ", " "), ("&amp;", "&"), ("&quot;", '"')):
-            raw = raw.replace(r[0], r[1])
-
-    return raw
+    return hms
 
 
 def get_tracks_from_json(jsons):
@@ -862,13 +1008,8 @@ def get_tracks_from_json(jsons):
     songs = []
 
     for item in items:
-        cursong = dict(
-            title=item['title'].strip(),
-            duration=item['duration'],
-            length=tidy(item['duration'], "duration"),
-            link=item['id'],
-            rating=item.get('rating')
-        )
+        cursong = Video(ytid=item['id'], title=item['title'].strip(),
+                        length=int(item['duration']))
 
         songs.append(cursong)
 
@@ -907,12 +1048,13 @@ def playback_progress(idx, allsongs, repeat=False):
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
-        length = " " * (8 - len(song['length'])) + song['length']
-        i = uea_rpad(64, song['title']), length, song['length']
+        length_orig = fmt_time(song.length)
+        length = " " * (8 - len(length_orig)) + length_orig
+        i = uea_rpad(66, song.title), length, length_orig
         fmt = (c.w, "  ", c.b, i[0], c.w, c.y, i[1], c.w)
 
         if n == idx:
-            fmt = (c.y, "> ", c.p, uea_rpad(66, i[0]), c.w, c.p, i[1], c.w)
+            fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w)
             cur = i
 
         out += "%s%s%s%s%s %s%s%s\n" % fmt
@@ -928,9 +1070,9 @@ def playback_progress(idx, allsongs, repeat=False):
 
     else:
         playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
-        out += "\n" + " " * 58 if multi else ""
+        out += "\n" + " " * 61 if multi else ""
 
-    fmt = playing, c.r, cur[0], c.w, c.w, cur[2], c.w
+    fmt = playing, c.r, cur[0].strip()[:61], c.w, c.w, cur[2], c.w
     out += "%s    %s%s%s %s[%s]%s" % fmt
     out += "    REPEAT MODE" if repeat else ""
     return out
@@ -980,9 +1122,10 @@ def generate_songlist_display(song=False, zeromsg=None):
 
     for n, x in enumerate(songs):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
-        length = x.get('length') or 0
+        #length = x.get('length') or 0
+        length = fmt_time(x.length)
         length = " " * (8 - len(length)) + length
-        title = x.get('title') or "unknown title"
+        title = x.title or "unknown title"
         title = uea_rpad(63, title)
 
         if not song or song != songs[n]:
@@ -1009,50 +1152,6 @@ def writeline(text):
     sys.stdout.flush()
 
 
-def get_stream_size(song, video=False):
-    """ Get size of stream. """
-
-    if not video:
-        stream = song['pafy'].getbestaudio()
-        key = "audiosize"
-
-    else:
-        stream = song['pafy'].getbest()
-        key = "videosize"
-
-    if song.get(key):
-        return song[key]
-
-    if not stream:
-        return 0
-
-    else:
-        size = stream.get_filesize()
-        return size
-
-
-def get_streams(song, force=False, future=False):
-    """ Return the pafy object for a song. """
-
-    if not force and "pafy" in song and song['pafy'].expires > time.time():
-        logging.info("cache hit for %s", song['title'])
-        return song['pafy']
-
-    else:
-        statusline = "getting stream url for %s..." % song['link']
-
-        if not future:
-            writestatus(statusline)
-            p = pafy.new(song['link'], callback=writestatus)
-            logging.info("resolving url stream for %s", song['title'])
-
-        else:
-            p = pafy.new(song['link'])
-            logging.info("--prefetched url for %s", song['title'])
-
-        return p
-
-
 def playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
     # pylint: disable=R0914
@@ -1060,9 +1159,12 @@ def playsong(song, failcount=0, override=False):
     # pylint: disable=R0912
     # too many branches
 
+    video = Config.SHOW_VIDEO
+    video = True if override in ("fullscreen", "window") else video
+    video = False if override == "audio" else video
+
     try:
-        song['pafy'] = get_streams(song, force=failcount)
-        paf = song['pafy']
+        get_streams(song, force=failcount)
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
         g.message = F('cant get track') % str(e)
@@ -1072,44 +1174,35 @@ def playsong(song, failcount=0, override=False):
         g.message = F('track unresolved')
         return
 
-    video = Config.SHOW_VIDEO
-
-    # handle audio / video override
-
-    if override == "fullscreen" or override == "window":
-        video = True
-
-    elif override == "audio":
-        video = False
-
-    stream = paf.getbest() if video else paf.getbestaudio()
+    stream = song.urls['v']['url'] if video else song.urls['a'].get('url')
 
     # handle no audio stream found
     if not stream and not video:
+        logging.debug("no audio, overriding to video")
         override = "a-v"
         video = True  # to display correct status info
-        stream = paf.getbest()
+        stream = song.urls['v']['url']
 
-    url = stream.url.replace("https://", "http://")
-    size = get_stream_size(song, video=video)
-    key = "audiosize" if not video else "videosize"
-    song[key] = size
-    songdata = song['link'], stream.extension, int(size / (1024 ** 2))
+    url = stream.replace("https://", "http://")
+    key = "a" if not video else "v"
+    size = get_size(song, is_video=video)
+    songdata = song.ytid, song.urls[key]['ext'], int(size / (1024 ** 2))
     args = Config.PLAYERARGS[::]
 
     if has_known_player():
+        novid_arg = g.playerargs_defaults[Config.PLAYER]["novid"]
+        fs_arg = g.playerargs_defaults[Config.PLAYER]["fs"]
 
         # handle no audio stream available
         if override == "a-v":
-            args.append(g.playerargs_defaults[Config.PLAYER]["novid"])
+            args.append(novid_arg)
 
         # handle fullscreen / window overrides
         elif override == "fullscreen" and not Config.FULLSCREEN:
-            args.append(g.playerargs_defaults[Config.PLAYER]["fs"])
+            args.append(fs_arg)
 
         elif override == "window" and Config.FULLSCREEN:
-            fsarg = g.playerargs_defaults[Config.PLAYER]["fs"]
-            args.pop(args.index(fsarg))
+            args.pop(args.index(fs_arg))
 
     cmd = [Config.PLAYER] + args + [url]
     stdout = stderr = None
@@ -1125,7 +1218,7 @@ def playsong(song, failcount=0, override=False):
             stdout = stderr = fnull
 
         try:
-            logging.info("playing %s (%s)", paf.title, failcount)
+            logging.info("playing %s (%s)", song.title, failcount)
             subprocess.call(cmd, stdout=stdout, stderr=stderr)
 
         except OSError:
@@ -1133,10 +1226,10 @@ def playsong(song, failcount=0, override=False):
             return
 
     fin = time.time()
-    failed = fin - now < 1 and int(paf.length) > 10
+    failed = fin - now < 1 and song.length > 10
 
     if failed and failcount < g.max_retries:
-        del song['pafy']
+        reset_video(song)
         logging.warn("stream failed to open")
         writestatus("trying again (attempt %s)" % (2 + failcount))
         failcount += 1
@@ -1203,7 +1296,7 @@ def _search(url, progtext, qs=None, splash=True):
         t.start()
 
         # cache resuls
-        g.url_memo[url] = songs
+        g.url_memo[url] = songs[::]
         g.model.songs = songs
         return True
 
@@ -1271,18 +1364,16 @@ def _make_fname(song, ext=None, av=None):
     if not os.path.exists(Config.DDIR):
         os.makedirs(Config.DDIR)
 
-    p = get_streams(song)
+    get_streams(song)
 
     if ext:
         extension = ext
 
-    elif av == "audio":
-        extension = p.getbestaudio().extension
-
     else:
-        extension = p.getbest().extension
+        key = "a" if av == "audio" else "v"
+        extension = song.urls[key]['ext']
 
-    filename = song['title'][:59] + "." + extension
+    filename = song.title[:59] + "." + extension
     filename = os.path.join(Config.DDIR, mswinfn(filename.replace("/", "-")))
     return filename
 
@@ -1299,9 +1390,9 @@ def _download(song, filename, url=None, audio=False):
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
 
     if not url:
-        paf = get_streams(song)
-        video = not audio
-        url = paf.getbest().url if video else paf.getbestaudio().url
+        get_streams(song)
+        key = "a" if audio else "v"
+        url = song.urls[key]["url"]
 
     resp = g.urlopen(url)
     total = int(resp.info()['Content-Length'].strip())
@@ -1540,10 +1631,8 @@ def play(pre, choice, post=""):
                 nx = g.model.songs[chosen + 1]
                 kwa = {"song": nx, "override": override}
                 t = threading.Thread(target=preload, kwargs=kwa)
-                #t = threading.Thread(target=preload, args=(nx, override))
                 t.start()
 
-        logging.debug("calling play range with override set to %s", override)
         play_range(songlist, shuffle, repeat, override)
 
 
@@ -1580,32 +1669,20 @@ def vp():
     g.content = generate_songlist_display()
 
 
-def preload(song, delay=1, override=False):
+def preload(song, delay=2, override=False):
     """  Get streams (runs in separate thread). """
 
     time.sleep(delay)
+    video = Config.SHOW_VIDEO
+    video = True if override in ("fullscreen", "window") else video
+    video = False if override == "audio" else video
 
     try:
-        song['pafy'] = get_streams(song, future=True)
+        get_streams(song, future=True)
+        get_size(song, is_video=video)
 
-    except IOError:
+    except (AttributeError, IOError):
         return None  # fail silently on preload
-
-    video = Config.SHOW_VIDEO
-
-    if override == "fullscreen" or override == "window":
-        video = True
-
-    elif override == "audio":
-        video = False
-
-    size = get_stream_size(song, video=video)
-
-    if video:
-        song['videosize'] = size
-
-    else:
-        song['audiosize'] = size
 
 
 def play_range(songlist, shuffle=False, repeat=False, override=False):
@@ -1634,7 +1711,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             except KeyboardInterrupt:
                 logging.info("Keyboard Interrupt")
                 print("Stopping...")
-                time.sleep(1)
+                time.sleep(2)
                 g.message = c.y + "Playback halted" + c.w
                 break
 
@@ -1645,6 +1722,14 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
                 for n, song in enumerate(songlist):
                     g.content = playback_progress(n, songlist, repeat=True)
                     screen_update()
+                    hasnext = len(songlist) > n + 1
+
+                    if hasnext:
+                        nex = songlist[n + 1]
+                        kwa = {"song": nex, "override": override}
+                        t = threading.Thread(target=preload, kwargs=kwa)
+                        t.start()
+
                     playsong(song, override=override)
                     g.content = generate_songlist_display()
 
@@ -1706,8 +1791,8 @@ def get_dl_data(song):
     """ Get filesize and metadata for all streams, return dict. """
 
     mbsize = lambda x: str(int(x / (1024 ** 2)))
-    p = get_streams(song)
-    song['pafy'] = p
+
+    p = get_pafy(song)
     dldata = []
     text = " [Fetching stream info] >"
     l = len(p.allstreams)
@@ -1727,7 +1812,7 @@ def get_dl_data(song):
         dldata.append(item)
 
     writestatus("")
-    return dldata
+    return dldata, p
 
 
 def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
@@ -1764,8 +1849,8 @@ def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
 def prompt_dl(song):
     """ Prompt user do choose a stream to dl.  Return (url, extension). """
 
-    dl_data = get_dl_data(song)
-    dl_text = gen_dl_text(dl_data, song)
+    dl_data, p = get_dl_data(song)
+    dl_text = gen_dl_text(dl_data, song, p)
 
     model = [x['url'] for x in dl_data]
     ed = enumerate(dl_data)
@@ -1774,14 +1859,14 @@ def prompt_dl(song):
     return url, ext
 
 
-def gen_dl_text(ddata, song):
+def gen_dl_text(ddata, song, p):
     """ Generate text for dl screen. """
 
     hdr = []
-    hdr.append("  %s%s%s [%s]" % (c.r, song['title'], c.w,
-                                  song['pafy'].duration))
-    author = py2utf8_decode(song['pafy'].author)
+    hdr.append("  %s%s%s" % (c.r, song.title, c.w))
+    author = py2utf8_decode(p.author)
     hdr.append(c.r + "  Uploaded by " + author + c.w)
+    hdr.append("  [" + fmt_time(song.length) + "]")
     hdr.append("")
 
     heading = tuple("Item Format Quality Media Size Notes".split())
@@ -1790,6 +1875,7 @@ def gen_dl_text(ddata, song):
     heading.append("")
 
     content = []
+
     for n, d in enumerate(ddata):
         row = (n + 1, d['ext'], d['quality'], d['mediatype'], d['size'],
                d['notes'])
@@ -1807,6 +1893,7 @@ def gen_dl_text(ddata, song):
 def download(dltype, num):
     """ Download a track. """
 
+    writestatus("Fetching video info...")
     song = (g.model.songs[int(num) - 1])
     best = dltype.startswith("dv") or dltype.startswith("da")
 
@@ -1892,7 +1979,7 @@ def songlist_mv_sw(action, a, b):
 
     if action == "mv":
         g.model.songs.insert(j, g.model.songs.pop(i))
-        g.message = F('song move') % (g.model.songs[j]['title'], b)
+        g.message = F('song move') % (g.model.songs[j].title, b)
 
     elif action == "sw":
         g.model.songs[i], g.model.songs[j] = g.model.songs[j], g.model.songs[i]
@@ -1994,15 +2081,15 @@ def info(num):
 
     writestatus("Fetching video metadata..")
     item = (g.model.songs[int(num) - 1])
-    p = get_streams(item)
-    item['pafy'] = p
+    get_streams(item)
+    p = get_pafy(item)
     i = py2utf8_decode
     writestatus("Fetched")
     out = c.ul + "Video Info" + c.w + "\n\n"
-    out += py2utf8_decode(p.title or "")
+    out += i(p.title or "")
     out += "\n" + (p.description or "")
-    out += py2utf8_decode("\n\nAuthor     : " + str(p.author))
-    out += py2utf8_decode("\nView count : " + str(p.viewcount))
+    out += i("\n\nAuthor     : " + str(p.author))
+    out += i("\nView count : " + str(p.viewcount))
     out += i("\nRating     : " + str(p.rating)[:4])
     out += i("\nCategory   : " + p.category)
     out += i("\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid)
@@ -2026,6 +2113,7 @@ def main():
     screen_update()
 
     # open playlists from file
+    convert_playlist_to_v2()
     open_from_file()
 
     # get cmd line input

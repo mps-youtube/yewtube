@@ -1,6 +1,8 @@
 Version 0.01.33 (Develop branch - Not yet released)
 
- - Improve display alignment for Russian text
+ - Changed structure of playlist file. Now consumes KB's rather than MB's
+ - Same playlist file can be used with both Python2.7+ and Python3+
+ - Improved display alignment for Russian text
  - Preload of url now fails silently on unobtainable items
 
 -------------------------------------------------------------------------------
