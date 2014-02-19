@@ -192,7 +192,7 @@ def populate_video(video, callback=None):
         p = g.pafs[video.ytid]
         logging.debug("pafy fetch for %s", video.title)
 
-    except IndexError:
+    except (ValueError, IndexError):
         raise IOError("Can't fetch this stream")
 
     while len(g.pafs) > g.max_pafy_objects:
