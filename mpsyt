@@ -74,6 +74,7 @@ else:
 
 mswin = os.name == "nt"
 member_var = lambda x: not(x.startswith("__") or callable(x))
+dbg = logging.debug
 
 
 def mswinenc(txt):
@@ -190,7 +191,7 @@ def populate_video(video, callback=None):
     try:
         g.pafs[video.ytid] = pafy.new(video.ytid, callback=callback)
         p = g.pafs[video.ytid]
-        logging.debug("pafy fetch for %s", video.title)
+        dbg("pafy fetch for %s", video.title)
 
     except (ValueError, IndexError):
         raise IOError("Can't fetch this stream")
@@ -377,7 +378,7 @@ def init_debug():
     """ Enable debug logging if mpsytdebug var is set. """
 
     if os.environ.get("mpsytdebug") == "1":
-        g.blank_text = "--\n"
+        #g.blank_text = "--\n"
         logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
         logging.basicConfig(level=logging.DEBUG, filename=logfile)
         logging.getLogger("pafy").setLevel(logging.CRITICAL)
@@ -863,6 +864,7 @@ def save_to_file():
 
     f = open(g.PLFILE, "wb")
     pickle.dump(g.userpl, f, protocol=2)
+    dbg("Playlist saved")
 
 
 def open_from_file():
@@ -1014,7 +1016,7 @@ def get_tracks_from_json(jsons):
         songs.append(cursong)
 
     if not items:
-        logging.debug("got unexpected data or no search results")
+        dbg("got unexpected data or no search results")
         return False
 
     return songs
@@ -1178,7 +1180,7 @@ def playsong(song, failcount=0, override=False):
 
     # handle no audio stream found
     if not stream and not video:
-        logging.debug("no audio, overriding to video")
+        dbg("no audio, overriding to video")
         override = "a-v"
         video = True  # to display correct status info
         stream = song.urls['v']['url']
