@@ -1511,7 +1511,7 @@ def save_last(args=None):
 
         #save using artist name in postion 1
         if not g.model.is_empty:
-            saveas = g.model.songs[0]['title'][:18].strip()
+            saveas = g.model.songs[0].title[:18].strip()
             saveas = re.sub(r"[^-\w]", "-", saveas, re.UNICODE)
 
         # loop to find next available name
@@ -1519,7 +1519,7 @@ def save_last(args=None):
 
         while g.userpl.get(saveas):
             post += 1
-            saveas = g.model.songs[0]['title'][:18].strip() + "-" + str(post)
+            saveas = g.model.songs[0].title[:18].strip() + "-" + str(post)
 
         open_save_view("save", saveas)
 
