@@ -1845,12 +1845,15 @@ def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
     if choice in model:
         return model[choice]
 
-    else:
-        if force:
-            return menu_prompt(model, prompt, rows, header, theading, footer,
-                               force)
+    elif force:
+        return menu_prompt(model, prompt, rows, header, theading, footer,
+                           force)
 
-    return False, False
+    elif not(choice.strip()):
+        return False, False
+
+    else:  # unrecognised input
+        return False, "abort"
 
 
 def prompt_dl(song):
@@ -1868,11 +1871,15 @@ def prompt_dl(song):
     if ext == "m4v" and has_exefile("ffmpeg"):
         dl_data, p = get_dl_data(song, mediatype="audio")
         dl_text = gen_dl_text(dl_data, song, p)
+        footer = "Select [%s1-%s%s] to mux audio or [%sEnter%s] to download "
+        footer += "with no audio."
+        footer = [footer % (c.y, len(dl_data), c.w, c.y, c.w)]
+        dl_text = tuple(dl_text[0:3] + (footer,))
         aext = ("ogg", "m4a")
         model = [x['url'] for x in dl_data if x['ext'] in aext]
         ed = enumerate(dl_data)
         model = {str(n+1): (x['url'], x['ext']) for n, x in ed}
-        prompt = "Select audio to mux or press Enter to download with no audio: "
+        prompt = "Audio stream: "
         url2, ext2 = menu_prompt(model, prompt, *dl_text)
 
     return url, ext, url2, ext2
@@ -1926,9 +1933,9 @@ def download(dltype, num):
             g.content = generate_songlist_display()
             return
 
-        if not url:
+        if not url or ext_au == "abort":
             g.content = generate_songlist_display()
-            g.message = "%sNo download selected%s" % (c.y, c.w)
+            g.message = "%sNo download selected / invalid input%s" % (c.y, c.w)
             return
 
         else:
@@ -1978,10 +1985,15 @@ def download(dltype, num):
         ffmux_cmd = ffmux_cmd.split()
         ffmux_cmd[2], ffmux_cmd[4] = args[1], args_au[1]
         ffmux_cmd[7] = args[1][:-3] + "mp4"
-        subprocess.call(ffmux_cmd)
-        g.message = "Saved to:" + c.g + ffmux_cmd[7] + c.w
-        os.remove(args[1])
-        os.remove(args_au[1])
+
+        try:
+            subprocess.call(ffmux_cmd)
+            g.message = "Saved to:" + c.g + ffmux_cmd[7] + c.w
+            os.remove(args[1])
+            os.remove(args_au[1])
+
+        except KeyboardInterrupt:
+            g.message = "Audio/Video multiplex aborted!"
 
     g.content = generate_songlist_display()
 
