@@ -1917,7 +1917,14 @@ def download(dltype, num):
     best = dltype.startswith("dv") or dltype.startswith("da")
 
     if not best:
-        url, ext, url_au, ext_au = prompt_dl(song)
+
+        try:
+            url, ext, url_au, ext_au = prompt_dl(song)
+
+        except KeyboardInterrupt:
+            g.message = c.r + "Download aborted!" + c.w
+            g.content = generate_songlist_display()
+            return
 
         if not url:
             g.content = generate_songlist_display()
@@ -1941,12 +1948,12 @@ def download(dltype, num):
         kwargs = dict(url=None, audio=audio)
 
     try:
+        dl_filenames = [args[1]]
         f = _download(*args, **kwargs)
         g.message = "Downloaded " + c.g + f + c.w
-        dlfn = [args[1]]
         if url_au:
+            dl_filenames += [args_au[1]]
             f_au = _download(*args_au, **kwargs)
-            dlfn += [args_au[1]]
 
     except IndexError:
         g.message = c.r + "Invalid index" + c.w
@@ -1956,8 +1963,8 @@ def download(dltype, num):
         g.message = c.r + "Download halted!" + c.w
 
         try:
-            for fff in dlfn:
-                os.remove(fff)
+            for downloaded in dl_filenames:
+                os.remove(downloaded)
 
         except IOError:
             pass
