@@ -73,7 +73,6 @@ else:
     compat_input = raw_input
 
 mswin = os.name == "nt"
-member_var = lambda x: not(x.startswith("__") or callable(x))
 dbg = logging.debug
 
 
@@ -333,6 +332,7 @@ class g(object):
     userpl = {}
     pafs = collections.OrderedDict()
     last_opened = message = content = ""
+    member_var = lambda x: not(x.startswith("__") or callable(x))
     config = [x for x in sorted(dir(Config)) if member_var(x)]
     configbool = [x for x in config if type(getattr(Config, x)) is bool]
     defaults = {setting: getattr(Config, setting) for setting in config}
@@ -463,7 +463,7 @@ def has_known_player():
 
 
 def has_exefile(filename):
-    """ Check whether mpv is available. """
+    """ Check whether file exists in path and is executable. """
 
     paths = os.environ.get("PATH", []).split(os.pathsep)
     dbg("searching path for %s", filename)
@@ -473,9 +473,10 @@ def has_exefile(filename):
 
         if os.path.exists(exepath):
             if os.path.isfile(exepath):
+
                 if os.access(exepath, os.X_OK):
                     dbg("found at %s", exepath)
-                    return True
+                    return exepath
 
     return False
 
@@ -662,101 +663,6 @@ def setconfig(key, val):
         g.message = fail_msg
 
 
-g.helptext = [("Basic Usage", """
-{0}Basic Usage{1}
-
-Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/pink floyd{1}
-
-{2}<number(s)>{1} - play specified items, separated by commas.
-            e.g., {2}1-3,5{1} plays items 1, 2, 3 and 5.
-
-{2}i <number>{1} - view information on the specified item.
-
-{2}d <number>{1} - download the specified item.
-
-[For further help, enter a number from the list below]
-""".format(c.ul, c.w, c.g, c.r)),
-    ("Searching and Editing Results", """
-{0}Searching and Editing Results{1}
-
-Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
-{2}set search_music false{1} - search all YouTube categories.
-{2}set search_music true{1} - search only YouTube music category.
-{2}n{1} and {2}p{1} - continue search to next/previous pages.
-{2}/<username> -user{1} - list YouTube uploads by <username>.
-
-{2}rm <number(s)>{1} - remove items from displayed results.
-{2}sw <number>,<number>{1} - swap two items.
-{2}mv <number>,<number>{1} - move item <number> to position <number>.
-""".format(c.ul, c.w, c.g, c.r)),
-
-    ("Downloading and Playback", """
-{0}Downloading and Playback{1}
-
-{2}set show_video true{1} - play video instead of audio.
-{2}<number(s)>{1} - play specified items, separated by commas.
-            e.g., {2}1-3,5{1} plays items 1, 2, 3 and 5
-{2}i <number>{1} - view information on the specified item.
-{2}d <number>{1} - view downloads available for an item.
-{2}da <number>{1} - download best available audio file.
-{2}dv <number>{1} - download best available video file.
-
-{2}all{1} - play all displayed items.
-{2}shuffle <number(s)>{1} - play specified items in random order.
-{2}repeat <number(s)>{1} - play and repeat the specified items.
-
-Note: {2}all{1} can be used as an argument (e.g., {2}shuffle all{1})
-""".format(c.ul, c.w, c.g, c.r)),
-
-    ("Using Playlists", """
-{0}Using Playlists{1}
-
-{2}add <number(s)>{1} - add items to the current playlist.
-{2}add <number(s)> <playlist>{1} - add items to the specified playlist.
-{2}vp{1} - view current playlist.
-{2}ls{1} - list your saved playlists.
-{2}open <name or ID>{1} - open a saved playlist as the current playlist.
-{2}view <name or ID>{1} - view a playlist (current playlist left intact)
-{2}play <name or ID>{1} - play a saved playlist directly.
-{2}save{1} or {2}save <name>{1} - save the displayed items as a playlist.
-{2}rmp <playlist_name or ID>{1} - delete a playlist from disk.
-{2}mv <old name or ID> <new name>{1} - rename a playlist.
-""".format(c.ul, c.w, c.g, c.r)),
-
-    ("Invocation Parameters", """
-{0}Invocation{1}
-
-To play a saved playlist when invoking mpsyt use {2}mpsyt play <name>{1}
-This also works for other commands:
-
-{2}mpsyt /mozart{1} to search
-{2}mpsyt open <name or ID>{1} to open a saved playlist
-{2}mpsyt ls{1} to list saved playlists
-""".format(c.ul, c.w, c.g, c.r)),
-
-    ("Advanced Tips", """
-{0}Advanced Tips{1}
-When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you \
-can enter the
-first few characters instead of the whole name. The first alphabetically
-matching playlist will be opened/displayed/played.
-
-Use {2}5-{1} to select items 5 upward and {2}-5{1} to select up to item 5. \
-This can be
-included with other choices. e.g., 5,3,7-,-2
-You can use spaces instead of commas: 5 3 7- -2
-
-Use {2}-w{1}, {2}-f{1} or {2}-a{1} with your choice to override the configured\
- setting and
-play items in windowed, fullscreen or audio modes respectively.
-
-{2}set{1} - view current configuration.
-{2}set fullscreen true{1} - play video content in fullscreen mode.
-{2}set player mpv{1} or {2} - set player mplayer{1} change player application
-""".format(c.ul, c.w, c.g, c.r))
-]
-
-
 def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
     """Format text.
 
@@ -830,9 +736,14 @@ def init_text():
         'no pl match for rename_': (c.r, c.w),
         'invalid range': "*Invalid item / range entered!*",
         'invalid range_': (c.r, c.w),
+        '-audio': "*Warning* - the filetype you selected (m4v) has no audio!",
+        '-audio_': (c.y, c.w),
 
         # Info messages
 
+        'select mux': ("Select [*1-&&*] to mux audio or [*Enter*] to download "
+                       "without audio"),
+        'select mux_': (c.y, c.w, c.y, c.w),
         'pl renamed': 'Playlist *&&* renamed to *&&*',
         'pl renamed_': (c.y, c.w, c.y, c.w),
         'pl saved': 'Playlist saved as *&&*.  Use *ls* to list playlists',
@@ -1849,7 +1760,7 @@ def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
         return menu_prompt(model, prompt, rows, header, theading, footer,
                            force)
 
-    elif not(choice.strip()):
+    elif not choice.strip():
         return False, False
 
     else:  # unrecognised input
@@ -1868,17 +1779,16 @@ def prompt_dl(song):
     url, ext = menu_prompt(model, "Download number: ", *dl_text)
     url2 = ext2 = None
 
-    if ext == "m4v" and has_exefile("ffmpeg"):
+    muxapp = has_exefile("avconv") or has_exefile("ffmpeg")
+    if ext == "m4v" and muxapp:
         dl_data, p = get_dl_data(song, mediatype="audio")
         dl_text = gen_dl_text(dl_data, song, p)
-        footer = "Select [%s1-%s%s] to mux audio or [%sEnter%s] to download "
-        footer += "with no audio."
-        footer = [footer % (c.y, len(dl_data), c.w, c.y, c.w)]
-        dl_text = tuple(dl_text[0:3] + (footer,))
+        footer = [F('-audio'), F('select mux') % len(dl_data)]
+        dl_text = tuple(dl_text[0:3]) + (footer,)
         aext = ("ogg", "m4a")
         model = [x['url'] for x in dl_data if x['ext'] in aext]
         ed = enumerate(dl_data)
-        model = {str(n+1): (x['url'], x['ext']) for n, x in ed}
+        model = {str(n + 1): (x['url'], x['ext']) for n, x in ed}
         prompt = "Audio stream: "
         url2, ext2 = menu_prompt(model, prompt, *dl_text)
 
@@ -1919,6 +1829,10 @@ def gen_dl_text(ddata, song, p):
 def download(dltype, num):
     """ Download a track. """
 
+    # This function needs refactoring!
+    # pylint: disable=R0912
+    # pylint: disable=R0914
+
     writestatus("Fetching video info...")
     song = (g.model.songs[int(num) - 1])
     best = dltype.startswith("dv") or dltype.startswith("da")
@@ -1926,6 +1840,7 @@ def download(dltype, num):
     if not best:
 
         try:
+            # user prompt for download stream
             url, ext, url_au, ext_au = prompt_dl(song)
 
         except KeyboardInterrupt:
@@ -1934,11 +1849,13 @@ def download(dltype, num):
             return
 
         if not url or ext_au == "abort":
+            # abort on invalid stream selection
             g.content = generate_songlist_display()
             g.message = "%sNo download selected / invalid input%s" % (c.y, c.w)
             return
 
         else:
+            # download user selected stream(s)
             filename = _make_fname(song, ext)
             args = (song, filename, url)
             kwargs = {}
@@ -1948,6 +1865,7 @@ def download(dltype, num):
                 args_au = (song, filename_au, url_au)
 
     elif best:
+        # set updownload without prompt
         av = "audio" if dltype.startswith("da") else "video"
         audio = av == "audio"
         filename = _make_fname(song, None, av=av)
@@ -1955,16 +1873,14 @@ def download(dltype, num):
         kwargs = dict(url=None, audio=audio)
 
     try:
+        # perform download(s)
         dl_filenames = [args[1]]
         f = _download(*args, **kwargs)
         g.message = "Downloaded " + c.g + f + c.w
+
         if url_au:
             dl_filenames += [args_au[1]]
-            f_au = _download(*args_au, **kwargs)
-
-    except IndexError:
-        g.message = c.r + "Invalid index" + c.w
-        return
+            _download(*args_au, **kwargs)
 
     except KeyboardInterrupt:
         g.message = c.r + "Download halted!" + c.w
@@ -1976,19 +1892,17 @@ def download(dltype, num):
         except IOError:
             pass
 
-        finally:
-            g.content = generate_songlist_display()
-            return
-
-    if url_au:  # multiplex
-        ffmux_cmd = "ffmpeg -i BISH -i BASH -threads 2 BOSH"
+    if url_au:
+        # multiplex
+        muxapp = has_exefile("avconv") or has_exefile("ffmpeg")
+        ffmux_cmd = "APP -i BISH -i BASH -threads 2 BOSH"
         ffmux_cmd = ffmux_cmd.split()
         ffmux_cmd[2], ffmux_cmd[4] = args[1], args_au[1]
-        ffmux_cmd[7] = args[1][:-3] + "mp4"
+        ffmux_cmd[0], ffmux_cmd[7] = muxapp, args[1][:-3] + "mp4"
 
         try:
             subprocess.call(ffmux_cmd)
-            g.message = "Saved to:" + c.g + ffmux_cmd[7] + c.w
+            g.message = "Saved to :" + c.g + ffmux_cmd[7] + c.w
             os.remove(args[1])
             os.remove(args_au[1])
 
@@ -2165,6 +2079,101 @@ def plist(parturl):
     g.content = generate_songlist_display()
 
 
+g.helptext = [("Basic Usage", """
+{0}Basic Usage{1}
+
+Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/pink floyd{1}
+
+{2}<number(s)>{1} - play specified items, separated by commas.
+            e.g., {2}1-3,5{1} plays items 1, 2, 3 and 5.
+
+{2}i <number>{1} - view information on the specified item.
+
+{2}d <number>{1} - download the specified item.
+
+[For further help, enter a number from the list below]
+""".format(c.ul, c.w, c.g, c.r)),
+    ("Searching and Editing Results", """
+{0}Searching and Editing Results{1}
+
+Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
+{2}set search_music false{1} - search all YouTube categories.
+{2}set search_music true{1} - search only YouTube music category.
+{2}n{1} and {2}p{1} - continue search to next/previous pages.
+{2}/<username> -user{1} - list YouTube uploads by <username>.
+
+{2}rm <number(s)>{1} - remove items from displayed results.
+{2}sw <number>,<number>{1} - swap two items.
+{2}mv <number>,<number>{1} - move item <number> to position <number>.
+""".format(c.ul, c.w, c.g, c.r)),
+
+    ("Downloading and Playback", """
+{0}Downloading and Playback{1}
+
+{2}set show_video true{1} - play video instead of audio.
+{2}<number(s)>{1} - play specified items, separated by commas.
+            e.g., {2}1-3,5{1} plays items 1, 2, 3 and 5
+{2}i <number>{1} - view information on the specified item.
+{2}d <number>{1} - view downloads available for an item.
+{2}da <number>{1} - download best available audio file.
+{2}dv <number>{1} - download best available video file.
+
+{2}all{1} - play all displayed items.
+{2}shuffle <number(s)>{1} - play specified items in random order.
+{2}repeat <number(s)>{1} - play and repeat the specified items.
+
+Note: {2}all{1} can be used as an argument (e.g., {2}shuffle all{1})
+""".format(c.ul, c.w, c.g, c.r)),
+
+    ("Using Playlists", """
+{0}Using Playlists{1}
+
+{2}add <number(s)>{1} - add items to the current playlist.
+{2}add <number(s)> <playlist>{1} - add items to the specified playlist.
+{2}vp{1} - view current playlist.
+{2}ls{1} - list your saved playlists.
+{2}open <name or ID>{1} - open a saved playlist as the current playlist.
+{2}view <name or ID>{1} - view a playlist (current playlist left intact)
+{2}play <name or ID>{1} - play a saved playlist directly.
+{2}save{1} or {2}save <name>{1} - save the displayed items as a playlist.
+{2}rmp <playlist_name or ID>{1} - delete a playlist from disk.
+{2}mv <old name or ID> <new name>{1} - rename a playlist.
+""".format(c.ul, c.w, c.g, c.r)),
+
+    ("Invocation Parameters", """
+{0}Invocation{1}
+
+To play a saved playlist when invoking mpsyt use {2}mpsyt play <name>{1}
+This also works for other commands:
+
+{2}mpsyt /mozart{1} to search
+{2}mpsyt open <name or ID>{1} to open a saved playlist
+{2}mpsyt ls{1} to list saved playlists
+""".format(c.ul, c.w, c.g, c.r)),
+
+    ("Advanced Tips", """
+{0}Advanced Tips{1}
+When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you \
+can enter the
+first few characters instead of the whole name. The first alphabetically
+matching playlist will be opened/displayed/played.
+
+Use {2}5-{1} to select items 5 upward and {2}-5{1} to select up to item 5. \
+This can be
+included with other choices. e.g., 5,3,7-,-2
+You can use spaces instead of commas: 5 3 7- -2
+
+Use {2}-w{1}, {2}-f{1} or {2}-a{1} with your choice to override the configured\
+ setting and
+play items in windowed, fullscreen or audio modes respectively.
+
+{2}set{1} - view current configuration.
+{2}set fullscreen true{1} - play video content in fullscreen mode.
+{2}set player mpv{1} or {2} - set player mplayer{1} change player application
+""".format(c.ul, c.w, c.g, c.r))
+]
+
+
 def main():
     """ Main control loop. """
 
@@ -2187,7 +2196,6 @@ def main():
         'ls': r'ls$',
         'vp': r'vp$',
         'top': r'top(|3m|6m|year|all)\s*$',
-        #'plist': r'.*(list[\da-zA-Z]{8,14})$',
         'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
         'info': r'i\s*(\d{1,4})$',
         'quits': r'(?:q|quit|exit)$',
