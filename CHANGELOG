@@ -1,4 +1,5 @@
-Version 0.01.33 (Develop branch - Not yet released)
+Version 0.01.33
+Feb 20 2014
 
  - Added prompt to mux audio on m4v download (enables 1080p dl with audio)
  - Changed structure of playlist file. Now consumes KB's rather than MB's
