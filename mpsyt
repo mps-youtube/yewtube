@@ -799,6 +799,10 @@ def convert_playlist_to_v2():
     if os.path.isfile(g.PLFILE):
         return
 
+    # skip if no playlist files exist
+    elif not os.path.isfile(g.OLD_PLFILE):
+        return
+
     try:
         with open(g.OLD_PLFILE, "rb") as plf:
             old_playlists = pickle.load(plf)
