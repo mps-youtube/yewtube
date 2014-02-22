@@ -1,11 +1,10 @@
-Version 0.01.33
-Feb 20 2014
+Version 0.01.33 - in development, not yet released
 
- - Added prompt to mux audio on m4v download (enables 1080p dl with audio)
  - Changed structure of playlist file. Now consumes KB's rather than MB's
  - Same playlist file shared between Python2.7+ and Python3+ (was separate)
  - Improved display alignment for Russian text
  - Preload of url fails silently on unobtainable items (previously crashed)
+ - Added prompt to mux audio on m4v download (experimental)
 
 -------------------------------------------------------------------------------
 
