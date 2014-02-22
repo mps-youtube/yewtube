@@ -1,3 +1,10 @@
+Version 0.01.34
+Feb 22 2014
+
+ - Fix bug: fails when no playlist file exists
+
+-------------------------------------------------------------------------------
+
 Version 0.01.33
 Feb 22 2014
 
