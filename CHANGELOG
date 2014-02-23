@@ -1,3 +1,11 @@
+Version 0.01.35
+Date TBA
+
+ - Faster opening of audio streams with mpv (ignidx demuxer arg)
+ - Faster opening of audio streams with mplayer (prefer ogg streams)
+
+-------------------------------------------------------------------------------
+
 Version 0.01.34
 Feb 22 2014
 
