@@ -205,7 +205,8 @@ def populate_video(video, callback=None, signature=True, gdata=False):
         g.pafs.popitem(last=False)  # store maximum 500 objects
 
     v = p.getbest()
-    a = p.getbestaudio(preftype="m4a", ftypestrict=False)
+    preftype = "ogg" if Config.PLAYER == "mplayer" else "m4a"
+    a = p.getbestaudio(preftype=preftype, ftypestrict=False)
     video.urls['v'] = dict(url=v.url, last=time.time(), ext=v.extension)
 
     if a:  # audio streams may not be available
@@ -261,7 +262,8 @@ def get_size(video, is_video):
             size = g.pafs[video.ytid].getbest().get_filesize()
 
         else:
-            a = g.pafs[video.ytid].getbestaudio(preftype="m4a",
+            preftype = "ogg" if Config.PLAYER == "mplayer" else "m4a"
+            a = g.pafs[video.ytid].getbestaudio(preftype=preftype,
                                                 ftypestrict=False)
             size = a.get_filesize() if a else 0
 
@@ -363,7 +365,8 @@ class g(object):
         "mplayer": {"def": ("-prefer-ipv4 -nolirc -really-quiet").split(),
                     "fs": "-fs",
                     "novid": "-novideo",
-                    "ignidx": "-lavfdopts o=fflags=+ignidx".split()
+                    #"ignidx": "-lavfdopts o=fflags=+ignidx".split()
+                    "ignidx": [],
                     }
     }
 
@@ -387,7 +390,6 @@ def init():
     # setup colorama
     if has_colorama and mswin:
         init_colorama()
-
 
 def init_debug():
     """ Enable debug logging if mpsytdebug var is set. """
