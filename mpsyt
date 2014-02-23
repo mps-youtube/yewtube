@@ -172,13 +172,17 @@ def is_valid(video):
 
     last = video.urls['v'].get("last")  # 'v' and 'a' are fetched together
     valid = last and time.time() < last + g.expiry
-    return valid  # bool
+    return valid
 
 
 def reset_video(video):
     """ Clear url data of a Video object. """
 
-    video.urls = dict(v={}, a={})
+    #video.urls = dict(v={}, a={})
+    video.urls["v"]["last"] = 0
+    video.urls["v"]["url"] = ""
+    video.urls["a"]["last"] = 0
+    video.urls["a"]["url"] = ""
 
 
 def populate_video(video, callback=None):
@@ -200,7 +204,7 @@ def populate_video(video, callback=None):
         g.pafs.popitem(last=False)  # store maximum 500 objects
 
     v = p.getbest()
-    a = p.getbestaudio()
+    a = p.getbestaudio(preftype="m4a", ftypestrict=False)
     video.urls['v'] = dict(url=v.url, last=time.time(), ext=v.extension)
 
     if a:  # audio streams may not be available
@@ -255,12 +259,20 @@ def get_size(video, is_video):
             size = g.pafs[video.ytid].getbest().get_filesize()
 
         else:
-            a = g.pafs[video.ytid].getbestaudio()
+            a = g.pafs[video.ytid].getbestaudio(preftype="m4a",
+                                                ftypestrict=False)
             size = a.get_filesize() if a else 0
 
     else:
         url = video.urls[key].get("url")
-        size = get_content_length(url) if url else 0
+
+        try:
+            size = get_content_length(url) if url else 0
+
+        except HTTPError:
+            raise
+            #reset_video(video)
+            #return(get_size(video, is_video))
 
     video.urls[key]['size'] = size
     return size
@@ -341,15 +353,16 @@ class g(object):
     OLD_PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
     PLFILE = os.path.join(get_config_dir(), "playlist_v2")
     playerargs_defaults = {
-        "mplayer": {"def": ("-nocache -prefer-ipv4 -nolirc "
-                            "-really-quiet").split(),
-                    "fs": "-fs",
-                    "novid": "-novideo"
-                    },
         "mpv": {"def": "--really-quiet".split(),
                 "fs": "--fs",
-                "novid": "--no-video"
-                }
+                "novid": "--no-video",
+                "ignidx": "--demuxer-lavf-o=fflags=+ignidx".split()
+                },
+        "mplayer": {"def": ("-prefer-ipv4 -nolirc -really-quiet").split(),
+                    "fs": "-fs",
+                    "novid": "-novideo",
+                    "ignidx": "-lavfdopts o=fflags=+ignidx".split()
+                    }
     }
 
 
@@ -1120,6 +1133,10 @@ def playsong(song, failcount=0, override=False):
 
         elif override == "window" and Config.FULLSCREEN:
             args.pop(args.index(fs_arg))
+
+        # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
+        if not video and song.urls["a"].get("ext") == "m4a":
+            args += g.playerargs_defaults[Config.PLAYER]["ignidx"]
 
     cmd = [Config.PLAYER] + args + [url]
     stdout = stderr = None
