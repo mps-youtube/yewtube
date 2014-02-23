@@ -185,7 +185,7 @@ def reset_video(video):
     video.urls["a"]["url"] = ""
 
 
-def populate_video(video, callback=None):
+def populate_video(video, callback=None, signature=True, gdata=False):
     """ Populate Video object with pafy data.  Fetches new Pafy object. """
 
     nullf = lambda x: None
@@ -193,9 +193,10 @@ def populate_video(video, callback=None):
     callback("Fetching video...")
 
     try:
-        g.pafs[video.ytid] = pafy.new(video.ytid, callback=callback)
-        p = g.pafs[video.ytid]
+        g.pafs[video.ytid] = pafy.new(video.ytid, callback=callback,
+                                      signature=signature, gdata=gdata)
         dbg("pafy fetch for %s", video.title)
+        p = g.pafs[video.ytid]
 
     except (ValueError, IndexError):
         raise IOError("Can't fetch this stream")
@@ -211,13 +212,14 @@ def populate_video(video, callback=None):
         video.urls['a'] = dict(url=a.url, last=time.time(), ext=a.extension)
 
 
-def get_streams(video, force=False, future=False):
+def get_streams(video, force=False, future=False, signature=True, gdata=False):
     """ Check a video is valid, if not fetch new data. Return video. """
 
     if force or not is_valid(video):
         nullf = lambda x: None
         callback = nullf if future else writestatus
-        populate_video(video, callback=callback)
+        populate_video(video, callback=callback, signature=signature,
+                       gdata=gdata)
 
     return video
 
@@ -231,14 +233,14 @@ def get_content_length(url):
     return int(cl)
 
 
-def get_pafy(video):
+def get_pafy(video, signature=True, gdata=False):
     """ Get valid pafy object for song. """
 
     p = g.pafs.get(video.ytid)  # try to get pafy object from memory
 
     if not p or not is_valid(video):
         # fetch new pafy object if links expired or no pafy available
-        populate_video(video)
+        populate_video(video, signature=signature, gdata=gdata)
 
     return g.pafs.get(video.ytid)
 
@@ -2081,8 +2083,8 @@ def info(num):
 
     writestatus("Fetching video metadata..")
     item = (g.model.songs[int(num) - 1])
-    get_streams(item)
-    p = get_pafy(item)
+    get_streams(item, signature=False, gdata=True)
+    p = get_pafy(item, signature=False, gdata=True)
     i = py2utf8_decode
     writestatus("Fetched")
     out = c.ul + "Video Info" + c.w + "\n\n"
