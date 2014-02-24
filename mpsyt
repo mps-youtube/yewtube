@@ -205,7 +205,8 @@ def populate_video(video, callback=None):
 
     v = p.getbest()
     preftype = "ogg" if Config.PLAYER == "mplayer" else "m4a"
-    a = p.getbestaudio(preftype=preftype, ftypestrict=False)
+    strict = Config.PLAYER == "mplayer"
+    a = p.getbestaudio(preftype=preftype, ftypestrict=strict)
     video.urls['v'] = dict(url=v.url, last=time.time(), ext=v.extension)
 
     if a:  # audio streams may not be available
@@ -261,8 +262,9 @@ def get_size(video, is_video):
 
         else:
             preftype = "ogg" if Config.PLAYER == "mplayer" else "m4a"
+            strict = Config.PLAYER == "mplayer"
             a = g.pafs[video.ytid].getbestaudio(preftype=preftype,
-                                                ftypestrict=False)
+                                                ftypestrict=strict)
             size = a.get_filesize() if a else 0
 
     else:
@@ -285,7 +287,7 @@ class Config(object):
     """ Holds various configuration values. """
 
     PLAYER = "mplayer"
-    PLAYERARGS = "-nolirc -nocache -prefer-ipv4 -really-quiet".split()
+    PLAYERARGS = "-nolirc -prefer-ipv4 -really-quiet".split()
     COLOURS = False if mswin and not has_colorama else True
     CHECKUPDATE = True
     SHOW_MPLAYER_KEYS = True
@@ -376,6 +378,8 @@ def init():
     init_text()
     init_readline()
     init_opener()
+    print("mpsyt version: %s " % __version__)
+    print("pafy version: %s" % pafy.__version__)
 
     if not has_config() and has_exefile("mpv"):
         Config.PLAYER = "mpv"
@@ -388,6 +392,7 @@ def init():
     # setup colorama
     if has_colorama and mswin:
         init_colorama()
+
 
 def init_debug():
     """ Enable debug logging if mpsytdebug var is set. """
@@ -1107,12 +1112,16 @@ def playsong(song, failcount=0, override=False):
         return
 
     stream = song.urls['v']['url'] if video else song.urls['a'].get('url')
+    aext = song.urls['a'].get("ext")
 
-    # handle no audio stream found
-    if not stream and not video:
-        dbg("no audio, overriding to video")
+    # handle no audio stream available, or m4a with mplayer
+    # by switching to video stream and suppressing video output.
+    if any([not stream and not video,
+            not video and Config.PLAYER == "mplayer" and aext == "m4a"]):
+
+        dbg("no audio available or mplayer m4a, overriding to video")
         override = "a-v"
-        video = True  # to display correct status info
+        video = True
         stream = song.urls['v']['url']
 
     url = stream.replace("https://", "http://")
@@ -1602,7 +1611,7 @@ def vp():
         g.model.songs = g.active.songs
         g.message = F('current pl')
 
-    g.content = generate_songlist_display()
+    g.content = generate_songlist_display(zeromsg=g.message)
 
 
 def preload(song, delay=2, override=False):
@@ -1617,7 +1626,7 @@ def preload(song, delay=2, override=False):
         get_streams(song, future=True)
         get_size(song, is_video=video)
 
-    except (AttributeError, IOError):
+    except (ValueError, AttributeError, IOError):
         return None  # fail silently on preload
 
 
@@ -1646,7 +1655,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
             except KeyboardInterrupt:
                 logging.info("Keyboard Interrupt")
-                print("Stopping...")
+                print(c.w + "Stopping...                    " + c.w)
                 time.sleep(2)
                 g.message = c.y + "Playback halted" + c.w
                 break
