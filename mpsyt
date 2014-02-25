@@ -333,6 +333,7 @@ class g(object):
     """ Class for holding globals that are needed throught the module. """
 
     urlopen = None
+    preloading=[]
     expiry = 5 * 60 * 60  # 5 hours
     blank_text = "\n" * 200
     helptext = []
@@ -1096,6 +1097,11 @@ def playsong(song, failcount=0, override=False):
     # pylint: disable=R0912
     # too many branches
 
+    # don't interrupt preloading:
+    while song.ytid in g.preloading:
+        writestatus("fetching item..")
+        time.sleep(0.1)
+
     video = Config.SHOW_VIDEO
     video = True if override in ("fullscreen", "window") else video
     video = False if override == "audio" else video
@@ -1617,6 +1623,7 @@ def vp():
 def preload(song, delay=2, override=False):
     """  Get streams (runs in separate thread). """
 
+    g.preloading.append(song.ytid)
     time.sleep(delay)
     video = Config.SHOW_VIDEO
     video = True if override in ("fullscreen", "window") else video
@@ -1627,7 +1634,10 @@ def preload(song, delay=2, override=False):
         get_size(song, is_video=video)
 
     except (ValueError, AttributeError, IOError):
-        return None  # fail silently on preload
+        pass  # fail silently on preload
+
+    finally:
+        g.preloading.remove(song.ytid)
 
 
 def play_range(songlist, shuffle=False, repeat=False, override=False):

@@ -1,3 +1,8 @@
+
+ - Wait for preloading thread if a selected item is busy preloading
+
+-------------------------------------------------------------------------------
+
 Version 0.01.35
 Feb 25 2014
 
