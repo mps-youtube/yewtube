@@ -26,15 +26,16 @@ Search
 
 .. image:: http://np1.github.io/mpsyt-images/mpsyt-search.png
 
+Local Playlists
+~~~~~~~~~~~~~~~
+
+.. image:: http://np1.github.io/mpsyt-images/mpsyt-playlists.png
+
+
 Playback (video)
 ~~~~~~~~
 
 .. image:: http://np1.github.io/mpsyt-images/mpsyt-vid-playback.png
-
-Playlists
-~~~~~~~~~
-
-.. image:: http://np1.github.io/mpsyt-images/mpsyt-playlists.png
 
 Download
 ~~~~~~~~
