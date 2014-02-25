@@ -1,8 +1,12 @@
 Version 0.01.35
 Date TBA
 
- - Faster opening of audio streams with mpv (ignidx demuxer arg)
- - Faster opening of audio streams with mplayer (prefer ogg streams)
+ - Faster opening of audio streams with mpv 
+    (--demuxer-lavf-o=fflags=+ignid argument added for m4a streams)
+
+ - Faster opening of audio streams with mplayer 
+    (reject m4a streams, prefer ogg streams)
+    (fallback to video stream and suppress video when no ogg available)
 
 -------------------------------------------------------------------------------
 
@@ -37,4 +41,3 @@ Feb 13 2014
 
  - Migrate location of config directory to reflect new name
    (~/.config/mps-youtube)
-
