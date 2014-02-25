@@ -14,13 +14,42 @@ Features
 - Download audio/video
 - Works with Python 2.7 and 3.x
 - Works with Windows, Linux and Mac OS X 
-- Requires mplayer
+- Requires mplayer or mpv
 
 This project is based on `mps <https://github.com/np1/mps>`_, which is a terminal based program
 to search, stream and download music.  This implementation uses YouTube as a 
 source of content and can play and download video as well as audio.  The `pafy <https://github.com/np1/pafy>`_
 library handles interfacing with YouTube.
 
+Screenshots
+-----------
+
+Search
+~~~~~~
+
+.. image:: http://np1.github.io/mpsyt-images/mpsyt-search.png
+
+Playback
+~~~~~~~~
+
+.. image:: http://np1.github.io/mpsyt-images/mpsyt-playback.png
+
+Playlists
+~~~~~~~~~
+
+.. image:: http://np1.github.io/mpsyt-images/mpsyt-playlists.png
+
+Download
+~~~~~~~~
+
+.. image:: http://np1.github.io/mpsyt-images/mpsyt-download.png
+
+
+Installation
+------------
+
+Using `pip <http://www.pip-installer.org>`_::
+    
 Installation
 ------------
 
