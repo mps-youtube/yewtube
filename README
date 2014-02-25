@@ -29,10 +29,10 @@ Search
 
 .. image:: http://np1.github.io/mpsyt-images/mpsyt-search.png
 
-Playback
+Playback (video)
 ~~~~~~~~
 
-.. image:: http://np1.github.io/mpsyt-images/mpsyt-playback.png
+.. image:: http://np1.github.io/mpsyt-images/mpsyt-vid-playback.png
 
 Playlists
 ~~~~~~~~~
@@ -50,12 +50,7 @@ Installation
 
 Using `pip <http://www.pip-installer.org>`_::
     
-Installation
-------------
-
-Using `pip <http://www.pip-installer.org>`_::
-    
-    sudo pip install mps-youtube
+    [sudo] pip install mps-youtube
 
 Mac OS X installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,7 +80,7 @@ It is recommended you update to the latest version.
 
 Upgrade pip installation::
 
-    sudo pip install mps-youtube --upgrade
+    [sudo] pip install mps-youtube --upgrade
 
 Usage
 -----
