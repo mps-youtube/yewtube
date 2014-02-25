@@ -1,5 +1,5 @@
 Version 0.01.35
-Date TBA
+Feb 25 2014
 
  - Faster opening of audio streams with mpv 
     (--demuxer-lavf-o=fflags=+ignid argument added for m4a streams)
