@@ -1575,6 +1575,7 @@ def play(pre, choice, post=""):
         songlist = [g.model.songs[x - 1] for x in selection]
 
         # cache next result of displayed items
+        # when selecting a single item
         if len(songlist) == 1:
             chosen = selection[0] - 1
 
