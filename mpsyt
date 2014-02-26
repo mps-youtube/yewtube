@@ -193,8 +193,8 @@ def populate_video(video, callback=None):
     callback("Fetching video...")
 
     try:
+        dbg(" - pafy fetch for %s", video.title)
         g.pafs[video.ytid] = pafy.new(video.ytid, callback=callback)
-        dbg("pafy fetch for %s", video.title)
         p = g.pafs[video.ytid]
 
     except (ValueError, IndexError):
@@ -796,7 +796,7 @@ def save_to_file():
 
     f = open(g.PLFILE, "wb")
     pickle.dump(g.userpl, f, protocol=2)
-    dbg("Playlist saved")
+    dbg("Playlist saved\n---")
 
 
 def open_from_file():
@@ -1177,12 +1177,12 @@ def playsong(song, failcount=0, override=False):
             return
 
     fin = time.time()
-    failed = fin - now < 1 and song.length > 10
+    failed = fin - now < 1 and song.length > 1
 
     if failed and failcount < g.max_retries:
         reset_video(song)
         logging.warn("stream failed to open")
-        writestatus("trying again (attempt %s)" % (2 + failcount))
+        dbg("trying again (attempt %s)" % (2 + failcount))
         failcount += 1
         playsong(song, failcount=failcount, override=override)
 
