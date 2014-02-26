@@ -1184,7 +1184,7 @@ def playsong(song, failcount=0, override=False):
         logging.warn("stream failed to open")
         writestatus("trying again (attempt %s)" % (2 + failcount))
         failcount += 1
-        playsong(song, failcount=failcount)
+        playsong(song, failcount=failcount, override=override)
 
     if not failed:
         save_to_file()
