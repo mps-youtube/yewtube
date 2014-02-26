@@ -1,5 +1,8 @@
+Version 0.01.36 - dev, not yet released
+DATE TBA
 
- - Wait for preloading thread if a selected item is busy preloading
+ - Wait for preloading item if it is selected while preloading
+ - Fix bug where -a audio override is sometimes ignored
 
 -------------------------------------------------------------------------------
 
