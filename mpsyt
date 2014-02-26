@@ -757,7 +757,7 @@ def init_text():
         'no pl match for rename_': (c.r, c.w),
         'invalid range': "*Invalid item / range entered!*",
         'invalid range_': (c.r, c.w),
-        '-audio': "*Warning* - the filetype you selected (m4v) has no audio!",
+        '-audio': "*Warning* - the video file you selected has no audio!",
         '-audio_': (c.y, c.w),
 
         # Info messages
@@ -1803,10 +1803,10 @@ def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
                            force)
 
     elif not choice.strip():
-        return False, False
+        return False, False, False
 
     else:  # unrecognised input
-        return False, "abort"
+        return False, "abort", False
 
 
 def prompt_dl(song):
@@ -1818,12 +1818,12 @@ def prompt_dl(song):
 
     model = [x['url'] for x in dl_data]
     ed = enumerate(dl_data)
-    model = {str(n + 1): (x['url'], x['ext']) for n, x in ed}
-    url, ext = menu_prompt(model, "Download number: ", *dl_text)
+    model = {str(n + 1): (x['url'], x['ext'], x['mediatype']) for n, x in ed}
+    url, ext, mediatype = menu_prompt(model, "Download number: ", *dl_text)
     url2 = ext2 = None
 
     muxapp = has_exefile("avconv") or has_exefile("ffmpeg")
-    if ext == "m4v" and muxapp:
+    if mediatype == "video" and muxapp:
         dl_data, p = get_dl_data(song, mediatype="audio")
         dl_text = gen_dl_text(dl_data, song, p)
         au_choices = "1" if len(dl_data) == 1 else "1-%s" % len(dl_data)
@@ -1832,9 +1832,9 @@ def prompt_dl(song):
         aext = ("ogg", "m4a")
         model = [x['url'] for x in dl_data if x['ext'] in aext]
         ed = enumerate(dl_data)
-        model = {str(n + 1): (x['url'], x['ext']) for n, x in ed}
+        model = {str(n + 1): (x['url'], x['ext'], "_") for n, x in ed}
         prompt = "Audio stream: "
-        url2, ext2 = menu_prompt(model, prompt, *dl_text)
+        url2, ext2, _ = menu_prompt(model, prompt, *dl_text)
 
     return url, ext, url2, ext2
 
@@ -1944,7 +1944,11 @@ def download(dltype, num):
         mux_cmd += " -map 1:a:0 -threads 2 BOSH"
         mux_cmd = mux_cmd.split()
         mux_cmd[2], mux_cmd[6] = args[1], args_au[1]
-        mux_cmd[0], mux_cmd[15] = muxapp, args[1][:-3] + "mp4"
+        # replace file extension
+        dotpos, fname = args[1].rfind("."), args[1]
+        nom, ext = fname[:dotpos], fname[dotpos + 1:]
+        ext = "mp4" if ext == "m4v" else ext
+        mux_cmd[0], mux_cmd[15] = muxapp, nom + "." + ext
 
         try:
             subprocess.call(mux_cmd)
