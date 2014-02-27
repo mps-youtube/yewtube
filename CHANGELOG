@@ -1,3 +1,11 @@
+Version 0.01.36
+Feb 27 2014
+
+ - Wait for preloading item if it is selected while preloading
+ - Fix bug where -a audio override is sometimes ignored
+
+-------------------------------------------------------------------------------
+
 Version 0.01.35
 Feb 25 2014
 
