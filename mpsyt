@@ -1264,6 +1264,26 @@ def _search(url, progtext, qs=None, splash=True):
     return False
 
 
+def generate_search_qs(term, page):
+    """ Return query string. """
+
+    qs = {
+        'q': term,
+        'v': 2,
+        'alt': 'jsonc',
+        'start-index': ((page - 1) * g.max_results + 1) or 1,
+        'safeSearch': "none",
+        'max-results': g.max_results,
+        'paid-content': "false",
+        'orderby': 'relevance'
+    }
+
+    if Config.SEARCH_MUSIC:
+        qs['category'] = "Music"
+
+    return qs
+
+
 def search(term, page=1, splash=True):
     """ Perform search. """
 
@@ -1275,19 +1295,7 @@ def search(term, page=1, splash=True):
         original_term = term
         logging.info("search for %s", original_term)
         url = "https://gdata.youtube.com/feeds/api/videos"
-
-        query = {
-            'q': term,
-            'v': 2,
-            'alt': 'jsonc',
-            'start-index': ((page - 1) * g.max_results + 1) or 1,
-            'safeSearch': "none",
-            'max-results': g.max_results,
-            'paid-content': "false",
-            'orderby': 'relevance'
-        }
-        if Config.SEARCH_MUSIC:
-            query['category'] = "Music"
+        query = generate_search_qs(term, page)
 
         if "-user" in term:
             query, user = _uploads(term, query)
