@@ -2141,7 +2141,14 @@ def info(num):
 def yt_url(url):
     """ Acess a video by url. """
 
-    p = pafy.new(url, basic=0, signature=0)
+    try:
+        p = pafy.new(url, basic=1, signature=0)
+
+    except (IOError, ValueError) as e:
+        g.message = c.r + str(e) + c.w
+        g.content = g.content or generate_songlist_display(zeromsg=g.message)
+        return
+
     v = Video(p.videoid, unicode(p.title), p.length)
     g.model.songs = [v]
     g.content = generate_songlist_display()
