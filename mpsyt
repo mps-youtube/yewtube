@@ -1273,6 +1273,7 @@ def search(term, page=1, splash=True):
             'start-index': ((page - 1) * g.max_results + 1) or 1,
             'safeSearch': "none",
             'max-results': g.max_results,
+            'paid-content': "false",
             'orderby': 'relevance'
         }
         if Config.SEARCH_MUSIC:
