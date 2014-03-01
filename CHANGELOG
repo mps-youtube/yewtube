@@ -1,3 +1,12 @@
+Version 0.01.37 (in development, not yet released)
+Date TBC
+
+ - Excluded YouTube paid videos from search results
+ - Added mpsyt -v flag for printing version info
+ - Added "url <YouTube url>" command for retrieving a specific YT video
+
+-------------------------------------------------------------------------------
+
 Version 0.01.36
 Feb 27 2014
 
