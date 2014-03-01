@@ -2120,6 +2120,15 @@ def nextprev(np):
     g.content = generate_songlist_display()
 
 
+def user_more(num):
+    """ Show more videos from user of vid num. """
+
+    item = g.model.songs[int(num) - 1]
+    p = get_pafy(item)
+    user = p.username
+    usersearch(user)
+
+
 def info(num):
     """ Get video description. """
 
@@ -2188,6 +2197,7 @@ Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
 {2}user <username>{1} - list YouTube uploads by <username>.
 {2}url <YouTube url>{1} - Retrive specific YouTube video by url.
 
+{2}u <number>{1} - show uploads by uploader of item <number>.
 {2}rm <number(s)>{1} - remove items from displayed results.
 {2}sw <number>,<number>{1} - swap two items.
 {2}mv <number>,<number>{1} - move item <number> to position <number>.
@@ -2294,7 +2304,8 @@ def main():
         'save_last': r'(save)\s*$',
         'setconfig': r'set\s*(\w+)\s*"?([^"]*)"?\s*$',
         'show_help': r'(?:help|h)$',
-        'usersearch': r'user\s([^\s]{2,})$',
+        'usersearch': r'user\s?([^s].{2,})$',
+        'user_more': r'u\s?([\d]{1,4})$',
         'add_rm_all': r'(rm|add)\s(?:\*|all)$',
         'showconfig': r'(set|showconfig)\s*$',
         'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
