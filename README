@@ -235,7 +235,7 @@ List YouTube User Uploads
 
 To list the uploaded videos of a YouTube user:
 
-    /username -user
+    user <username>
 
 Access YouTube Video by url
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
