@@ -333,7 +333,7 @@ class g(object):
     """ Class for holding globals that are needed throught the module. """
 
     urlopen = None
-    preloading=[]
+    preloading = []
     expiry = 5 * 60 * 60  # 5 hours
     blank_text = "\n" * 200
     helptext = []
@@ -2138,7 +2138,7 @@ def info(num):
     g.content = out
 
 
-def url(url):
+def yt_url(url):
     """ Acess a video by url. """
 
     p = pafy.new(url, basic=0, signature=0)
@@ -2271,11 +2271,11 @@ def main():
     regx = {
         'ls': r'ls$',
         'vp': r'vp$',
-        'url': r'url\s(.*[-_a-z{11}].*$)',
         'top': r'top(|3m|6m|year|all)\s*$',
         'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
         'info': r'i\s*(\d{1,4})$',
         'quits': r'(?:q|quit|exit)$',
+        'yt_url': r'url\s(.*[-_a-z{11}].*$)',
         'search': r'(?:search|\.|/)\s*(.{2,500})',
         'play_pl': r'play\s*(%s|\d+)$' % word,
         'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
