@@ -372,6 +372,16 @@ class g(object):
     }
 
 
+def process_cl_args(args):
+    """ Process command line arguments. """
+
+    if "-v" in args:
+        print("mpsyt version: %s " % __version__)
+        print("pafy version: %s" % pafy.__version__)
+        print("Python version: %s" % sys.version)
+        sys.exit()
+
+
 def init():
     """ Initial setup. """
 
@@ -379,8 +389,6 @@ def init():
     init_text()
     init_readline()
     init_opener()
-    print("mpsyt version: %s " % __version__)
-    print("pafy version: %s" % pafy.__version__)
 
     if not has_config() and has_exefile("mpv"):
         Config.PLAYER = "mpv"
@@ -393,6 +401,8 @@ def init():
     # setup colorama
     if has_colorama and mswin:
         init_colorama()
+
+    process_cl_args(sys.argv)
 
 
 def init_debug():
