@@ -1200,27 +1200,6 @@ def playsong(song, failcount=0, override=False):
         save_to_file()
 
 
-def _uploads(userterm, query):
-    """ Modify query dict for user uploaded videos. """
-
-    term = userterm.strip()
-    term = term.replace("-user", "")
-    term = term.strip()
-
-    if " " in term:
-        return {}, ""
-
-    else:
-        del query['q']
-
-        if query.get('category'):
-            del query['category']
-
-        query['orderby'] = 'published'
-
-    return query, term
-
-
 def _search(url, progtext, qs=None, splash=True):
     """ Perform memoized url fetch, display progtext. """
 
@@ -1284,46 +1263,60 @@ def generate_search_qs(term, page):
     return qs
 
 
+def usersearch(user, page=1, splash=True):
+
+    query = generate_search_qs(user, page)
+    del query['q']
+    query['orderby'] = 'published'
+
+    if query.get('category'):
+        del query['category']
+
+    url = "https://gdata.youtube.com/feeds/api/users/%s/uploads"
+    url = url % user
+
+    have_results = _search(url, user, query)
+
+    if have_results:
+        g.message = "Video uploads by %s%s%s" % (c.y, user, c.w)
+        g.last_opened = ""
+        g.last_search_query = {"user": user}
+        g.current_page = page
+        g.content = generate_songlist_display()
+
+    else:
+        g.message = "User %s%s%s not found" % (c.y, user, c.w)
+        g.content = logo(c.r)
+        g.current_page = 1
+        g.last_search_query = ""
+
+
 def search(term, page=1, splash=True):
     """ Perform search. """
 
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
         g.content = generate_songlist_display()
+        return
+
+    original_term = term
+    logging.info("search for %s", original_term)
+    url = "https://gdata.youtube.com/feeds/api/videos"
+    query = generate_search_qs(term, page)
+    have_results = _search(url, original_term, query)
+
+    if have_results:
+        g.message = "Search results for %s%s%s" % (c.y, original_term, c.w)
+        g.last_opened = ""
+        g.last_search_query = {"term": original_term}
+        g.current_page = page
+        g.content = generate_songlist_display()
 
     else:
-        original_term = term
-        logging.info("search for %s", original_term)
-        url = "https://gdata.youtube.com/feeds/api/videos"
-        query = generate_search_qs(term, page)
-
-        if "-user" in term:
-            query, user = _uploads(term, query)
-
-            if not user:
-                return False
-
-            url = "https://gdata.youtube.com/feeds/api/users/%s/uploads"
-            url = url % user
-
-        have_results = _search(url, original_term, query)
-
-        if have_results:
-            g.message = "Search results for %s%s%s" % (c.y, original_term, c.w)
-
-            if "/users/" in url:
-                g.message = "Video uploads by %s%s%s" % (c.y, user, c.w)
-
-            g.last_opened = ""
-            g.last_search_query = original_term
-            g.current_page = page
-            g.content = generate_songlist_display()
-
-        else:
-            g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
-            g.content = logo(c.r)
-            g.current_page = 1
-            g.last_search_query = ""
+        g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
+        g.content = logo(c.r)
+        g.current_page = 1
+        g.last_search_query = None
 
 
 def _make_fname(song, ext=None, av=None):
@@ -2096,23 +2089,33 @@ def add_rm_all(action):
 def nextprev(np):
     """ Get next / previous search results. """
 
-    if np == "n":
-        if len(g.model.songs) == g.max_results and g.last_search_query:
-            g.current_page += 1
-            search(g.last_search_query, g.current_page, splash=False)
-            g.message += " : page %s" % g.current_page
+    glsq, gcp = g.last_search_query, g.current_page
 
-        else:
-            g.message = "No more items to display"
+    if "user" in g.last_search_query:
+        function, query, page = usersearch, glsq['user'], gcp
+
+    elif "term" in g.last_search_query:
+        function, query, page = search, glsq['term'], gcp
+
+    good = False
+
+    if np == "n":
+        if len(g.model.songs) == g.max_results and glsq:
+            g.current_page += 1
+            good = True
 
     elif np == "p":
         if g.current_page > 1 and g.last_search_query:
             g.current_page -= 1
-            search(g.last_search_query, g.current_page, splash=False)
-            g.message += " : page %s" % g.current_page
+            good = True
 
-        else:
-            g.message = "No previous items to display"
+    if good:
+        function(query, g.current_page, splash=False)
+        g.message += " : page %s" % g.current_page
+
+    else:
+        norp = "next" if np == "n" else "previous"
+        g.message = "No %s items to display" % norp
 
     g.content = generate_songlist_display()
 
@@ -2182,7 +2185,7 @@ Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
 {2}set search_music false{1} - search all YouTube categories.
 {2}set search_music true{1} - search only YouTube music category.
 {2}n{1} and {2}p{1} - continue search to next/previous pages.
-{2}/<username> -user{1} - list YouTube uploads by <username>.
+{2}user <username>{1} - list YouTube uploads by <username>.
 {2}url <YouTube url>{1} - Retrive specific YouTube video by url.
 
 {2}rm <number(s)>{1} - remove items from displayed results.
@@ -2291,6 +2294,7 @@ def main():
         'save_last': r'(save)\s*$',
         'setconfig': r'set\s*(\w+)\s*"?([^"]*)"?\s*$',
         'show_help': r'(?:help|h)$',
+        'usersearch': r'user\s([^\s]{2,})$',
         'add_rm_all': r'(rm|add)\s(?:\*|all)$',
         'showconfig': r'(set|showconfig)\s*$',
         'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
