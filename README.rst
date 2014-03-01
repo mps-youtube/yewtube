@@ -230,12 +230,17 @@ To search all YouTube categories (instead of just music), enter::
     
     set search_music false
 
-List YouTube User Uploads
+List YouTube User Uploads 
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To list the uploaded videos of a YouTube user:
 
     /username -user
+
+Access YouTube Video by url
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    url <YouTube video url>
 
 Show Video Content / Fullscreen Mode
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

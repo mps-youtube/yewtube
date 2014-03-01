@@ -2130,6 +2130,15 @@ def info(num):
     g.content = out
 
 
+def url(url):
+    """ Acess a video by url. """
+
+    p = pafy.new(url, basic=0, signature=0)
+    v = Video(p.videoid, unicode(p.title), p.length)
+    g.model.songs = [v]
+    g.content = generate_songlist_display()
+
+
 def plist(parturl):
     """ Import playlist created on website. """
 
@@ -2159,6 +2168,7 @@ Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
 {2}set search_music true{1} - search only YouTube music category.
 {2}n{1} and {2}p{1} - continue search to next/previous pages.
 {2}/<username> -user{1} - list YouTube uploads by <username>.
+{2}url <YouTube url>{1} - Retrive specific YouTube video by url.
 
 {2}rm <number(s)>{1} - remove items from displayed results.
 {2}sw <number>,<number>{1} - swap two items.
@@ -2253,6 +2263,7 @@ def main():
     regx = {
         'ls': r'ls$',
         'vp': r'vp$',
+        'url': r'url\s(.*[-_a-z{11}].*$)',
         'top': r'top(|3m|6m|year|all)\s*$',
         'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
         'info': r'i\s*(\d{1,4})$',
