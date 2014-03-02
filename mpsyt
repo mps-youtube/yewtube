@@ -926,7 +926,7 @@ def mplayer_help(short=True):
     seek = u"[{0}\u2190{1}] seek [{0}\u2192{1}]"
     pause = u"[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
 
-    if mswin:
+    if mswin or not "UTF-8" in os.environ.get("LANG", ""):
         seek = "[{0}<-{1}] seek [{0}->{1}]"
         pause = "[{0}DN{1}] SEEK [{0}UP{1}]       [{0}space{1}] pause"
 
