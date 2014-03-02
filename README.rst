@@ -189,21 +189,21 @@ Invocation
 
 To play a saved playlist when invoking mps-youtube use the following command:
 
-    ``mpsyt play <playlistname>``
+``mpsyt play <playlistname>``
 
 This also works for other commands, eg:
 
-    ``mpsyt .mozart`` to search .
+``mpsyt .mozart`` to search .
 
-    ``mpsyt view <playlistname>`` to view a saved playlist.
+``mpsyt view <playlistname>`` to view a saved playlist.
 
-    ``mpsyt ls`` to list saved playlists.
+``mpsyt ls`` to list saved playlists.
 
-    ``mpsyt open moz`` to open a saved playlist called mozart.
+``mpsyt open moz`` to open a saved playlist called mozart.
 
-    ``mpsyt playurl <url>`` to play a YouTube video by url.
+``mpsyt playurl <url>`` to play a YouTube video by url.
 
-    ``mpsyt dlurl <url>`` to download a YouTube video by url.
+``mpsyt dlurl <url>`` to download a YouTube video by url.
 
 Note: If the url contains & symbols you may need to quote it with ""
 
