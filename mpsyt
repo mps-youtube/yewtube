@@ -2153,6 +2153,24 @@ def info(num):
     g.content = out
 
 
+def play_url(url):
+    """ Open and play a youtube video url. """
+
+    yt_url(url)
+
+    if len(g.model.songs) == 1:
+        play("", "1")
+
+
+def dl_url(url):
+    """ Open and prompt for download of youtube video url. """
+
+    yt_url(url)
+
+    if len(g.model.songs) == 1:
+        download("download", "1")
+
+
 def yt_url(url):
     """ Acess a video by url. """
 
@@ -2282,6 +2300,8 @@ This also works for other commands:
 {2}mpsyt /mozart{1} to search
 {2}mpsyt open <name or ID>{1} to open a saved playlist
 {2}mpsyt ls{1} to list saved playlists
+{2}mpsyt playurl <url>{1} to play a YouTube video by url
+{2}mpsyt dlurl <url>{1} to download a YouTube video by url
 """.format(c.ul, c.w, c.g, c.r)),
 
     ("Advanced Tips", """
@@ -2302,7 +2322,7 @@ play items in windowed, fullscreen or audio modes respectively.
 
 {2}set{1} - view current configuration.
 {2}set fullscreen true{1} - play video content in fullscreen mode.
-{2}set player mpv{1} or {2} - set player mplayer{1} change player application
+{2}set player mpv{1} or {2}set player mplayer{1} - change player application
 """.format(c.ul, c.w, c.g, c.r))
 ]
 
@@ -2335,8 +2355,10 @@ def main():
         'plist': r'pl\s(.*[A-Z0-9]{18}).*$',
         'yt_url': r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
         'search': r'(?:search|\.|/)\s*(.{2,500})',
-        'play_pl': r'play\s*(%s|\d+)$' % word,
+        'dl_url': r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
+        'play_pl': r'play\s{1,}(%s|\d+)$' % word,
         'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
+        'play_url': r'playurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
         'nextprev': r'(n|p)$',
         'play_all': r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
         'save_last': r'(save)\s*$',
