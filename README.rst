@@ -242,10 +242,15 @@ To list the uploaded videos of a YouTube user:
 
     user <username>
 
-Access YouTube Video by url
+Access YouTube Video by URL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     url <YouTube video url>
+
+Open YouTube Playlist by URL
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    pl <YouTube playlist url>
 
 Show Video Content / Fullscreen Mode
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

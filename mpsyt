@@ -342,12 +342,13 @@ class g(object):
     max_pafy_objects = 500
     url_memo = {}
     model = Playlist(name="model")
-    last_search_query = ""
+    last_search_query = {}
     current_page = 1
     active = Playlist(name="active")
     noblank = False
     text = {}
     userpl = {}
+    ytpl = {}
     pafs = collections.OrderedDict()
     last_opened = message = content = ""
     config = [x for x in sorted(dir(Config)) if member_var(x)]
@@ -1070,7 +1071,6 @@ def generate_songlist_display(song=False, zeromsg=None):
 
     for n, x in enumerate(songs):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
-        #length = x.get('length') or 0
         length = fmt_time(x.length)
         length = " " * (8 - len(length)) + length
         title = x.title or "unknown title"
@@ -1288,7 +1288,7 @@ def usersearch(user, page=1, splash=True):
         g.message = "User %s%s%s not found" % (c.y, user, c.w)
         g.content = logo(c.r)
         g.current_page = 1
-        g.last_search_query = ""
+        g.last_search_query = {}
 
 
 def search(term, page=1, splash=True):
@@ -1316,7 +1316,7 @@ def search(term, page=1, splash=True):
         g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
         g.content = logo(c.r)
         g.current_page = 1
-        g.last_search_query = None
+        g.last_search_query = {}
 
 
 def _make_fname(song, ext=None, av=None):
@@ -2097,6 +2097,9 @@ def nextprev(np):
     elif "term" in g.last_search_query:
         function, query, page = search, glsq['term'], gcp
 
+    elif "playlist" in g.last_search_query:
+        function, query, page = plist, glsq['playlist'], gcp
+
     good = False
 
     if np == "n":
@@ -2166,10 +2169,43 @@ def yt_url(url):
     g.content = generate_songlist_display()
 
 
-def plist(parturl):
+def plist(parturl, pagenum=1, splash=True):
     """ Import playlist created on website. """
 
-    # not implemented
+    if "playlist" in g.last_search_query and\
+            parturl == g.last_search_query['playlist']:
+
+        # go to pagenum
+        s, e = (pagenum - 1) * g.max_results, pagenum * g.max_results
+        g.model.songs = g.ytpl['items'][s:e]
+        g.content = generate_songlist_display()
+        g.message = "Showing YouTube playlist %s" % c.y + g.ytpl['name'] + c.w
+        g.current_page = pagenum
+        return
+
+    if splash:
+        g.content = logo(col=c.b)
+        g.message = "Retreiving YouTube playlist"
+        screen_update()
+
+    title, items = pafy.get_playlist(parturl)
+    g.content = generate_songlist_display()
+    songs = []
+
+    for item in items:
+        cur = Video(ytid=item.videoid, title=item.title, length=item.length)
+        songs.append(cur)
+
+    if not items:
+        dbg("got unexpected data or no search results")
+        return False
+
+    g.last_search_query = {"playlist": parturl}
+    g.content = generate_songlist_display()
+    g.ytpl = dict(name=title, items=songs)
+    g.current_page = 1
+    g.model.songs = songs[:g.max_results]
+    g.message = "Showing YouTube playlist %s" % (c.y + title + c.w)
     g.content = generate_songlist_display()
 
 
@@ -2196,6 +2232,7 @@ Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
 {2}n{1} and {2}p{1} - continue search to next/previous pages.
 {2}user <username>{1} - list YouTube uploads by <username>.
 {2}url <YouTube url>{1} - Retrive specific YouTube video by url.
+{2}pl <YouTube playlist url>{1} - Open YouTube playlist.
 
 {2}u <number>{1} - show uploads by uploader of item <number>.
 {2}rm <number(s)>{1} - remove items from displayed results.
@@ -2295,7 +2332,8 @@ def main():
         'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
         'info': r'i\s*(\d{1,4})$',
         'quits': r'(?:q|quit|exit)$',
-        'yt_url': r'url\s(.*[-_a-z{11}].*$)',
+        'plist': r'pl\s(.*[A-Z0-9]{18}).*$',
+        'yt_url': r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
         'search': r'(?:search|\.|/)\s*(.{2,500})',
         'play_pl': r'play\s*(%s|\d+)$' % word,
         'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
@@ -2345,9 +2383,10 @@ def main():
                     g.message = F('invalid range')
                     g.content = g.content or generate_songlist_display()
 
-                except IOError as e:
+                except (ValueError, IOError) as e:
                     g.message = F('cant get track') % str(e)
-                    g.content = g.content or generate_songlist_display()
+                    g.content = g.content or\
+                        generate_songlist_display(zeromsg=g.message)
 
                 break
         else:

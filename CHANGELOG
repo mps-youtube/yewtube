@@ -3,9 +3,10 @@ Date TBC
 
  - Excluded YouTube paid videos from search results
  - Added mpsyt -v flag for printing version info
+ - Added "u <number>" command to list uploads by uploader of <number>
+ - Added "pl <playlist url>" command to open YouTube playlist
  - Added "url <YouTube url>" command for retrieving a specific YT video
  - Changed command to list user uploads, new syntax is "user <username>"
- - Added "u <number>" command to list uploads by uploader of <number>
 
 -------------------------------------------------------------------------------
 
