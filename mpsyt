@@ -2346,13 +2346,10 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
     songs = []
 
     for item in ytpl_items:
-        pafy_obj = item['pafy']
-        videoid = pafy_obj.videoid
-        title = pafy_obj.title
-        length = pafy_obj.length
-
         # Create Video object, appends to songs
-        cur = Video(ytid=videoid, title=title, length=length)
+        cur = Video(ytid=item['pafy'].videoid,
+                    title=item['pafy'].title,
+                    length=item['pafy'].length)
         songs.append(cur)
 
     if not ytpl_items:
