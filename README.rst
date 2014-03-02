@@ -9,10 +9,11 @@ mps-youtube
 
 Features
 --------
-- Search and play audio/video
-- Create local playlists
+- Search and play audio/video from YouTube
+- Search and import YouTube playlists
+- Create and save local playlists
 - Download audio/video
-- Works with Python 2.7 and 3.x
+- Works with Python 2.7+ and 3.x
 - Works with Windows, Linux and Mac OS X 
 - Requires mplayer or mpv
 

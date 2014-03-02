@@ -5,7 +5,7 @@ Date TBC
  - Added "pl <playlist url>" command to open YouTube playlist url
  - Added "plsearch <query>" command to search for YouTube playlists
  - Added "dump" command to show entire YT playlist (useful for saving locally)
- - Added "undump" command to reverse dump (re-paginates playlist items)
+ - Added "undump" command to undo dump (re-paginates playlist items)
  - Added "u <number>" command to list uploads by uploader of <number>
  - Added "url <YouTube url>" command for retrieving a specific YT video
  - Added "playurl <YouTube url>" command for directly playing a YT video
