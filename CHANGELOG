@@ -10,8 +10,9 @@ Date TBC
  - Added "url <YouTube url>" command for retrieving a specific YT video
  - Added "playurl <YouTube url>" command for directly playing a YT video
  - Added "dlurl <YouTube url>" command for directly downloading a YT video
- - Added mpsyt -v flag for printing version info
  - Changed command to list user uploads, new syntax is "user <username>"
+ - Added mpsyt --version flag for printing version info
+ - Added mpsyt --help flag for printing help text
  - Fixed identation bug when using readline history
 
 -------------------------------------------------------------------------------

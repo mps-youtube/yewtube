@@ -378,10 +378,17 @@ class g(object):
 def process_cl_args(args):
     """ Process command line arguments. """
 
-    if "-v" in args:
+    if "--version" in args:
         print("mpsyt version: %s " % __version__)
         print("pafy version: %s" % pafy.__version__)
         print("Python version: %s" % sys.version)
+        sys.exit()
+
+    elif "--help" in args:
+
+        for x in g.helptext:
+            print(x[1])
+
         sys.exit()
 
 
