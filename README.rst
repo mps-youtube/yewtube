@@ -92,13 +92,15 @@ Enter ``h`` from within the program for help.
 Searching
 ~~~~~~~~~
 
-You can enter an search term name to search whenever the program is expecting
-text input. Searches must be prefixed with either a . or / character.
+Enter your search term by prefixing it with a ``.`` or ``/`` character.
+    e.g., ``/daft punk``
 
 Enter ``n`` or ``p`` to go to the next / previous page of results
 
-When a list of items is displayed, such as search results or a playlist, you
-can use the following commands:
+Use ``plsearch <query>`` to search for YouTube playlists
+
+When a list of search results or a saved playlist is shown, you can use the
+following commands:
 
 Information
 ~~~~~~~~~~~
@@ -257,6 +259,13 @@ Open YouTube Playlist by URL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     pl <YouTube playlist url>
+
+Show Entire YouTube Playlist Contents
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a YouTube playlist is displayed:
+
+    dump
 
 Show Video Content / Fullscreen Mode
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
