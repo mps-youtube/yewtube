@@ -767,7 +767,7 @@ def init_text():
         'no data_': (c.r, c.w),
         'use dot': 'Start your query with a *.* to perform a search',
         'use dot_': (c.g, c.w),
-        'cant get track': 'Problem fetching this track: *&&*',
+        'cant get track': 'Problem fetching this item: *&&*',
         'cant get track_': (c.r, c.w),
         'track unresolved': 'Sorry, this track is not available',
         'no player': '*&&* was not found on this system',
@@ -2339,25 +2339,33 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
         g.message = "Retreiving YouTube playlist"
         screen_update()
 
-    title, items = pafy.get_playlist(parturl)
+    yt_playlist = pafy.get_playlist(parturl)
+    ytpl_items = yt_playlist['items']
+    ytpl_title = yt_playlist['title']
     g.content = generate_songlist_display()
     songs = []
 
-    for item in items:
-        cur = Video(ytid=item.videoid, title=item.title, length=item.length)
+    for item in ytpl_items:
+        pafy_obj = item['pafy']
+        videoid = pafy_obj.videoid
+        title = pafy_obj.title
+        length = pafy_obj.length
+
+        # Create Video object, appends to songs
+        cur = Video(ytid=videoid, title=title, length=length)
         songs.append(cur)
 
-    if not items:
+    if not ytpl_items:
         dbg("got unexpected data or no search results")
         return False
 
     g.last_search_query = {"playlist": parturl}
     g.browse_mode = "normal"
-    g.ytpl = dict(name=title, items=songs)
+    g.ytpl = dict(name=ytpl_title, items=songs)
     g.current_page = 1
     g.model.songs = songs[:g.max_results]
     g.content = generate_songlist_display()
-    g.message = "Showing YouTube playlist %s" % (c.y + title + c.w)
+    g.message = "Showing YouTube playlist %s" % (c.y + ytpl_title + c.w)
 
 
 g.helptext = [("Basic Usage", """
