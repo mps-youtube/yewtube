@@ -1,11 +1,11 @@
 Version 0.01.37 (in development, not yet released)
-Date TBC
+Mar 2 2014
 
  - Excluded YouTube paid videos from search results
  - Added "pl <playlist url>" command to open YouTube playlist url
  - Added "plsearch <query>" command to search for YouTube playlists
  - Added "dump" command to show entire YT playlist (useful for saving locally)
- - Added "undump" command to undo dump (re-paginates playlist items)
+ - Added "undump" command to undo dump (re-paginates YT playlist items)
  - Added "u <number>" command to list uploads by uploader of <number>
  - Added "url <YouTube url>" command for retrieving a specific YT video
  - Added "playurl <YouTube url>" command for directly playing a YT video
@@ -13,7 +13,7 @@ Date TBC
  - Changed command to list user uploads, new syntax is "user <username>"
  - Added mpsyt --version flag for printing version info
  - Added mpsyt --help flag for printing help text
- - Fixed identation bug when using readline history
+ - Fixed indentation bug when scrolling through readline history
 
 -------------------------------------------------------------------------------
 
