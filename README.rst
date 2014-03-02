@@ -98,7 +98,7 @@ Enter your search term by prefixing it with a ``.`` or ``/`` character.
 
 Enter ``n`` or ``p`` to go to the next / previous page of results
 
-Use ``plsearch <query>`` to search for YouTube playlists
+Use ``pls <query>`` to search for YouTube playlists
 
 When a list of search results or a saved playlist is shown, you can use the
 following commands:
