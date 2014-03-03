@@ -2383,6 +2383,11 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
     g.ytpl = dict(name=ytpl_title, items=songs)
     g.current_page = 1
     g.model.songs = songs[:g.max_results]
+    # preload first result url
+    kwa = {"song": songs[0], "delay": 0}
+    t = threading.Thread(target=preload, kwargs=kwa)
+    t.start()
+
     g.content = generate_songlist_display()
     g.message = "Showing YouTube playlist %s" % (c.y + ytpl_title + c.w)
 
