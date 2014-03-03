@@ -34,7 +34,7 @@ Local Playlists
 
 
 Playback (video)
-~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 .. image:: http://np1.github.io/mpsyt-images/mpsyt-vid-playback.png
 
