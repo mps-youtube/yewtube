@@ -1390,6 +1390,10 @@ def pl_search(term, page=1, splash=True):
         g.message = "Playlist results for %s" % c.y + term + c.w
         g.content = generate_playlist_display()
 
+    else:
+        g.message = "No playlists found for: %s" % c.y + term + c.w
+        g.content = generate_songlist_display(zeromsg=g.message)
+
 
 def get_pl_from_json(pldata):
     """ Process json playlist data. """
@@ -1735,6 +1739,7 @@ def vp():
         g.message = F('pl empty') + " " + txt
 
     else:
+        g.browse_mode = "normal"
         g.model.songs = g.active.songs
         g.message = F('current pl')
 
@@ -1998,6 +2003,11 @@ def download(dltype, num):
     # pylint: disable=R0912
     # pylint: disable=R0914
 
+    if g.browse_mode != "normal":
+        g.message = "download must refer to a specific video item"
+        g.content = generate_songlist_display()
+        return
+
     writestatus("Fetching video info...")
     song = (g.model.songs[int(num) - 1])
     best = dltype.startswith("dv") or dltype.startswith("da")
@@ -2239,6 +2249,11 @@ def nextprev(np):
 def user_more(num):
     """ Show more videos from user of vid num. """
 
+    if g.browse_mode != "normal":
+        g.message = "user uploads must refer to a specific video item"
+        g.content = generate_songlist_display()
+        return
+
     item = g.model.songs[int(num) - 1]
     p = get_pafy(item)
     user = p.username
@@ -2248,6 +2263,13 @@ def user_more(num):
 def info(num):
     """ Get video description. """
 
+    if g.browse_mode != "normal":
+        g.message = "video info must refer to a specific video item"
+        g.content = generate_songlist_display()
+        return
+
+    g.content = logo(c.b)
+    screen_update()
     writestatus("Fetching video metadata..")
     item = (g.model.songs[int(num) - 1])
     get_streams(item)
@@ -2311,7 +2333,7 @@ def dump(un):
 
     else:
         un = "" if not un else un
-        g.message = "%s%sdump%s may only be used on a YouTube playlist"
+        g.message = "%s%sdump%s may only be used on an open YouTube playlist"
         g.message = g.message % (c.y, un, c.w)
         g.content = generate_songlist_display()
 
