@@ -80,7 +80,7 @@ member_var = lambda x: not(x.startswith("__") or callable(x))
 def mswinenc(txt):
     """ Encoding for Windows. """
 
-    if mswin:
+    if mswin or not "UTF-8" in os.environ.get("LANG"):
         sse = sys.stdout.encoding
         txt = txt.encode(sse, "replace").decode("utf8", "ignore")
 
