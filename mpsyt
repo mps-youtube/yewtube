@@ -2291,6 +2291,7 @@ def info(num):
 def play_url(url):
     """ Open and play a youtube video url. """
 
+    g.browse_mode = "normal"
     yt_url(url)
 
     if len(g.model.songs) == 1:
@@ -2300,6 +2301,7 @@ def play_url(url):
 def dl_url(url):
     """ Open and prompt for download of youtube video url. """
 
+    g.browse_mode = "normal"
     yt_url(url)
 
     if len(g.model.songs) == 1:
@@ -2317,6 +2319,7 @@ def yt_url(url):
         g.content = g.content or generate_songlist_display(zeromsg=g.message)
         return
 
+    g.browse_mode = "normal"
     v = Video(p.videoid, py2utf8_decode(p.title), p.length)
     g.model.songs = [v]
     g.content = generate_songlist_display()
