@@ -178,7 +178,6 @@ def is_valid(video):
 def reset_video(video):
     """ Clear url data of a Video object. """
 
-    #video.urls = dict(v={}, a={})
     video.urls["v"]["last"] = 0
     video.urls["v"]["url"] = ""
     video.urls["a"]["last"] = 0
@@ -227,6 +226,7 @@ def get_streams(video, force=False, future=False):
 def get_content_length(url):
     """ Return content length of a url. """
 
+    dbg("getting content-length header")
     response = g.urlopen(url)
     headers = response.headers
     cl = headers['content-length']
@@ -1071,18 +1071,21 @@ def generate_playlist_display():
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
 
-    fmtrow = "%s%-5s %s %-4s%s\n"
-    fmthd = "%s%-5s %-65s %-6s%s\n"
-    head = (c.ul, "Item", "Playlist", "Count", c.w)
+    fmtrow = "%s%-5s %s %-8s  %-2s%s\n"
+    fmthd = "%s%-5s %-57s %-9s %-5s%s\n"
+    head = (c.ul, "Item", "Playlist", "Created", "Count", c.w)
     out = "\n" + fmthd % head
 
     for n, x in enumerate(g.ytpls):
         col = (c.g if n % 2 == 0 else c.w)
         length = x.get('size') or "?"
         length = "%4s" % length
-        title = x.get('name') or "unknown"
-        title = uea_rpad(66, title)
-        out += (fmtrow % (col, str(n + 1), title, str(length), c.w))
+        title = x.get('title') or "unknown"
+        z = x.get("created")[:10]
+        y, m, d = tuple(z.split("-"))
+        created = "%s/%s/%s" % (d, m, y[2:4])
+        title = uea_rpad(57, title)
+        out += (fmtrow % (col, str(n + 1), title, created, str(length), c.w))
 
     return out + "\n" * (5 - len(g.ytpls))
 
@@ -1405,17 +1408,15 @@ def get_pl_from_json(pldata):
         items = []
 
     results = []
-
     for item in items:
-        name = item['title']
-        author = item['author']
-        created = item['created']
-        link = item['id']
-        size = item['size']
-        dic = dict(name=name, author=author, created=created, link=link,
-                   size=size)
-        results.append(dic)
-
+        results.append(dict(title=item.get("title"),
+                            author=item.get("author"),
+                            created=item.get("created"),
+                            link=item.get("id"),
+                            size=item.get("size"),
+                            description=item.get("description")
+                            )
+                       )
     return results
 
 
@@ -2263,29 +2264,38 @@ def user_more(num):
 def info(num):
     """ Get video description. """
 
-    if g.browse_mode != "normal":
-        g.message = "video info must refer to a specific video item"
-        g.content = generate_songlist_display()
-        return
+    if g.browse_mode == "ytpl":
+        p = g.ytpls[int(num) - 1]
+        out = c.ul + "Playlist Info" + c.w + "\n\n"
+        out += p['title']
+        out += "\n" + (p['description'] or "")
+        out += ("\n\nAuthor     : " + str(p['author']))
+        out += "\nSize       : " + str(p['size']) + " videos"
+        out += "\nCreated    : " + str(p['created'])[:10]
+        out += "\nID         : " + str(p['link'])
+        out += ("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
+        g.content = out
 
-    g.content = logo(c.b)
-    screen_update()
-    writestatus("Fetching video metadata..")
-    item = (g.model.songs[int(num) - 1])
-    get_streams(item)
-    p = get_pafy(item)
-    i = py2utf8_decode
-    writestatus("Fetched")
-    out = c.ul + "Video Info" + c.w + "\n\n"
-    out += i(p.title or "")
-    out += "\n" + (p.description or "")
-    out += i("\n\nAuthor     : " + str(p.author))
-    out += i("\nView count : " + str(p.viewcount))
-    out += i("\nRating     : " + str(p.rating)[:4])
-    out += i("\nCategory   : " + p.category)
-    out += i("\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid)
-    out += i("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
-    g.content = out
+    elif g.browse_mode == "normal":
+        g.content = logo(c.b)
+        screen_update()
+        writestatus("Fetching video metadata..")
+        item = (g.model.songs[int(num) - 1])
+        get_streams(item)
+        p = get_pafy(item)
+        i = py2utf8_decode
+        writestatus("Fetched")
+        out = c.ul + "Video Info" + c.w + "\n\n"
+        out += i(p.title or "")
+        out += "\n" + (p.description or "")
+        out += i("\n\nAuthor     : " + str(p.author))
+        out += i("\nView count : " + str(p.viewcount))
+        out += i("\nRating     : " + str(p.rating)[:4])
+        out += i("\nCategory   : " + p.category)
+        out += i("\nLink       : " + "https://youtube.com/watch?v=%s" %
+                 p.videoid)
+        out += i("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
+        g.content = out
 
 
 def play_url(url):
