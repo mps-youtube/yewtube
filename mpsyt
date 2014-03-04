@@ -282,9 +282,7 @@ def get_size(video, is_video):
             size = get_content_length(url) if url else 0
 
         except HTTPError:
-            raise
-            #reset_video(video)
-            #return(get_size(video, is_video))
+            size = 0
 
     video.urls[key]['size'] = size
     return size
@@ -348,7 +346,7 @@ class g(object):
     blank_text = "\n" * 200
     helptext = []
     max_results = 19
-    max_retries = 8
+    max_retries = 3
     max_pafy_objects = 500
     url_memo = {}
     model = Playlist(name="model")
@@ -1073,7 +1071,7 @@ def uea_rpad(num, t):
 
 
 def generate_playlist_display():
-    """ Generate list of choices from a song list."""
+    """ Generate list of playlists. """
 
     if not g.ytpls:
         g.message = c.r + "No playlists found!"
@@ -1091,9 +1089,6 @@ def generate_playlist_display():
         title = x.get('title') or "unknown"
         updated = time.strptime(x.get('updated'), "%Y-%m-%dT%H:%M:%S.000Z")
         updated = time.strftime("%x", updated)
-        #z = x.get("updated")[:10]
-        #y, m, d = tuple(z.split("-"))
-        #created = "%s/%s/%s" % (d, m, y[2:4])
         title = uea_rpad(57, title)
         out += (fmtrow % (col, str(n + 1), title, updated, str(length), c.w))
 
@@ -1241,6 +1236,8 @@ def playsong(song, failcount=0, override=False):
         reset_video(song)
         logging.warn("stream failed to open")
         dbg("trying again (attempt %s)" % (2 + failcount))
+        writestatus(F("cant get track") % song.title)
+        time.sleep(1)
         failcount += 1
         playsong(song, failcount=failcount, override=override)
 
