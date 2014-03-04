@@ -427,10 +427,10 @@ def init_debug():
     """ Enable debug logging if mpsytdebug var is set. """
 
     if os.environ.get("mpsytdebug") == "1":
-        g.blank_text = "--\n"
+        #g.blank_text = "--\n"
         logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
         logging.basicConfig(level=logging.DEBUG, filename=logfile)
-        logging.getLogger("pafy").setLevel(logging.CRITICAL)
+        logging.getLogger("pafy").setLevel(logging.DEBUG)
 
     else:
         logging.basicConfig(level=logging.FATAL)
