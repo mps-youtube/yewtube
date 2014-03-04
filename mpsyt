@@ -77,11 +77,11 @@ mswin = os.name == "nt"
 non_utf8 = mswin or not "UTF-8" in os.environ.get("LANG", "")
 dbg = logging.debug
 member_var = lambda x: not(x.startswith("__") or callable(x))
-locale.setlocale(locale.LC_ALL, "")
+locale.setlocale(locale.LC_ALL, "")  # for date formatting
 
 
-def mswinenc(txt):
-    """ Encoding for Windows. """
+def non_utf8_encode(txt):
+    """ Encoding for non UTF8 environments. """
 
     if non_utf8:
         sse = sys.stdout.encoding
@@ -94,7 +94,7 @@ def mswinfn(filename):
     """ Fix filename for Windows. """
 
     if mswin:
-        filename = mswinenc(filename)
+        filename = non_utf8_encode(filename)
         allowed = re.compile(r'[^\\/?*$\'"%&:<>|]')
         filename = "".join(x if allowed.match(x) else "_" for x in filename)
 
@@ -993,7 +993,7 @@ def screen_update():
         print(g.blank_text)
 
     if g.content:
-        g.content = mswinenc(g.content)
+        g.content = non_utf8_encode(g.content)
         print(py2utf8_encode(g.content))
 
     if g.message:
