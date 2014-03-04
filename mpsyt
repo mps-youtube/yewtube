@@ -747,8 +747,8 @@ def init_text():
 
     g.text = {
 
-        "exitmsg": ("**0mps - **1http://github.com/np1/mps-youtube**0\n"
-                    "Released under the GPLv3 license\n"
+        "exitmsg": ("**0mps-youtube - **1http://github.com/np1/mps-youtube**0"
+                    "\nReleased under the GPLv3 license\n"
                     "(c) 2014 nagev**2\n"""),
         "_exitmsg": (c.r, c.b, c.w),
 
