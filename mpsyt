@@ -1075,7 +1075,6 @@ def uea_rpad(num, t):
 def generate_playlist_display():
     """ Generate list of choices from a song list."""
 
-
     if not g.ytpls:
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
@@ -1091,7 +1090,7 @@ def generate_playlist_display():
         length = "%4s" % length
         title = x.get('title') or "unknown"
         updated = time.strptime(x.get('updated'), "%Y-%m-%dT%H:%M:%S.000Z")
-        updated =  time.strftime("%x", updated)
+        updated = time.strftime("%x", updated)
         #z = x.get("updated")[:10]
         #y, m, d = tuple(z.split("-"))
         #created = "%s/%s/%s" % (d, m, y[2:4])
@@ -1773,8 +1772,7 @@ def preload(song, delay=2, override=False):
         get_size(song, is_video=video)
 
     except (ValueError, AttributeError, IOError) as e:
-        dbg(e)
-        pass  # fail silently on preload
+        dbg(e)  # Fail silently on preload
 
     finally:
         g.preloading.remove(song.ytid)
