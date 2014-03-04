@@ -104,32 +104,37 @@ def mswinfn(filename):
 def get_default_ddir():
     """ Get system default Download directory, append mps dir. """
 
-    if mswin:
-        return os.path.join(os.path.expanduser("~"), "Downloads", "mps")
+    user_home = os.path.expanduser("~")
+    join, exists = os.path.join, os.path.exists
 
-    USER_DIRS = os.path.join(os.path.expanduser("~"),
-                             ".config", "user-dirs.dirs")
-    DOWNLOAD_HOME = os.path.join(os.path.expanduser("~"), "Downloads")
+    if mswin:
+        return join(user_home, "Downloads", "mps")
+
+    USER_DIRS = join(user_home, ".config", "user-dirs.dirs")
+    DOWNLOAD_HOME = join(user_home, "Downloads")
+
+    # define ddir by (1) env var, (2) user-dirs.dirs file,
+    #                (3) existing ~/Downloads dir (4) ~
 
     if 'XDG_DOWNLOAD_DIR' in os.environ:
         ddir = os.environ['XDG_DOWNLOAD_DIR']
 
-    elif os.path.exists(USER_DIRS):
+    elif exists(USER_DIRS):
         lines = open(USER_DIRS).readlines()
         defn = [x for x in lines if x.startswith("XDG_DOWNLOAD_DIR")]
 
         if len(defn) == 0:
-            ddir = os.path.expanduser("~")
+            ddir = user_home
 
         else:
-            ddir = defn[0].split("=")[1].replace('"', '')\
-                .replace("$HOME", os.path.expanduser("~")).strip()
+            ddir = defn[0].split("=")[1].replace('"', '')
+            ddir = ddir.replace("$HOME", user_home).strip()
 
-    elif os.path.exists(DOWNLOAD_HOME):
+    elif exists(DOWNLOAD_HOME):
         ddir = DOWNLOAD_HOME
 
     else:
-        ddir = os.path.expanduser("~")
+        ddir = user_home
 
     ddir = py2utf8_decode(ddir)
     return os.path.join(ddir, "mps")
