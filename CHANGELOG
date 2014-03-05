@@ -1,11 +1,12 @@
 Version 0.01.38
-Date TBC
+Mar 5 2014
 
  - Added i<number> for YT playlist information display 
  - Added stream url preloading for first item of opened YT playlists
  - Added last-updated date to YT playlist search result list 
  - Fixed UnicodeError when run in non-UTF8 environments
- - Added --debug command line option (logs to <platform_tmpdir>/mpsyt.log)
+ - Added more verbosity to --version command line option
+ - Added --debug command line option (logs to <tmpdir>/mpsyt.log)
 
 -------------------------------------------------------------------------------
 
