@@ -338,6 +338,7 @@ class g(object):
 
     """ Class for holding globals that are needed throught the module. """
 
+    debug_mode = False
     urlopen = None
     ytpls = []
     browse_mode = "normal"
@@ -381,16 +382,39 @@ class g(object):
     }
 
 
+def get_version_info():
+    """ Return version and platform info. """
+
+    import platform
+    out = ("\nmpsyt version  : %s " % __version__)
+    out += ("\npafy version   : %s" % pafy.__version__)
+    out += ("\nPython version : %s" % sys.version)
+    out += ("\nProcessor      : %s" % platform.processor())
+    out += ("\nMachine type   : %s" % platform.machine())
+    out += ("\nArchitecture   : %s, %s" % platform.architecture())
+    out += ("\nPlatform       : %s" % platform.platform())
+    return out
+
+
 def process_cl_args(args):
     """ Process command line arguments. """
 
     if "--version" in args:
-        print("mpsyt version: %s " % __version__)
-        print("pafy version: %s" % pafy.__version__)
-        print("Python version: %s" % sys.version)
+        print(get_version_info())
+        print("")
         sys.exit()
 
-    elif "--help" in args:
+    if "--debug" in args:
+        init_debug(force=True)
+        print("\nDEBUG MODE")
+        print(get_version_info())
+
+        for x in sys.argv:
+
+            if "--debug" in x:
+                sys.argv.remove(x)
+
+    if "--help" in args:
 
         for x in g.helptext:
             print(x[1])
@@ -421,11 +445,12 @@ def init():
     process_cl_args(sys.argv)
 
 
-def init_debug():
+def init_debug(force=False):
     """ Enable debug logging if mpsytdebug var is set. """
 
-    if os.environ.get("mpsytdebug") == "1":
-        #g.blank_text = "--\n"
+    if os.environ.get("mpsytdebug") == "1" or force:
+        g.debug_mode = True
+        g.blank_text = "--\n"
         logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
         logging.basicConfig(level=logging.DEBUG, filename=logfile)
         logging.getLogger("pafy").setLevel(logging.DEBUG)
@@ -2570,7 +2595,6 @@ def main():
 
     # compile regexp's
     regx = {name: re.compile(val, re.UNICODE) for name, val in regx.items()}
-    #prompt = "> " + c.y if not mswin else "> "
     prompt = "> "
 
     while True:
@@ -2589,17 +2613,22 @@ def main():
             if v.match(userinput):
                 func, matches = k, v.match(userinput).groups()
 
-                try:
+                if g.debug_mode:
                     globals()[func](*matches)
 
-                except IndexError:
-                    g.message = F('invalid range')
-                    g.content = g.content or generate_songlist_display()
+                else:
 
-                except (ValueError, IOError) as e:
-                    g.message = F('cant get track') % str(e)
-                    g.content = g.content or\
-                        generate_songlist_display(zeromsg=g.message)
+                    try:
+                        globals()[func](*matches)
+
+                    except IndexError:
+                        g.message = F('invalid range')
+                        g.content = g.content or generate_songlist_display()
+
+                    except (ValueError, IOError) as e:
+                        g.message = F('cant get track') % str(e)
+                        g.content = g.content or\
+                            generate_songlist_display(zeromsg=g.message)
 
                 break
         else:
