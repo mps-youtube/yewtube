@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.01.37"
+__version__ = "0.01.38"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -2299,13 +2299,32 @@ def info(num):
 
     if g.browse_mode == "ytpl":
         p = g.ytpls[int(num) - 1]
+
+        # fetch the playlist item as it has more metadata
+        yt_playlist = g.pafs.get("parturl")
+
+        if not yt_playlist:
+            g.content = logo(col = c.g)
+            g.message = "Fetching playlist info.."
+            screen_update()
+            yt_playlist = pafy.get_playlist(p['link'])
+            g.pafs[p['link']] = yt_playlist
+
+        ytpl_items = yt_playlist['items']
+        ytpl_likes = yt_playlist.get('likes', 0)
+        ytpl_dislikes = yt_playlist.get('dislikes', 0)
+        ytpl_desc = yt_playlist.get('description', "")
+        g.content = generate_songlist_display()
+
         created = time.strptime(p['created'], "%Y-%m-%dT%H:%M:%S.000Z")
         updated = time.strptime(p['updated'], "%Y-%m-%dT%H:%M:%S.000Z")
         out = c.ul + "Playlist Info" + c.w + "\n\n"
         out += p['title']
-        out += "\n" + (p['description'] or "")
+        out += "\n" + ytpl_desc
         out += ("\n\nAuthor     : " + str(p['author']))
         out += "\nSize       : " + str(p['size']) + " videos"
+        out += "\nLikes      : " + str(ytpl_likes)
+        out += "\nDislikes   : " + str(ytpl_dislikes)
         out += "\nCreated    : " + time.strftime("%x %X", created)
         out += "\nUpdated    : " + time.strftime("%x %X", updated)
         out += "\nID         : " + str(p['link'])
@@ -2411,6 +2430,7 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
         screen_update()
 
     yt_playlist = pafy.get_playlist(parturl)
+    g.pafs['parturl'] = yt_playlist
     ytpl_items = yt_playlist['items']
     ytpl_title = yt_playlist['title']
     g.content = generate_songlist_display()
