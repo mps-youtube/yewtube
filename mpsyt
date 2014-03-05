@@ -2301,7 +2301,7 @@ def info(num):
         p = g.ytpls[int(num) - 1]
 
         # fetch the playlist item as it has more metadata
-        yt_playlist = g.pafs.get("parturl")
+        yt_playlist = g.pafs.get(p['link'])
 
         if not yt_playlist:
             g.content = logo(col = c.g)
@@ -2321,7 +2321,7 @@ def info(num):
         out = c.ul + "Playlist Info" + c.w + "\n\n"
         out += p['title']
         out += "\n" + ytpl_desc
-        out += ("\n\nAuthor     : " + str(p['author']))
+        out += ("\n\nAuthor     : " + p['author'])
         out += "\nSize       : " + str(p['size']) + " videos"
         out += "\nLikes      : " + str(ytpl_likes)
         out += "\nDislikes   : " + str(ytpl_dislikes)
@@ -2430,7 +2430,7 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
         screen_update()
 
     yt_playlist = pafy.get_playlist(parturl)
-    g.pafs['parturl'] = yt_playlist
+    g.pafs[parturl] = yt_playlist
     ytpl_items = yt_playlist['items']
     ytpl_title = yt_playlist['title']
     g.content = generate_songlist_display()
