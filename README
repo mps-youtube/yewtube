@@ -244,12 +244,16 @@ To search all YouTube categories (instead of just music), enter::
     
     set search_music false
 
-List YouTube User Uploads 
-~~~~~~~~~~~~~~~~~~~~~~~~~
+List YouTube User Uploads / Playlists 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To list the uploaded videos of a YouTube user:
 
     user <username>
+
+To list playlists created by a YouTube user:
+
+    userpl <username> 
 
 Access YouTube Video by URL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
