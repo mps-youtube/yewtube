@@ -404,7 +404,6 @@ def process_cl_args(args):
         print("")
         sys.exit()
 
-
     if "--help" in args:
 
         for x in g.helptext:
@@ -433,7 +432,6 @@ def init():
         init_colorama()
 
     process_cl_args(sys.argv)
-
 
 
 def init_readline():
@@ -2282,13 +2280,12 @@ def info(num):
         yt_playlist = g.pafs.get(p['link'])
 
         if not yt_playlist:
-            g.content = logo(col = c.g)
+            g.content = logo(col=c.g)
             g.message = "Fetching playlist info.."
             screen_update()
             yt_playlist = pafy.get_playlist(p['link'])
             g.pafs[p['link']] = yt_playlist
 
-        ytpl_items = yt_playlist['items']
         ytpl_likes = yt_playlist.get('likes', 0)
         ytpl_dislikes = yt_playlist.get('dislikes', 0)
         ytpl_desc = yt_playlist.get('description', "")
@@ -2639,7 +2636,7 @@ def main():
 
 if "--debug" in sys.argv:
     print(get_version_info())
-    sys.argv = [x for x in sys.argv if not "--debug" in x]
+    sys.argv = [_x for _x in sys.argv if not "--debug" in _x]
     g.debug_mode = True
     g.blank_text = "--\n"
     logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
