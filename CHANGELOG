@@ -1,9 +1,10 @@
 Version 0.01.39
 
+ - Implemented input history persistence (uses readline, linux only)
  - Fixed issue with debug mode not logging to file
  - Changed year format in YT playlist result screen to last two digits.
  - Added related video search; r{number}
- - Added comand to retrieve user playlists; userpl {username} or upl {username}
+ - Added command to retrieve user playlists; userpl {username} or upl {username}
 
 -------------------------------------------------------------------------------
 

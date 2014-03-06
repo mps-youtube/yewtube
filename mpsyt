@@ -53,6 +53,14 @@ try:
 except ImportError:
     has_colorama = False
 
+try:
+    import readline
+    readline.set_history_length(2000)
+    has_readline = True
+
+except ImportError:
+    has_readline = False
+
 
 # Python 3 compatibility hack
 
@@ -367,6 +375,7 @@ class g(object):
     CFFILE = os.path.join(get_config_dir(), "config")
     OLD_PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
     PLFILE = os.path.join(get_config_dir(), "playlist_v2")
+    READLINE_FILE = None
     playerargs_defaults = {
         "mpv": {"def": "--really-quiet".split(),
                 "fs": "--fs",
@@ -437,13 +446,12 @@ def init():
 def init_readline():
     """ Enable readline for input history. """
 
-    if not mswin:
-        try:
-            import readline  # import readline if not running on windows
-            readline.get_history_length()  # redundant, prevents import warning
+    if has_readline:
+        g.READLINE_FILE = os.path.join(get_config_dir(), "input_history")
 
-        except ImportError:
-            pass  # no biggie
+        if os.path.exists(g.READLINE_FILE):
+            readline.read_history_file(g.READLINE_FILE)
+            dbg("Read history file")
 
 
 def init_opener():
@@ -1914,6 +1922,10 @@ def show_help(option="1"):
 
 def quits(showlogo=True):
     """ Exit the program. """
+
+    if has_readline:
+        readline.write_history_file(g.READLINE_FILE)
+        dbg("Saved history file")
 
     msg = g.blank_text + logo(c.r, version=__version__) if showlogo else ""
     vermsg = ""
