@@ -115,10 +115,12 @@ Downloading
 ``da 3`` to download audio stream of item 3
 ``dv 3`` to download video stream of item 3
 
-View Uploads
-~~~~~~~~~~~~
+View Uploads / Related Videos
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``u 3`` to view more videos from uploader of item 3
+
+``r 3`` to view videos related to item 3
 
 Playback
 ~~~~~~~~

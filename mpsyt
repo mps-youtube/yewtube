@@ -2531,8 +2531,8 @@ Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
 {2}pl <YouTube playlist url>{1} - Open YouTube playlist by url.
 {2}pls <query>{1} - Search for YouTube playlists.
 {2}url <YouTube url>{1} - Retrive specific YouTube video by url.
-
-{2}u <number>{1} - show uploads by uploader of item <number>.
+{2}r <number>{1} - show videos related to item <number>.
+{2}u <number>{1} - show videos uploaded by uploader of item <number>.
 {2}rm <number(s)>{1} - remove items from displayed results.
 {2}sw <number>,<number>{1} - swap two items.
 {2}mv <number>,<number>{1} - move item <number> to position <number>.
