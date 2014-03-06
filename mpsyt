@@ -44,6 +44,7 @@ import sys
 import re
 import os
 
+
 try:
     # pylint: disable=F0401
     from colorama import init as init_colorama, Fore, Style
@@ -75,7 +76,6 @@ else:
 
 mswin = os.name == "nt"
 non_utf8 = mswin or not "UTF-8" in os.environ.get("LANG", "")
-dbg = logging.debug
 member_var = lambda x: not(x.startswith("__") or callable(x))
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 
@@ -404,15 +404,6 @@ def process_cl_args(args):
         print("")
         sys.exit()
 
-    if "--debug" in args:
-        init_debug(force=True)
-        print("\nDEBUG MODE")
-        print(get_version_info())
-
-        for x in sys.argv:
-
-            if "--debug" in x:
-                sys.argv.remove(x)
 
     if "--help" in args:
 
@@ -425,7 +416,6 @@ def process_cl_args(args):
 def init():
     """ Initial setup. """
 
-    init_debug()
     init_text()
     init_readline()
     init_opener()
@@ -444,19 +434,6 @@ def init():
 
     process_cl_args(sys.argv)
 
-
-def init_debug(force=False):
-    """ Enable debug logging if mpsytdebug var is set. """
-
-    if os.environ.get("mpsytdebug") == "1" or force:
-        g.debug_mode = True
-        g.blank_text = "--\n"
-        logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
-        logging.basicConfig(level=logging.DEBUG, filename=logfile)
-        logging.getLogger("pafy").setLevel(logging.DEBUG)
-
-    else:
-        logging.basicConfig(level=logging.FATAL)
 
 
 def init_readline():
@@ -1114,6 +1091,7 @@ def generate_playlist_display():
         title = x.get('title') or "unknown"
         updated = time.strptime(x.get('updated'), "%Y-%m-%dT%H:%M:%S.000Z")
         updated = time.strftime("%x", updated)
+        updated = re.sub(r"(\d\d\D\d\d\D)20(\d\d)$", r"\1\2", updated)
         title = uea_rpad(57, title)
         out += (fmtrow % (col, str(n + 1), title, updated, str(length), c.w))
 
@@ -2659,6 +2637,16 @@ def main():
 
         screen_update()
 
+if "--debug" in sys.argv:
+    print(get_version_info())
+    sys.argv = [x for x in sys.argv if not "--debug" in x]
+    g.debug_mode = True
+    g.blank_text = "--\n"
+    logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
+    logging.basicConfig(level=logging.DEBUG, filename=logfile)
+    logging.getLogger("pafy").setLevel(logging.DEBUG)
+
+dbg = logging.debug
 
 if __name__ == "__main__":
     init()
