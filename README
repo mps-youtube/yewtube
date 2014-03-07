@@ -96,9 +96,11 @@ Searching
 Enter your search term by prefixing it with a ``.`` or ``/`` character.
     e.g., ``/daft punk``
 
+Prefix with ``..`` or ``//`` to search for YouTube playlists.  
+    e.g., ``..linux tutorials``
+
 Enter ``n`` or ``p`` to go to the next / previous page of results
 
-Use ``pls <query>`` to search for YouTube playlists
 
 When a list of search results or a saved playlist is shown, you can use the
 following commands:

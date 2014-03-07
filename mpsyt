@@ -343,6 +343,7 @@ class g(object):
 
     """ Class for holding globals that are needed throught the module. """
 
+    command_line = False
     debug_mode = False
     urlopen = None
     ytpls = []
@@ -413,9 +414,12 @@ def process_cl_args(args):
     if "--help" in args:
 
         for x in g.helptext:
-            print(x[1])
+            print(x[2])
 
         sys.exit()
+
+    g.command_line = "playurl" in args or "dlurl" in args
+    g.blank_text = "" if g.command_line else g.blank_text
 
 
 def init():
@@ -442,6 +446,9 @@ def init():
 
 def init_readline():
     """ Enable readline for input history. """
+
+    if g.command_line:
+        return
 
     if has_readline:
         g.READLINE_FILE = os.path.join(get_config_dir(), "input_history")
@@ -818,6 +825,8 @@ def init_text():
         'current pl': "This is the current playlist. Use *save <name>* to save"
         " it",
         'current pl_': (c.g, c.w),
+        'help topic': ("  Enter *help <topic>* for specific help:"),
+        'help topic_': (c.y, c.w),
         'songs rm': '*&&* tracks removed &&',
         'songs rm_': (c.y, c.w)}
 
@@ -1192,7 +1201,8 @@ def playsong(song, failcount=0, override=False):
     url = stream.replace("https://", "http://")
     key = "a" if not video else "v"
     size = get_size(song, is_video=video)
-    songdata = song.ytid, song.urls[key]['ext'], int(size / (1024 ** 2))
+    trackinfo = song.title if g.command_line else song.ytid
+    songdata = trackinfo, song.urls[key]['ext'], int(size / (1024 ** 2))
     args = Config.PLAYERARGS[::]
 
     if has_known_player():
@@ -1597,12 +1607,13 @@ def _parse_multi(choice, end=None):
     return alltracks
 
 
-def _get_near_plname(begin):
+def _get_near_name(begin, items):
     """ Return the closest matching playlist name that starts with begin. """
 
-    for name in sorted(g.userpl):
+    for name in sorted(items):
         if name.lower().startswith(begin.lower()):
             break
+
     else:
         return begin
 
@@ -1619,7 +1630,7 @@ def play_pl(name):
     saved = g.userpl.get(name)
 
     if not saved:
-        name = _get_near_plname(name)
+        name = _get_near_name(name, g.userpl)
         saved = g.userpl.get(name)
 
     if saved:
@@ -1664,7 +1675,7 @@ def open_save_view(action, name):
         saved = g.userpl.get(name)
 
         if not saved:
-            name = _get_near_plname(name)
+            name = _get_near_name(name, g.userpl)
             saved = g.userpl.get(name)
 
         if saved and action == "open":
@@ -1847,7 +1858,9 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
         for n, song in enumerate(songlist):
             g.content = playback_progress(n, songlist, repeat=False)
-            screen_update()
+
+            if not g.command_line:
+                screen_update()
 
             hasnext = len(songlist) > n + 1
 
@@ -1894,27 +1907,48 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
     g.content = generate_songlist_display()
 
 
-def show_help(option="1"):
+def show_help(_, choice):
     """ Print help message. """
 
-    all_help = g.helptext
-    help_titles = ["\n[%s] %s" % (n + 1, x[0]) for n, x in enumerate(all_help)]
-    help_titles = "".join(help_titles)
+    helps = {"download": ("playback dl listen watch show repeat playing"
+                          "show_video shuffle playurl dlurl d da dv all *"
+                          " playback".split()
+                          ),
+             "invoke": "mpsyt invocation".split(),
+             "search": ("user userpl pl pls n p url rm mv sw".split()),
+             "tips": ("dump set fullscreen player mpv mplayer -f -w "
+                      "-a".split(" ")),
+             "basic": ("r u i".split()),
+             "playlists": ("save rename delete move rm ls mv sw add vp open"
+                           " play view".split())
+             }
 
-    if option.isdigit() and int(option) <= len(all_help):
-        g.content = all_help[int(option) - 1][1] + help_titles
-        g.message = "[{0}1-%s{1} for more or {0}ENTER{1} to return]"
-        g.message = " " * 23 + g.message.format(c.y, c.w) % len(all_help)
-        screen_update()
+    for topic, aliases in helps.items():
 
-        try:
-            inp = compat_input("help > " + c.y)
-            show_help(inp)
+        if choice in aliases:
+            choice = topic
+            break
 
-        except (KeyboardInterrupt, EOFError):
-            prompt_for_exit()
+    choice = "menu" if not choice else choice
+    out, all_help = "", g.helptext
+    help_names = [x[0] for n, x in enumerate(all_help)]
+    choice = _get_near_name(choice, help_names)
 
-        g.content = generate_songlist_display()
+
+    if choice == "menu" or not choice in help_names:
+        out += "  %sHelp Topics%s" % (c.ul, c.w)
+        out += F('help topic', 2, 2)
+
+        for x in all_help:
+            out += ("\n%s     %-10s%s : %s" % (c.y, x[0], c.w, x[1]))
+
+        out += "\n"
+        g.content = out
+
+    else:
+        indent = lambda x: "\n  ".join(x.split("\n"))
+        choice = help_names.index(choice)
+        g.content = indent(all_help[choice][2])
 
 
 def quits(showlogo=True):
@@ -2079,7 +2113,8 @@ def download(dltype, num):
     # pylint: disable=R0914
 
     if g.browse_mode != "normal":
-        g.message = "download must refer to a specific video item"
+        g.message = "Download must refer to a specific video item"
+        g.message = c.y + g.message + c.w
         g.content = generate_songlist_display()
         return
 
@@ -2328,7 +2363,8 @@ def user_more(num):
     """ Show more videos from user of vid num. """
 
     if g.browse_mode != "normal":
-        g.message = "user uploads must refer to a specific video item"
+        g.message = "User uploads must refer to a specific video item"
+        g.message = c.y + g.message + c.w
         g.content = generate_songlist_display()
         return
 
@@ -2342,7 +2378,8 @@ def related(num):
     """ Show videos related to to vid num. """
 
     if g.browse_mode != "normal":
-        g.message = "related items must refer to a specific video item"
+        g.message = "Related items must refer to a specific video item"
+        g.message = c.y + g.message + c.w
         g.content = generate_songlist_display()
         return
 
@@ -2408,14 +2445,22 @@ def info(num):
         g.content = out
 
 
-def play_url(url):
+def play_url(url, override):
     """ Open and play a youtube video url. """
 
+    override = override if override else "_"
     g.browse_mode = "normal"
     yt_url(url)
 
     if len(g.model.songs) == 1:
-        play("", "1")
+        play(override, "1", "_")
+
+    elif g.command_line:
+        g.content = ""
+        screen_update()
+
+    if g.command_line:
+        sys.exit("")
 
 
 def dl_url(url):
@@ -2426,6 +2471,13 @@ def dl_url(url):
 
     if len(g.model.songs) == 1:
         download("download", "1")
+
+    elif g.command_line:
+        g.content = ""
+        screen_update()
+
+    if g.command_line:
+        sys.exit("")
 
 
 def yt_url(url):
@@ -2442,7 +2494,9 @@ def yt_url(url):
     g.browse_mode = "normal"
     v = Video(p.videoid, py2utf8_decode(p.title), p.length)
     g.model.songs = [v]
-    g.content = generate_songlist_display()
+
+    if not g.command_line:
+        g.content = generate_songlist_display()
 
 
 def dump(un):
@@ -2516,86 +2570,111 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
     g.message = "Showing YouTube playlist %s" % (c.y + ytpl_title + c.w)
 
 
-g.helptext = [("Basic Usage", """
+g.helptext = [("basic", "Basics", """
 {0}Basic Usage{1}
 
 Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/pink floyd{1}
 
-{2}<number(s)>{1} - play specified items, separated by commas.
-              e.g., {2}1-3,5{1} plays items 1, 2, 3 and 5.
+Then, when results are shown:
 
-{2}i <number>{1} - view information on the specified item.
-{2}d <number>{1} - download the specified item.
+    {2}<number(s)>{1} - play specified items, separated by commas.
+                  e.g., {2}1-3,5{1} plays items 1, 2, 3 and 5.
 
-[For further help, enter a number from the list below]
-""".format(c.ul, c.w, c.g, c.r)),
-    ("Searching and Editing Results", """
+    {2}i <number>{1} - view information on item <number>
+    {2}d <number>{1} - download the specified item.
+    {2}r <number>{1} - show videos related to video <number>.
+    {2}u <number>{1} - show videos uploaded by uploader of video <number>.
+""".format(c.ul, c.w, c.y, c.r)),
+
+    ("search", "Searching and Editing Results", """
 {0}Searching and Editing Results{1}
 
-Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/daft punk{1}
 {2}set search_music false{1} - search all YouTube categories.
-{2}set search_music true{1} - search only YouTube music category.
+{2}set search_music true{1}  - search only YouTube music category.
+
+{2}/<query>{1} or {2}.<query>{1} to search. e.g., {2}/daft punk{1}
+{2}//<query>{1} or {2}..<query>{1} - search for YouTube playlists. e.g., \
+{2}//80's music{1}
 {2}n{1} and {2}p{1} - continue search to next/previous pages.
+
 {2}user <username>{1} - list YouTube uploads by <username>.
 {2}userpl <username>{1} - list YouTube playlists created by <username>.
 {2}pl <YouTube playlist url>{1} - Open YouTube playlist by url.
-{2}pls <query>{1} - Search for YouTube playlists.
 {2}url <YouTube url>{1} - Retrive specific YouTube video by url.
-{2}r <number>{1} - show videos related to item <number>.
-{2}u <number>{1} - show videos uploaded by uploader of item <number>.
+
 {2}rm <number(s)>{1} - remove items from displayed results.
 {2}sw <number>,<number>{1} - swap two items.
 {2}mv <number>,<number>{1} - move item <number> to position <number>.
-""".format(c.ul, c.w, c.g, c.r)),
+{2}r <number>{1} - show videos related to video <number>.
+{2}u <number>{1} - show videos uploaded by uploader of video <number>.
+""".format(c.ul, c.w, c.y, c.r)),
 
-    ("Downloading and Playback", """
+    ("download", "Downloading and Playback", """
 {0}Downloading and Playback{1}
 
 {2}set show_video true{1} - play video instead of audio.
+
 {2}<number(s)>{1} - play specified items, separated by commas.
               e.g., {2}1-3,5{1} plays items 1, 2, 3 and 5
-{2}i <number>{1} - view information on the specified item.
+
 {2}d <number>{1} - view downloads available for an item.
 {2}da <number>{1} - download best available audio file.
 {2}dv <number>{1} - download best available video file.
+{2}dlurl <url or id>{1} download a YouTube video by url or video id
+{2}playurl <url or id>{1} to play a YouTube video by url or id
 
-{2}all{1} - play all displayed items.
+{2}all{1} or {2}*{1} - play all displayed items.
 {2}shuffle <number(s)>{1} - play specified items in random order.
 {2}repeat <number(s)>{1} - play and repeat the specified items.
 
-Note: {2}all{1} can be used as an argument (e.g., {2}shuffle all{1})
-""".format(c.ul, c.w, c.g, c.r)),
+Note: {2}all{1} and {2}*{1} can be used as an argument (e.g., \
+{2}shuffle all{1})
+""".format(c.ul, c.w, c.y, c.r)),
 
-    ("Using Playlists", """
-{0}Using Playlists{1}
+    ("playlists", "Using Local Playlists", """
+{0}Using Local Playlists{1}
 
 {2}add <number(s)>{1} - add items to the current playlist.
 {2}add <number(s)> <playlist>{1} - add items to the specified playlist.
-{2}vp{1} - view current playlist.
-{2}ls{1} - list your saved playlists.
-{2}open <name or ID>{1} - open a saved playlist as the current playlist.
-{2}view <name or ID>{1} - view a playlist (current playlist left intact)
-{2}play <name or ID>{1} - play a saved playlist directly.
-{2}save{1} or {2}save <name>{1} - save the displayed items as a playlist.
-{2}rmp <playlist_name or ID>{1} - delete a playlist from disk.
-{2}mv <old name or ID> <new name>{1} - rename a playlist.
-""".format(c.ul, c.w, c.g, c.r)),
+     (<playlist> will be created if it doesn't already exist)
 
-    ("Invocation Parameters", """
+{2}vp{1} - view current playlist.
+{2}ls{1} - list saved playlists.
+{2}mv <old name or ID> <new name>{1} - rename a playlist.
+{2}rmp <playlist_name or ID>{1} - delete a playlist from disk.
+
+{2}open <name or ID>{1} - open a saved playlist as the current playlist.
+{2}play <name or ID>{1} - play a saved playlist directly.
+{2}view <name or ID>{1} - view a playlist (current playlist left intact)
+{2}save{1} or {2}save <name>{1} - save the displayed items as a playlist.
+
+{2}rm <number(s)>{1} - remove items from displayed results.
+{2}sw <number>,<number>{1} - swap two items.
+{2}mv <number>,<number>{1} - move item <number> to position <number>.
+""".format(c.ul, c.w, c.y, c.r)),
+
+    ("invoke", "Invocation Parameters", """
 {0}Invocation{1}
 
-To play a saved playlist when invoking mpsyt use {2}mpsyt play <name>{1}
-This also works for other commands:
+All commands that can be used in mpsyt can be invoked from the command line
+where this makes sense, so excluding commands that act on specific results.
 
-{2}mpsyt /mozart{1} to search
-{2}mpsyt open <name or ID>{1} to open a saved playlist
-{2}mpsyt ls{1} to list saved playlists
-{2}mpsyt playurl <url>{1} to play a YouTube video by url
-{2}mpsyt dlurl <url>{1} to download a YouTube video by url
-""".format(c.ul, c.w, c.g, c.r)),
+For example;
 
-    ("Advanced Tips", """
+  {2}mpsyt /mozart{1} to search
+  {2}mpsyt pls best songs of 2010{1} for a playlist search
+  {2}mpsyt play <playlist name or ID>{1} to play a saved playlist
+  {2}mpsyt ls{1} to list saved playlists
+  {2}mpsyt playurl <url or id>{1} to play a YouTube video by url or id
+  {2}mpsyt dlurl <url or id>{1} to download a YouTube video by url or id
+
+When invoking with playurl or dlurl, a less interactive session will be used
+and mpsyt will exit when done.
+""".format(c.ul, c.w, c.y, c.r)),
+
+    ("tips", "Advanced Tips", """
 {0}Advanced Tips{1}
+
 When using {2}open{1}, {2}view{1} or {2}play{1} to access a playlist, you \
 can enter the
 first few characters instead of the whole name.
@@ -2604,25 +2683,28 @@ Use {2}5-{1} to select items 5 upward and {2}-5{1} to select up to item 5. \
 This can be
 included with other choices. e.g., 5,3,7-,-2
 You can use spaces instead of commas: 5 3 7- -2
+Reversed ranges also work. eg., 5-2
 
 Use {2}-w{1}, {2}-f{1} or {2}-a{1} with your choice to override the configured\
  setting and
-play items in windowed, fullscreen or audio modes respectively.
-{2}dump{1} - to show entire contents of a YouTube playlist.
+play items in windowed, fullscreen or audio modes.
+
+{2}dump{1} - to show entire contents of an opened YouTube playlist.
 {2}set{1} - view current configuration.
 {2}set fullscreen true{1} - play video content in fullscreen mode.
 {2}set player mpv{1} or {2}set player mplayer{1} - change player application
-""".format(c.ul, c.w, c.g, c.r))
+""".format(c.ul, c.w, c.y, c.r))
 ]
 
 
 def main():
     """ Main control loop. """
 
-    g.content = generate_songlist_display()
-    g.content = logo(col=c.g, version=__version__) + "\n"
-    g.message = "Enter /search-term to search or [h]elp"
-    screen_update()
+    if not g.command_line:
+        g.content = generate_songlist_display()
+        g.content = logo(col=c.g, version=__version__) + "\n"
+        g.message = "Enter /search-term to search or [h]elp"
+        screen_update()
 
     # open playlists from file
     convert_playlist_to_v2()
@@ -2632,6 +2714,7 @@ def main():
     inp = " ".join(sys.argv[1:])
 
     # input types
+    #yt = r'[^-_a-zA-Z0-9]?([-_a-zA-Z0-9]{11})[^-_a-zA-Z0-9]?
     word = r'[^\W\d][-\w\s]{,100}'
     rs = r'(?:repeat\s*|shuffle\s*|-a\s*|-f\s*|-w\s*)'
     regx = {
@@ -2644,19 +2727,19 @@ def main():
         'quits': r'(?:q|quit|exit)$',
         'plist': r'pl\s.*[^-_a-zA-Z0-9]([-_a-zA-Z0-9]{18,50})(?:(?:\&.*)|$)',
         'yt_url': r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
-        'search': r'(?:search|\.|/)\s*(.{2,500})',
+        'search': r'(?:search|\.|/)\s*([^./].{1,500})',
         'dl_url': r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
         'play_pl': r'play\s{1,}(%s|\d+)$' % word,
         'related': r'r\s?([\d]{1,4})$',
         'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
-        'play_url': r'playurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
+        'play_url': r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
         'nextprev': r'(n|p)$',
         'play_all': r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
         'user_pls': r'u(?:ser)?pl\s(.*)$',
         'save_last': r'(save)\s*$',
-        'pl_search': r'pls(?:earch)?\s(.*)$',
+        'pl_search': r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
         'setconfig': r'set\s*(\w+)\s*"?([^"]*)"?\s*$',
-        'show_help': r'(?:help|h)$',
+        'show_help': r'(help|h)(?:\s+(-?\w+)\s*)?$',
         'usersearch': r'user\s+([^s].{2,})$',
         'user_more': r'u\s?([\d]{1,4})$',
         'add_rm_all': r'(rm|add)\s(?:\*|all)$',
@@ -2669,6 +2752,7 @@ def main():
         'playlist_remove': r'rmp\s*(\d+|%s)$' % word,
         'open_view_bynum': r'(open|view)\s*(\d{1,4})$',
         'playlist_rename_idx': r'mv\s*(\d{1,3})\s*(%s)\s*$' % word
+        #'play_url': r'(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$'
     }
 
     # compile regexp's
@@ -2680,7 +2764,9 @@ def main():
             # get user input
             userinput = inp or compat_input(prompt)
             userinput = userinput.strip()
-            print(c.w)
+
+            if not g.command_line:
+                print(c.w)
 
         except (KeyboardInterrupt, EOFError):
             userinput = prompt_for_exit()
@@ -2692,6 +2778,8 @@ def main():
                 func, matches = k, v.match(userinput).groups()
 
                 if g.debug_mode:
+                    print(func)
+                    print(matches)
                     globals()[func](*matches)
 
                 else:
@@ -2712,8 +2800,14 @@ def main():
         else:
             g.content = g.content or generate_songlist_display()
 
-            if userinput:
+            if g.command_line:
+                g.content = ""
+
+            if userinput and not g.command_line:
                 g.message = c.b + "Bad syntax. Enter h for help" + c.w
+
+            elif userinput and g.command_line:
+                sys.exit("Bad syntax")
 
         screen_update()
 
