@@ -1,10 +1,26 @@
 Version 0.01.39
 
+Features:
+
+ - Added command to retrieve YouTube user playlists; 
+    userpl {username} or upl {username}
+ - Added command to retrieve related videos; r{number}
  - Implemented input history persistence (uses readline, linux only)
+ - playurl now respects -f, -w, and -a flags (fullscreen, window or audio)
+ - Implemented non-interactive mode for command line invocation with playurl
+ - Implemented less interactive mode for command line invocation with dlurl
+
+Help / Documentation:
+
+ - Changed help <number> to help <topic>
+ - Re-authored some help topics
+ - help <command> now shows relevant help topic page e.g., help ls
+
+Bugfixes
+
  - Fixed issue with debug mode not logging to file
  - Changed year format in YT playlist result screen to last two digits.
- - Added related video search; r{number}
- - Added command to retrieve user playlists; userpl {username} or upl {username}
+      (Under some environments it was showing 4-digit years)
 
 -------------------------------------------------------------------------------
 
