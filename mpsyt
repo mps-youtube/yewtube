@@ -131,18 +131,15 @@ def get_default_ddir():
         lines = open(USER_DIRS).readlines()
         defn = [x for x in lines if x.startswith("XDG_DOWNLOAD_DIR")]
 
-        if len(defn) == 0:
-            ddir = user_home
-
-        else:
+        if len(defn) == 1:
             ddir = defn[0].split("=")[1].replace('"', '')
             ddir = ddir.replace("$HOME", user_home).strip()
 
-    elif exists(DOWNLOAD_HOME):
-        ddir = DOWNLOAD_HOME
+        else:
+            ddir = DOWNLOAD_HOME if exists(DOWNLOAD_HOME) else user_home
 
     else:
-        ddir = user_home
+        ddir = DOWNLOAD_HOME if exists(DOWNLOAD_HOME) else user_home
 
     ddir = py2utf8_decode(ddir)
     return os.path.join(ddir, "mps")
@@ -2351,6 +2348,7 @@ def related(num):
 
     item = g.model.songs[int(num) - 1]
     related_search(item)
+
 
 def info(num):
     """ Get video description. """
