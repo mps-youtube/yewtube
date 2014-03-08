@@ -1170,10 +1170,6 @@ def playsong(song, failcount=0, override=False):
         writestatus("fetching item..")
         time.sleep(0.1)
 
-    video = Config.SHOW_VIDEO
-    video = True if override in ("fullscreen", "window") else video
-    video = False if override == "audio" else video
-
     try:
         get_streams(song, force=failcount)
 
@@ -1184,6 +1180,10 @@ def playsong(song, failcount=0, override=False):
     except ValueError:
         g.message = F('track unresolved')
         return
+
+    video = Config.SHOW_VIDEO
+    video = True if override in ("fullscreen", "window") else video
+    video = False if override == "audio" else video
 
     stream = song.urls['v']['url'] if video else song.urls['a'].get('url')
     aext = song.urls['a'].get("ext")
@@ -1643,7 +1643,7 @@ def play_pl(name):
         #return
 
 
-def save_last(args=None):
+def save_last():
     """ Save command with no playlist name. """
 
     if g.last_opened:
@@ -1907,7 +1907,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
     g.content = generate_songlist_display()
 
 
-def show_help(_, choice):
+def show_help(choice):
     """ Print help message. """
 
     helps = {"download": ("playback dl listen watch show repeat playing"
@@ -1915,9 +1915,11 @@ def show_help(_, choice):
                           " playback".split()
                           ),
              "invoke": "mpsyt invocation".split(),
-             "search": ("user userpl pl pls n p url rm mv sw".split()),
-             "tips": ("dump set fullscreen player mpv mplayer -f -w "
-                      "-a".split(" ")),
+             "search": ("user userpl pl pls n p url rm mv sw edit "
+                        "editing result results move remove swap "
+                        "swop".split()),
+             "tips": ("undump dump set fullscreen player mpv mplayer -f -w "
+                      "-a adv advanced".split(" ")),
              "basic": ("r u i".split()),
              "playlists": ("save rename delete move rm ls mv sw add vp open"
                            " play view".split())
@@ -2455,10 +2457,6 @@ def play_url(url, override):
     if len(g.model.songs) == 1:
         play(override, "1", "_")
 
-    elif g.command_line:
-        g.content = ""
-        screen_update()
-
     if g.command_line:
         sys.exit("")
 
@@ -2471,10 +2469,6 @@ def dl_url(url):
 
     if len(g.model.songs) == 1:
         download("download", "1")
-
-    elif g.command_line:
-        g.content = ""
-        screen_update()
 
     if g.command_line:
         sys.exit("")
@@ -2592,7 +2586,7 @@ Then, when results are shown:
 {2}set search_music false{1} - search all YouTube categories.
 {2}set search_music true{1}  - search only YouTube music category.
 
-{2}/<query>{1} or {2}.<query>{1} to search. e.g., {2}/daft punk{1}
+{2}/<query>{1} or {2}.<query>{1} to search for videos. e.g., {2}/daft punk{1}
 {2}//<query>{1} or {2}..<query>{1} - search for YouTube playlists. e.g., \
 {2}//80's music{1}
 {2}n{1} and {2}p{1} - continue search to next/previous pages.
@@ -2690,6 +2684,8 @@ Use {2}-w{1}, {2}-f{1} or {2}-a{1} with your choice to override the configured\
 play items in windowed, fullscreen or audio modes.
 
 {2}dump{1} - to show entire contents of an opened YouTube playlist.
+       (useful for playing or saving entire playlists, user {2}undump{1} to \
+undo)
 {2}set{1} - view current configuration.
 {2}set fullscreen true{1} - play video content in fullscreen mode.
 {2}set player mpv{1} or {2}set player mplayer{1} - change player application
@@ -2711,7 +2707,7 @@ def main():
     open_from_file()
 
     # get cmd line input
-    inp = " ".join(sys.argv[1:])
+    arg_inp = " ".join(sys.argv[1:])
 
     # input types
     #yt = r'[^-_a-zA-Z0-9]?([-_a-zA-Z0-9]{11})[^-_a-zA-Z0-9]?
@@ -2729,17 +2725,17 @@ def main():
         'yt_url': r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
         'search': r'(?:search|\.|/)\s*([^./].{1,500})',
         'dl_url': r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
-        'play_pl': r'play\s{1,}(%s|\d+)$' % word,
-        'related': r'r\s?([\d]{1,4})$',
+        'play_pl': r'play\s+(%s|\d+)$' % word,
+        'related': r'r\s?(\d{1,4})$',
         'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
         'play_url': r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
         'nextprev': r'(n|p)$',
         'play_all': r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
         'user_pls': r'u(?:ser)?pl\s(.*)$',
-        'save_last': r'(save)\s*$',
+        'save_last': r'save\s*$',
         'pl_search': r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
         'setconfig': r'set\s*(\w+)\s*"?([^"]*)"?\s*$',
-        'show_help': r'(help|h)(?:\s+(-?\w+)\s*)?$',
+        'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
         'usersearch': r'user\s+([^s].{2,})$',
         'user_more': r'u\s?([\d]{1,4})$',
         'add_rm_all': r'(rm|add)\s(?:\*|all)$',
@@ -2762,24 +2758,25 @@ def main():
     while True:
         try:
             # get user input
-            userinput = inp or compat_input(prompt)
+            userinput = arg_inp or compat_input(prompt)
             userinput = userinput.strip()
 
-            if not g.command_line:
-                print(c.w)
+            #if not g.command_line:
+                #print(c.w)
 
         except (KeyboardInterrupt, EOFError):
             userinput = prompt_for_exit()
 
-        inp = None
+        arg_inp = None
 
         for k, v in regx.items():
             if v.match(userinput):
                 func, matches = k, v.match(userinput).groups()
 
                 if g.debug_mode:
-                    print(func)
-                    print(matches)
+                    dbg("input: %s", userinput)
+                    dbg("function call: %s", func)
+                    dbg("regx matches: %s", matches)
                     globals()[func](*matches)
 
                 else:
