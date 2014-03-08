@@ -1241,11 +1241,67 @@ def playsong(song, failcount=0, override=False):
         if mswin:
             stdout = stderr = fnull
 
-        try:
-            logging.info("playing %s (%s)", song.title, failcount)
-            dbg("calling %s", cmd)
-            subprocess.call(cmd, stdout=stdout, stderr=stderr)
+        def mplayer_status(popen_object):
+            # A: 175.6 (02:55.5) of 258.8 (04:18.7)  0.0%
+            re_mplayer_audio_status = re.compile(r"""
+                A:\s*(?P<sec>[0-9.]+)?
+                \s+
+                \((?P<elapsed_h>\d+:)??(?P<elapsed_m>\d+:)?(?P<elapsed_s>\d+)(?P<elapsed_ms>\.[0-9]+)?\)
+                \s+of\s+
+                (?P<sec_total>[0-9.]+)?
+            """, re.VERBOSE)
 
+            def make_status_line(match_object):
+                try:
+                    current = float(match_object.group('sec'))
+                except ValueError:
+                    current = 0.0
+
+                try:
+                    total = float(match_object.group('sec_total'))
+                except ValueError:
+                    total = 0.0
+
+                try:
+                    pct = (current / total * 100)
+                except ZeroDivisionError:
+                    pct = '?'
+
+                return "\r progress: %s%s%s (%.0f%%)" % (
+                    match_object.group('elapsed_h') or '',
+                    match_object.group('elapsed_m') or '00:',
+                    match_object.group('elapsed_s'),
+                    pct
+                )
+
+            buff = ''
+            last_displayed_line = None
+            while popen_object.poll() is None:
+                char = popen_object.stdout.read(1)
+                if char in '\r\n':
+                    m = re_mplayer_audio_status.match(buff)
+                    if m:
+                        line = make_status_line(m)
+                        if line != last_displayed_line:
+                            writeline(line)
+                            last_displayed_line = line
+                    buff = ''
+                else:
+                    buff += char
+
+        try:
+            cmd.remove('-really-quiet')
+            p = None
+            try:
+                logging.info("playing %s (%s)", song.title, failcount)
+                dbg("calling %s", cmd)
+                p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=stderr, bufsize=1)
+                mplayer_status(p)
+            finally:
+                try:
+                    p.terminate()  # make sure to kill mplayer if mpsyt crashes
+                except:
+                    pass
         except OSError:
             g.message = F('no player') % Config.PLAYER
             return
