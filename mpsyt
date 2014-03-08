@@ -1293,8 +1293,10 @@ def playsong(song, failcount=0, override=False):
                 p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE, stderr=stderr, bufsize=1)
                 mplayer_status(p)
             finally:
-                if p:
+                try:
                     p.terminate()  # make sure to kill mplayer if mpsyt crashes
+                except:
+                    pass
         except OSError:
             g.message = F('no player') % Config.PLAYER
             return
