@@ -376,11 +376,13 @@ class g(object):
     READLINE_FILE = None
     playerargs_defaults = {
         "mpv": {"def": "--really-quiet".split(),
+                "title": "-title",
                 "fs": "--fs",
                 "novid": "--no-video",
                 "ignidx": "--demuxer-lavf-o=fflags=+ignidx".split()
                 },
         "mplayer": {"def": ("-prefer-ipv4 -nolirc -really-quiet").split(),
+                    "title": "-title",
                     "fs": "-fs",
                     "novid": "-novideo",
                     #"ignidx": "-lavfdopts o=fflags=+ignidx".split()
@@ -1206,6 +1208,8 @@ def playsong(song, failcount=0, override=False):
     args = Config.PLAYERARGS[::]
 
     if has_known_player():
+        args.append(g.playerargs_defaults[Config.PLAYER]["title"])
+        args.append(song.title)
         novid_arg = g.playerargs_defaults[Config.PLAYER]["novid"]
         fs_arg = g.playerargs_defaults[Config.PLAYER]["fs"]
 
@@ -1239,6 +1243,7 @@ def playsong(song, failcount=0, override=False):
 
         try:
             logging.info("playing %s (%s)", song.title, failcount)
+            dbg("calling %s", cmd)
             subprocess.call(cmd, stdout=stdout, stderr=stderr)
 
         except OSError:
