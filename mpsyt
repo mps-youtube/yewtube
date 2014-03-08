@@ -376,7 +376,7 @@ class g(object):
     READLINE_FILE = None
     playerargs_defaults = {
         "mpv": {"def": "--really-quiet".split(),
-                "title": "-title",
+                "title": "--title",
                 "fs": "--fs",
                 "novid": "--no-video",
                 "ignidx": "--demuxer-lavf-o=fflags=+ignidx".split()
