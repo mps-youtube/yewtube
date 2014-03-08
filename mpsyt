@@ -543,7 +543,7 @@ def has_exefile(filename):
 def showconfig(_):
     """ Dump config data. """
 
-    s = "  %s%-17s%s : \"%s\"\n"
+    s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
 
     for setting in g.config:
