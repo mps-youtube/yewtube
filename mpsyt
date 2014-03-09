@@ -1684,6 +1684,7 @@ def open_save_view(action, name):
             saved = g.userpl.get(name)
 
         if saved and action == "open":
+            g.browse_mode = "normal"
             g.model.songs = g.active.songs = list(saved.songs)
             g.message = F("pl loaded") % name
             g.last_opened = name
@@ -1691,6 +1692,7 @@ def open_save_view(action, name):
             g.content = generate_songlist_display()
 
         elif saved and action == "view":
+            g.browse_mode = "normal"
             g.last_search_query = {}
             g.model.songs = list(saved.songs)
             g.message = F("pl viewed") % name
