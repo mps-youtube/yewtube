@@ -1160,28 +1160,12 @@ def writeline(text):
     sys.stdout.flush()
 
 
-def playsong(song, failcount=0, override=False):
-    """ Play song using config.PLAYER called with args config.PLAYERARGS."""
-    # pylint: disable=R0914
-    # too many local variables
-    # pylint: disable=R0912
-    # too many branches
+def generate_real_playerargs(song, override):
+    """ Generate args for player command.
 
-    # don't interrupt preloading:
-    while song.ytid in g.preloading:
-        writestatus("fetching item..")
-        time.sleep(0.1)
+    Returns args and songdata status.
 
-    try:
-        get_streams(song, force=failcount)
-
-    except (IOError, URLError, HTTPError, socket.timeout) as e:
-        g.message = F('cant get track') % str(e)
-        return
-
-    except ValueError:
-        g.message = F('track unresolved')
-        return
+    """
 
     video = Config.SHOW_VIDEO
     video = True if override in ("fullscreen", "window") else video
@@ -1228,7 +1212,34 @@ def playsong(song, failcount=0, override=False):
         if not video and song.urls["a"].get("ext") == "m4a":
             args += g.playerargs_defaults[Config.PLAYER]["ignidx"]
 
-    cmd = [Config.PLAYER] + args + [url]
+    return args + [url], songdata
+
+
+def playsong(song, failcount=0, override=False):
+    """ Play song using config.PLAYER called with args config.PLAYERARGS."""
+    # pylint: disable=R0914
+    # too many local variables
+    # pylint: disable=R0912
+    # too many branches
+
+    # don't interrupt preloading:
+    while song.ytid in g.preloading:
+        writestatus("fetching item..")
+        time.sleep(0.1)
+
+    try:
+        get_streams(song, force=failcount)
+
+    except (IOError, URLError, HTTPError, socket.timeout) as e:
+        g.message = F('cant get track') % str(e)
+        return
+
+    except ValueError:
+        g.message = F('track unresolved')
+        return
+
+    args, songdata = generate_real_playerargs(song, override)
+    cmd = [Config.PLAYER] + args
     stdout = stderr = None
     now = time.time()
     writestatus("%s; %s; %s Mb" % songdata)
