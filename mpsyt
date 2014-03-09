@@ -1861,6 +1861,13 @@ def preload(song, delay=2, override=False):
         g.preloading.remove(song.ytid)
 
 
+def reset_terminal():
+    """ Reset terminal control character and modes for non Win OS's. """
+
+    if not mswin:
+        subprocess.call(["tset", "-c"])
+
+
 def play_range(songlist, shuffle=False, repeat=False, override=False):
     """ Play a range of songs, exit cleanly on keyboard interrupt. """
 
@@ -1888,8 +1895,8 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
             except KeyboardInterrupt:
                 logging.info("Keyboard Interrupt")
-                print(c.w + "Stopping...                    " + c.w)
-                time.sleep(2)
+                print(c.w + "Stopping...                    ")
+                reset_terminal()
                 g.message = c.y + "Playback halted" + c.w
                 break
 
@@ -1913,7 +1920,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
             except KeyboardInterrupt:
                 print("Stopping...")
-                time.sleep(2)
+                reset_terminal()
                 g.message = c.y + "Playback halted" + c.w
                 break
 
