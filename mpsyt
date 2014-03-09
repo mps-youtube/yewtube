@@ -1895,7 +1895,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
             except KeyboardInterrupt:
                 logging.info("Keyboard Interrupt")
-                print(c.w + "Stopping...                    ")
+                print(c.w + "Stopping...                          ")
                 reset_terminal()
                 g.message = c.y + "Playback halted" + c.w
                 break
@@ -1919,7 +1919,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
                     g.content = generate_songlist_display()
 
             except KeyboardInterrupt:
-                print("Stopping...")
+                print(c.w + "Stopping...                          ")
                 reset_terminal()
                 g.message = c.y + "Playback halted" + c.w
                 break

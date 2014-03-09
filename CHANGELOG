@@ -19,8 +19,9 @@ Help / Documentation:
  - help <command> will show relevant help topic page e.g., help dlurl
 
 Bugfixes
- - mplayer / mpv window displays content title instead of url
+ - mplayer / mpv window now displays content title instead of url
  - Fixed issue with debug mode not logging to file
+ - Fixed issue with Python3 terminal output on playback interrupt
  - Changed year format in YT playlist result screen to last two digits.
       (Under some environments it was showing 4-digit years)
 
