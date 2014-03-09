@@ -1267,45 +1267,36 @@ def playsong(song, failcount=0, override=False):
         return
 
     cmd, songdata = generate_real_playerargs(song, override)
-    stdout = stderr = None
     now = time.time()
     songdata = "%s; %s; %s Mb" % songdata
     writestatus(songdata)
 
-    with open(os.devnull, "w") as fnull:
-
-        if "mpv" in Config.PLAYER or "mplayer" in Config.PLAYER:
-            stderr = fnull
-
-        if mswin:
-            stdout = stderr = fnull
-
-        for quiet in ('-really-quiet', '--really-quiet'):
-
-            try:
-                cmd.remove(quiet)
-
-            except ValueError:
-                pass
-
-        logging.info("playing %s (%s)", song.title, failcount)
-        dbg("calling %s", cmd)
+    for quiet in ('-really-quiet', '--really-quiet'):
 
         try:
-            p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
-                                 stderr=stderr, bufsize=1)
-            mplayer_status(p, songdata + ";")
+            cmd.remove(quiet)
 
-        except OSError:
-            g.message = F('no player') % Config.PLAYER
-            return
+        except ValueError:
+            pass
 
-        finally:
-            try:
-                p.terminate()  # make sure to kill mplayer if mpsyt crashes
+    logging.info("playing %s (%s)", song.title, failcount)
+    dbg("calling %s", cmd)
 
-            except:
-                pass
+    try:
+        p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT, bufsize=1)
+        mplayer_status(p, songdata + ";")
+
+    except OSError:
+        g.message = F('no player') % Config.PLAYER
+        return
+
+    finally:
+        try:
+            p.terminate()  # make sure to kill mplayer if mpsyt crashes
+
+        except:
+            pass
 
     fin = time.time()
     failed = fin - now < 1 and song.length > 1
