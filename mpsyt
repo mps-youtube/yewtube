@@ -1160,28 +1160,12 @@ def writeline(text):
     sys.stdout.flush()
 
 
-def playsong(song, failcount=0, override=False):
-    """ Play song using config.PLAYER called with args config.PLAYERARGS."""
-    # pylint: disable=R0914
-    # too many local variables
-    # pylint: disable=R0912
-    # too many branches
+def generate_real_playerargs(song, override):
+    """ Generate args for player command.
 
-    # don't interrupt preloading:
-    while song.ytid in g.preloading:
-        writestatus("fetching item..")
-        time.sleep(0.1)
+    Returns args and songdata status.
 
-    try:
-        get_streams(song, force=failcount)
-
-    except (IOError, URLError, HTTPError, socket.timeout) as e:
-        g.message = F('cant get track') % str(e)
-        return
-
-    except ValueError:
-        g.message = F('track unresolved')
-        return
+    """
 
     video = Config.SHOW_VIDEO
     video = True if override in ("fullscreen", "window") else video
@@ -1228,7 +1212,29 @@ def playsong(song, failcount=0, override=False):
         if not video and song.urls["a"].get("ext") == "m4a":
             args += g.playerargs_defaults[Config.PLAYER]["ignidx"]
 
-    cmd = [Config.PLAYER] + args + [url]
+    return [Config.PLAYER] + args + [url], songdata
+
+
+def playsong(song, failcount=0, override=False):
+    """ Play song using config.PLAYER called with args config.PLAYERARGS."""
+
+    # don't interrupt preloading:
+    while song.ytid in g.preloading:
+        writestatus("fetching item..")
+        time.sleep(0.1)
+
+    try:
+        get_streams(song, force=failcount)
+
+    except (IOError, URLError, HTTPError, socket.timeout) as e:
+        g.message = F('cant get track') % str(e)
+        return
+
+    except ValueError:
+        g.message = F('track unresolved')
+        return
+
+    cmd, songdata = generate_real_playerargs(song, override)
     stdout = stderr = None
     now = time.time()
     songdata = "%s; %s; %s Mb" % songdata
@@ -1767,6 +1773,7 @@ def open_save_view(action, name):
             saved = g.userpl.get(name)
 
         if saved and action == "open":
+            g.browse_mode = "normal"
             g.model.songs = g.active.songs = list(saved.songs)
             g.message = F("pl loaded") % name
             g.last_opened = name
@@ -1774,6 +1781,7 @@ def open_save_view(action, name):
             g.content = generate_songlist_display()
 
         elif saved and action == "view":
+            g.browse_mode = "normal"
             g.last_search_query = {}
             g.model.songs = list(saved.songs)
             g.message = F("pl viewed") % name
@@ -1936,6 +1944,13 @@ def preload(song, delay=2, override=False):
         g.preloading.remove(song.ytid)
 
 
+def reset_terminal():
+    """ Reset terminal control character and modes for non Win OS's. """
+
+    if not mswin:
+        subprocess.call(["tset", "-c"])
+
+
 def play_range(songlist, shuffle=False, repeat=False, override=False):
     """ Play a range of songs, exit cleanly on keyboard interrupt. """
 
@@ -1963,8 +1978,8 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
             except KeyboardInterrupt:
                 logging.info("Keyboard Interrupt")
-                print(c.w + "Stopping...                    " + c.w)
-                time.sleep(2)
+                print(c.w + "Stopping...                          ")
+                reset_terminal()
                 g.message = c.y + "Playback halted" + c.w
                 break
 
@@ -1987,8 +2002,8 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
                     g.content = generate_songlist_display()
 
             except KeyboardInterrupt:
-                print("Stopping...")
-                time.sleep(2)
+                print(c.w + "Stopping...                          ")
+                reset_terminal()
                 g.message = c.y + "Playback halted" + c.w
                 break
 
@@ -2021,9 +2036,8 @@ def show_help(choice):
 
     choice = "menu" if not choice else choice
     out, all_help = "", g.helptext
-    help_names = [x[0] for n, x in enumerate(all_help)]
+    help_names = [x[0] for x in all_help]
     choice = _get_near_name(choice, help_names)
-
 
     if choice == "menu" or not choice in help_names:
         out += "  %sHelp Topics%s" % (c.ul, c.w)
@@ -2781,6 +2795,39 @@ undo)
 ]
 
 
+def matchfunction(funcname, regex, userinput):
+    """ Match userinput against regex.
+
+    Call funcname, return True if matches.
+
+    """
+
+    if regex.match(userinput):
+        matches = regex.match(userinput).groups()
+
+        if g.debug_mode:
+            dbg("input: %s", userinput)
+            dbg("function call: %s", funcname)
+            dbg("regx matches: %s", matches)
+            globals()[funcname](*matches)
+
+        else:
+
+            try:
+                globals()[funcname](*matches)
+
+            except IndexError:
+                g.message = F('invalid range')
+                g.content = g.content or generate_songlist_display()
+
+            except (ValueError, IOError) as e:
+                g.message = F('cant get track') % str(e)
+                g.content = g.content or\
+                    generate_songlist_display(zeromsg=g.message)
+
+        return True
+
+
 def main():
     """ Main control loop. """
 
@@ -2849,39 +2896,15 @@ def main():
             userinput = arg_inp or compat_input(prompt)
             userinput = userinput.strip()
 
-            #if not g.command_line:
-                #print(c.w)
-
         except (KeyboardInterrupt, EOFError):
             userinput = prompt_for_exit()
 
         arg_inp = None
 
         for k, v in regx.items():
-            if v.match(userinput):
-                func, matches = k, v.match(userinput).groups()
-
-                if g.debug_mode:
-                    dbg("input: %s", userinput)
-                    dbg("function call: %s", func)
-                    dbg("regx matches: %s", matches)
-                    globals()[func](*matches)
-
-                else:
-
-                    try:
-                        globals()[func](*matches)
-
-                    except IndexError:
-                        g.message = F('invalid range')
-                        g.content = g.content or generate_songlist_display()
-
-                    except (ValueError, IOError) as e:
-                        g.message = F('cant get track') % str(e)
-                        g.content = g.content or\
-                            generate_songlist_display(zeromsg=g.message)
-
+            if matchfunction(k, v, userinput):
                 break
+
         else:
             g.content = g.content or generate_songlist_display()
 
