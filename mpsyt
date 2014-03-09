@@ -1212,15 +1212,11 @@ def generate_real_playerargs(song, override):
         if not video and song.urls["a"].get("ext") == "m4a":
             args += g.playerargs_defaults[Config.PLAYER]["ignidx"]
 
-    return args + [url], songdata
+    return [Config.PLAYER] + args + [url], songdata
 
 
 def playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
-    # pylint: disable=R0914
-    # too many local variables
-    # pylint: disable=R0912
-    # too many branches
 
     # don't interrupt preloading:
     while song.ytid in g.preloading:
@@ -1238,8 +1234,7 @@ def playsong(song, failcount=0, override=False):
         g.message = F('track unresolved')
         return
 
-    args, songdata = generate_real_playerargs(song, override)
-    cmd = [Config.PLAYER] + args
+    cmd, songdata = generate_real_playerargs(song, override)
     stdout = stderr = None
     now = time.time()
     writestatus("%s; %s; %s Mb" % songdata)
@@ -1951,9 +1946,8 @@ def show_help(choice):
 
     choice = "menu" if not choice else choice
     out, all_help = "", g.helptext
-    help_names = [x[0] for n, x in enumerate(all_help)]
+    help_names = [x[0] for x in all_help]
     choice = _get_near_name(choice, help_names)
-
 
     if choice == "menu" or not choice in help_names:
         out += "  %sHelp Topics%s" % (c.ul, c.w)
@@ -2711,6 +2705,39 @@ undo)
 ]
 
 
+def matchfunction(funcname, regex, userinput):
+    """ Match userinput against regex.
+
+    Call funcname, return True if matches.
+
+    """
+
+    if regex.match(userinput):
+        matches = regex.match(userinput).groups()
+
+        if g.debug_mode:
+            dbg("input: %s", userinput)
+            dbg("function call: %s", funcname)
+            dbg("regx matches: %s", matches)
+            globals()[funcname](*matches)
+
+        else:
+
+            try:
+                globals()[funcname](*matches)
+
+            except IndexError:
+                g.message = F('invalid range')
+                g.content = g.content or generate_songlist_display()
+
+            except (ValueError, IOError) as e:
+                g.message = F('cant get track') % str(e)
+                g.content = g.content or\
+                    generate_songlist_display(zeromsg=g.message)
+
+        return True
+
+
 def main():
     """ Main control loop. """
 
@@ -2779,39 +2806,15 @@ def main():
             userinput = arg_inp or compat_input(prompt)
             userinput = userinput.strip()
 
-            #if not g.command_line:
-                #print(c.w)
-
         except (KeyboardInterrupt, EOFError):
             userinput = prompt_for_exit()
 
         arg_inp = None
 
         for k, v in regx.items():
-            if v.match(userinput):
-                func, matches = k, v.match(userinput).groups()
-
-                if g.debug_mode:
-                    dbg("input: %s", userinput)
-                    dbg("function call: %s", func)
-                    dbg("regx matches: %s", matches)
-                    globals()[func](*matches)
-
-                else:
-
-                    try:
-                        globals()[func](*matches)
-
-                    except IndexError:
-                        g.message = F('invalid range')
-                        g.content = g.content or generate_songlist_display()
-
-                    except (ValueError, IOError) as e:
-                        g.message = F('cant get track') % str(e)
-                        g.content = g.content or\
-                            generate_songlist_display(zeromsg=g.message)
-
+            if matchfunction(k, v, userinput):
                 break
+
         else:
             g.content = g.content or generate_songlist_display()
 
