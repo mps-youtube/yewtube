@@ -2015,17 +2015,20 @@ def show_help(choice):
 
     helps = {"download": ("playback dl listen watch show repeat playing"
                           "show_video shuffle playurl dlurl d da dv all *"
-                          " playback".split()
+                          " play".split()
                           ),
-             "invoke": "mpsyt invocation".split(),
-             "search": ("user userpl pl pls n p url rm mv sw edit "
-                        "editing result results move remove swap "
-                        "swop".split()),
-             "tips": ("undump dump set fullscreen player mpv mplayer -f -w "
-                      "-a adv advanced".split(" ")),
+             "invoke": "command commands mpsyt invocation".split(),
+             "search": ("user userpl pl pls n p url rm mv sw edit move swap "
+                        "editing result results remove swop".split()),
+             "tips": ("undump dump -f -w -a adv advanced".split(" ")),
              "basic": ("r u i".split()),
+             "config": ("set checkupdate colours colors ddir directory player "
+                        "arguments args playerargs music search_music keys "
+                        "status show_status show_video video configuration "
+                        "fullscreen full screen folder player mpv mplayer"
+                        " settings default reset configure audio".split()),
              "playlists": ("save rename delete move rm ls mv sw add vp open"
-                           " play view".split())
+                           " view".split())
              }
 
     for topic, aliases in helps.items():
@@ -2041,7 +2044,7 @@ def show_help(choice):
 
     if choice == "menu" or not choice in help_names:
         out += "  %sHelp Topics%s" % (c.ul, c.w)
-        out += F('help topic', 2, 2)
+        out += F('help topic', 2, 1)
 
         for x in all_help:
             out += ("\n%s     %-10s%s : %s" % (c.y, x[0], c.w, x[1]))
@@ -2717,7 +2720,7 @@ Then, when results are shown:
 {2}da <number>{1} - download best available audio file.
 {2}dv <number>{1} - download best available video file.
 {2}dlurl <url or id>{1} download a YouTube video by url or video id
-{2}playurl <url or id>{1} to play a YouTube video by url or id
+{2}playurl <url or id>{1} play a YouTube video by url or id
 
 {2}all{1} or {2}*{1} - play all displayed items.
 {2}repeat <number(s)>{1} - play and repeat the specified items.
@@ -2757,15 +2760,36 @@ where this makes sense, so excluding commands that act on specific results.
 
 For example;
 
+  {2}mpsyt dlurl <url or id>{1} to download a YouTube video by url or id
+  {2}mpsyt playurl <url or id>{1} to play a YouTube video by url or id
   {2}mpsyt /mozart{1} to search
-  {2}mpsyt pls best songs of 2010{1} for a playlist search
+  {2}mpsyt //best songs of 2010{1} for a playlist search
   {2}mpsyt play <playlist name or ID>{1} to play a saved playlist
   {2}mpsyt ls{1} to list saved playlists
-  {2}mpsyt playurl <url or id>{1} to play a YouTube video by url or id
-  {2}mpsyt dlurl <url or id>{1} to download a YouTube video by url or id
 
 When invoking with playurl or dlurl, a less interactive session will be used
 and mpsyt will exit when done.
+""".format(c.ul, c.w, c.y, c.r)),
+
+    ("config", "Configuration Options", """
+{0}Configuration{1}
+
+{2}set{1} - view current configuration
+
+{2}set all default{1} - restore default settings
+
+{2}set checkupdate true|false{1} - if true, checks for updates on exit
+{2}set colours true|false{1} - use colours in display output
+{2}set ddir <download direcory>{1} - sets where files are saved
+{2}set fullscreen true|false{1} - if true, video output is full screen
+{2}set player <player app>{1} - use <player app> for playback
+{2}set playerargs <args>{1} - use specified arguments to player
+{2}set search_music true|false{1} - search only music or all categories
+{2}set show_mplayer_keys true|false{1} - show keyboard help for mplayer and mpv
+{2}set show_status true|false{1} - shows status messages
+{2}set show_video true|false{1} - if true, shows video output in player
+
+[Tip: you can use {2}1{1} and {2}0{1} in place of true and false]
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("tips", "Advanced Tips", """

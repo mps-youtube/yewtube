@@ -15,6 +15,7 @@ Changes:
 
 Help / Documentation:
  - Re-authored some help categories
+ - Documented configuration options (set commands)
  - Changed help <number> to help <topic>, removed menu from help pages
  - help <command> will show relevant help topic page e.g., help dlurl
 
