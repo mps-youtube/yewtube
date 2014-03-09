@@ -330,7 +330,7 @@ class Config(object):
     """ Holds various configuration values. """
 
     PLAYER = "mplayer"
-    PLAYERARGS = "-nolirc -prefer-ipv4 -really-quiet".split()
+    PLAYERARGS = "-nolirc -prefer-ipv4".split()
     COLOURS = False if mswin and not has_colorama else True
     CHECKUPDATE = True
     SHOW_MPLAYER_KEYS = True
@@ -407,13 +407,13 @@ class g(object):
     PLFILE = os.path.join(get_config_dir(), "playlist_v2")
     READLINE_FILE = None
     playerargs_defaults = {
-        "mpv": {"def": "--really-quiet".split(),
+        "mpv": {"def": [],
                 "title": "--title",
                 "fs": "--fs",
                 "novid": "--no-video",
                 "ignidx": "--demuxer-lavf-o=fflags=+ignidx".split()
                 },
-        "mplayer": {"def": ("-prefer-ipv4 -nolirc -really-quiet").split(),
+        "mplayer": {"def": "-prefer-ipv4 -nolirc".split(),
                     "title": "-title",
                     "fs": "-fs",
                     "novid": "-novideo",
