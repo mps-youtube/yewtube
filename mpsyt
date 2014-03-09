@@ -88,6 +88,37 @@ non_utf8 = mswin or not "UTF-8" in os.environ.get("LANG", "")
 member_var = lambda x: not(x.startswith("__") or callable(x))
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 
+# A: 175.6 (02:55.5) of 258.8 (04:18.7)  0.0%
+re_mplayer_audio_status = re.compile(r"""
+    A:\s*(?:[0-9.]+)?
+    \s+\(
+        (?:(?P<elapsed_h>\d+):)??
+        (?:(?P<elapsed_m>\d+):)?
+        (?P<elapsed_s>\d+)
+        (?:\.[0-9]+)?
+    \)\s+of\s+
+    (?:[0-9.]+)?
+    \s+\(
+        (?:(?P<total_h>\d+):)??
+        (?:(?P<total_m>\d+):)?
+        (?P<total_s>\d+)
+        (?:\.[0-9]+)?
+    \)
+""", re.VERBOSE)
+
+# A: 00:00:07 / 00:05:37 (2%) Cache: 46%
+# AV: 00:00:03 / 00:03:30 (1%) A-V: -0.000 Cache: 14%
+re_mpv_status = re.compile(r"""
+    AV?:\s*
+        (?P<elapsed_h>\d+):
+        (?P<elapsed_m>\d+):
+        (?P<elapsed_s>\d+)
+    \s+/\s+
+        (?P<total_h>\d+):
+        (?P<total_m>\d+):
+        (?P<total_s>\d+)
+""", re.VERBOSE)
+
 
 def non_utf8_encode(txt):
     """ Encoding for non UTF8 environments. """
@@ -1293,19 +1324,6 @@ def playsong(song, failcount=0, override=False):
 
 
 def mplayer_status(popen_object, prefix=""):
-
-    # A: 175.6 (02:55.5) of 258.8 (04:18.7)  0.0%
-    re_mplayer_audio_status = re.compile(r"""
-        A:\s*(?P<sec>[0-9.]+)?
-        \s+
-        \((?P<elapsed_h>\d+:)??
-        (?P<elapsed_m>\d+:)?
-        (?P<elapsed_s>\d+)
-        (?P<elapsed_ms>\.[0-9]+)?\)
-        \s+of\s+
-        (?P<sec_total>[0-9.]+)?
-    """, re.VERBOSE)
-
     buff = ''
     last_displayed_line = None
 
@@ -1314,12 +1332,14 @@ def mplayer_status(popen_object, prefix=""):
 
         if char in '\r\n':
             m = re_mplayer_audio_status.match(buff)
+            if not m:
+                m = re_mpv_status.match(buff)
 
             if m:
                 line = make_status_line(m)
 
                 if line != last_displayed_line:
-                    writestatus(prefix + line)
+                    writestatus(prefix + (" " if prefix else "") + line)
                     last_displayed_line = line
 
             buff = ''
@@ -1328,34 +1348,62 @@ def mplayer_status(popen_object, prefix=""):
             buff += char
 
 
-def make_status_line(match_object):
+def make_status_line(match_object, progress_bar_size=30):
+    """
+    Assume match_object have groups:
+        - elapsed_h
+        - elapsed_m
+        - elapsed_s
+        - total_h
+        - total_m
+        - total_s
+    which hold either an empty string or an integer value as a string
 
+    >>> make_status_line(re_mplayer_audio_status.match("A: 0.0 (0.0) of 258.8 (04:18.7)  0.0%"))
+    '00:00:00 (0%)   [>.............................]'
+    >>> make_status_line(re_mplayer_audio_status.match("A: 175.6 (02:55.5) of 258.8 (04:18.7)  0.0%"))
+    '00:02:55 (68%)  [====================>.........]'
+    >>> make_status_line(re_mplayer_audio_status.match("A: 258.8 (04:18.7) of 258.8 (04:18.7)  0.0%"))
+    '00:04:18 (100%) [=============================>]'
+
+    >>> make_status_line(re_mpv_status.match("A: 00:00:00 / 00:05:37 (0%) Cache: 46%"))
+    '00:00:00 (0%)   [>.............................]'
+    >>> make_status_line(re_mpv_status.match("A: 00:02:32 / 00:05:37 (45%) Cache: 60%"))
+    '00:02:32 (45%)  [=============>................]'
+    >>> make_status_line(re_mpv_status.match("A: 00:05:37 / 00:05:37 (100%) Cache: 100%"))
+    '00:05:37 (100%) [=============================>]'
+
+    >>> make_status_line(re_mpv_status.match("AV: 00:00:00 / 00:03:30 (0%) A-V: -0.000 Cache: 14%"))
+    '00:00:00 (0%)   [>.............................]'
+    >>> make_status_line(re_mpv_status.match("AV: 00:02:32 / 00:03:30 (73%) A-V: -0.000 Cache: 14%"))
+    '00:02:32 (72%)  [=====================>........]'
+    >>> make_status_line(re_mpv_status.match("AV: 00:03:30 / 00:03:30 (100%) A-V: -0.000 Cache: 100%"))
+    '00:03:30 (100%) [=============================>]'
+    """
     try:
-        current = float(match_object.group('sec'))
-
+        elapsed_h = int(match_object.group('elapsed_h') or '0')
+        elapsed_m = int(match_object.group('elapsed_m') or '0')
+        elapsed_s = int(match_object.group('elapsed_s') or '0')
+        total_h = int(match_object.group('total_h') or '0')
+        total_m = int(match_object.group('total_m') or '0')
+        total_s = int(match_object.group('total_s') or '0')
     except ValueError:
-        current = 0.0
+        return ""
+
+    current_sec = elapsed_h * 60 * 60 + elapsed_m * 60 + elapsed_s
+    total_sec = total_h * 60 * 60 + total_m * 60 + total_s
 
     try:
-        total = float(match_object.group('sec_total'))
-
-    except ValueError:
-        total = 0.0
-
-    try:
-        pct = (current / total * 100)
+        pct = (float(current_sec) / total_sec * 100)
 
     except ZeroDivisionError:
         pct = 0
 
-    status_line = " %s%s%s %s" % (
-        match_object.group('elapsed_h') or '',
-        match_object.group('elapsed_m') or '00:',
-        match_object.group('elapsed_s'),
+    status_line = "%02i:%02i:%02i %s" % (
+        elapsed_h, elapsed_m, elapsed_s,
         ("(%.0f%%)" % pct).ljust(6)
     )
 
-    progress_bar_size = 30
     progress = int(ceil(pct / 100 * progress_bar_size))
     status_line += " [%s]" % ("=" * (progress - 1) + ">").ljust(progress_bar_size, '.')
 
