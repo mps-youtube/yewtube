@@ -1285,7 +1285,7 @@ def playsong(song, failcount=0, override=False):
     try:
         p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT, bufsize=1)
-        mplayer_status(p, songdata + ";")
+        mplayer_status(p, songdata + ";", song.length)
 
     except OSError:
         g.message = F('no player') % Config.PLAYER
@@ -1314,7 +1314,7 @@ def playsong(song, failcount=0, override=False):
         save_to_file()
 
 
-def mplayer_status(popen_object, prefix=""):
+def mplayer_status(popen_object, prefix="", songlength=0):
     buff = ''
     last_displayed_line = None
 
@@ -1327,7 +1327,7 @@ def mplayer_status(popen_object, prefix=""):
                 m = re_mpv_status.match(buff)
 
             if m:
-                line = make_status_line(m)
+                line = make_status_line(m, songlength)
 
                 if line != last_displayed_line:
                     writestatus(prefix + (" " if prefix else "") + line)
@@ -1339,7 +1339,7 @@ def mplayer_status(popen_object, prefix=""):
             buff += char
 
 
-def make_status_line(match_object, progress_bar_size=30):
+def make_status_line(match_object, total_sec=0, progress_bar_size=30):
     """
     Assume match_object have groups:
         - elapsed_h
@@ -1375,14 +1375,16 @@ def make_status_line(match_object, progress_bar_size=30):
         elapsed_h = int(match_object.group('elapsed_h') or '0')
         elapsed_m = int(match_object.group('elapsed_m') or '0')
         elapsed_s = int(match_object.group('elapsed_s') or '0')
-        total_h = int(match_object.group('total_h') or '0')
-        total_m = int(match_object.group('total_m') or '0')
-        total_s = int(match_object.group('total_s') or '0')
+        #total_h = int(match_object.group('total_h') or '0')
+        #total_m = int(match_object.group('total_m') or '0')
+        #total_s = int(match_object.group('total_s') or '0')
     except ValueError:
         return ""
 
     current_sec = elapsed_h * 60 * 60 + elapsed_m * 60 + elapsed_s
-    total_sec = total_h * 60 * 60 + total_m * 60 + total_s
+    #total_sec = total_h * 60 * 60 + total_m * 60 + total_s
+    # mpv sometimes reports wrong total time with fflags=+ignidx
+    # e.g; A: 00:00:18 / 00:00:10 (100%) Cache: 47%
 
     try:
         pct = (float(current_sec) / total_sec * 100)
@@ -1396,7 +1398,8 @@ def make_status_line(match_object, progress_bar_size=30):
     )
 
     progress = int(ceil(pct / 100 * progress_bar_size))
-    status_line += " [%s]" % ("=" * (progress - 1) + ">").ljust(progress_bar_size, '.')
+    status_line += " [%s]" % ("=" * (progress - 1) +
+                              ">").ljust(progress_bar_size, '.')
 
     return status_line
 
