@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
+from math import ceil
 
 __version__ = "0.01.38"
 __author__ = "nagev"
@@ -1345,14 +1346,20 @@ def make_status_line(match_object):
         pct = (current / total * 100)
 
     except ZeroDivisionError:
-        pct = '?'
+        pct = 0
 
-    return " %s%s%s (%.0f%%)" % (
+    status_line = " %s%s%s %s" % (
         match_object.group('elapsed_h') or '',
         match_object.group('elapsed_m') or '00:',
         match_object.group('elapsed_s'),
-        pct
+        ("(%.0f%%)" % pct).ljust(6)
     )
+
+    progress_bar_size = 30
+    progress = int(ceil(pct / 100 * progress_bar_size))
+    status_line += " [%s]" % ("=" * (progress - 1) + ">").ljust(progress_bar_size, '.')
+
+    return status_line
 
 
 def _search(url, progtext, qs=None, splash=True):
