@@ -1125,7 +1125,7 @@ def generate_songlist_display(song=False, zeromsg=None):
         return logo(c.g) + "\n\n"
 
     fmtrow = "%s%-5s %s %-6s  %s\n"
-    fmthd = "%s%-5s %-65s %-6s%s\n"
+    fmthd = "%s%-5s %-64s %-6s%s\n"
     head = (c.ul, "Item", "Title", "Length", c.w)
     out = "\n" + fmthd % head
 
@@ -1134,7 +1134,7 @@ def generate_songlist_display(song=False, zeromsg=None):
         length = fmt_time(x.length)
         length = " " * (8 - len(length)) + length
         title = x.title or "unknown title"
-        title = uea_rpad(63, title)
+        title = uea_rpad(62, title)
 
         if not song or song != songs[n]:
             out += (fmtrow % (col, str(n + 1), title, str(length), c.w))
