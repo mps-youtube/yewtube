@@ -88,37 +88,6 @@ non_utf8 = mswin or not "UTF-8" in os.environ.get("LANG", "")
 member_var = lambda x: not(x.startswith("__") or callable(x))
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 
-# A: 175.6 (02:55.5) of 258.8 (04:18.7)  0.0%
-re_mplayer_audio_status = re.compile(r"""
-    A:\s*(?:[0-9.]+)?
-    \s+\(
-        (?:(?P<elapsed_h>\d+):)??
-        (?:(?P<elapsed_m>\d+):)?
-        (?P<elapsed_s>\d+)
-        (?:\.[0-9]+)?
-    \)\s+of\s+
-    (?:[0-9.]+)?
-    \s+\(
-        (?:(?P<total_h>\d+):)??
-        (?:(?P<total_m>\d+):)?
-        (?P<total_s>\d+)
-        (?:\.[0-9]+)?
-    \)
-""", re.VERBOSE)
-
-# A: 00:00:07 / 00:05:37 (2%) Cache: 46%
-# AV: 00:00:03 / 00:03:30 (1%) A-V: -0.000 Cache: 14%
-re_mpv_status = re.compile(r"""
-    AV?:\s*
-        (?P<elapsed_h>\d+):
-        (?P<elapsed_m>\d+):
-        (?P<elapsed_s>\d+)
-    \s+/\s+
-        (?P<total_h>\d+):
-        (?P<total_m>\d+):
-        (?P<total_s>\d+)
-""", re.VERBOSE)
-
 
 def non_utf8_encode(txt):
     """ Encoding for non UTF8 environments. """
@@ -1219,8 +1188,7 @@ def generate_real_playerargs(song, override):
     url = stream.replace("https://", "http://")
     key = "a" if not video else "v"
     size = get_size(song, is_video=video)
-    trackinfo = song.title if g.command_line else song.ytid
-    songdata = trackinfo, song.urls[key]['ext'], int(size / (1024 ** 2))
+    songdata = song.ytid, song.urls[key]['ext'], int(size / (1024 ** 2))
     args = Config.PLAYERARGS[::]
 
     if has_known_player():
@@ -1315,6 +1283,47 @@ def playsong(song, failcount=0, override=False):
 
 
 def mplayer_status(popen_object, prefix="", songlength=0):
+    """ Capture time progress from player output. Write status line. """
+
+    # A: 175.6 (02:55.5) of 258.8 (04:18.7)  0.0%
+    re_mplayer_audio_status = re.compile(r"""
+        A:\s*(?:[0-9.]+)?
+        \s+\(
+            (?:(?P<elapsed_h>\d+):)??
+            (?:(?P<elapsed_m>\d+):)?
+            (?P<elapsed_s>\d+)
+            (?:\.[0-9]+)?
+        \)\s+of\s+
+        (?:[0-9.]+)?
+        \s+\(
+            (?:(?P<total_h>\d+):)??
+            (?:(?P<total_m>\d+):)?
+            (?P<total_s>\d+)
+            (?:\.[0-9]+)?
+        \)
+    """, re.VERBOSE)
+
+    #A:  27.6 V:  27.6 A-V:  0.000 ct:  0.040   0/  0 68%  4%  2.5% 2 0 45%
+    re_mplayer_video_status = re.compile(r"""
+        A:\s*(?P<elapsed_s>\d+)\.\d\s*
+        V:\s*\d+\.\d\s*
+        (?P<elapsed_m>) # no minutes available, match nothing
+        (?P<elapsed_h>) # no hour available, match nothing
+        A-V:\s*\d.\d+\s*ct:""", re.VERBOSE)
+
+    # A: 00:00:07 / 00:05:37 (2%) Cache: 46%
+    # AV: 00:00:03 / 00:03:30 (1%) A-V: -0.000 Cache: 14%
+    re_mpv_status = re.compile(r"""
+        AV?:\s*
+            (?P<elapsed_h>\d+):
+            (?P<elapsed_m>\d+):
+            (?P<elapsed_s>\d+)
+        \s+/\s+
+            (?P<total_h>\d+):
+            (?P<total_m>\d+):
+            (?P<total_s>\d+)
+    """, re.VERBOSE)
+
     buff = ''
     last_displayed_line = None
 
@@ -1322,25 +1331,28 @@ def mplayer_status(popen_object, prefix="", songlength=0):
         char = popen_object.stdout.read(1).decode('utf-8')
 
         if char in '\r\n':
-            m = re_mplayer_audio_status.match(buff)
-            if not m:
-                m = re_mpv_status.match(buff)
 
-            if m:
-                line = make_status_line(m, songlength)
+            for regexp in (re_mplayer_audio_status, re_mpv_status,
+                           re_mplayer_video_status):
+                m = regexp.match(buff)
 
-                if line != last_displayed_line:
-                    writestatus(prefix + (" " if prefix else "") + line)
-                    last_displayed_line = line
+                if m:
+                    line = make_status_line(m, songlength)
+
+                    if line != last_displayed_line:
+                        writestatus(prefix + (" " if prefix else "") + line)
+                        last_displayed_line = line
+                        break
 
             buff = ''
-        else:
 
+        else:
             buff += char
 
 
 def make_status_line(match_object, total_sec=0, progress_bar_size=30):
-    """
+    """ Format progress line output.
+
     Assume match_object have groups:
         - elapsed_h
         - elapsed_m
@@ -1350,26 +1362,27 @@ def make_status_line(match_object, total_sec=0, progress_bar_size=30):
         - total_s
     which hold either an empty string or an integer value as a string
 
-    >>> make_status_line(re_mplayer_audio_status.match("A: 0.0 (0.0) of 258.8 (04:18.7)  0.0%"))
+    >> make_status_line(re_mplayer_audio_status.match("A: 0.0 (0.0) of 258.8 (04:18.7)  0.0%"))
     '00:00:00 (0%)   [>.............................]'
-    >>> make_status_line(re_mplayer_audio_status.match("A: 175.6 (02:55.5) of 258.8 (04:18.7)  0.0%"))
+    >> make_status_line(re_mplayer_audio_status.match("A: 175.6 (02:55.5) of 258.8 (04:18.7)  0.0%"))
     '00:02:55 (68%)  [====================>.........]'
-    >>> make_status_line(re_mplayer_audio_status.match("A: 258.8 (04:18.7) of 258.8 (04:18.7)  0.0%"))
+    >> make_status_line(re_mplayer_audio_status.match("A: 258.8 (04:18.7) of 258.8 (04:18.7)  0.0%"))
     '00:04:18 (100%) [=============================>]'
 
-    >>> make_status_line(re_mpv_status.match("A: 00:00:00 / 00:05:37 (0%) Cache: 46%"))
+    >> make_status_line(re_mpv_status.match("A: 00:00:00 / 00:05:37 (0%) Cache: 46%"))
     '00:00:00 (0%)   [>.............................]'
-    >>> make_status_line(re_mpv_status.match("A: 00:02:32 / 00:05:37 (45%) Cache: 60%"))
+    >> make_status_line(re_mpv_status.match("A: 00:02:32 / 00:05:37 (45%) Cache: 60%"))
     '00:02:32 (45%)  [=============>................]'
-    >>> make_status_line(re_mpv_status.match("A: 00:05:37 / 00:05:37 (100%) Cache: 100%"))
+    >> make_status_line(re_mpv_status.match("A: 00:05:37 / 00:05:37 (100%) Cache: 100%"))
     '00:05:37 (100%) [=============================>]'
 
-    >>> make_status_line(re_mpv_status.match("AV: 00:00:00 / 00:03:30 (0%) A-V: -0.000 Cache: 14%"))
+    >> make_status_line(re_mpv_status.match("AV: 00:00:00 / 00:03:30 (0%) A-V: -0.000 Cache: 14%"))
     '00:00:00 (0%)   [>.............................]'
-    >>> make_status_line(re_mpv_status.match("AV: 00:02:32 / 00:03:30 (73%) A-V: -0.000 Cache: 14%"))
+    >> make_status_line(re_mpv_status.match("AV: 00:02:32 / 00:03:30 (73%) A-V: -0.000 Cache: 14%"))
     '00:02:32 (72%)  [=====================>........]'
-    >>> make_status_line(re_mpv_status.match("AV: 00:03:30 / 00:03:30 (100%) A-V: -0.000 Cache: 100%"))
+    >> make_status_line(re_mpv_status.match("AV: 00:03:30 / 00:03:30 (100%) A-V: -0.000 Cache: 100%"))
     '00:03:30 (100%) [=============================>]'
+
     """
     try:
         elapsed_h = int(match_object.group('elapsed_h') or '0')
@@ -1386,6 +1399,15 @@ def make_status_line(match_object, total_sec=0, progress_bar_size=30):
     # mpv sometimes reports wrong total time with fflags=+ignidx
     # e.g; A: 00:00:18 / 00:00:10 (100%) Cache: 47%
 
+    # mplayer video output status shows only elapsed seconds
+    if elapsed_s > 59:
+        elapsed_m = current_sec // 60
+        elapsed_s %= 60
+
+        if elapsed_m > 59:
+            elapsed_h = elapsed_m // 60
+            elapsed_m %= 60
+
     try:
         pct = (float(current_sec) / total_sec * 100)
 
@@ -1394,12 +1416,12 @@ def make_status_line(match_object, total_sec=0, progress_bar_size=30):
 
     status_line = "%02i:%02i:%02i %s" % (
         elapsed_h, elapsed_m, elapsed_s,
-        ("(%.0f%%)" % pct).ljust(6)
+        ("[%.0f%%]" % pct).ljust(6)
     )
 
     progress = int(ceil(pct / 100 * progress_bar_size))
     status_line += " [%s]" % ("=" * (progress - 1) +
-                              ">").ljust(progress_bar_size, '.')
+                              ">").ljust(progress_bar_size, ' ')
 
     return status_line
 
@@ -2606,7 +2628,7 @@ def play_url(url, override):
 
     override = override if override else "_"
     g.browse_mode = "normal"
-    yt_url(url)
+    yt_url(url, print_title=1)
 
     if len(g.model.songs) == 1:
         play(override, "1", "_")
@@ -2628,7 +2650,7 @@ def dl_url(url):
         sys.exit("")
 
 
-def yt_url(url):
+def yt_url(url, print_title=0):
     """ Acess a video by url. """
 
     try:
@@ -2645,6 +2667,9 @@ def yt_url(url):
 
     if not g.command_line:
         g.content = generate_songlist_display()
+
+    if print_title:
+        print(v.title)
 
 
 def dump(un):
