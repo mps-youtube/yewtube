@@ -1303,13 +1303,16 @@ def mplayer_status(popen_object, prefix="", songlength=0):
         \)
     """, re.VERBOSE)
 
-    #A:  27.6 V:  27.6 A-V:  0.000 ct:  0.040   0/  0 68%  4%  2.5% 2 0 45%
+    #A:  87.6 V:  87.6 A-V:  0.000 ct:  0.040   0/  0 68%  4%  2.5% 2 0 45%
+    #A:  13.1 (13.0) of 7273.3 ( 2:01:13.3)  4.4% 46%  # -novideo mode
+    #A:  75.2 (01:15.2) of 7273.3 ( 2:01:13.3)  2.4% 47% # -novideo mode > 60s
     re_mplayer_video_status = re.compile(r"""
         A:\s*(?P<elapsed_s>\d+)\.\d\s*
-        V:\s*\d+\.\d\s*
+        (?: V: \s*  \d+\.\d \s* A-V: \s* \d.\d+\s*ct:
+        |\([\d:\.]{3,10}\) \s+ of \s+ \d+ )  # -novideo mode
         (?P<elapsed_m>) # no minutes available, match nothing
         (?P<elapsed_h>) # no hour available, match nothing
-        A-V:\s*\d.\d+\s*ct:""", re.VERBOSE)
+        """, re.VERBOSE)
 
     # A: 00:00:07 / 00:05:37 (2%) Cache: 46%
     # AV: 00:00:03 / 00:03:30 (1%) A-V: -0.000 Cache: 14%
@@ -1351,7 +1354,7 @@ def mplayer_status(popen_object, prefix="", songlength=0):
             buff += char
 
 
-def make_status_line(match_object, total_sec=0, progress_bar_size=32):
+def make_status_line(match_object, total_sec=0, progress_bar_size=30):
     """ Format progress line output.
 
     Assume match_object have groups:
