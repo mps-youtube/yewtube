@@ -943,6 +943,7 @@ def playlists_display():
 
 def mplayer_help(short=True):
     """ Mplayer help.  """
+    # pylint: disable=W1402
 
     volume = "[{0}9{1}] volume [{0}0{1}]"
     volume = volume if short else volume + "      [{0}ctrl-c{1}] return"
@@ -1250,7 +1251,7 @@ def playsong(song, failcount=0, override=False):
                 cmd.remove("-really-quiet")
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT, bufsize=1)
+                                 stderr=subprocess.STDOUT, bufsize=1)
             mplayer_status(p, songdata + ";", song.length)
 
         else:
