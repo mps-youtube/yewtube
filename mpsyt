@@ -1288,69 +1288,23 @@ def playsong(song, failcount=0, override=False):
 def mplayer_status(popen_object, prefix="", songlength=0):
     """ Capture time progress from player output. Write status line. """
 
-    # A: 175.6 (02:55.5) of 258.8 (04:18.7)  0.0%
-    re_mplayer_audio_status = re.compile(r"""
-        A:\s*(?:[0-9.]+)?
-        \s+\(
-            (?:(?P<elapsed_h>\d+):)??
-            (?:(?P<elapsed_m>\d+):)?
-            (?P<elapsed_s>\d+)
-            (?:\.[0-9]+)?
-        \)\s+of\s+
-        (?:[0-9.]+)?
-        \s+\(
-            (?:(?P<total_h>\d+):)??
-            (?:(?P<total_m>\d+):)?
-            (?P<total_s>\d+)
-            (?:\.[0-9]+)?
-        \)
-    """, re.VERBOSE)
-
-    #A:  87.6 V:  87.6 A-V:  0.000 ct:  0.040   0/  0 68%  4%  2.5% 2 0 45%
-    #A:  13.1 (13.0) of 7273.3 ( 2:01:13.3)  4.4% 46%  # -novideo mode
-    #A:  75.2 (01:15.2) of 7273.3 ( 2:01:13.3)  2.4% 47% # -novideo mode > 60s
-    re_mplayer_video_status = re.compile(r"""
-        A:\s*(?P<elapsed_s>\d+)\.\d\s*
-        (?: V: \s*  \d+\.\d \s* A-V: \s* \d.\d+\s*ct:
-        |\([\d:\.]{3,10}\) \s+ of \s+ \d+ )  # -novideo mode
-        (?P<elapsed_m>) # no minutes available, match nothing
-        (?P<elapsed_h>) # no hour available, match nothing
-        """, re.VERBOSE)
-
-    # A: 00:00:07 / 00:05:37 (2%) Cache: 46%
-    # AV: 00:00:03 / 00:03:30 (1%) A-V: -0.000 Cache: 14%
-    re_mpv_status = re.compile(r"""
-        AV?:\s*
-            (?P<elapsed_h>\d+):
-            (?P<elapsed_m>\d+):
-            (?P<elapsed_s>\d+)
-        \s+/\s+
-            (?P<total_h>\d+):
-            (?P<total_m>\d+):
-            (?P<total_s>\d+)
-    """, re.VERBOSE)
-
-    buff = ''
+    # A: 175.6
+    re_mplayer = re.compile(r"A:\s*(?P<elapsed_s>\d+)\.\d\s*")
     last_displayed_line = None
+    buff = ''
 
     while popen_object.poll() is None:
-
         char = popen_object.stdout.read(1).decode('utf-8')
 
         if char in '\r\n':
+            m = re_mplayer.match(buff)
 
-            for regexp in (re_mplayer_audio_status, re_mpv_status,
-                           re_mplayer_video_status):
-                m = regexp.match(buff)
+            if m:
+                line = make_status_line(m, songlength)
 
-                if m:
-                    line = make_status_line(m, songlength)
-
-                    if line != last_displayed_line:
-                        writestatus(prefix + (" " if prefix else "") + line)
-                        last_displayed_line = line
-
-                    break
+                if line != last_displayed_line:
+                    writestatus(prefix + (" " if prefix else "") + line)
+                    last_displayed_line = line
 
             buff = ''
 
@@ -1358,56 +1312,35 @@ def mplayer_status(popen_object, prefix="", songlength=0):
             buff += char
 
 
-def make_status_line(match_object, total_sec=0, progress_bar_size=30):
-    """ Format progress line output.
+def make_status_line(match_object, songlength=0, progress_bar_size=30):
+    """ Format progress line output.  """
 
-    Assume match_object have groups:
-        - elapsed_h
-        - elapsed_m
-        - elapsed_s
-        - total_h
-        - total_m
-        - total_s
-    which hold either an empty string or an integer value as a string
-
-    """
     try:
-        elapsed_h = int(match_object.group('elapsed_h') or '0')
-        elapsed_m = int(match_object.group('elapsed_m') or '0')
         elapsed_s = int(match_object.group('elapsed_s') or '0')
-        #total_h = int(match_object.group('total_h') or '0')
-        #total_m = int(match_object.group('total_m') or '0')
-        #total_s = int(match_object.group('total_s') or '0')
+
     except ValueError:
         return ""
 
-    current_sec = elapsed_h * 60 * 60 + elapsed_m * 60 + elapsed_s
-    #total_sec = total_h * 60 * 60 + total_m * 60 + total_s
-    # mpv sometimes reports wrong total time with fflags=+ignidx
-    # e.g; A: 00:00:18 / 00:00:10 (100%) Cache: 47%
+    display_s = elapsed_s
+    display_h = display_m = 0
 
-    # mplayer video output status shows only elapsed seconds
-    if elapsed_s > 59:
-        elapsed_m = current_sec // 60
-        elapsed_s %= 60
+    if elapsed_s >= 60:
+        display_m = display_s // 60
+        display_s %= 60
 
-        if elapsed_m > 59:
-            elapsed_h = elapsed_m // 60
-            elapsed_m %= 60
+        if display_m >= 100:
+            display_h = display_m // 60
+            display_m %= 60
 
-    try:
-        pct = (float(current_sec) / total_sec * 100)
-
-    except ZeroDivisionError:
-        pct = 0
+    pct = (float(elapsed_s) / songlength * 100) if songlength else 0
 
     status_line = "%02i:%02i:%02i %s" % (
-        elapsed_h, elapsed_m, elapsed_s,
+        display_h, display_m, display_s,
         ("[%.0f%%]" % pct).ljust(6)
     )
 
     progress = int(ceil(pct / 100 * progress_bar_size))
-    status_line += " [%s]" % ("=" * (progress - 1) +
+    status_line += " [%s]" % ("-" * (progress - 1) +
                               ">").ljust(progress_bar_size, ' ')
 
     return status_line
