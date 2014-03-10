@@ -1342,7 +1342,8 @@ def mplayer_status(popen_object, prefix="", songlength=0):
                     if line != last_displayed_line:
                         writestatus(prefix + (" " if prefix else "") + line)
                         last_displayed_line = line
-                        break
+
+                    break
 
             buff = ''
 
@@ -1350,7 +1351,7 @@ def mplayer_status(popen_object, prefix="", songlength=0):
             buff += char
 
 
-def make_status_line(match_object, total_sec=0, progress_bar_size=30):
+def make_status_line(match_object, total_sec=0, progress_bar_size=32):
     """ Format progress line output.
 
     Assume match_object have groups:
@@ -1361,27 +1362,6 @@ def make_status_line(match_object, total_sec=0, progress_bar_size=30):
         - total_m
         - total_s
     which hold either an empty string or an integer value as a string
-
-    >> make_status_line(re_mplayer_audio_status.match("A: 0.0 (0.0) of 258.8 (04:18.7)  0.0%"))
-    '00:00:00 (0%)   [>.............................]'
-    >> make_status_line(re_mplayer_audio_status.match("A: 175.6 (02:55.5) of 258.8 (04:18.7)  0.0%"))
-    '00:02:55 (68%)  [====================>.........]'
-    >> make_status_line(re_mplayer_audio_status.match("A: 258.8 (04:18.7) of 258.8 (04:18.7)  0.0%"))
-    '00:04:18 (100%) [=============================>]'
-
-    >> make_status_line(re_mpv_status.match("A: 00:00:00 / 00:05:37 (0%) Cache: 46%"))
-    '00:00:00 (0%)   [>.............................]'
-    >> make_status_line(re_mpv_status.match("A: 00:02:32 / 00:05:37 (45%) Cache: 60%"))
-    '00:02:32 (45%)  [=============>................]'
-    >> make_status_line(re_mpv_status.match("A: 00:05:37 / 00:05:37 (100%) Cache: 100%"))
-    '00:05:37 (100%) [=============================>]'
-
-    >> make_status_line(re_mpv_status.match("AV: 00:00:00 / 00:03:30 (0%) A-V: -0.000 Cache: 14%"))
-    '00:00:00 (0%)   [>.............................]'
-    >> make_status_line(re_mpv_status.match("AV: 00:02:32 / 00:03:30 (73%) A-V: -0.000 Cache: 14%"))
-    '00:02:32 (72%)  [=====================>........]'
-    >> make_status_line(re_mpv_status.match("AV: 00:03:30 / 00:03:30 (100%) A-V: -0.000 Cache: 100%"))
-    '00:03:30 (100%) [=============================>]'
 
     """
     try:
