@@ -3,6 +3,7 @@ Mar 10 2014
 
 Features:
  - Added time / progress bar indicator. Big thanks to Thomas LÉVEIL!
+    (mplayer only)
  - Added command to retrieve YouTube user playlists; 
     userpl {username} or upl {username}
  - Added command to retrieve related videos; r{number}
@@ -12,7 +13,7 @@ Features:
  - Implemented less interactive mode for command line invocation with dlurl
 
 Changes:
- - // or .. to search for YouTube playlists
+ - // or .. prefix to search for YouTube playlists (was plsearch / pls)
 
 Help / Documentation:
  - help <command> will show relevant help topic page e.g., help dlurl
@@ -22,7 +23,7 @@ Help / Documentation:
 
 Bugfixes
  - mplayer / mpv window now displays content title instead of url
- - Fixed issue with Python3 terminal output on playback interrupt
+ - Fixed issue with Python3 terminal output on playback ctrl-c interrupt
  - Fixed issue with debug mode not logging to file
  - Changed year format in YT playlist result screen to last two digits.
       (Under some environments it was showing 4-digit years)
