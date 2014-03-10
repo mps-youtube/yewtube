@@ -376,7 +376,7 @@ class g(object):
     PLFILE = os.path.join(get_config_dir(), "playlist_v2")
     READLINE_FILE = None
     playerargs_defaults = {
-        "mpv": {"def": [],
+        "mpv": {"def": ['--really-quiet'],
                 "title": "--title",
                 "fs": "--fs",
                 "novid": "--no-video",
@@ -1239,21 +1239,24 @@ def playsong(song, failcount=0, override=False):
     songdata = "%s; %s; %s Mb" % songdata
     writestatus(songdata)
 
-    for quiet in ('-really-quiet', '--really-quiet'):
-
-        try:
-            cmd.remove(quiet)
-
-        except ValueError:
-            pass
-
     logging.info("playing %s (%s)", song.title, failcount)
     dbg("calling %s", cmd)
 
     try:
-        p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT, bufsize=1)
-        mplayer_status(p, songdata + ";", song.length)
+
+        if "mplayer" in Config.PLAYER:
+
+            if "-really-quiet" in cmd:
+                cmd.remove("-really-quiet")
+
+            p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, bufsize=1)
+            mplayer_status(p, songdata + ";", song.length)
+
+        else:
+
+            with open(os.devnull, "w") as devnull:
+                subprocess.call(cmd, stderr=devnull)
 
     except OSError:
         g.message = F('no player') % Config.PLAYER
@@ -1263,7 +1266,7 @@ def playsong(song, failcount=0, override=False):
         try:
             p.terminate()  # make sure to kill mplayer if mpsyt crashes
 
-        except:
+        except (OSError, AttributeError, UnboundLocalError):
             pass
 
     fin = time.time()
@@ -1331,6 +1334,7 @@ def mplayer_status(popen_object, prefix="", songlength=0):
     last_displayed_line = None
 
     while popen_object.poll() is None:
+
         char = popen_object.stdout.read(1).decode('utf-8')
 
         if char in '\r\n':
