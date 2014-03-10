@@ -1341,7 +1341,7 @@ def make_status_line(match_object, songlength=0, progress_bar_size=30):
     )
 
     progress = int(ceil(pct / 100 * progress_bar_size))
-    status_line += " [%s]" % ("-" * (progress - 1) +
+    status_line += " [%s]" % ("=" * (progress - 1) +
                               ">").ljust(progress_bar_size, ' ')
 
     return status_line
