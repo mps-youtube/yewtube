@@ -255,6 +255,10 @@ To list the uploaded videos of a YouTube user:
 
     user <username>
 
+To search videos uploaded by a YouTube user:
+
+    user <username>/<search terms>
+
 To list playlists created by a YouTube user:
 
     userpl <username> 
