@@ -1,3 +1,8 @@
+Version 0.01.40
+Mar 11 2014
+
+ - Bugfix release, corrects UnicodeDecode error
+
 Version 0.01.39
 Mar 10 2014
 
