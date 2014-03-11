@@ -1295,7 +1295,7 @@ def mplayer_status(popen_object, prefix="", songlength=0):
     buff = ''
 
     while popen_object.poll() is None:
-        char = popen_object.stdout.read(1)
+        char = popen_object.stdout.read(1).decode("utf-8")
 
         if char in '\r\n':
             m = re_mplayer.match(buff)
