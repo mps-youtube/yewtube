@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# encoding: utf-8
+
 """
 mps-youtube.
 
@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-from __future__ import print_function, unicode_literals
+from __future__ import print_function
 from math import ceil
 
 __version__ = "0.01.39"
@@ -947,8 +947,8 @@ def mplayer_help(short=True):
 
     volume = "[{0}9{1}] volume [{0}0{1}]"
     volume = volume if short else volume + "      [{0}ctrl-c{1}] return"
-    seek = "[{0}\u2190{1}] seek [{0}\u2192{1}]"
-    pause = "[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
+    seek = u"[{0}\u2190{1}] seek [{0}\u2192{1}]"
+    pause = u"[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
 
     if non_utf8:
         seek = "[{0}<-{1}] seek [{0}->{1}]"
@@ -1295,7 +1295,7 @@ def mplayer_status(popen_object, prefix="", songlength=0):
     buff = ''
 
     while popen_object.poll() is None:
-        char = popen_object.stdout.read(1).decode('utf-8')
+        char = popen_object.stdout.read(1)
 
         if char in '\r\n':
             m = re_mplayer.match(buff)
