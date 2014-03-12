@@ -218,8 +218,8 @@ def populate_video(video, callback=None):
 
     v = p.getbest()
     preftype = "ogg" if Config.PLAYER == "mplayer" else "m4a"
-    strict = Config.PLAYER == "mplayer"
-    a = p.getbestaudio(preftype=preftype, ftypestrict=strict)
+    #strict = Config.PLAYER == "mplayer"
+    a = p.getbestaudio(preftype=preftype, ftypestrict=False)
     video.urls['v'] = dict(url=v.url, last=time.time(), ext=v.extension)
 
     if a:  # audio streams may not be available
