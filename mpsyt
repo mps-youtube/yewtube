@@ -2710,8 +2710,8 @@ Then, when results are shown:
 {2}user <username>{1} - list YouTube uploads by <username>.
 {2}user <username>/<query>{1} - as above, but matches <query>.
 {2}userpl <username>{1} - list YouTube playlists created by <username>.
-{2}pl <YouTube playlist url>{1} - Open YouTube playlist by url.
-{2}url <YouTube url>{1} - Retrieve specific YouTube video by url.
+{2}pl <playlist url or id>{1} - Open YouTube playlist by url or id.
+{2}url <url or id>{1} - Retrieve specific YouTube video by url or id.
 
 {2}rm <number(s)>{1} - remove items from displayed results.
 {2}sw <number>,<number>{1} - swap two items.
@@ -2892,7 +2892,7 @@ def main():
         'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
         'info': r'i\s*(\d{1,4})$',
         'quits': r'(?:q|quit|exit)$',
-        'plist': r'pl\s.*[^-_a-zA-Z0-9]([-_a-zA-Z0-9]{18,50})(?:(?:\&.*)|$)',
+        'plist': r'pl\s+(?:.*=|)([-_a-zA-Z0-9]{18,50})(?:(?:\&\#).*|$)',
         'yt_url': r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
         'search': r'(?:search|\.|/)\s*([^./].{1,500})',
         'dl_url': r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
