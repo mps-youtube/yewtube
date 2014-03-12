@@ -1,7 +1,19 @@
+Version 0.01.41
+In development - not yet released
+
+Features:
+
+ - new configuration option, max_results - sets number of returned results
+ - pl <url> now accepts YouTube playlist id's as well as url's
+
+-------------------------------------------------------------------------------
+
 Version 0.01.40
 Mar 11 2014
 
  - Bugfix release, corrects UnicodeDecode error
+
+-------------------------------------------------------------------------------
 
 Version 0.01.39
 Mar 10 2014

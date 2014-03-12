@@ -1,10 +1,9 @@
 *.py[cod]
 *.py
-yt.py
 otherstuff/
 pafy.py
-pms.py
 pmsyt.py
+changelog
 MANIFEST
 
 # C extensions
