@@ -266,12 +266,12 @@ To list playlists created by a YouTube user:
 Access YouTube Video by URL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    url <YouTube video url>
+    url <YouTube video url or id>
 
 Open YouTube Playlist by URL
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    pl <YouTube playlist url>
+    pl <YouTube playlist url or id>
 
 Show Entire YouTube Playlist Contents
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
