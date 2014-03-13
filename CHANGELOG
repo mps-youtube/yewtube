@@ -4,6 +4,8 @@ In development - not yet released
  - new configuration option, max_results - sets number of returned results
  - pl <url> now accepts YouTube playlist id's as well as url's
  - Fix error in download of .m4a files when mplayer is set as player.
+ - Added option for downloading multiple items
+     eg. da 1-4 or dv 3,5,6
 
 -------------------------------------------------------------------------------
 

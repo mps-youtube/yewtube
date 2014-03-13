@@ -645,7 +645,7 @@ def setconfig(key, val):
 
     elif key == "MAX_RESULTS" and not val == "DEFAULT":
 
-        if not val.isdigit() or not (1 <= int(val_orig) <= 50):
+        if not val.isdigit() or not 1 <= int(val_orig) <= 50:
             fail_msg = "max_results must be between 1 and 50"
 
         else:
@@ -683,7 +683,7 @@ def setconfig(key, val):
             success_msg = success_msg % (c.y, val_orig, c.w)
 
         else:
-            fail_msg = "Invalid path: %s%s%s" % (c.r, val, c.w)
+            fail_msg = "Invalid path: %s%s%s" % (c.r, val_orig, c.w)
 
     elif key in g.configbool and not val == "DEFAULT":
 
@@ -1857,6 +1857,64 @@ def songlist_rm_add(action, songrange):
     g.content = generate_songlist_display()
 
 
+def down_many(dltype, choice):
+    """ Download multiple items. """
+
+    choice = _parse_multi(choice)
+    choice = list(set(choice))
+    getsong = lambda item: g.model.songs[int(item) - 1]
+    downsongs = [getsong(x) for x in choice]
+    temp = g.model.songs[::]
+    g.model.songs = downsongs[::]
+    count = len(downsongs)
+    av = "audio" if dltype.startswith("da") else "video"
+
+    def handle_error(message):
+        """ Handle error in download. """
+
+        g.message = message
+        g.content = disp
+        screen_update()
+        time.sleep(2)
+        g.model.songs.pop(0)
+
+    try:
+        for song in downsongs:
+            disp = generate_songlist_display()
+            title = "Downloading selection (%s):%s\n\n" % (av, c.w)
+            disp = re.sub(r"(Item\s*?Title.*?\n)", title, disp)
+            g.content = disp
+            screen_update()
+
+            try:
+                filename = _make_fname(song, None, av=av)
+
+            except KeyError:
+                handle_error("No audio track for %s" % song.title)
+                count -= 1
+                continue
+
+            try:
+                _download(song, filename, url=None, audio=av == "audio")
+
+            except HTTPError:
+                handle_error("HTTP Error for %s" % song.title)
+                count -= 1
+                continue
+
+            g.model.songs.pop(0)
+            msg = "Downloaded %s items" % count
+            g.message = "Downloaded " + c.g + song.title + c.w
+
+    except KeyboardInterrupt:
+        msg = "Downloads interrupted!"
+
+    finally:
+        g.model.songs = temp[::]
+        g.message = msg
+        g.content = generate_songlist_display()
+
+
 def play(pre, choice, post=""):
     """ Play choice.  Use repeat/random if appears in pre/post. """
     # pylint: disable=R0914
@@ -2740,8 +2798,8 @@ Then, when results are shown:
               e.g., {2}1-3,5{1} plays items 1, 2, 3 and 5
 
 {2}d <number>{1} - view downloads available for an item.
-{2}da <number>{1} - download best available audio file.
-{2}dv <number>{1} - download best available video file.
+{2}da <number(s)>{1} - download best available audio file(s)
+{2}dv <number(s)>{1} - download best available video file(s).
 {2}dlurl <url or id>{1} download a YouTube video by url or video id
 {2}playurl <url or id>{1} play a YouTube video by url or id
 
@@ -2918,9 +2976,10 @@ def main():
         'save_last': r'save\s*$',
         'pl_search': r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
         'setconfig': r'set\s*(\w+)\s*"?([^"]*)"?\s*$',
+        'down_many': r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
         'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
-        'usersearch': r'user\s+([^\s].{2,})$',
         'user_more': r'u\s?([\d]{1,4})$',
+        'usersearch': r'user\s+([^\s].{2,})$',
         'add_rm_all': r'(rm|add)\s(?:\*|all)$',
         'showconfig': r'(set|showconfig)\s*$',
         'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
