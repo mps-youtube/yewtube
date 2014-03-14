@@ -1,7 +1,8 @@
 Version 0.01.41
-In development - not yet released
+Mar 14 2014
 
  - new configuration option, max_results - sets number of returned results
+    (1 - 50)
  - pl <url> now accepts YouTube playlist id's as well as url's
  - Fix error in download of .m4a files when mplayer is set as player.
  - Added option for downloading multiple items
