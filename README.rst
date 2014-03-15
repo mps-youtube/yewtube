@@ -114,7 +114,9 @@ Downloading
 ~~~~~~~~~~~
 
 ``d 3`` to download item 3 (will open new menu)
+
 ``da 3-5, 7`` to download audio streams of items 3, 4, 5 and 7
+
 ``dv 3-5, 7`` to download video streams of items 3, 4, 5 and 7
 
 View Uploads / Related Videos
