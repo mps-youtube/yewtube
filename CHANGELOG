@@ -1,3 +1,9 @@
+Version 0.01.42
+
+ - Fix UnicodeDecodeError in mplayer progress parsing (gh-58)
+
+-------------------------------------------------------------------------------
+
 Version 0.01.41
 Mar 14 2014
 
