@@ -1223,7 +1223,13 @@ def generate_real_playerargs(song, override):
         if not video and song.urls["a"].get("ext") == "m4a":
             args += g.playerargs_defaults[Config.PLAYER]["ignidx"]
 
-    return [Config.PLAYER] + args + [url], songdata
+    cmd = [Config.PLAYER] + args + [url]
+
+    # fix for github issue 59
+    if mswin and sys.version_info[:2] < (3, 0):
+        cmd = [x.encode("utf8", "replace") for x in cmd]
+
+    return cmd, songdata
 
 
 def playsong(song, failcount=0, override=False):

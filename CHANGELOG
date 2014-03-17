@@ -1,6 +1,8 @@
 Version 0.01.42
+In development, not yet released
 
- - Fix UnicodeDecodeError in mplayer progress parsing (gh-58)
+ - Fix UnicodeDecodeError in mplayer progress parsing (issue 58)
+ - Fix UnicodeEncodeError under Windows with Python 2.7 (issue 59)
 
 -------------------------------------------------------------------------------
 
