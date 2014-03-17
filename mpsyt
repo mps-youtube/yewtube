@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 from math import ceil
 
-__version__ = "0.01.41"
+__version__ = "0.01.42"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -1223,13 +1223,7 @@ def generate_real_playerargs(song, override):
         if not video and song.urls["a"].get("ext") == "m4a":
             args += g.playerargs_defaults[Config.PLAYER]["ignidx"]
 
-    cmd = [Config.PLAYER] + args + [url]
-
-    # fix for github issue 59
-    if mswin and sys.version_info[:2] < (3, 0):
-        cmd = [x.encode("utf8", "replace") for x in cmd]
-
-    return cmd, songdata
+    return [Config.PLAYER] + args + [url], songdata
 
 
 def playsong(song, failcount=0, override=False):
@@ -1265,6 +1259,10 @@ def playsong(song, failcount=0, override=False):
 
             if "-really-quiet" in cmd:
                 cmd.remove("-really-quiet")
+
+            # fix for github issue 59
+            if mswin and sys.version_info[:2] < (3, 0):
+                cmd = [x.encode("utf8", errors="replace") for x in cmd]
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
