@@ -2896,7 +2896,7 @@ Use {2}-w{1}, {2}-f{1} or {2}-a{1} with your choice to override the configured\
 play items in windowed, fullscreen or audio modes.
 
 {2}dump{1} - to show entire contents of an opened YouTube playlist.
-       (useful for playing or saving entire playlists, user {2}undump{1} to \
+       (useful for playing or saving entire playlists, use {2}undump{1} to \
 undo)
 {2}set{1} - view current configuration.
 {2}set fullscreen true{1} - play video content in fullscreen mode.
