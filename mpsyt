@@ -3000,21 +3000,17 @@ def main():
     # compile regexp's
     regx = {name: re.compile(val, re.UNICODE) for name, val in regx.items()}
     prompt = "> "
-    arg_inp = arg_inp.replace(r",,", "[mpsyt-comma]")
-    arg_inp = arg_inp.split(",")
 
     while True:
-        next_inp = ""
-
-        if len(arg_inp):
-            arg_inp, next_inp = arg_inp[1:], arg_inp[0].strip()
-            next_inp = next_inp.replace("[mpsyt-comma]", ",")
-
         try:
-            userinput = next_inp or compat_input(prompt).strip()
+            # get user input
+            userinput = arg_inp or compat_input(prompt)
+            userinput = userinput.strip()
 
         except (KeyboardInterrupt, EOFError):
             userinput = prompt_for_exit()
+
+        arg_inp = None
 
         for k, v in regx.items():
             if matchfunction(k, v, userinput):
