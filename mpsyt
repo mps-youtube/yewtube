@@ -2094,20 +2094,29 @@ def show_help(choice):
     """ Print help message. """
 
     helps = {"download": ("playback dl listen watch show repeat playing"
-                          "show_video shuffle playurl dlurl d da dv all *"
+                          "show_video playurl dlurl d da dv all *"
                           " play".split()
                           ),
+
              "invoke": "command commands mpsyt invocation".split(),
-             "search": ("user userpl pl pls n p url rm mv sw edit move swap "
+
+             "search": ("user userpl pl pls n p url "
                         "editing result results remove swop".split()),
+
+             "edit": ("editing manupulate manipulating rm mv sw edit move "
+                      "swap shuffle".split()),
+
              "tips": ("undump dump -f -w -a adv advanced".split(" ")),
+
              "basic": ("r u i".split()),
+
              "config": ("set checkupdate colours colors ddir directory player "
                         "arguments args playerargs music search_music keys "
                         "status show_status show_video video configuration "
                         "fullscreen full screen folder player mpv mplayer"
                         " settings default reset configure audio results "
                         "max_results size lines rows height".split()),
+
              "playlists": ("save rename delete move rm ls mv sw add vp open"
                            " view".split())
              }
@@ -2753,6 +2762,14 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
     g.message = "Showing YouTube playlist %s" % (c.y + ytpl_title + c.w)
 
 
+def shuffle(_):
+    """ Shuffle displayed items. """
+
+    random.shuffle(g.model.songs)
+    g.message = c.y + "Items shuffled" + c.w
+    g.content = generate_songlist_display()
+
+
 g.helptext = [("basic", "Basics", """
 {0}Basic Usage{1}
 
@@ -2769,8 +2786,8 @@ Then, when results are shown:
     {2}u <number>{1} - show videos uploaded by uploader of video <number>.
 """.format(c.ul, c.w, c.y, c.r)),
 
-    ("search", "Searching and Editing Results", """
-{0}Searching and Editing Results{1}
+    ("search", "Searching and Retrieving", """
+{0}Searching and Retrieving{1}
 
 {2}set search_music false{1} - search all YouTube categories.
 {2}set search_music true{1}  - search only YouTube music category.
@@ -2786,11 +2803,18 @@ Then, when results are shown:
 {2}pl <playlist url or id>{1} - Open YouTube playlist by url or id.
 {2}url <url or id>{1} - Retrieve specific YouTube video by url or id.
 
+{2}r <number>{1} - show videos related to video <number>.
+{2}u <number>{1} - show videos uploaded by uploader of video <number>.
+""".format(c.ul, c.w, c.y, c.r)),
+
+    ("edit", "Editing / Manipulating Results", """
+{0}Editing and Manipulating Results{1}
+
 {2}rm <number(s)>{1} - remove items from displayed results.
 {2}sw <number>,<number>{1} - swap two items.
 {2}mv <number>,<number>{1} - move item <number> to position <number>.
-{2}r <number>{1} - show videos related to video <number>.
-{2}u <number>{1} - show videos uploaded by uploader of video <number>.
+
+{2}shuffle{1} - Shuffle the displayed results.
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("download", "Downloading and Playback", """
@@ -2840,10 +2864,7 @@ Note: {2}all{1} and {2}*{1} can be used as an argument (e.g., \
     ("invoke", "Invocation Parameters", """
 {0}Invocation{1}
 
-All commands that can be used in mpsyt can be invoked from the command line
-where this makes sense, so excluding commands that act on specific results.
-
-For example;
+All mpsyt commands can be entered from the command line.  For example;
 
   {2}mpsyt dlurl <url or id>{1} to download a YouTube video by url or id
   {2}mpsyt playurl <url or id>{1} to play a YouTube video by url or id
@@ -2852,8 +2873,13 @@ For example;
   {2}mpsyt play <playlist name or ID>{1} to play a saved playlist
   {2}mpsyt ls{1} to list saved playlists
 
-When invoking with playurl or dlurl, a less interactive session will be used
-and mpsyt will exit when done.
+For further automation, a series of commands can be entered separated by
+commas (,).  E.g.,
+
+  {2}mpsyt open 1, 2-4{1} - play items 2-4 of first saved playlist
+  {2}mpsyt //the doors, 1, dump, all{1} - open YouTube playlist and play all
+
+If you need to enter an actual comma on the command line, use {2},,{1} instead.
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("config", "Configuration Options", """
@@ -2971,6 +2997,7 @@ def main():
         'search': r'(?:search|\.|/)\s*([^./].{1,500})',
         'dl_url': r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
         'play_pl': r'play\s+(%s|\d+)$' % word,
+        'shuffle': r'\s*(shuffle)\s*$',
         'related': r'r\s?(\d{1,4})$',
         'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
         'play_url': r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
