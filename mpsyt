@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
-from math import ceil
 
 __version__ = "0.01.42"
 __author__ = "nagev"
@@ -39,6 +38,7 @@ import random
 import locale
 import socket
 import time
+import math
 import pafy
 import json
 import sys
@@ -1229,6 +1229,7 @@ def generate_real_playerargs(song, override):
 def playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
 
+    # pylint: disable=R0912
     # don't interrupt preloading:
     while song.ytid in g.preloading:
         writestatus("fetching item..")
@@ -1354,7 +1355,7 @@ def make_status_line(match_object, songlength=0, progress_bar_size=30):
         ("[%.0f%%]" % pct).ljust(6)
     )
 
-    progress = int(ceil(pct / 100 * progress_bar_size))
+    progress = int(math.ceil(pct / 100 * progress_bar_size))
     status_line += " [%s]" % ("=" * (progress - 1) +
                               ">").ljust(progress_bar_size, ' ')
 
@@ -2762,7 +2763,7 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
     g.message = "Showing YouTube playlist %s" % (c.y + ytpl_title + c.w)
 
 
-def shuffle(_):
+def shuffle_fn(_):
     """ Shuffle displayed items. """
 
     random.shuffle(g.model.songs)
@@ -2997,7 +2998,6 @@ def main():
         'search': r'(?:search|\.|/)\s*([^./].{1,500})',
         'dl_url': r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
         'play_pl': r'play\s+(%s|\d+)$' % word,
-        'shuffle': r'\s*(shuffle)\s*$',
         'related': r'r\s?(\d{1,4})$',
         'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
         'play_url': r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
@@ -3011,6 +3011,7 @@ def main():
         'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
         'user_more': r'u\s?([\d]{1,4})$',
         'usersearch': r'user\s+([^\s].{2,})$',
+        'shuffle_fn': r'\s*(shuffle)\s*$',
         'add_rm_all': r'(rm|add)\s(?:\*|all)$',
         'showconfig': r'(set|showconfig)\s*$',
         'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
