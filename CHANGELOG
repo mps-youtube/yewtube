@@ -3,6 +3,9 @@ In development, not yet released
 
  - Fix UnicodeDecodeError in mplayer progress parsing (issue 58)
  - Fix UnicodeEncodeError under Windows with Python 2.7 (issue 59)
+ - Enabled multiple invocation commands (comma separated)
+    Eg: mpsyt //the doors, 1, dump, shuffle, 1-2-a, quit
+ - Added shuffle command (no arguments, shuffles displayed items)
 
 -------------------------------------------------------------------------------
 
