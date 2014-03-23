@@ -377,18 +377,16 @@ class g(object):
     PLFILE = os.path.join(get_config_dir(), "playlist_v2")
     READLINE_FILE = None
     playerargs_defaults = {
-        "mpv": {"def": ['--really-quiet'],
-                "title": "--title",
+        "mpv": {"title": "--title",
                 "fs": "--fs",
                 "novid": "--no-video",
-                "ignidx": "--demuxer-lavf-o=fflags=+ignidx".split()
+                "ignidx": "--demuxer-lavf-o=fflags=+ignidx"
                 },
-        "mplayer": {"def": "-prefer-ipv4 -nolirc".split(),
-                    "title": "-title",
+        "mplayer": {"title": "-title",
                     "fs": "-fs",
                     "novid": "-novideo",
                     #"ignidx": "-lavfdopts o=fflags=+ignidx".split()
-                    "ignidx": [],
+                    "ignidx": "",
                     }
     }
 
@@ -435,7 +433,6 @@ def init():
 
     if not has_config() and has_exefile("mpv"):
         Config.PLAYER = "mpv"
-        set_playerargs(default=True)
         saveconfig()
 
     else:
@@ -472,35 +469,7 @@ def init_opener():
     g.urlopen = opener.open
 
 
-def set_playerargs(playername=None, default=True):
-    """ Set default arguments for player. """
-
-    if not playername:
-        playername = Config.PLAYER
-
-    gpd = g.playerargs_defaults
-    for player in gpd:
-
-        # set player defaults
-        if player in playername and default:
-            Config.PLAYERARGS = gpd[player]["def"]
-
-        # set fullscreen
-        fsarg = gpd[player]["fs"]
-        if player in playername:
-            if Config.FULLSCREEN:
-
-                if not fsarg in Config.PLAYERARGS:
-                    Config.PLAYERARGS.append(fsarg)
-
-            else:
-                if fsarg in Config.PLAYERARGS:
-                    Config.PLAYERARGS.pop(Config.PLAYERARGS.index(fsarg))
-
-            break
-
-    else:
-        Config.PLAYERARGS = []
+        #Config.PLAYERARGS = []
 
 
 def has_config():
@@ -637,7 +606,6 @@ def setconfig(key, val):
     elif key == "PLAYER" and val == "DEFAULT":
         player = "mpv" if has_exefile("mpv") else g.defaults['PLAYER']
         setattr(Config, key, player)
-        set_playerargs()
         success_msg = "PLAYER has been set to %s" % val
 
     elif key == "COLOURS" and mswin and not has_colorama:
@@ -654,7 +622,6 @@ def setconfig(key, val):
 
     elif key == "PLAYER":
         setattr(Config, key, val_orig)
-        set_playerargs(default=True)
         success_msg = "PLAYER has been set to %s" % val_orig
 
     elif key == "PLAYERARGS" and not val == "DEFAULT":
@@ -662,16 +629,12 @@ def setconfig(key, val):
         success_msg = "PLAYERARGS set to %s" % val_orig
 
     elif key == "PLAYERARGS" and val == "DEFAULT":
-        set_playerargs(default=True)
+        setattr(Config, key, [])
         success_msg = "PLAYERARGS set to %s" % val
-
-    elif key == "FULLSCREEN" and not has_known_player():
-        fail_msg = "Unknown player %s, set fullscreen manually."
-        fail_msg = fail_msg % Config.PLAYER
 
     elif key == "FULLSCREEN" and val == "DEFAULT":
         setattr(*FALSE)
-        set_playerargs()
+        #set_playerargs()
         success_msg = "FULLSCREEN set to disabled (default)"
 
     elif key == "DDIR" and not val == "DEFAULT":
@@ -696,7 +659,6 @@ def setconfig(key, val):
             else:
                 setattr(*FALSE)
 
-            set_playerargs(default=False)
             success_msg = "FULLSCREEN set to %s" % boolval
 
         elif not boolval:
@@ -715,9 +677,6 @@ def setconfig(key, val):
 
         if val == "DEFAULT":
             val = g.defaults[key]
-
-            if key == "FULLSCREEN":
-                set_playerargs(default=False)
 
         setattr(Config, key, val)
         success_msg = "%s has been set to %s" % (key.upper(), val)
@@ -1172,6 +1131,16 @@ def writeline(text):
     sys.stdout.flush()
 
 
+def list_update(item, lst, remove=False):
+    """ Adds item to list if not already present. Removes if present. """
+
+    if not remove and not item in lst:
+        lst.append(item)
+
+    elif remove and item in lst:
+        lst.remove(item)
+
+
 def generate_real_playerargs(song, override):
     """ Generate args for player command.
 
@@ -1196,34 +1165,42 @@ def generate_real_playerargs(song, override):
         video = True
         stream = song.urls['v']['url']
 
-    url = stream.replace("https://", "http://")
     key = "a" if not video else "v"
     size = get_size(song, is_video=video)
     songdata = song.ytid, song.urls[key]['ext'], int(size / (1024 ** 2))
     args = Config.PLAYERARGS[::]
 
     if has_known_player():
-        args.append(g.playerargs_defaults[Config.PLAYER]["title"])
+        pd = g.playerargs_defaults[Config.PLAYER]
+        args.append(pd["title"])
         args.append(song.title)
-        novid_arg = g.playerargs_defaults[Config.PLAYER]["novid"]
-        fs_arg = g.playerargs_defaults[Config.PLAYER]["fs"]
+        novid_arg = pd["novid"]
+        fs_arg = pd["fs"]
+        list_update(fs_arg, args, remove=not Config.FULLSCREEN)
 
         # handle no audio stream available
         if override == "a-v":
-            args.append(novid_arg)
+            list_update(novid_arg, args)
 
         # handle fullscreen / window overrides
-        elif override == "fullscreen" and not Config.FULLSCREEN:
-            args.append(fs_arg)
+        elif override == "fullscreen":
+            list_update(fs_arg, args)
 
-        elif override == "window" and Config.FULLSCREEN:
-            args.pop(args.index(fs_arg))
+        elif override == "window":
+            list_update(fs_arg, args, remove=True)
 
         # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
         if not video and song.urls["a"].get("ext") == "m4a":
-            args += g.playerargs_defaults[Config.PLAYER]["ignidx"]
+            list_update(pd["ignidx"], args)
 
-    return [Config.PLAYER] + args + [url], songdata
+        if "mplayer" in Config.PLAYER:
+            list_update("-really-quiet", args, remove=True)
+            list_update("-prefer-ipv4", args)
+
+        elif "mpv" in Config.PLAYER:
+            list_update("--really-quiet", args)
+
+    return [Config.PLAYER] + args + [stream], songdata
 
 
 def playsong(song, failcount=0, override=False):
@@ -1257,9 +1234,6 @@ def playsong(song, failcount=0, override=False):
     try:
 
         if "mplayer" in Config.PLAYER:
-
-            if "-really-quiet" in cmd:
-                cmd.remove("-really-quiet")
 
             # fix for github issue 59
             if mswin and sys.version_info[:2] < (3, 0):
