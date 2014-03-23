@@ -876,7 +876,7 @@ def logo(col=None, version=""):
                   % (c.w + "v" + version + " (YouTube)" if version else "",
                      col, c.w, "\n\n"))
 
-    return LOGO + c.w
+    return LOGO + c.w if not g.debug_mode else ""
 
 
 def playlists_display():
