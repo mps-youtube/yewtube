@@ -299,7 +299,7 @@ class Config(object):
     """ Holds various configuration values. """
 
     PLAYER = "mplayer"
-    PLAYERARGS = "-nolirc -prefer-ipv4".split()
+    PLAYERARGS = ""
     COLOURS = False if mswin and not has_colorama else True
     CHECKUPDATE = True
     SHOW_MPLAYER_KEYS = True
@@ -469,9 +469,6 @@ def init_opener():
     g.urlopen = opener.open
 
 
-        #Config.PLAYERARGS = []
-
-
 def has_config():
     """ Check whether config file has been saved before. """
 
@@ -522,10 +519,6 @@ def showconfig(_):
     for setting in g.config:
         val = getattr(Config, setting)
 
-        # don't show playerargs as a list
-        if setting == "PLAYERARGS":
-            val = " ".join(val)
-
         # don't show fullscreen if unknown player
         if not has_known_player() and setting == "FULLSCREEN":
             continue
@@ -553,10 +546,10 @@ def import_config():
         for k, v in saved_config.items():
             setattr(Config, k, v)
 
-        # Update config files from versions <= 0.01.08
+        # Update config files from versions <= 0.01.40
         # pylint: disable=E1103
-        if type(Config.PLAYERARGS) == str:
-            Config.PLAYERARGS = Config.PLAYERARGS.split(" ")
+        if type(Config.PLAYERARGS) == list:
+            Config.PLAYERARGS = " ".join(Config.PLAYERARGS)
             saveconfig()
 
 
@@ -625,11 +618,11 @@ def setconfig(key, val):
         success_msg = "PLAYER has been set to %s" % val_orig
 
     elif key == "PLAYERARGS" and not val == "DEFAULT":
-        setattr(Config, key, val_orig.split())
+        setattr(Config, key, val_orig)
         success_msg = "PLAYERARGS set to %s" % val_orig
 
     elif key == "PLAYERARGS" and val == "DEFAULT":
-        setattr(Config, key, [])
+        setattr(Config, key, "")
         success_msg = "PLAYERARGS set to %s" % val
 
     elif key == "FULLSCREEN" and val == "DEFAULT":
@@ -1168,7 +1161,7 @@ def generate_real_playerargs(song, override):
     key = "a" if not video else "v"
     size = get_size(song, is_video=video)
     songdata = song.ytid, song.urls[key]['ext'], int(size / (1024 ** 2))
-    args = Config.PLAYERARGS[::]
+    args = Config.PLAYERARGS.strip().split() if Config.PLAYERARGS else []
 
     if has_known_player():
         pd = g.playerargs_defaults[Config.PLAYER]
