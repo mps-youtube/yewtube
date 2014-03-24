@@ -236,7 +236,7 @@ def populate_video(video, callback=None):
         g.pafs.popitem(last=False)  # store maximum 500 objects
 
     v = p.getbest()
-    preftype = "ogg" if Config.PLAYER == "mplayer" else "m4a"
+    preftype = "ogg" if Config.PLAYER.get == "mplayer" else "m4a"
     #strict = Config.PLAYER == "mplayer"
     a = p.getbestaudio(preftype=preftype, ftypestrict=False)
     video.urls['v'] = dict(url=v.url, last=time.time(), ext=v.extension)
@@ -294,8 +294,8 @@ def get_size(video, is_video):
             size = g.pafs[video.ytid].getbest().get_filesize()
 
         else:
-            preftype = "ogg" if Config.PLAYER == "mplayer" else "m4a"
-            strict = Config.PLAYER == "mplayer"
+            preftype = "ogg" if Config.PLAYER.get == "mplayer" else "m4a"
+            strict = Config.PLAYER.get == "mplayer"
             a = g.pafs[video.ytid].getbestaudio(preftype=preftype,
                                                 ftypestrict=strict)
             size = a.get_filesize() if a else 0
@@ -313,21 +313,128 @@ def get_size(video, is_video):
     return size
 
 
+class ConfigItem(object):
+
+    def __init__(self, name, value, minval=None, maxval=None, check_fn=None):
+
+        """ If specified, the check_fn should return a dict:
+            {valid: bool, message: success/fail mesage, value: value to set}
+        """
+
+        self.default = self.value = value
+        self.name = name
+        self.type = type(value)
+        self.maxval, self.minval = maxval, minval
+        self.check_fn = check_fn
+
+    @property
+    def get(self):
+        """ Return value. """
+
+        return self.value
+
+    @property
+    def display(self):
+        """ Return value in a format suitable for display. """
+
+        retval = self.value
+        # more display specific code to go here, eg. for displaying lists
+        return retval
+
+    def set(self, value):
+        """ Set value with checks. """
+
+        # note: fail_msg should contain %s %s for self.name, value
+        #       success_msg should not
+
+        success_msg = fail_msg = ""
+        value = value.strip()
+
+        # handle true / false values
+
+        if self.type == bool:
+
+            if value.upper() in "0 OFF NO DISABLED FALSE".split():
+                value = False
+                success_msg =  "%s set to False" % self.name
+
+            elif value.upper() in "1 ON YES ENABLED TRUE".split():
+                value = True
+                success_msg = "%s set to True" % self.name
+
+            else:
+                fail_msg = "%s requires True/False, got: %s"
+
+        # handle int values
+
+        elif self.type == int:
+
+            if not value.isdigit():
+                fail_msg = "%s requires a number, got: %s"
+
+            else:
+                value = int(value)
+
+                if self.maxval and self.minval:
+
+                    if not self.minval <= value <= self.maxval:
+                        m = " must be between %s and %s, got "
+                        m = m % (self.minval, self.maxval)
+                        fail_msg = "%s" + m + "%s"
+
+                if not fail_msg:
+                    success_msg = "%s set to %s" % (self.name, value)
+
+        # handle space separated list
+
+        elif self.type == list:
+            success_msg = "%s set to %s" % (self.name, value)
+            value = value.split()
+
+        if fail_msg:
+            colvals = c.y + self.name + c.w, c.r + value + c.w
+            return fail_msg % colvals
+
+
+        elif self.check_fn:
+            checked = self.check_fn(value)
+            value = checked.get("value") or value
+
+            if checked['valid']:
+                value = checked.get("value") or value
+                self.value = value
+                return checked.get("message") or success_msg
+
+            else:
+                return checked.get('message') or fail_msg % colvals
+
+        elif success_msg:
+            self.value = value
+            return success_msg
+
+
+def permisive(x):
+    # valid, message, value
+    return dict(valid=True, message="Looks good to me", value=x)
+
+
 class Config(object):
 
     """ Holds various configuration values. """
 
-    PLAYER = "mplayer"
-    PLAYERARGS = ""
-    COLOURS = False if mswin and not has_colorama else True
-    CHECKUPDATE = True
-    SHOW_MPLAYER_KEYS = True
-    FULLSCREEN = False
-    SHOW_STATUS = True
-    DDIR = get_default_ddir()
-    SHOW_VIDEO = False
-    SEARCH_MUSIC = True
-    MAX_RESULTS = 19
+    MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
+    PLAYER = ConfigItem("player", "mplayer")
+    PLAYERARGS = ConfigItem("playerargs", "")
+    CHECKUPDATE = ConfigItem("checkupdate", True)
+    SHOW_MPLAYER_KEYS = ConfigItem("show_mplayer_keys", True)
+    FULLSCREEN = ConfigItem("fullscreen", False)
+    SHOW_STATUS = ConfigItem("show_status", True)
+    DDIR = ConfigItem("ddir", get_default_ddir(), check_fn=permisive)
+    SHOW_VIDEO = ConfigItem("show_video", False)
+    SEARCH_MUSIC = ConfigItem("search_music", True)
+    COLOURS = ConfigItem("colours",
+                         False if mswin and not has_colorama else True,
+                         check_fn=permisive)
 
 
 class Playlist(object):
@@ -453,7 +560,7 @@ def init():
     # set player to mpv if no config file exists and mpv is installed
     if not os.path.exists(g.CFFILE) and not has_exefile("mplayer") and\
             has_exefile("mpv"):
-        Config.PLAYER = "mpv"
+        Config.PLAYER = ConfigItem("player", "mpv")
         saveconfig()
 
     else:
@@ -495,10 +602,10 @@ def has_known_player():
 
     for allowed_player in g.playerargs_defaults:
         regex = r'(?:^%s$)|(?:\b%s$)' % ((allowed_player,) * 2)
-        match = re.search(regex, Config.PLAYER)
+        match = re.search(regex, Config.PLAYER.get)
 
         if mswin:
-            match = re.search(regex, Config.PLAYER, re.IGNORECASE)
+            match = re.search(regex, Config.PLAYER.get, re.IGNORECASE)
 
         if match:
             return True
@@ -513,11 +620,11 @@ def showconfig(_):
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
 
     for setting in g.config:
-        val = getattr(Config, setting)
+        val = getattr(Config, setting).display
 
         # don't show fullscreen if unknown player
-        if not has_known_player() and setting == "FULLSCREEN":
-            continue
+        #if not has_known_player() and setting == "FULLSCREEN":
+            #continue
 
         out += s % (c.g, setting.lower(), c.w, val)
 
@@ -529,8 +636,9 @@ def showconfig(_):
 def saveconfig():
     """ Save current config to file. """
 
-    config = {setting: getattr(Config, setting) for setting in g.config}
-    pickle.dump(config, open(g.CFFILE, "wb"), protocol=2)
+    #config = {setting: getattr(Config, setting) for setting in g.config}
+    #pickle.dump(config, open(g.CFFILE, "wb"), protocol=2)
+    pass
 
 
 def import_config():
@@ -540,12 +648,12 @@ def import_config():
         saved_config = pickle.load(open(g.CFFILE, "rb"))
 
         for k, v in saved_config.items():
-            setattr(Config, k, v)
+            getattr(Config, k).value = v
 
-        # Update config files from versions <= 0.01.40
+        # Update config files from versions <= 0.01.41
         # pylint: disable=E1103
-        if type(Config.PLAYERARGS) == list:
-            Config.PLAYERARGS = " ".join(Config.PLAYERARGS)
+        if type(Config.PLAYERARGS.get) == list:
+            Config.PLAYERARGS.value = " ".join(Config.PLAYERARGS.get)
             saveconfig()
 
 
@@ -560,7 +668,7 @@ class c(object):
         blue, pink = Fore.CYAN, Fore.MAGENTA
 
     elif mswin:
-        Config.COLOURS = False
+        Config.COLOURS.value = False
 
     else:
         white = "\x1b[%sm" % 0
@@ -568,7 +676,7 @@ class c(object):
         cols = ["\x1b[%sm" % n for n in range(91, 96)]
         red, green, yellow, blue, pink = cols
 
-    if not Config.COLOURS:
+    if not Config.COLOURS.get:
         ul = red = green = yellow = blue = pink = white = ""
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
@@ -576,111 +684,13 @@ class c(object):
 def setconfig(key, val):
     """ Set configuration variable. """
 
-    # pylint: disable=R0912
-    success_msg = fail_msg = ""
-    key = key.upper()
-    val_orig = val
-    val = val.upper()
-    TRUE = (Config, key, True)
-    FALSE = (Config, key, False)
-    falses = "0 FALSE OFF NO".split()
-
-    # set all default
-    if key == "ALL" and val == "DEFAULT":
-
-        for k, v in g.defaults.items():
-            setattr(Config, k, v)
-            success_msg = "Default configuration reinstated"
-
-    elif key == "PLAYER" and val == "DEFAULT":
-        player = "mpv" if has_exefile("mpv") else g.defaults['PLAYER']
-        setattr(Config, key, player)
-        success_msg = "PLAYER has been set to %s" % val
-
-    elif key == "COLOURS" and mswin and not has_colorama:
-        fail_msg = "Can't enable colours, colorama not found"
-
-    elif key == "MAX_RESULTS" and not val == "DEFAULT":
-
-        if not val.isdigit() or not 1 <= int(val_orig) <= 50:
-            fail_msg = "max_results must be between 1 and 50"
-
-        else:
-            setattr(Config, key, int(val))
-            success_msg = ("Result size is now %s") % val
-
-    elif key == "PLAYER":
-        setattr(Config, key, val_orig)
-        success_msg = "PLAYER has been set to %s" % val_orig
-
-    elif key == "PLAYERARGS" and not val == "DEFAULT":
-        setattr(Config, key, val_orig)
-        success_msg = "PLAYERARGS set to %s" % val_orig
-
-    #elif key == "PLAYERARGS" and val == "DEFAULT":
-        #setattr(Config, key, "")
-        #success_msg = "PLAYERARGS set to %s" % val
-
-    elif key == "FULLSCREEN" and val == "DEFAULT":
-        setattr(*FALSE)
-        #set_playerargs()
-        success_msg = "FULLSCREEN set to disabled (default)"
-
-    elif key == "DDIR" and not val == "DEFAULT":
-        valid = os.path.exists(val_orig) and os.path.isdir(val_orig)
-
-        if valid:
-            setattr(Config, key, val_orig)
-            success_msg = "Downloads will be saved to %s%s%s"
-            success_msg = success_msg % (c.y, val_orig, c.w)
-
-        else:
-            fail_msg = "Invalid path: %s%s%s" % (c.r, val_orig, c.w)
-
-    elif key in g.configbool and not val == "DEFAULT":
-
-        boolval = val not in falses
-
-        if key == "FULLSCREEN":
-            if boolval:
-                setattr(*TRUE)
-
-            else:
-                setattr(*FALSE)
-
-            success_msg = "FULLSCREEN set to %s" % boolval
-
-        elif not boolval:
-            setattr(*FALSE)
-            success_msg = "%s set to disabled (restart may be required)" % key
-        else:
-            setattr(*TRUE)
-            success_msg = "%s set to enabled (restart may be required)" % key
-
-    elif key in g.configbool and val == "DEFAULT":
-        boolval = val not in falses
-        setattr(Config, key, boolval)
-        success_msg = "%s set to %s (restart may be required)" % (key, boolval)
-
-    elif key in g.config:
-
-        if val == "DEFAULT":
-            val = g.defaults[key]
-
-        setattr(Config, key, val)
-        success_msg = "%s has been set to %s" % (key.upper(), val)
+    if not key.upper() in g.config:
+        g.message = "Unknown config item: %s%s%s" % (c.r, key, c.w)
 
     else:
-        fail_msg = "Unknown config item: %s%s%s" % (c.r, key, c.w)
+        g.message = getattr(Config, key.upper()).set(val)
 
     showconfig(1)
-
-    if success_msg:
-        saveconfig()
-        g.message = success_msg
-
-    elif fail_msg:
-        g.message = fail_msg
 
 
 def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
@@ -983,8 +993,9 @@ def playback_progress(idx, allsongs, repeat=False):
     # pylint: disable=R0914
     # too many local variables
     out = "  %s%-71s%s%s\n" % (c.ul, "Title", "Time", c.w)
-    show_key_help = (Config.PLAYER == "mplayer" or Config.PLAYER == "mpv")\
-        and Config.SHOW_MPLAYER_KEYS
+    show_key_help = (Config.PLAYER.get == "mplayer" or\
+                     Config.PLAYER.get == "mpv")\
+        and Config.SHOW_MPLAYER_KEYS.get
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
@@ -1108,7 +1119,7 @@ def generate_songlist_display(song=False, zeromsg=None):
 def writestatus(text):
     """ Update status linei. """
 
-    if Config.SHOW_STATUS:
+    if Config.SHOW_STATUS.get:
         writeline(text)
 
 
@@ -1137,7 +1148,7 @@ def generate_real_playerargs(song, override):
 
     """
 
-    video = Config.SHOW_VIDEO
+    video = Config.SHOW_VIDEO.get
     video = True if override in ("fullscreen", "window") else video
     video = False if override == "audio" else video
 
@@ -1147,7 +1158,7 @@ def generate_real_playerargs(song, override):
     # handle no audio stream available, or m4a with mplayer
     # by switching to video stream and suppressing video output.
     if any([not stream and not video,
-            not video and Config.PLAYER == "mplayer" and aext == "m4a"]):
+            not video and Config.PLAYER.get == "mplayer" and aext == "m4a"]):
 
         dbg("no audio available or mplayer m4a, overriding to video")
         override = "a-v"
@@ -1157,15 +1168,16 @@ def generate_real_playerargs(song, override):
     key = "a" if not video else "v"
     size = get_size(song, is_video=video)
     songdata = song.ytid, song.urls[key]['ext'], int(size / (1024 ** 2))
-    args = Config.PLAYERARGS.strip().split() if Config.PLAYERARGS else []
+    args = Config.PLAYERARGS.get.strip().split() if Config.PLAYERARGS.get \
+        else []
 
     if has_known_player():
-        pd = g.playerargs_defaults[Config.PLAYER]
+        pd = g.playerargs_defaults[Config.PLAYER.get]
         args.append(pd["title"])
         args.append(song.title)
         novid_arg = pd["novid"]
         fs_arg = pd["fs"]
-        list_update(fs_arg, args, remove=not Config.FULLSCREEN)
+        list_update(fs_arg, args, remove=not Config.FULLSCREEN.get)
 
         # handle no audio stream available
         if override == "a-v":
@@ -1182,14 +1194,14 @@ def generate_real_playerargs(song, override):
         if not video and song.urls["a"].get("ext") == "m4a":
             list_update(pd["ignidx"], args)
 
-        if "mplayer" in Config.PLAYER:
+        if "mplayer" in Config.PLAYER.get:
             list_update("-really-quiet", args, remove=True)
             list_update("-prefer-ipv4", args)
 
-        elif "mpv" in Config.PLAYER:
+        elif "mpv" in Config.PLAYER.get:
             list_update("--really-quiet", args)
 
-    return [Config.PLAYER] + args + [stream], songdata
+    return [Config.PLAYER.get] + args + [stream], songdata
 
 
 def playsong(song, failcount=0, override=False):
@@ -1222,7 +1234,7 @@ def playsong(song, failcount=0, override=False):
 
     try:
 
-        if "mplayer" in Config.PLAYER:
+        if "mplayer" in Config.PLAYER.get:
 
             # fix for github issue 59
             if mswin and sys.version_info[:2] < (3, 0):
@@ -1238,7 +1250,7 @@ def playsong(song, failcount=0, override=False):
                 subprocess.call(cmd, stderr=devnull)
 
     except OSError:
-        g.message = F('no player') % Config.PLAYER
+        g.message = F('no player') % Config.PLAYER.get
         return
 
     finally:
@@ -1375,14 +1387,14 @@ def generate_search_qs(term, page):
         'q': term,
         'v': 2,
         'alt': 'jsonc',
-        'start-index': ((page - 1) * Config.MAX_RESULTS + 1) or 1,
+        'start-index': ((page - 1) * Config.MAX_RESULTS.get + 1) or 1,
         'safeSearch': "none",
-        'max-results': Config.MAX_RESULTS,
+        'max-results': Config.MAX_RESULTS.get,
         'paid-content': "false",
         'orderby': 'relevance'
     }
 
-    if Config.SEARCH_MUSIC:
+    if Config.SEARCH_MUSIC.get:
         qs['category'] = "Music"
 
     return qs
@@ -1519,9 +1531,9 @@ def pl_search(term, page=1, splash=True, is_user=False):
     url = "https://gdata.youtube.com/feeds/api%s" % x
     prog = "user: " + term if is_user else term
     logging.info("playlist search for %s", prog)
-    start = (page - 1) * Config.MAX_RESULTS or 1
+    start = (page - 1) * Config.MAX_RESULTS.get or 1
     qs = {"start-index": start,
-          "max-results": Config.MAX_RESULTS, "v": 2, 'alt': 'jsonc'}
+          "max-results": Config.MAX_RESULTS.get, "v": 2, 'alt': 'jsonc'}
 
     # modify query string based on whether this is a user playlst search.
     if not is_user:
@@ -1585,8 +1597,8 @@ def _make_fname(song, ext=None, av=None):
 
     # pylint: disable=E1103
     # Instance of 'bool' has no 'extension' member (some types not inferable)
-    if not os.path.exists(Config.DDIR):
-        os.makedirs(Config.DDIR)
+    if not os.path.exists(Config.DDIR.get):
+        os.makedirs(Config.DDIR.get)
 
     get_streams(song)
 
@@ -1598,7 +1610,8 @@ def _make_fname(song, ext=None, av=None):
         extension = song.urls[key]['ext']
 
     filename = song.title[:59] + "." + extension
-    filename = os.path.join(Config.DDIR, mswinfn(filename.replace("/", "-")))
+    filename = os.path.join(Config.DDIR.get,
+                            mswinfn(filename.replace("/", "-")))
     return filename
 
 
@@ -1973,7 +1986,7 @@ def preload(song, delay=2, override=False):
 
     g.preloading.append(song.ytid)
     time.sleep(delay)
-    video = Config.SHOW_VIDEO
+    video = Config.SHOW_VIDEO.get
     video = True if override in ("fullscreen", "window") else video
     video = False if override == "audio" else video
 
@@ -2123,7 +2136,7 @@ def quits(showlogo=True):
     vermsg = ""
     print(msg + F("exitmsg", 2))
 
-    if Config.CHECKUPDATE and showlogo:
+    if Config.CHECKUPDATE.get and showlogo:
         try:
             url = "https://github.com/np1/mps-youtube/raw/master/VERSION"
             v = g.urlopen(url).read().decode("utf8")
@@ -2500,7 +2513,7 @@ def nextprev(np):
     good = False
 
     if np == "n":
-        if len(content) == Config.MAX_RESULTS and glsq:
+        if len(content) == Config.MAX_RESULTS.get and glsq:
             g.current_page += 1
             good = True
 
@@ -2678,7 +2691,8 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
             parturl == g.last_search_query['playlist']:
 
         # go to pagenum
-        s, e = (pagenum - 1) * Config.MAX_RESULTS, pagenum * Config.MAX_RESULTS
+        s = (pagenum - 1) * Config.MAX_RESULTS.get
+        e = pagenum * Config.MAX_RESULTS.get
 
         if dumps:
             s, e = 0, 99999
@@ -2716,7 +2730,7 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
     g.browse_mode = "normal"
     g.ytpl = dict(name=ytpl_title, items=songs)
     g.current_page = 1
-    g.model.songs = songs[:Config.MAX_RESULTS]
+    g.model.songs = songs[:Config.MAX_RESULTS.get]
     # preload first result url
     kwa = {"song": songs[0], "delay": 0}
     t = threading.Thread(target=preload, kwargs=kwa)
