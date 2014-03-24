@@ -170,6 +170,25 @@ def get_config_dir():
     return mps_confdir
 
 
+def has_exefile(filename):
+    """ Check whether file exists in path and is executable. """
+
+    paths = os.environ.get("PATH", []).split(os.pathsep)
+    dbg("searching path for %s", filename)
+
+    for path in paths:
+        exepath = os.path.join(path, filename)
+
+        if os.path.exists(exepath):
+            if os.path.isfile(exepath):
+
+                if os.access(exepath, os.X_OK):
+                    dbg("found at %s", exepath)
+                    return exepath
+
+    return False
+
+
 class Video(object):
 
     """ Class to represent a YouTube video. """
@@ -431,7 +450,9 @@ def init():
     init_readline()
     init_opener()
 
-    if not has_config() and has_exefile("mpv"):
+    # set player to mpv if no config file exists and mpv is installed
+    if not os.path.exists(g.CFFILE) and not has_exefile("mplayer") and\
+            has_exefile("mpv"):
         Config.PLAYER = "mpv"
         saveconfig()
 
@@ -469,12 +490,6 @@ def init_opener():
     g.urlopen = opener.open
 
 
-def has_config():
-    """ Check whether config file has been saved before. """
-
-    return os.path.exists(g.CFFILE)
-
-
 def has_known_player():
     """ Return true if the set player is known. """
 
@@ -487,25 +502,6 @@ def has_known_player():
 
         if match:
             return True
-
-    return False
-
-
-def has_exefile(filename):
-    """ Check whether file exists in path and is executable. """
-
-    paths = os.environ.get("PATH", []).split(os.pathsep)
-    dbg("searching path for %s", filename)
-
-    for path in paths:
-        exepath = os.path.join(path, filename)
-
-        if os.path.exists(exepath):
-            if os.path.isfile(exepath):
-
-                if os.access(exepath, os.X_OK):
-                    dbg("found at %s", exepath)
-                    return exepath
 
     return False
 
@@ -621,9 +617,9 @@ def setconfig(key, val):
         setattr(Config, key, val_orig)
         success_msg = "PLAYERARGS set to %s" % val_orig
 
-    elif key == "PLAYERARGS" and val == "DEFAULT":
-        setattr(Config, key, "")
-        success_msg = "PLAYERARGS set to %s" % val
+    #elif key == "PLAYERARGS" and val == "DEFAULT":
+        #setattr(Config, key, "")
+        #success_msg = "PLAYERARGS set to %s" % val
 
     elif key == "FULLSCREEN" and val == "DEFAULT":
         setattr(*FALSE)
@@ -1137,7 +1133,7 @@ def list_update(item, lst, remove=False):
 def generate_real_playerargs(song, override):
     """ Generate args for player command.
 
-    Returns args and songdata status.
+    Return args and songdata status.
 
     """
 
@@ -2895,6 +2891,9 @@ undo)
 {2}set{1} - view current configuration.
 {2}set fullscreen true{1} - play video content in fullscreen mode.
 {2}set player mpv{1} or {2}set player mplayer{1} - change player application
+
+{2}set playerargs -geometry 720x480+1+1{1} - 480p window, top-left
+{2}set playerargs -geometry 720x480-1+1{1} - 480p window, top-right
 """.format(c.ul, c.w, c.y, c.r))
 ]
 
