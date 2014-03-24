@@ -1849,6 +1849,7 @@ def down_many(dltype, choice):
     g.model.songs = downsongs[::]
     count = len(downsongs)
     av = "audio" if dltype.startswith("da") else "video"
+    msg = ""
 
     def handle_error(message):
         """ Handle error in download. """
@@ -1869,6 +1870,11 @@ def down_many(dltype, choice):
 
             try:
                 filename = _make_fname(song, None, av=av)
+
+            except IOError as e:
+                handle_error("Error for %s: %s" % (song.title, e.message))
+                count -= 1
+                continue
 
             except KeyError:
                 handle_error("No audio track for %s" % song.title)
