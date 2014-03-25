@@ -315,10 +315,13 @@ def get_size(video, is_video):
 
 class ConfigItem(object):
 
-    def __init__(self, name, value, minval=None, maxval=None, check_fn=None):
+    """ A configuration item. """
 
-        """ If specified, the check_fn should return a dict:
-            {valid: bool, message: success/fail mesage, value: value to set}
+    def __init__(self, name, value, minval=None, maxval=None, check_fn=None):
+        """ If specified, the check_fn should return a dict.
+
+        {valid: bool, message: success/fail mesage, value: value to set}
+
         """
 
         self.default = self.value = value
@@ -337,16 +340,8 @@ class ConfigItem(object):
     def display(self):
         """ Return value in a format suitable for display. """
 
-        #square_brackets = lambda x: "[%s]" % x
-        quotes = lambda x: '"%s"' % x
         retval = self.value
-
-        #if self.type == bool:
-            #retval = square_brackets(retval)
-
-        #eli self.type == str:
-            #retval = quotes(retval)
-
+        # display specific operations to go here
         return retval
 
     def set(self, value):
@@ -354,10 +349,12 @@ class ConfigItem(object):
 
         # note: fail_msg should contain %s %s for self.name, value
         #       success_msg should not
+        # pylint: disable=R0912
+        # too many branches
 
         success_msg = fail_msg = ""
         value = value.strip()
-        value_orig = value.strip()
+        value_orig = value
         green = lambda x: "%s%s%s" % (c.g, x, c.w)
 
         # handle true / false values
@@ -366,7 +363,7 @@ class ConfigItem(object):
 
             if value.upper() in "0 OFF NO DISABLED FALSE".split():
                 value = False
-                success_msg =  "%s set to False" % green(self.name)
+                success_msg = "%s set to False" % green(self.name)
 
             elif value.upper() in "1 ON YES ENABLED TRUE".split():
                 value = True
@@ -1052,9 +1049,8 @@ def playback_progress(idx, allsongs, repeat=False):
     # pylint: disable=R0914
     # too many local variables
     out = "  %s%-71s%s%s\n" % (c.ul, "Title", "Time", c.w)
-    show_key_help = (Config.PLAYER.get == "mplayer" or\
-                     Config.PLAYER.get == "mpv")\
-        and Config.SHOW_MPLAYER_KEYS.get
+    show_key_help = (Config.PLAYER.get in ["mplayer", "mpv"]
+                     and Config.SHOW_MPLAYER_KEYS.get)
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
@@ -1191,7 +1187,7 @@ def writeline(text):
 
 
 def list_update(item, lst, remove=False):
-    """ Adds item to list if not already present. Removes if present. """
+    """ Add or remove item from list, checking first to avoid exceptions. """
 
     if not remove and not item in lst:
         lst.append(item)
@@ -1227,6 +1223,8 @@ def generate_real_playerargs(song, override):
     key = "a" if not video else "v"
     size = get_size(song, is_video=video)
     songdata = song.ytid, song.urls[key]['ext'], int(size / (1024 ** 2))
+    # pylint: disable=E1103
+    # pylint thinks PLAYERARGS.get might be bool
     args = Config.PLAYERARGS.get.strip().split() if Config.PLAYERARGS.get \
         else []
 
