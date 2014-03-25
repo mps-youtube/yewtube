@@ -337,8 +337,16 @@ class ConfigItem(object):
     def display(self):
         """ Return value in a format suitable for display. """
 
+        #square_brackets = lambda x: "[%s]" % x
+        quotes = lambda x: '"%s"' % x
         retval = self.value
-        # more display specific code to go here, eg. for displaying lists
+
+        #if self.type == bool:
+            #retval = square_brackets(retval)
+
+        #eli self.type == str:
+            #retval = quotes(retval)
+
         return retval
 
     def set(self, value):
@@ -349,6 +357,8 @@ class ConfigItem(object):
 
         success_msg = fail_msg = ""
         value = value.strip()
+        value_orig = value.strip()
+        green = lambda x: "%s%s%s" % (c.g, x, c.w)
 
         # handle true / false values
 
@@ -356,21 +366,21 @@ class ConfigItem(object):
 
             if value.upper() in "0 OFF NO DISABLED FALSE".split():
                 value = False
-                success_msg =  "%s set to False" % self.name
+                success_msg =  "%s set to False" % green(self.name)
 
             elif value.upper() in "1 ON YES ENABLED TRUE".split():
                 value = True
-                success_msg = "%s set to True" % self.name
+                success_msg = "%s set to True" % green(self.name)
 
             else:
-                fail_msg = "%s requires True/False, got: %s"
+                fail_msg = "%s requires True/False, got %s"
 
         # handle int values
 
         elif self.type == int:
 
             if not value.isdigit():
-                fail_msg = "%s requires a number, got: %s"
+                fail_msg = "%s requires a number, got %s"
 
             else:
                 value = int(value)
@@ -383,39 +393,66 @@ class ConfigItem(object):
                         fail_msg = "%s" + m + "%s"
 
                 if not fail_msg:
-                    success_msg = "%s set to %s" % (self.name, value)
+                    success_msg = "%s set to %s" % (green(self.name), value)
 
         # handle space separated list
 
         elif self.type == list:
-            success_msg = "%s set to %s" % (self.name, value)
+            success_msg = "%s set to %s" % (green(self.name), value)
             value = value.split()
 
-        if fail_msg:
-            colvals = c.y + self.name + c.w, c.r + value + c.w
-            return fail_msg % colvals
+        # handle string values
 
+        elif self.type == str:
+            success_msg = "%s set to %s" % (green(self.name), green(value))
+
+        # handle failure
+
+        colvals = c.y + self.name + c.w, c.y + value_orig + c.w
+
+        if fail_msg:
+            return fail_msg % colvals
 
         elif self.check_fn:
             checked = self.check_fn(value)
             value = checked.get("value") or value
 
             if checked['valid']:
-                value = checked.get("value") or value
+                value = checked.get("value", value)
                 self.value = value
-                return checked.get("message") or success_msg
+                saveconfig()
+                return checked.get("message", success_msg)
 
             else:
-                return checked.get('message') or fail_msg % colvals
+                return checked.get('message', fail_msg)
 
         elif success_msg:
             self.value = value
+            saveconfig()
             return success_msg
 
 
-def permisive(x):
-    # valid, message, value
-    return dict(valid=True, message="Looks good to me", value=x)
+def check_ddir(d):
+    """ Check whether dir is a valid directory. """
+
+    if os.path.isdir(d):
+        message = "Downloads will be saved to " + c.y + d + c.w
+        return dict(valid=True, message=message)
+
+    else:
+        message = "Not a valid directory: " + c.r + d + c.w
+        return dict(valid=False, message=message)
+
+
+def check_colours(val):
+    """ Check whether colour config value can be set. """
+
+    if val and mswin and not has_colorama:
+        message = "The colorama module needs to be installed for colour output"
+        return dict(valid=False, message=message)
+
+    else:
+        return dict(valid=True)
 
 
 class Config(object):
@@ -429,12 +466,12 @@ class Config(object):
     SHOW_MPLAYER_KEYS = ConfigItem("show_mplayer_keys", True)
     FULLSCREEN = ConfigItem("fullscreen", False)
     SHOW_STATUS = ConfigItem("show_status", True)
-    DDIR = ConfigItem("ddir", get_default_ddir(), check_fn=permisive)
+    DDIR = ConfigItem("ddir", get_default_ddir(), check_fn=check_ddir)
     SHOW_VIDEO = ConfigItem("show_video", False)
     SEARCH_MUSIC = ConfigItem("search_music", True)
     COLOURS = ConfigItem("colours",
                          False if mswin and not has_colorama else True,
-                         check_fn=permisive)
+                         check_fn=check_colours)
 
 
 class Playlist(object):
@@ -636,9 +673,8 @@ def showconfig(_):
 def saveconfig():
     """ Save current config to file. """
 
-    #config = {setting: getattr(Config, setting) for setting in g.config}
-    #pickle.dump(config, open(g.CFFILE, "wb"), protocol=2)
-    pass
+    config = {setting: getattr(Config, setting).value for setting in g.config}
+    pickle.dump(config, open(g.CFFILE, "wb"), protocol=2)
 
 
 def import_config():
@@ -651,8 +687,14 @@ def import_config():
             getattr(Config, k).value = v
 
         # Update config files from versions <= 0.01.41
-        # pylint: disable=E1103
         if type(Config.PLAYERARGS.get) == list:
+            redu = ("-really-quiet --really-quiet -prefer-ipv4 -nolirc "
+                    "-fs --fs".split())
+
+            for redundant in redu:
+                dbg("removing redundant arg %s", redundant)
+                list_update(redundant, Config.PLAYERARGS.value, remove=True)
+
             Config.PLAYERARGS.value = " ".join(Config.PLAYERARGS.get)
             saveconfig()
 
@@ -684,13 +726,30 @@ class c(object):
 def setconfig(key, val):
     """ Set configuration variable. """
 
-    if not key.upper() in g.config:
-        g.message = "Unknown config item: %s%s%s" % (c.r, key, c.w)
+    if key.upper() == "ALL" and val.upper() == "DEFAULT":
+
+        for ci in g.config:
+            getattr(Config, ci).value = getattr(Config, ci).default
+
+        saveconfig()
+        message = "Default configuration reinstated"
+
+    elif not key.upper() in g.config:
+        message = "Unknown config item: %s%s%s" % (c.r, key, c.w)
+
+    elif val.upper() == "DEFAULT":
+        att = getattr(Config, key.upper())
+        att.value = att.default
+        message = "%s%s%s set to %s%s%s (default)"
+        message = message % (c.y, key, c.w, c.y, att.display, c.w)
+        saveconfig()
 
     else:
-        g.message = getattr(Config, key.upper()).set(val)
+        # saveconfig() will be called by Config.set() method
+        message = getattr(Config, key.upper()).set(val)
 
     showconfig(1)
+    g.message = message
 
 
 def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
