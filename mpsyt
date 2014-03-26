@@ -1317,6 +1317,11 @@ def generate_real_playerargs(song, override, failcount=0):
         video = True
         stream = select_stream(g.streams[song.ytid], q=q, audio=False)
 
+    if not stream and video:
+        msg = "No matching stream found, try: set max_res default"
+        msg = msg if Config.MAX_RES.get < 720 else msg.split(",")[0]
+        raise IOError(msg)
+
     size = get_size(song.ytid, stream['url'])
     songdata = song.ytid, stream['ext'], int(size / (1024 ** 2))
 
