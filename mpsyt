@@ -1295,7 +1295,7 @@ def list_update(item, lst, remove=False):
         lst.remove(item)
 
 
-def generate_real_playerargs(song, override):
+def generate_real_playerargs(song, override, failcount=0):
     """ Generate args for player command.
 
     Return args and songdata status.
@@ -1306,7 +1306,8 @@ def generate_real_playerargs(song, override):
     video = True if override in ("fullscreen", "window") else video
     video = False if override == "audio" else video
     m4a = not Config.PLAYER.get == "mplayer"
-    stream = select_stream(g.streams[song.ytid], audio=not video, m4a_ok=m4a)
+    q, audio = failcount, not video
+    stream = select_stream(g.streams[song.ytid], q=q, audio=audio, m4a_ok=m4a)
 
     # handle no audio stream available, or m4a with mplayer
     # by switching to video stream and suppressing video output.
@@ -1314,7 +1315,7 @@ def generate_real_playerargs(song, override):
         dbg(c.r + "no audio or mplayer m4a, using to video stream" + c.w)
         override = "a-v"
         video = True
-        stream = select_stream(g.streams[song.ytid], audio=False)
+        stream = select_stream(g.streams[song.ytid], q=q, audio=False)
 
     size = get_size(song.ytid, stream['url'])
     songdata = song.ytid, stream['ext'], int(size / (1024 ** 2))
@@ -1379,11 +1380,19 @@ def playsong(song, failcount=0, override=False):
         dbg("----valueerror in playsong call to get_streams")
         return
 
-    cmd, songdata = generate_real_playerargs(song, override)
+    try:
+        cmd, songdata = generate_real_playerargs(song, override, failcount)
+
+    except HTTPError:
+        # Fix for invalid streams (gh-65)
+        failcount += 1
+
+        if failcount < g.max_retries:
+            return playsong(song, failcount=failcount, override=override)
+
     now = time.time()
     songdata = "%s; %s; %s Mb" % songdata
     writestatus(songdata)
-
     logging.info("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
     dbg("calling %s", " ".join(cmd))
 
@@ -1416,15 +1425,15 @@ def playsong(song, failcount=0, override=False):
             pass
 
     fin = time.time()
-    failed = fin - now < 1 and song.length > 1
+    failed = fin - now < 2 and song.length > 1
 
     if failed and failcount < g.max_retries:
-        #reset_video(song)
-        # ----todo: rewrite fail handling code
-        logging.warn("stream failed to open")
+        dbg(c.r + "stream failed to open" + c.w)
         dbg("trying again (attempt %s)" % (2 + failcount))
-        writestatus(F("cant get track") % song.title)
-        time.sleep(1)
+        g.pafs.pop(song.ytid, 0)
+        g.streams.pop(song.ytid, 0)
+        writestatus("error: retrying")
+        time.sleep(1.2)
         failcount += 1
         playsong(song, failcount=failcount, override=override)
 
