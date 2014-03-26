@@ -1,12 +1,13 @@
 Version 0.01.42
 In development, not yet released
 
- - Add MAX_RES config item for selecting resolution (#56)
- - Fix UnicodeDecodeError in mplayer progress parsing (#58)
- - Fix UnicodeEncodeError under Windows with Python 2.7 (#59)
+ - Add MAX_RES config item for selecting resolution (gh request 56)
+ - Fix UnicodeDecodeError in mplayer progress parsing (gh issue 58)
+ - Fix UnicodeEncodeError under Windows with Python 2.7 (gh issue 59)
+ - Improved handling of playlist file read/write (issue 66)
+ - Revert to lower quality on failed streams (issue 65)
  - Improved url caching
- - Improved handling of playlist file read/write (#66)
- - Enabled multiple invocation commands (comma separated)
+ - Enabled multiple invocation commands (comma separated) (gh request #
     Eg: mpsyt //the doors, 1, shuffle, 1-3-a, quit
  - Added shuffle command (no arguments, shuffles displayed items)
  - Handle 'video not available in your country' during multiple downloads
