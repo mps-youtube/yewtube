@@ -1389,17 +1389,34 @@ def playsong(song, failcount=0, override=False):
         cmd, songdata = generate_real_playerargs(song, override, failcount)
 
     except HTTPError:
-        # Fix for invalid streams (gh-65)
-        failcount += 1
 
+        # Fix for invalid streams (gh-65)
         if failcount < g.max_retries:
+            failcount += 1
             return playsong(song, failcount=failcount, override=override)
 
-    now = time.time()
     songdata = "%s; %s; %s Mb" % songdata
     writestatus(songdata)
-    logging.info("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
+    dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
     dbg("calling %s", " ".join(cmd))
+    now = time.time()
+    launch_player(song, songdata, cmd)
+    fin = time.time()
+    failed = fin - now < 2 and song.length > 1
+
+    if failed and failcount < g.max_retries:
+        dbg(c.r + "stream failed to open" + c.w)
+        dbg("trying again (attempt %s)" % (2 + failcount))
+        g.pafs.pop(song.ytid, 0)
+        g.streams.pop(song.ytid, 0)
+        writestatus("error: retrying")
+        time.sleep(1.2)
+        failcount += 1
+        playsong(song, failcount=failcount, override=override)
+
+
+def launch_player(song, songdata, cmd):
+    """ Launch player application. """
 
     try:
 
@@ -1428,19 +1445,6 @@ def playsong(song, failcount=0, override=False):
 
         except (OSError, AttributeError, UnboundLocalError):
             pass
-
-    fin = time.time()
-    failed = fin - now < 2 and song.length > 1
-
-    if failed and failcount < g.max_retries:
-        dbg(c.r + "stream failed to open" + c.w)
-        dbg("trying again (attempt %s)" % (2 + failcount))
-        g.pafs.pop(song.ytid, 0)
-        g.streams.pop(song.ytid, 0)
-        writestatus("error: retrying")
-        time.sleep(1.2)
-        failcount += 1
-        playsong(song, failcount=failcount, override=override)
 
 
 def mplayer_status(popen_object, prefix="", songlength=0):
