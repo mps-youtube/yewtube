@@ -1,8 +1,11 @@
 Version 0.01.42
 In development, not yet released
 
- - Fix UnicodeDecodeError in mplayer progress parsing (issue 58)
- - Fix UnicodeEncodeError under Windows with Python 2.7 (issue 59)
+ - Add MAX_RES config item for selecting resolution (#56)
+ - Fix UnicodeDecodeError in mplayer progress parsing (#58)
+ - Fix UnicodeEncodeError under Windows with Python 2.7 (#59)
+ - Improved url caching
+ - Improved handling of playlist file read/write (#66)
  - Enabled multiple invocation commands (comma separated)
     Eg: mpsyt //the doors, 1, shuffle, 1-3-a, quit
  - Added shuffle command (no arguments, shuffles displayed items)

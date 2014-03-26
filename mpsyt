@@ -189,6 +189,16 @@ def has_exefile(filename):
     return False
 
 
+def get_content_length(url):
+    """ Return content length of a url. """
+
+    dbg(c.y + "getting content-length header" + c.w)
+    response = g.urlopen(url)
+    headers = response.headers
+    cl = headers['content-length']
+    return int(cl)
+
+
 class Video(object):
 
     """ Class to represent a YouTube video. """
@@ -197,119 +207,147 @@ class Video(object):
         self.ytid = ytid
         self.title = title
         self.length = int(length)
-        self.urls = dict(v={}, a={})
+        #self.urls = dict(v={}, a={})
 
 
-def is_valid(video):
-    """ Check with Video object has unexpired links. """
+def prune_streams():
+    """ Keep cache size in check. """
 
-    last = video.urls['v'].get("last")  # 'v' and 'a' are fetched together
-    valid = last and time.time() < last + g.expiry
-    return valid
+    #dbg(c.p + "     : 0: %s, %s%s", len(g.pafs), len(g.streams), c.w)
 
+    while len(g.pafs) > g.max_cached_streams:
+        g.pafs.popitem(last=False)
 
-def reset_video(video):
-    """ Clear url data of a Video object. """
+    while len(g.streams) > g.max_cached_streams:
+        g.streams.popitem(last=False)
 
-    video.urls["v"]["last"] = 0
-    video.urls["v"]["url"] = ""
-    video.urls["a"]["last"] = 0
-    video.urls["a"]["url"] = ""
+    #dbg(c.p + "prune: 1: %s, %s%s", len(g.pafs), len(g.streams), c.w)
 
+    # prune time expired items
 
-def populate_video(video, callback=None):
-    """ Populate Video object with pafy data.  Fetches new Pafy object. """
+    now = time.time()
+    oldpafs = [k for k in g.pafs if g.pafs[k].expiry < now]
+    if len(oldpafs):
+        dbg(c.r + "%s old pafy items pruned%s", len(oldpafs), c.w)
 
-    nullf = lambda x: None
-    callback = callback if callback else nullf
-    callback("Fetching video...")
+    for oldpaf in oldpafs:
+        g.pafs.pop(oldpaf, 0)
 
-    try:
-        dbg(" - pafy fetch for %s", video.title)
-        g.pafs[video.ytid] = pafy.new(video.ytid, callback=callback)
-        p = g.pafs[video.ytid]
+    oldstreams = [k for k in g.streams if g.streams[k]['expiry'] < now]
+    if len(oldstreams):
+        dbg(c.r + "%s old stream items pruned%s", len(oldstreams), c.w)
 
-    except (ValueError, IndexError):
-        raise IOError("Can't fetch this stream")
+    for oldstream in oldstreams:
+        g.streams.pop(oldstream, 0)
 
-    while len(g.pafs) > g.max_pafy_objects:
-        g.pafs.popitem(last=False)  # store maximum 500 objects
-
-    v = p.getbest()
-    preftype = "ogg" if Config.PLAYER.get == "mplayer" else "m4a"
-    #strict = Config.PLAYER == "mplayer"
-    a = p.getbestaudio(preftype=preftype, ftypestrict=False)
-    video.urls['v'] = dict(url=v.url, last=time.time(), ext=v.extension)
-
-    if a:  # audio streams may not be available
-        video.urls['a'] = dict(url=a.url, last=time.time(), ext=a.extension)
+    dbg(c.b + "paf: %s, streams: %s%s", len(g.pafs), len(g.streams), c.w)
 
 
-def get_streams(video, force=False, future=False):
-    """ Check a video is valid, if not fetch new data. Return video. """
+def get_pafy(item, force=False, callback=None):
+    """ Get pafy object for an item. """
 
-    if force or not is_valid(video):
-        nullf = lambda x: None
-        callback = nullf if future else writestatus
-        populate_video(video, callback=callback)
+    nullfunc = lambda x: None
+    callback = callback or nullfunc
+    cached = g.pafs.get(item.ytid)
 
-    return video
-
-
-def get_content_length(url):
-    """ Return content length of a url. """
-
-    dbg("getting content-length header")
-    response = g.urlopen(url)
-    headers = response.headers
-    cl = headers['content-length']
-    return int(cl)
-
-
-def get_pafy(video):
-    """ Get valid pafy object for song. """
-
-    p = g.pafs.get(video.ytid)  # try to get pafy object from memory
-
-    if not p or not is_valid(video):
-        # fetch new pafy object if links expired or no pafy available
-        populate_video(video)
-
-    return g.pafs.get(video.ytid)
-
-
-def get_size(video, is_video):
-    """ Get size of item.  Store it in Video object. """
-
-    key = "v" if is_video else "a"
-    size = video.urls[key].get('size')
-
-    if size:
-        pass
-
-    elif not is_valid(video):
-        populate_video(video)
-
-        if is_video:
-            size = g.pafs[video.ytid].getbest().get_filesize()
-
-        else:
-            preftype = "ogg" if Config.PLAYER.get == "mplayer" else "m4a"
-            strict = Config.PLAYER.get == "mplayer"
-            a = g.pafs[video.ytid].getbestaudio(preftype=preftype,
-                                                ftypestrict=strict)
-            size = a.get_filesize() if a else 0
+    if not force and cached and cached.expiry > time.time():
+        dbg("get pafy cache hit for %s", cached.title)
+        dbg("remaining time is %s", str(cached.expiry - time.time()))
+        cached.fresh = False
+        return cached
 
     else:
-        url = video.urls[key].get("url")
 
         try:
-            size = get_content_length(url) if url else 0
+            dbg("%sget new pafy object: %s%s" % (c.y, item.ytid, c.w))
+            p = pafy.new(item.ytid, callback=callback)
+            dbg("%sgot new pafy object: %s%s" % (c.y, item.ytid, c.w))
 
-        except HTTPError:
-            size = 0
+        except IOError:
+            time.sleep(1)
+            if g.debug_mode:
+                print("retrying failed pafy get")
+                print(item.ytid)
+                print("failed")
+                print("press enter to continue")
+                compat_input()
+            p = pafy.new(item.ytid, callback=callback)
 
-    video.urls[key]['size'] = size
+        g.pafs[item.ytid] = p
+        p.fresh = True
+        dbg("%sgot new pafy object: %s%s" % (c.y, p.title, c.w))
+        return p
+
+
+def get_streams(vid, force=False, callback=None):
+    """ Get all streams as a dict.  callback function passed to get_pafy. """
+
+    now = time.time()
+    ytid = vid.ytid
+    have_stream = g.streams.get(ytid) and g.streams[ytid]['expiry'] > now
+
+    if not force and have_stream:
+        timeleft = int(g.streams[ytid]['expiry'] - now)
+        dbg(c.g + "Got streams from cache (" + str(timeleft) + " left)" + c.w)
+        return g.streams.get(ytid)['meta']
+
+    p = get_pafy(vid, force=force, callback=callback)
+
+    streams = []
+
+    for s in p.allstreams:
+        x = dict(url=s.url,
+                 ext=s.extension,
+                 quality=s.quality.replace("-3D", ""),
+                 mtype=s.mediatype,
+                 size=-1)
+        streams.append(x)
+
+    g.streams[ytid] = dict(expiry=p.expiry, meta=streams)
+    prune_streams()
+    return streams
+
+
+def select_stream(slist, q=0, audio=False, m4a_ok=True):
+    """ Select a stream from stream list. """
+
+    slist = slist['meta'] if type(slist) == dict else slist
+    au_streams = [x for x in slist if x['mtype'] == "audio"]
+
+    okres = lambda x: int(x['quality'].split("x")[1]) <= Config.MAX_RES.get
+    getq = lambda x: int(x['quality'].split("x")[1])
+    vo_streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
+    vo_streams = sorted(vo_streams, key=getq, reverse=True)
+
+    if not m4a_ok:
+        au_streams = [x for x in au_streams if not x['ext'] == "m4a"]
+
+    streams = au_streams if audio else vo_streams
+
+    try:
+        ret = streams[q]
+
+    except IndexError:
+        ret = None
+
+    return ret
+
+
+def get_size(ytid, url):
+    """ Get size of stream, try stream cache first. """
+
+    # try cached value
+    stream = [x for x in g.streams[ytid]['meta'] if x['url'] == url][0]
+    size = stream['size']
+
+    if not size == -1:
+        dbg(c.g + "using cached size" + c.w)
+
+    else:
+        size = get_content_length(url)
+        stream['size'] = size
+        dbg(c.y + "fetched and stashed content-length" + c.w)
+
     return size
 
 
@@ -341,7 +379,10 @@ class ConfigItem(object):
         """ Return value in a format suitable for display. """
 
         retval = self.value
-        # display specific operations to go here
+
+        if self.name == "max_res":
+            retval = str(retval) + "p"
+
         return retval
 
     def set(self, value):
@@ -457,6 +498,7 @@ class Config(object):
     """ Holds various configuration values. """
 
     MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
+    MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
     PLAYER = ConfigItem("player", "mplayer")
     PLAYERARGS = ConfigItem("playerargs", "")
     CHECKUPDATE = ConfigItem("checkupdate", True)
@@ -511,12 +553,11 @@ class g(object):
     ytpls = []
     browse_mode = "normal"
     preloading = []
-    expiry = 5 * 60 * 60  # 5 hours
+    #expiry = 5 * 60 * 60  # 5 hours
     blank_text = "\n" * 200
     helptext = []
-    #max_results = 19
     max_retries = 3
-    max_pafy_objects = 500
+    max_cached_streams = 1500
     url_memo = {}
     model = Playlist(name="model")
     last_search_query = {}
@@ -527,6 +568,7 @@ class g(object):
     userpl = {}
     ytpl = {}
     pafs = collections.OrderedDict()
+    streams = collections.OrderedDict()
     last_opened = message = content = ""
     config = [x for x in sorted(dir(Config)) if member_var(x)]
     configbool = [x for x in config if type(getattr(Config, x)) is bool]
@@ -535,6 +577,7 @@ class g(object):
     CFFILE = os.path.join(get_config_dir(), "config")
     OLD_PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
     PLFILE = os.path.join(get_config_dir(), "playlist_v2")
+    CACHEFILE = os.path.join(get_config_dir(), "cache_py_" + sys.version[0:5])
     READLINE_FILE = None
     playerargs_defaults = {
         "mpv": {"title": "--title",
@@ -590,10 +633,11 @@ def init():
     init_text()
     init_readline()
     init_opener()
+    init_cache()
 
     # set player to mpv if no config file exists and mpv is installed
-    if not os.path.exists(g.CFFILE) and not has_exefile("mplayer") and\
-            has_exefile("mpv"):
+    E = os.path.exists
+    if not E(g.CFFILE) and not has_exefile("mplayer") and has_exefile("mpv"):
         Config.PLAYER = ConfigItem("player", "mpv")
         saveconfig()
 
@@ -607,6 +651,23 @@ def init():
     process_cl_args(sys.argv)
 
 
+def init_cache():
+    """ Import cache file. """
+
+    if os.path.isfile(g.CACHEFILE):
+
+        try:
+
+            with open(g.CACHEFILE, "rb") as cf:
+                g.streams = pickle.load(cf)
+
+        except IOError:
+            dbg(c.r + "Cache file failed to open" + c.w)
+
+        dbg(c.g + "%s cached streams imported%s", str(len(g.streams)), c.w)
+        prune_streams()
+
+
 def init_readline():
     """ Enable readline for input history. """
 
@@ -618,7 +679,7 @@ def init_readline():
 
         if os.path.exists(g.READLINE_FILE):
             readline.read_history_file(g.READLINE_FILE)
-            dbg("Read history file")
+            dbg(c.g + "Read history file" + c.w)
 
 
 def init_opener():
@@ -671,26 +732,41 @@ def saveconfig():
     """ Save current config to file. """
 
     config = {setting: getattr(Config, setting).value for setting in g.config}
-    pickle.dump(config, open(g.CFFILE, "wb"), protocol=2)
+
+    with open(g.CFFILE, "wb") as cf:
+        pickle.dump(config, cf, protocol=2)
+
+    dbg(c.y + "Saved config: " + g.CFFILE + c.w)
+
+
+def savecache():
+    """ Save stream cache. """
+
+    with open(g.CACHEFILE, "wb") as cf:
+        pickle.dump(g.streams, cf, protocol=2)
+
+    dbg(c.g + "saved cache file: " + g.CACHEFILE + c.w)
 
 
 def import_config():
     """ Override config if config file exists. """
 
     if os.path.exists(g.CFFILE):
-        saved_config = pickle.load(open(g.CFFILE, "rb"))
+
+        with open(g.CFFILE, "rb") as cf:
+            saved_config = pickle.load(cf)
 
         for k, v in saved_config.items():
             getattr(Config, k).value = v
 
         # Update config files from versions <= 0.01.41
         if type(Config.PLAYERARGS.get) == list:
-            redu = ("-really-quiet --really-quiet -prefer-ipv4 -nolirc "
-                    "-fs --fs".split())
+            redundant = ("-really-quiet --really-quiet -prefer-ipv4 -nolirc "
+                         "-fs --fs".split())
 
-            for redundant in redu:
-                dbg("removing redundant arg %s", redundant)
-                list_update(redundant, Config.PLAYERARGS.value, remove=True)
+            for r in redundant:
+                dbg("removing redundant arg %s", r)
+                list_update(r, Config.PLAYERARGS.value, remove=True)
 
             Config.PLAYERARGS.value = " ".join(Config.PLAYERARGS.get)
             saveconfig()
@@ -861,15 +937,17 @@ def init_text():
 def save_to_file():
     """ Save playlists.  Called each time a playlist is saved or deleted. """
 
-    f = open(g.PLFILE, "wb")
-    pickle.dump(g.userpl, f, protocol=2)
-    dbg("Playlist saved\n---")
+    with open(g.PLFILE, "wb") as plf:
+        pickle.dump(g.userpl, plf, protocol=2)
+
+    dbg(c.r + "Playlist saved\n---" + c.w)
 
 
 def open_from_file():
     """ Open playlists. Called once on script invocation. """
 
     try:
+
         with open(g.PLFILE, "rb") as plf:
             g.userpl = pickle.load(plf)
 
@@ -878,6 +956,27 @@ def open_from_file():
         if not os.path.isfile(g.PLFILE):
             g.userpl = {}
             save_to_file()
+
+    except EOFError:
+        print("Error opening playlists from %s" % g.PLFILE)
+        sys.exit()
+
+    # remove any cached urls from playlist file, these are now
+    # stored in a separate cache file
+
+    save = False
+
+    for k, v in g.userpl.items():
+
+        for song in v.songs:
+
+            if hasattr(song, "urls"):
+                dbg("remove %s: %s", k, song.urls)
+                del song.urls
+                save = True
+
+    if save:
+        save_to_file()
 
 
 def convert_playlist_to_v2():
@@ -1206,23 +1305,20 @@ def generate_real_playerargs(song, override):
     video = Config.SHOW_VIDEO.get
     video = True if override in ("fullscreen", "window") else video
     video = False if override == "audio" else video
-
-    stream = song.urls['v']['url'] if video else song.urls['a'].get('url')
-    aext = song.urls['a'].get("ext")
+    m4a = not Config.PLAYER.get == "mplayer"
+    stream = select_stream(g.streams[song.ytid], audio=not video, m4a_ok=m4a)
 
     # handle no audio stream available, or m4a with mplayer
     # by switching to video stream and suppressing video output.
-    if any([not stream and not video,
-            not video and Config.PLAYER.get == "mplayer" and aext == "m4a"]):
-
-        dbg("no audio available or mplayer m4a, overriding to video")
+    if not stream and not video:
+        dbg(c.r + "no audio or mplayer m4a, using to video stream" + c.w)
         override = "a-v"
         video = True
-        stream = song.urls['v']['url']
+        stream = select_stream(g.streams[song.ytid], audio=False)
 
-    key = "a" if not video else "v"
-    size = get_size(song, is_video=video)
-    songdata = song.ytid, song.urls[key]['ext'], int(size / (1024 ** 2))
+    size = get_size(song.ytid, stream['url'])
+    songdata = song.ytid, stream['ext'], int(size / (1024 ** 2))
+
     # pylint: disable=E1103
     # pylint thinks PLAYERARGS.get might be bool
     args = Config.PLAYERARGS.get.strip().split() if Config.PLAYERARGS.get \
@@ -1240,7 +1336,6 @@ def generate_real_playerargs(song, override):
         if override == "a-v":
             list_update(novid_arg, args)
 
-        # handle fullscreen / window overrides
         elif override == "fullscreen":
             list_update(fs_arg, args)
 
@@ -1248,7 +1343,8 @@ def generate_real_playerargs(song, override):
             list_update(fs_arg, args, remove=True)
 
         # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
-        if not video and song.urls["a"].get("ext") == "m4a":
+        if not video and stream['ext'] == "m4a":
+            dbg("using ignidx flag")
             list_update(pd["ignidx"], args)
 
         if "mplayer" in Config.PLAYER.get:
@@ -1258,7 +1354,7 @@ def generate_real_playerargs(song, override):
         elif "mpv" in Config.PLAYER.get:
             list_update("--really-quiet", args)
 
-    return [Config.PLAYER.get] + args + [stream], songdata
+    return [Config.PLAYER.get] + args + [stream['url']], songdata
 
 
 def playsong(song, failcount=0, override=False):
@@ -1271,14 +1367,16 @@ def playsong(song, failcount=0, override=False):
         time.sleep(0.1)
 
     try:
-        get_streams(song, force=failcount)
+        get_streams(song, force=failcount, callback=writestatus)
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
+        dbg("----ioerror in playsong call to get_streams %s", e.message)
         g.message = F('cant get track') % str(e)
         return
 
     except ValueError:
         g.message = F('track unresolved')
+        dbg("----valueerror in playsong call to get_streams")
         return
 
     cmd, songdata = generate_real_playerargs(song, override)
@@ -1286,8 +1384,8 @@ def playsong(song, failcount=0, override=False):
     songdata = "%s; %s; %s Mb" % songdata
     writestatus(songdata)
 
-    logging.info("playing %s (%s)", song.title, failcount)
-    dbg("calling %s", cmd)
+    logging.info("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
+    dbg("calling %s", " ".join(cmd))
 
     try:
 
@@ -1321,16 +1419,14 @@ def playsong(song, failcount=0, override=False):
     failed = fin - now < 1 and song.length > 1
 
     if failed and failcount < g.max_retries:
-        reset_video(song)
+        #reset_video(song)
+        # ----todo: rewrite fail handling code
         logging.warn("stream failed to open")
         dbg("trying again (attempt %s)" % (2 + failcount))
         writestatus(F("cant get track") % song.title)
         time.sleep(1)
         failcount += 1
         playsong(song, failcount=failcount, override=override)
-
-    if not failed:
-        save_to_file()
 
 
 def mplayer_status(popen_object, prefix="", songlength=0):
@@ -1657,14 +1753,14 @@ def _make_fname(song, ext=None, av=None):
     if not os.path.exists(Config.DDIR.get):
         os.makedirs(Config.DDIR.get)
 
-    get_streams(song)
+    streams = get_streams(song)
 
     if ext:
         extension = ext
 
     else:
-        key = "a" if av == "audio" else "v"
-        extension = song.urls[key]['ext']
+        stream = select_stream(streams, 0, audio=av == "audio", m4a_ok=True)
+        extension = stream['ext']
 
     filename = song.title[:59] + "." + extension
     filename = os.path.join(Config.DDIR.get,
@@ -1676,7 +1772,6 @@ def _download(song, filename, url=None, audio=False):
     """ Download file, show status, return filename. """
     # pylint: disable=R0914
     # too many local variables
-    # pylint: disable=E1103
     # Instance of 'bool' has no 'url' member (some types not inferable)
 
     print("Downloading to %s%s%s ..\n" % (c.r, filename, c.w))
@@ -1684,9 +1779,9 @@ def _download(song, filename, url=None, audio=False):
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
 
     if not url:
-        get_streams(song)
-        key = "a" if audio else "v"
-        url = song.urls[key]["url"]
+        streams = get_streams(song)
+        stream = select_stream(streams, 0, audio=audio, m4a_ok=True)
+        url = stream['url']
 
     resp = g.urlopen(url)
     total = int(resp.info()['Content-Length'].strip())
@@ -1920,7 +2015,7 @@ def down_many(dltype, choice):
     try:
         for song in downsongs:
             disp = generate_songlist_display()
-            title = "Downloading selection (%s):%s\n\n" % (av, c.w)
+            title = "Download Queue (%s):%s\n\n" % (av, c.w)
             disp = re.sub(r"(Item\s*?Title.*?\n)", title, disp)
             g.content = disp
             screen_update()
@@ -2047,15 +2142,23 @@ def vp():
 def preload(song, delay=2, override=False):
     """  Get streams (runs in separate thread). """
 
-    g.preloading.append(song.ytid)
+    ytid = song.ytid
+    g.preloading.append(ytid)
     time.sleep(delay)
     video = Config.SHOW_VIDEO.get
     video = True if override in ("fullscreen", "window") else video
     video = False if override == "audio" else video
 
     try:
-        get_streams(song, future=True)
-        get_size(song, is_video=video)
+        stream = get_streams(song)
+        m4a = not Config.PLAYER.get == "mplayer"
+        stream = select_stream(stream, audio=not video, m4a_ok=m4a)
+
+        if not stream and not video:
+            # preload video stream, no audio available
+            stream = select_stream(g.streams[ytid], audio=False)
+
+        get_size(ytid, stream['url'])
 
     except (ValueError, AttributeError, IOError) as e:
         dbg(e)  # Fail silently on preload
@@ -2195,6 +2298,8 @@ def quits(showlogo=True):
         readline.write_history_file(g.READLINE_FILE)
         dbg("Saved history file")
 
+    savecache()
+
     msg = g.blank_text + logo(c.r, version=__version__) if showlogo else ""
     vermsg = ""
     print(msg + F("exitmsg", 2))
@@ -2231,7 +2336,15 @@ def get_dl_data(song, mediatype="any"):
     for n, stream in enumerate(streams):
         sys.stdout.write(text + "-" * n + ">" + " " * (l - n - 1) + "<\r")
         sys.stdout.flush()
-        size = mbsize(stream.get_filesize())
+        #---- line below can cause TypeError from pafy line 67 makeurl
+        #---- raw += "&signature=" + sig
+        #---- sig is NoneType
+        try:
+            size = mbsize(stream.get_filesize())
+
+        except TypeError:
+            dbg(c.r + "---Error getting stream size" + c.w)
+            size = 0
 
         item = {'mediatype': stream.mediatype,
                 'size': size,
