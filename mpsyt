@@ -189,10 +189,11 @@ def has_exefile(filename):
     return False
 
 
-def get_content_length(url):
+def get_content_length(url, preloading=False):
     """ Return content length of a url. """
 
-    dbg(c.y + "getting content-length header" + c.w)
+    prefix = "thread: " if preloading else ""
+    dbg(c.y + prefix + "getting content-length header" + c.w)
     response = g.urlopen(url)
     headers = response.headers
     cl = headers['content-length']
@@ -247,7 +248,7 @@ def get_pafy(item, force=False, callback=None):
     """ Get pafy object for an item. """
 
     nullfunc = lambda x: None
-    callback = callback or nullfunc
+    callback_fn = callback or nullfunc
     cached = g.pafs.get(item.ytid)
 
     if not force and cached and cached.expiry > time.time():
@@ -259,46 +260,46 @@ def get_pafy(item, force=False, callback=None):
     else:
 
         try:
-            dbg("%sget new pafy object: %s%s" % (c.y, item.ytid, c.w))
-            p = pafy.new(item.ytid, callback=callback)
-            dbg("%sgot new pafy object: %s%s" % (c.y, item.ytid, c.w))
+            p = pafy.new(item.ytid, callback=callback_fn)
 
-        except IOError:
-            time.sleep(1)
-            if g.debug_mode:
-                print("retrying failed pafy get")
-                print(item.ytid)
-                print("failed")
-                print("press enter to continue")
-                compat_input()
-            p = pafy.new(item.ytid, callback=callback)
+        except IOError as e:
+
+            if "pafy" in str(e):
+                dbg(c.p + "retrying failed pafy get: " + item.ytid + c.w)
+                p = pafy.new(item.ytid, callback=callback)
+
+            else:
+                raise
 
         g.pafs[item.ytid] = p
         p.fresh = True
-        dbg("%sgot new pafy object: %s%s" % (c.y, p.title, c.w))
+        thread = "thread: " if not callback else ""
+        dbg("%s%sgot new pafy object: %s%s" % (c.y, thread, p.title[:26], c.w))
+        dbg("%s%sgot new pafy object: %s%s" % (c.y, thread, p.videoid, c.w))
         return p
 
 
-def get_streams(vid, force=False, callback=None):
+def get_streams(vid, force=False, callback=None, threed=False):
     """ Get all streams as a dict.  callback function passed to get_pafy. """
 
     now = time.time()
     ytid = vid.ytid
     have_stream = g.streams.get(ytid) and g.streams[ytid]['expiry'] > now
+    prfx = "thread: " if not callback else ""
 
     if not force and have_stream:
-        timeleft = int(g.streams[ytid]['expiry'] - now)
-        dbg(c.g + "Got streams from cache (" + str(timeleft) + " left)" + c.w)
+        ss = str(int(g.streams[ytid]['expiry'] - now) // 60)
+        dbg("%s%sGot streams from cache (%s mins left)%s", c.g, prfx, ss, c.w)
         return g.streams.get(ytid)['meta']
 
     p = get_pafy(vid, force=force, callback=callback)
-
+    ps = p.allstreams if threed else [x for x in p.allstreams if not x.threed]
     streams = []
 
-    for s in p.allstreams:
+    for s in ps:
         x = dict(url=s.url,
                  ext=s.extension,
-                 quality=s.quality.replace("-3D", ""),
+                 quality=s.quality,
                  mtype=s.mediatype,
                  size=-1)
         streams.append(x)
@@ -308,13 +309,14 @@ def get_streams(vid, force=False, callback=None):
     return streams
 
 
-def select_stream(slist, q=0, audio=False, m4a_ok=True):
+def select_stream(slist, q=0, audio=False, m4a_ok=True, maxres=None):
     """ Select a stream from stream list. """
 
+    maxres = maxres or Config.MAX_RES.get
     slist = slist['meta'] if type(slist) == dict else slist
     au_streams = [x for x in slist if x['mtype'] == "audio"]
 
-    okres = lambda x: int(x['quality'].split("x")[1]) <= Config.MAX_RES.get
+    okres = lambda x: int(x['quality'].split("x")[1]) <= maxres
     getq = lambda x: int(x['quality'].split("x")[1])
     vo_streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
     vo_streams = sorted(vo_streams, key=getq, reverse=True)
@@ -323,32 +325,34 @@ def select_stream(slist, q=0, audio=False, m4a_ok=True):
         au_streams = [x for x in au_streams if not x['ext'] == "m4a"]
 
     streams = au_streams if audio else vo_streams
+    dbg("select stream, q: %s, audio: %s, len: %s", q, audio, len(streams))
 
     try:
         ret = streams[q]
 
     except IndexError:
-        ret = None
+        ret = streams[0] if q and len(streams) else None
 
     return ret
 
 
-def get_size(ytid, url):
+def get_size(ytid, url, preloading=False):
     """ Get size of stream, try stream cache first. """
 
     # try cached value
     stream = [x for x in g.streams[ytid]['meta'] if x['url'] == url][0]
     size = stream['size']
+    prefix = "thread: " if preloading else ""
 
     if not size == -1:
-        dbg(c.g + "using cached size" + c.w)
+        dbg("%s%susing cached size: %s%s", c.g, prefix, size, c.w)
 
     else:
-        size = get_content_length(url)
-        stream['size'] = size
-        dbg(c.y + "fetched and stashed content-length" + c.w)
+        writestatus("Getting content length", mute=preloading)
+        stream['size'] = get_content_length(url, preloading=preloading)
+        dbg("%s%s - content-length: %s%s", c.y, prefix, stream['size'], c.w)
 
-    return size
+    return stream['size']
 
 
 class ConfigItem(object):
@@ -367,6 +371,7 @@ class ConfigItem(object):
         self.type = type(value)
         self.maxval, self.minval = maxval, minval
         self.check_fn = check_fn
+        self.require_known_player = False
 
     @property
     def get(self):
@@ -398,9 +403,14 @@ class ConfigItem(object):
         value_orig = value
         green = lambda x: "%s%s%s" % (c.g, x, c.w)
 
+        # handle known player not set
+
+        if self.require_known_player and not has_known_player():
+            fail_msg = "%s requires mpv or mplayer, can't set to %s"
+
         # handle true / false values
 
-        if self.type == bool:
+        elif self.type == bool:
 
             if value.upper() in "0 OFF NO DISABLED FALSE".split():
                 value = False
@@ -482,6 +492,43 @@ def check_ddir(d):
         return dict(valid=False, message=message)
 
 
+def check_win_pos(pos):
+    """ Check window position input. """
+
+    if not pos.strip():
+        return dict(valid=True, message="Window position set to default")
+
+    pos = pos.lower()
+    reg = r"(TOP|BOTTOM).?(LEFT|RIGHT)"
+
+    if not re.match(reg, pos, re.I):
+        msg = "Try something like top-left or bottom-right (or default)"
+        return dict(valid=False, message=msg)
+
+    else:
+        p = re.match(reg, pos, re.I).groups()
+        p = "%s-%s" % p
+        msg = "Window position set to %s" % p
+        return dict(valid=True, message=msg, value=p)
+
+
+def check_win_size(size):
+    """ Check window size input. """
+
+    if not size.strip():
+        return dict(valid=True, message="Window size set to default")
+
+    size = size.lower()
+    reg = r"\d{1,4}x\d{1,4}"
+
+    if not re.match(reg, size, re.I):
+        msg = "Try something like 720x480"
+        return dict(valid=False, message=msg)
+
+    else:
+        return dict(valid=True, value=size)
+
+
 def check_colours(val):
     """ Check whether colour config value can be set. """
 
@@ -504,10 +551,15 @@ class Config(object):
     CHECKUPDATE = ConfigItem("checkupdate", True)
     SHOW_MPLAYER_KEYS = ConfigItem("show_mplayer_keys", True)
     FULLSCREEN = ConfigItem("fullscreen", False)
+    FULLSCREEN.require_known_player = True
     SHOW_STATUS = ConfigItem("show_status", True)
     DDIR = ConfigItem("ddir", get_default_ddir(), check_fn=check_ddir)
     SHOW_VIDEO = ConfigItem("show_video", False)
     SEARCH_MUSIC = ConfigItem("search_music", True)
+    WINDOW_POS = ConfigItem("window_pos", "", check_fn=check_win_pos)
+    WINDOW_POS.require_known_player = True
+    WINDOW_SIZE = ConfigItem("window_size", "", check_fn=check_win_size)
+    WINDOW_SIZE.require_known_player = True
     COLOURS = ConfigItem("colours",
                          False if mswin and not has_colorama else True,
                          check_fn=check_colours)
@@ -583,13 +635,15 @@ class g(object):
         "mpv": {"title": "--title",
                 "fs": "--fs",
                 "novid": "--no-video",
-                "ignidx": "--demuxer-lavf-o=fflags=+ignidx"
+                "ignidx": "--demuxer-lavf-o=fflags=+ignidx",
+                "geo": "--geometry"
                 },
         "mplayer": {"title": "-title",
                     "fs": "-fs",
                     "novid": "-novideo",
                     #"ignidx": "-lavfdopts o=fflags=+ignidx".split()
                     "ignidx": "",
+                    "geo": "-geometry"
                     }
     }
 
@@ -713,13 +767,14 @@ def showconfig(_):
 
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
+    hideme = "WINDOW_SIZE FULLSCREEN WINDOW_POS".split()
 
     for setting in g.config:
         val = getattr(Config, setting).display
 
-        # don't show fullscreen if unknown player
-        #if not has_known_player() and setting == "FULLSCREEN":
-            #continue
+        # don't show player specific settings if unknown player
+        if not has_known_player() and setting in hideme:
+            continue
 
         out += s % (c.g, setting.lower(), c.w, val)
 
@@ -761,6 +816,7 @@ def import_config():
 
         # Update config files from versions <= 0.01.41
         if type(Config.PLAYERARGS.get) == list:
+            Config.WINDOW_POS.value = "top-right"
             redundant = ("-really-quiet --really-quiet -prefer-ipv4 -nolirc "
                          "-fs --fs".split())
 
@@ -799,6 +855,7 @@ class c(object):
 def setconfig(key, val):
     """ Set configuration variable. """
 
+    key = key.replace("-", "_")
     if key.upper() == "ALL" and val.upper() == "DEFAULT":
 
         for ci in g.config:
@@ -1270,10 +1327,10 @@ def generate_songlist_display(song=False, zeromsg=None):
     return out + "\n" * (5 - len(songs)) if not song else out
 
 
-def writestatus(text):
+def writestatus(text, mute=False):
     """ Update status linei. """
 
-    if Config.SHOW_STATUS.get:
+    if not mute and Config.SHOW_STATUS.get:
         writeline(text)
 
 
@@ -1295,19 +1352,20 @@ def list_update(item, lst, remove=False):
         lst.remove(item)
 
 
-def generate_real_playerargs(song, override, failcount=0):
+def generate_real_playerargs(song, override, failcount):
     """ Generate args for player command.
 
     Return args and songdata status.
 
     """
 
+    #pylint: disable=R0914
     video = Config.SHOW_VIDEO.get
     video = True if override in ("fullscreen", "window") else video
     video = False if override == "audio" else video
     m4a = not Config.PLAYER.get == "mplayer"
-    q, audio = failcount, not video
-    stream = select_stream(g.streams[song.ytid], q=q, audio=audio, m4a_ok=m4a)
+    q, audio, cached = failcount, not video, g.streams[song.ytid]
+    stream = select_stream(cached, q=q, audio=audio, m4a_ok=m4a)
 
     # handle no audio stream available, or m4a with mplayer
     # by switching to video stream and suppressing video output.
@@ -1315,20 +1373,18 @@ def generate_real_playerargs(song, override, failcount=0):
         dbg(c.r + "no audio or mplayer m4a, using to video stream" + c.w)
         override = "a-v"
         video = True
-        stream = select_stream(g.streams[song.ytid], q=q, audio=False)
+        stream = select_stream(cached, q=q, audio=False, maxres=1600)
 
     if not stream and video:
-        msg = "No matching stream found, try: set max_res default"
-        msg = msg if Config.MAX_RES.get < 720 else msg.split(",")[0]
-        raise IOError(msg)
+        raise IOError("No streams available")
 
     size = get_size(song.ytid, stream['url'])
     songdata = song.ytid, stream['ext'], int(size / (1024 ** 2))
 
     # pylint: disable=E1103
     # pylint thinks PLAYERARGS.get might be bool
-    args = Config.PLAYERARGS.get.strip().split() if Config.PLAYERARGS.get \
-        else []
+    argsstr = Config.PLAYERARGS.get.strip()
+    args = argsstr.split() if argsstr else []
 
     if has_known_player():
         pd = g.playerargs_defaults[Config.PLAYER.get]
@@ -1337,6 +1393,21 @@ def generate_real_playerargs(song, override, failcount=0):
         novid_arg = pd["novid"]
         fs_arg = pd["fs"]
         list_update(fs_arg, args, remove=not Config.FULLSCREEN.get)
+
+        geometry = ""
+
+        if Config.WINDOW_SIZE.get and not "-geometry" in argsstr:
+            geometry = Config.WINDOW_SIZE.get
+
+        if Config.WINDOW_POS.get and not "-geometry" in argsstr:
+            wp = Config.WINDOW_POS.get
+            xx = "+1" if "top" in wp else "-1"
+            yy = "+1" if "left" in wp else "-1"
+            geometry += "%s%s" % (yy, xx)
+
+        if geometry:
+            list_update(pd['geo'], args)
+            list_update(geometry, args)
 
         # handle no audio stream available
         if override == "a-v":
@@ -1350,7 +1421,7 @@ def generate_real_playerargs(song, override, failcount=0):
 
         # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
         if not video and stream['ext'] == "m4a":
-            dbg("using ignidx flag")
+            dbg("%susing ignidx flag%s", c.y, c.w)
             list_update(pd["ignidx"], args)
 
         if "mplayer" in Config.PLAYER.get:
@@ -1376,9 +1447,20 @@ def playsong(song, failcount=0, override=False):
         get_streams(song, force=failcount, callback=writestatus)
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
-        dbg("----ioerror in playsong call to get_streams %s", e.message)
+        dbg("----ioerror in playsong call to get_streams %s", str(e))
         g.message = F('cant get track') % str(e)
-        return
+
+        if "Youtube says" in str(e):
+            g.message = str(e)
+            return
+
+        elif "pafy" in str(e):
+            g.message = str(e) + " - " + song.ytid
+            return
+
+        elif failcount < g.max_retries:
+            failcount += 1
+            return playsong(song, failcount=failcount, override=override)
 
     except ValueError:
         g.message = F('track unresolved')
@@ -1388,9 +1470,10 @@ def playsong(song, failcount=0, override=False):
     try:
         cmd, songdata = generate_real_playerargs(song, override, failcount)
 
-    except HTTPError:
+    except (HTTPError) as e:
 
         # Fix for invalid streams (gh-65)
+        dbg("----htterror in playsong call to gen_real_args %s", str(e))
         if failcount < g.max_retries:
             failcount += 1
             return playsong(song, failcount=failcount, override=override)
@@ -1398,17 +1481,15 @@ def playsong(song, failcount=0, override=False):
     songdata = "%s; %s; %s Mb" % songdata
     writestatus(songdata)
     dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
-    dbg("calling %s", " ".join(cmd))
+    #dbg("calling %s", " ".join(cmd))
     now = time.time()
     launch_player(song, songdata, cmd)
     fin = time.time()
-    failed = fin - now < 2 and song.length > 1
+    failed = fin - now < 1.25 and song.length > 2
 
     if failed and failcount < g.max_retries:
         dbg(c.r + "stream failed to open" + c.w)
-        dbg("trying again (attempt %s)" % (2 + failcount))
-        g.pafs.pop(song.ytid, 0)
-        g.streams.pop(song.ytid, 0)
+        dbg("%strying again (attempt %s)%s", c.r, (2 + failcount), c.w)
         writestatus("error: retrying")
         time.sleep(1.2)
         failcount += 1
@@ -1948,6 +2029,9 @@ def open_save_view(action, name):
             g.last_opened = name
             g.last_search_query = {}
             g.content = generate_songlist_display()
+            kwa = {"song": g.model.songs[0], "delay": 0}
+            t = threading.Thread(target=preload, kwargs=kwa)
+            t.start()
 
         elif saved and action == "view":
             g.browse_mode = "normal"
@@ -1956,6 +2040,9 @@ def open_save_view(action, name):
             g.message = F("pl viewed") % name
             g.last_opened = ""
             g.content = generate_songlist_display()
+            kwa = {"song": g.model.songs[0], "delay": 0}
+            t = threading.Thread(target=preload, kwargs=kwa)
+            t.start()
 
         elif not saved and action in "view open".split():
             g.message = F("pl not found") % name
@@ -2042,7 +2129,7 @@ def down_many(dltype, choice):
                 filename = _make_fname(song, None, av=av)
 
             except IOError as e:
-                handle_error("Error for %s: %s" % (song.title, e.message))
+                handle_error("Error for %s: %s" % (song.title, str(e)))
                 count -= 1
                 continue
 
@@ -2176,7 +2263,7 @@ def preload(song, delay=2, override=False):
             # preload video stream, no audio available
             stream = select_stream(g.streams[ytid], audio=False)
 
-        get_size(ytid, stream['url'])
+        get_size(ytid, stream['url'], preloading=True)
 
     except (ValueError, AttributeError, IOError) as e:
         dbg(e)  # Fail silently on preload
@@ -2276,7 +2363,8 @@ def show_help(choice):
                         "status show_status show_video video configuration "
                         "fullscreen full screen folder player mpv mplayer"
                         " settings default reset configure audio results "
-                        "max_results size lines rows height".split()),
+                        "max_results size lines rows height window "
+                        "position window_pos".split()),
 
              "playlists": ("save rename delete move rm ls mv sw add vp open"
                            " view".split())
@@ -3072,6 +3160,8 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set show_mplayer_keys true|false{1} - show keyboard help for mplayer and mpv
 {2}set show_status true|false{1} - show status messages and progress
 {2}set show_video true|false{1} - show video output (audio only if false)
+{2}set window_pos <top|bottom>-<left|right>{1} - set window position
+{2}set window_size <number>x<number>{1} - set window dimensions
 
 [Tip: you can use {2}1{1} and {2}0{1} in place of true and false]
 """.format(c.ul, c.w, c.y, c.r)),
@@ -3176,7 +3266,7 @@ def main():
         'user_pls': r'u(?:ser)?pl\s(.*)$',
         'save_last': r'save\s*$',
         'pl_search': r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
-        'setconfig': r'set\s*(\w+)\s*"?([^"]*)"?\s*$',
+        'setconfig': r'set\s+([-\w]+)\s*"?([^"]*)"?\s*$',
         'down_many': r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
         'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
         'user_more': r'u\s?([\d]{1,4})$',
@@ -3237,6 +3327,12 @@ if "--debug" in sys.argv:
     sys.argv = [_x for _x in sys.argv if not "--debug" in _x]
     g.debug_mode = True
     g.blank_text = "--\n"
+    logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
+    logging.basicConfig(level=logging.DEBUG, filename=logfile)
+    logging.getLogger("pafy").setLevel(logging.DEBUG)
+
+elif "--logging" in sys.argv:
+    sys.argv = [_x for _x in sys.argv if not "--logging" in _x]
     logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
     logging.basicConfig(level=logging.DEBUG, filename=logfile)
     logging.getLogger("pafy").setLevel(logging.DEBUG)
