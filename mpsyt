@@ -564,6 +564,7 @@ class Config(object):
     PLAYERARGS = ConfigItem("playerargs", "")
     CHECKUPDATE = ConfigItem("checkupdate", True)
     SHOW_MPLAYER_KEYS = ConfigItem("show_mplayer_keys", True)
+    SHOW_MPLAYER_KEYS.require_known_player = True
     FULLSCREEN = ConfigItem("fullscreen", False)
     FULLSCREEN.require_known_player = True
     SHOW_STATUS = ConfigItem("show_status", True)
@@ -782,16 +783,15 @@ def showconfig(_):
 
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
-    hideme = "WINDOW_SIZE FULLSCREEN WINDOW_POS".split()
 
     for setting in g.config:
-        val = getattr(Config, setting).display
+        val = getattr(Config, setting)
 
         # don't show player specific settings if unknown player
-        if not has_known_player() and setting in hideme:
+        if not has_known_player() and val.require_known_player:
             continue
 
-        out += s % (c.g, setting.lower(), c.w, val)
+        out += s % (c.g, setting.lower(), c.w, val.display)
 
     g.content = out
     g.message = "Enter %sset <key> <value>%s to change\n" % (c.g, c.w)
@@ -2380,7 +2380,8 @@ def show_help(choice):
                         "fullscreen full screen folder player mpv mplayer"
                         " settings default reset configure audio results "
                         "max_results size lines rows height window "
-                        "position window_pos".split()),
+                        "position window_pos quality resolution max_res "
+                        "".split()),
 
              "playlists": ("save rename delete move rm ls mv sw add vp open"
                            " view".split())
@@ -3164,13 +3165,14 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {0}Configuration{1}
 
 {2}set{1} - view current configuration
-
+{2}set <item> default{1} - set an item to its default value
 {2}set all default{1} - restore default settings
 
 {2}set checkupdate true|false{1} - check for updates on exit
 {2}set colours true|false{1} - use colours in display output
 {2}set ddir <download direcory>{1} - set where downloads are saved
 {2}set fullscreen true|false{1} - output video content in full-screen mode
+{2}set max_res <number>{1} - play / download maximum video resolution height
 {2}set max_results <number>{1} - show <number> results when searching (max 50)
 {2}set player <player app>{1} - use <player app> for playback
 {2}set playerargs <args>{1} - use specified arguments with player
@@ -3178,8 +3180,8 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set show_mplayer_keys true|false{1} - show keyboard help for mplayer and mpv
 {2}set show_status true|false{1} - show status messages and progress
 {2}set show_video true|false{1} - show video output (audio only if false)
-{2}set window_pos <top|bottom>-<left|right>{1} - set window position
-{2}set window_size <number>x<number>{1} - set window dimensions
+{2}set window_pos <top|bottom>-<left|right>{1} - set player window position
+{2}set window_size <number>x<number>{1} - set player window width & height
 
 [Tip: you can use {2}1{1} and {2}0{1} in place of true and false]
 """.format(c.ul, c.w, c.y, c.r)),
