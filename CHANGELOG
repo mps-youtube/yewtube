@@ -1,5 +1,5 @@
-Version 0.01.42
-In development, not yet released
+Version 0.01.44
+Mar 27 2014
 
  - Added max_res config item for selecting video resolution (request 56)
  - Added window_size and window_pos for selecting size / position of player
