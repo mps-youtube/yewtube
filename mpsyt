@@ -621,6 +621,7 @@ class g(object):
     ytpl = {}
     pafs = collections.OrderedDict()
     streams = collections.OrderedDict()
+    pafy_pls = {}  #
     last_opened = message = content = ""
     config = [x for x in sorted(dir(Config)) if member_var(x)]
     configbool = [x for x in config if type(getattr(Config, x)) is bool]
@@ -2850,14 +2851,15 @@ def info(num):
         p = g.ytpls[int(num) - 1]
 
         # fetch the playlist item as it has more metadata
-        yt_playlist = g.pafs.get(p['link'])
+        yt_playlist = g.pafy_pls.get(p['link'])
 
         if not yt_playlist:
             g.content = logo(col=c.g)
             g.message = "Fetching playlist info.."
             screen_update()
+            dbg("%sFetching playlist using pafy%s", c.y, c.w)
             yt_playlist = pafy.get_playlist(p['link'])
-            g.pafs[p['link']] = yt_playlist
+            g.pafy_pls[p['link']] = yt_playlist
 
         ytpl_likes = yt_playlist.get('likes', 0)
         ytpl_dislikes = yt_playlist.get('dislikes', 0)
@@ -2990,8 +2992,9 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
         g.message = "Retreiving YouTube playlist"
         screen_update()
 
+    dbg("%sFetching playlist using pafy%s", c.y, c.w)
     yt_playlist = pafy.get_playlist(parturl)
-    g.pafs[parturl] = yt_playlist
+    g.pafy_pls[parturl] = yt_playlist
     ytpl_items = yt_playlist['items']
     ytpl_title = yt_playlist['title']
     g.content = generate_songlist_display()
