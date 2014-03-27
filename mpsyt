@@ -294,6 +294,16 @@ def get_streams(vid, force=False, callback=None, threed=False):
 
     p = get_pafy(vid, force=force, callback=callback)
     ps = p.allstreams if threed else [x for x in p.allstreams if not x.threed]
+
+    try:
+        urls = [x.url for x in ps]
+
+    except TypeError:
+        dbg("%sType Error in get_streams. Retrying%s", c.r, c.w)
+        p = get_pafy(vid, force=True, callback=callback)
+        ps = p.allstreams if threed else [x for x in p.allstreams
+                                          if not x.threed]
+
     streams = []
 
     for s in ps:
@@ -1455,13 +1465,13 @@ def playsong(song, failcount=0, override=False):
             g.message = str(e)
             return
 
-        elif "pafy" in str(e):
-            g.message = str(e) + " - " + song.ytid
-            return
-
         elif failcount < g.max_retries:
             failcount += 1
             return playsong(song, failcount=failcount, override=override)
+
+        elif "pafy" in str(e):
+            g.message = str(e) + " - " + song.ytid
+            return
 
     except ValueError:
         g.message = F('track unresolved')
