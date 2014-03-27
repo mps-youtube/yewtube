@@ -453,7 +453,8 @@ class ConfigItem(object):
                         fail_msg = "%s" + m + "%s"
 
                 if not fail_msg:
-                    success_msg = "%s set to %s" % (green(self.name), value)
+                    dispval = value or "None"
+                    success_msg = "%s set to %s" % (green(self.name), dispval)
 
         # handle space separated list
 
@@ -464,13 +465,14 @@ class ConfigItem(object):
         # handle string values
 
         elif self.type == str:
-            success_msg = "%s set to %s" % (green(self.name), green(value))
+            dispval = value or "None"
+            success_msg = "%s set to %s" % (green(self.name), green(dispval))
 
         # handle failure
 
-        colvals = c.y + self.name + c.w, c.y + value_orig + c.w
-
         if fail_msg:
+            failed_val = value_orig.strip() or "<nothing>"
+            colvals = c.y + self.name + c.w, c.y + failed_val + c.w
             return fail_msg % colvals
 
         elif self.check_fn:
@@ -508,7 +510,7 @@ def check_win_pos(pos):
     """ Check window position input. """
 
     if not pos.strip():
-        return dict(valid=True, message="Window position set to default")
+        return dict(valid=True, message="Window position not set (default)")
 
     pos = pos.lower()
     reg = r"(TOP|BOTTOM).?(LEFT|RIGHT)"
@@ -528,7 +530,7 @@ def check_win_size(size):
     """ Check window size input. """
 
     if not size.strip():
-        return dict(valid=True, message="Window size set to default")
+        return dict(valid=True, message="Window size not set (default)")
 
     size = size.lower()
     reg = r"\d{1,4}x\d{1,4}"
@@ -884,7 +886,8 @@ def setconfig(key, val):
         att = getattr(Config, key.upper())
         att.value = att.default
         message = "%s%s%s set to %s%s%s (default)"
-        message = message % (c.y, key, c.w, c.y, att.display, c.w)
+        dispval = att.display or "None"
+        message = message % (c.y, key, c.w, c.y, dispval, c.w)
         saveconfig()
 
     else:
