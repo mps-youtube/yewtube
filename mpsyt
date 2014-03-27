@@ -296,10 +296,12 @@ def get_streams(vid, force=False, callback=None, threed=False):
     ps = p.allstreams if threed else [x for x in p.allstreams if not x.threed]
 
     try:
-        urls = [x.url for x in ps]
+        # test urls are valid
+        _ = [x.url for x in ps]
 
     except TypeError:
-        dbg("%sType Error in get_streams. Retrying%s", c.r, c.w)
+        # refetch if problem
+        dbg("%s****Type Error in get_streams. Retrying%s", c.r, c.w)
         p = get_pafy(vid, force=True, callback=callback)
         ps = p.allstreams if threed else [x for x in p.allstreams
                                           if not x.threed]
