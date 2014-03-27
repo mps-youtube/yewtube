@@ -3049,6 +3049,16 @@ def shuffle_fn(_):
     g.content = generate_songlist_display()
 
 
+def clearcache():
+    """ Clear cached items - for debugging use. """
+
+    g.pafs = {}
+    g.streams = {}
+    print("cache cleared")
+    time.sleep(2)
+    screen_update()
+
+
 g.helptext = [("basic", "Basics", """
 {0}Basic Usage{1}
 
@@ -3290,6 +3300,7 @@ def main():
         'down_many': r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
         'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
         'user_more': r'u\s?([\d]{1,4})$',
+        'clearcache': r'clearcache$',
         'usersearch': r'user\s+([^\s].{2,})$',
         'shuffle_fn': r'\s*(shuffle)\s*$',
         'add_rm_all': r'(rm|add)\s(?:\*|all)$',
