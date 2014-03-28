@@ -2914,6 +2914,7 @@ def info(num):
         out += i(p.title or "")
         out += "\n" + (p.description or "")
         out += i("\n\nAuthor     : " + str(p.author))
+        out += i("\nPublished  : " + str(p.published))
         out += i("\nView count : " + str(p.viewcount))
         out += i("\nRating     : " + str(p.rating)[:4])
         out += i("\nCategory   : " + p.category)
