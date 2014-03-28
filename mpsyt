@@ -961,7 +961,7 @@ def init_text():
         'no data_': (c.r, c.w),
         'use dot': 'Start your query with a *.* to perform a search',
         'use dot_': (c.g, c.w),
-        'cant get track': 'Problem fetching this item: *&&*',
+        'cant get track': 'Problem playing last item: *&&*',
         'cant get track_': (c.r, c.w),
         'track unresolved': 'Sorry, this track is not available',
         'no player': '*&&* was not found on this system',
@@ -1394,9 +1394,9 @@ def generate_real_playerargs(song, override, failcount):
     if not stream and video:
         raise IOError("No streams available")
 
-    if stream['url'].startswith("https") and "requiressl=yes" in stream['url']:
-        if "mplayer" in Config.PLAYER.get:
-            raise IOError("Sorry mplayer doesn't support https, try mpv")
+    if "uiressl=yes" in stream['url'] and "mplayer" in Config.PLAYER.get:
+            raise IOError("%s : Sorry mplayer doesn't support this stream. "
+                          "Try mpv or download it" % song.title)
 
     size = get_size(song.ytid, stream['url'])
     songdata = song.ytid, stream['ext'], int(size / (1024 ** 2))
@@ -1467,14 +1467,14 @@ def playsong(song, failcount=0, override=False):
         get_streams(song, force=failcount, callback=writestatus)
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
-        dbg("----ioerror in playsong call to get_streams %s", str(e))
-        g.message = F('cant get track') % str(e)
+        dbg("--ioerror in playsong call to get_streams %s", str(e))
 
         if "Youtube says" in str(e):
-            g.message = str(e)
+            g.message = F('cant get track') % (song.title + " " + str(e))
             return
 
         elif failcount < g.max_retries:
+            dbg("--ioerror - trying next stream")
             failcount += 1
             return playsong(song, failcount=failcount, override=override)
 
