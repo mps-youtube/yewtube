@@ -1394,6 +1394,10 @@ def generate_real_playerargs(song, override, failcount):
     if not stream and video:
         raise IOError("No streams available")
 
+    if stream['url'].startswith("https") and "requiressl=yes" in stream['url']:
+        if "mplayer" in Config.PLAYER.get:
+            raise IOError("Sorry mplayer doesn't support https, try mpv")
+
     size = get_size(song.ytid, stream['url'])
     songdata = song.ytid, stream['ext'], int(size / (1024 ** 2))
 
@@ -1497,7 +1501,7 @@ def playsong(song, failcount=0, override=False):
     songdata = "%s; %s; %s Mb" % songdata
     writestatus(songdata)
     dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
-    #dbg("calling %s", " ".join(cmd))
+    dbg("calling %s", " ".join(cmd))
     now = time.time()
     launch_player(song, songdata, cmd)
     fin = time.time()
@@ -3054,9 +3058,7 @@ def clearcache():
 
     g.pafs = {}
     g.streams = {}
-    print("cache cleared")
-    time.sleep(2)
-    screen_update()
+    g.message = "cache cleared"
 
 
 g.helptext = [("basic", "Basics", """
