@@ -1,4 +1,12 @@
-Version 0.01.45 (in development, not yet released)
+CHANGELOG for mps-youtube
+https://np1.github.com/mps-youtube
+
+Version 0.01.45 (development version, not yet released)
+
+ - Added uploaded date in video info display (request #64)
+ - Added likes / dislikes in video info display
+ - Added support for age-restricted videos with encrypted signatures
+	(supported in pafy 0.3.42)
 
 -------------------------------------------------------------------------------
 
