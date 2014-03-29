@@ -2917,6 +2917,7 @@ def info(num):
         p = get_pafy(item)
         i = py2utf8_decode
         writestatus("Fetched")
+        up = "Update Pafy to 0.3.42 to view likes/dislikes"
         out = c.ul + "Video Info" + c.w + "\n\n"
         out += i(p.title or "")
         out += "\n" + (p.description or "")
@@ -2924,8 +2925,8 @@ def info(num):
         out += i("\nPublished  : " + str(p.published))
         out += i("\nView count : " + str(p.viewcount))
         out += i("\nRating     : " + str(p.rating)[:4])
-        out += i("\nLikes      : " + str(p.likes))
-        out += i("\nDislikes   : " + str(p.dislikes))
+        out += i("\nLikes      : " + str(getattr(p, "likes", up)))
+        out += i("\nDislikes   : " + str(getattr(p, "dislikes", up)))
         out += i("\nCategory   : " + p.category)
         out += i("\nLink       : " + "https://youtube.com/watch?v=%s" %
                  p.videoid)
