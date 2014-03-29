@@ -2924,6 +2924,8 @@ def info(num):
         out += i("\nPublished  : " + str(p.published))
         out += i("\nView count : " + str(p.viewcount))
         out += i("\nRating     : " + str(p.rating)[:4])
+        out += i("\nLikes      : " + str(p.likes))
+        out += i("\nDislikes   : " + str(p.dislikes))
         out += i("\nCategory   : " + p.category)
         out += i("\nLink       : " + "https://youtube.com/watch?v=%s" %
                  p.videoid)
