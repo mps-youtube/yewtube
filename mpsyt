@@ -296,8 +296,8 @@ def get_streams(vid, force=False, callback=None, threeD=False):
     ps = p.allstreams if threeD else [x for x in p.allstreams if not x.threed]
 
     try:
-        # test urls are valid
         # pylint: disable=W0612
+        # test urls are valid
         _ = [x.url for x in ps]
 
     except TypeError:
@@ -1377,6 +1377,7 @@ def generate_real_playerargs(song, override, failcount):
     """
 
     #pylint: disable=R0914
+    #pylint: disable=R0912
     video = Config.SHOW_VIDEO.get
     video = True if override in ("fullscreen", "window") else video
     video = False if override == "audio" else video
@@ -1872,7 +1873,11 @@ def get_pl_from_json(pldata):
 
 
 def paginate(items, pagesize, spacing=2, delim_fn=None):
-    """ Paginate items to fit in pagesize according to delimiter function. """
+    """ Paginate items to fit in pagesize.
+
+    item size is defined by delim_fn.
+
+    """
 
     dfn = lambda x: sum(1 for char in x if char == "\n")
     delim_fn = dfn or delim_fn
@@ -1925,23 +1930,30 @@ def fetch_comments(item):
     G = lambda x: c.g + x + c.w
     y = lambda x: c.y + x + c.w
     dbg("%sFetching coments for %s%s", c.y, y(ytid), c.w)
-    writestatus("Fetching comments for %s" % y(title))
-    url = ("https://gdata.youtube.com/feeds/api/videos/%s/comments?alt=json"
-           "&v=2&orderby=published&max-results=50" % ytid)
+    writestatus("Fetching comments for %s" % y(title[:55]))
+    url = ("https://gdata.youtube.com/feeds/api/videos/%s/comments?alt="
+           "json&v=2&orderby=published&max-results=50" % ytid)
 
     if not url in g.url_memo:
-        raw = g.urlopen(url).read().decode("utf8")
-        g.url_memo[url] = raw
+
+        try:
+            raw = g.urlopen(url).read().decode("utf8")
+            g.url_memo[url] = raw
+
+        except HTTPError:
+            g.message = "No comments for %s" % item.title[:50]
+            g.content = generate_songlist_display()
+            return
 
     else:
         raw = g.url_memo[url]
 
     jsdata = json.loads(raw)
-    coms = jsdata['feed']['entry']
+    coms = jsdata['feed'].get('entry', [])
     coms = [x for x in coms if x['content']['$t'].strip()]  # skip blanks
 
     if not len(coms):
-        g.message = "No comments for %s", item.title[:50]
+        g.message = "No comments for %s" % item.title[:50]
         g.content = generate_songlist_display()
         return
 
@@ -1949,10 +1961,10 @@ def fetch_comments(item):
 
     for n, com in enumerate(coms, 1):
         poster = com['author'][0]['name']['$t']
-        date = com['published']['$t'].rstrip(".000Z")
+        date = com['published']['$t'].rstrip(".000Z").replace("T", " ")
         text = com['content']['$t']
         cid = ("%s/%s" % (n, len(coms)))
-        out = ("%s %-55s %s\n" % (cid, G(poster), date))
+        out = ("%s %-59s %s\n" % (cid, G(poster), date))
         out += y(text.strip())
         items.append(out)
 
