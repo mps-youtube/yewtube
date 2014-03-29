@@ -297,6 +297,7 @@ def get_streams(vid, force=False, callback=None, threeD=False):
 
     try:
         # test urls are valid
+        # pylint: disable=W0612
         _ = [x.url for x in ps]
 
     except TypeError:
@@ -1504,7 +1505,6 @@ def playsong(song, failcount=0, override=False):
         g.message = c.r + str(e) + c.w
         return
 
-
     songdata = "%s; %s; %s Mb" % songdata
     writestatus(songdata)
     dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
@@ -1869,6 +1869,128 @@ def get_pl_from_json(pldata):
                             )
                        )
     return results
+
+
+def paginate(items, pagesize, spacing=2, delim_fn=None):
+    """ Paginate items to fit in pagesize according to delimiter function. """
+
+    dfn = lambda x: sum(1 for char in x if char == "\n")
+    delim_fn = dfn or delim_fn
+    pages = []
+    currentpage = []
+    roomleft = pagesize
+
+    for item in items:
+        itemsize = delim_fn(item) + spacing
+
+        # check for oversized item, fit it on a page of its own
+        if itemsize > pagesize:
+
+            # but first end current page if has content
+            if len(currentpage):
+                pages.append(currentpage)
+
+            # add large item on its own page
+            pages.append([item])
+            roomleft = pagesize
+            currentpage = []
+
+        else:
+
+            # item is smaller than one page
+            if itemsize < roomleft:
+                # is there room on this page?, yes, fit it in
+                currentpage.append(item)
+                roomleft = roomleft - itemsize
+
+            else:
+                # no room on this page, start a new page
+                pages.append(currentpage)
+                currentpage = [item]
+                roomleft = pagesize - itemsize
+
+    # add final page if it has content
+    if len(currentpage):
+        pages.append(currentpage)
+
+    return pages
+
+
+def fetch_comments(item):
+    """ Fetch comments for item using gdata. """
+
+    # pylint: disable=R0914
+    pagesize = max(Config.MAX_RESULTS.get + 4, 10)
+    ytid, title = item.ytid, item.title
+    G = lambda x: c.g + x + c.w
+    y = lambda x: c.y + x + c.w
+    dbg("%sFetching coments for %s%s", c.y, y(ytid), c.w)
+    writestatus("Fetching comments for %s" % y(title))
+    url = ("https://gdata.youtube.com/feeds/api/videos/%s/comments?alt=json"
+           "&v=2&orderby=published&max-results=50" % ytid)
+
+    if not url in g.url_memo:
+        raw = g.urlopen(url).read().decode("utf8")
+        g.url_memo[url] = raw
+
+    else:
+        raw = g.url_memo[url]
+
+    jsdata = json.loads(raw)
+    coms = jsdata['feed']['entry']
+    coms = [x for x in coms if x['content']['$t'].strip()]  # skip blanks
+
+    if not len(coms):
+        g.message = "No comments for %s", item.title[:50]
+        g.content = generate_songlist_display()
+        return
+
+    items = []
+
+    for n, com in enumerate(coms, 1):
+        poster = com['author'][0]['name']['$t']
+        date = com['published']['$t'].rstrip(".000Z")
+        text = com['content']['$t']
+        cid = ("%s/%s" % (n, len(coms)))
+        out = ("%s %-55s %s\n" % (cid, G(poster), date))
+        out += y(text.strip())
+        items.append(out)
+
+    plain = lambda x: x.replace(c.y, "").replace(c.w, "").replace(c.g, "")
+    linecount = lambda x: sum(1 for char in x if char == "\n")
+    longlines = lambda x: sum(len(plain(line)) // 80 for line in x.split("\n"))
+    linecounter = lambda x: linecount(x) + longlines(x)
+    pages = paginate(items, pagesize=pagesize, delim_fn=linecounter)
+    pagenum = 0
+
+    while True and 0 <= pagenum < len(pages):
+        page = pages[pagenum]
+        pagetext = ("\n\n".join(page)).strip()
+        tpagesize = linecount(pagetext) + longlines(pagetext)
+        blanks = "\n" * (-2 + pagesize - tpagesize)
+        g.content = pagetext + blanks
+        screen_update()
+        print("Use [Enter] for next, [p] for previous, [q] to return:", end="")
+        v = compat_input()
+
+        if v == "p":
+            pagenum -= 1
+
+        elif not v:
+            pagenum += 1
+
+        else:
+            break
+
+    g.content = generate_songlist_display()
+
+
+def comments(number):
+    """ Receive use request to view comments. """
+
+    if g.browse_mode == "normal":
+        item = g.model.songs[int(number) - 1]
+        fetch_comments(item)
 
 
 def _make_fname(song, ext=None, av=None):
@@ -3245,11 +3367,11 @@ def matchfunction(funcname, regex, userinput):
 
     if regex.match(userinput):
         matches = regex.match(userinput).groups()
+        dbg("input: %s", userinput)
+        dbg("function call: %s", funcname)
+        dbg("regx matches: %s", matches)
 
         if g.debug_mode:
-            dbg("input: %s", userinput)
-            dbg("function call: %s", funcname)
-            dbg("regx matches: %s", matches)
             globals()[funcname](*matches)
 
         else:
@@ -3305,6 +3427,7 @@ def main():
         'related': r'r\s?(\d{1,4})$',
         'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
         'play_url': r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
+        'comments': r'c\s?(\d{1,4})$',
         'nextprev': r'(n|p)$',
         'play_all': r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
         'user_pls': r'u(?:ser)?pl\s(.*)$',

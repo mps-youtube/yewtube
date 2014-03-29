@@ -3,10 +3,12 @@ https://np1.github.com/mps-youtube
 
 Version 0.01.45 (development version, not yet released)
 
+ - Added c <number> to view comments for a video
+    (first 50 comments, no reply comments)
  - Added uploaded date in video info display (request #64)
  - Added likes / dislikes in video info display
  - Added support for age-restricted videos with encrypted signatures
-	(supported in pafy 0.3.42)
+    (supported in pafy 0.3.42)
 
 -------------------------------------------------------------------------------
 
