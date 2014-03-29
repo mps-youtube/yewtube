@@ -417,7 +417,7 @@ class ConfigItem(object):
 
         # handle known player not set
 
-        if self.require_known_player and not has_known_player():
+        if self.require_known_player and not known_player_set():
             fail_msg = "%s requires mpv or mplayer, can't set to %s"
 
         # handle true / false values
@@ -762,7 +762,7 @@ def init_opener():
     g.urlopen = opener.open
 
 
-def has_known_player():
+def known_player_set():
     """ Return true if the set player is known. """
 
     for allowed_player in g.playerargs_defaults:
@@ -788,7 +788,7 @@ def showconfig(_):
         val = getattr(Config, setting)
 
         # don't show player specific settings if unknown player
-        if not has_known_player() and val.require_known_player:
+        if not known_player_set() and val.require_known_player:
             continue
 
         out += s % (c.g, setting.lower(), c.w, val.display)
@@ -806,7 +806,7 @@ def saveconfig():
     with open(g.CFFILE, "wb") as cf:
         pickle.dump(config, cf, protocol=2)
 
-    dbg(c.y + "Saved config: " + g.CFFILE + c.w)
+    dbg(c.p + "Saved config: " + g.CFFILE + c.w)
 
 
 def savecache():
@@ -815,7 +815,7 @@ def savecache():
     with open(g.CACHEFILE, "wb") as cf:
         pickle.dump(g.streams, cf, protocol=2)
 
-    dbg(c.g + "saved cache file: " + g.CACHEFILE + c.w)
+    dbg(c.p + "saved cache file: " + g.CACHEFILE + c.w)
 
 
 def import_config():
@@ -1395,8 +1395,8 @@ def generate_real_playerargs(song, override, failcount):
         raise IOError("No streams available")
 
     if "uiressl=yes" in stream['url'] and "mplayer" in Config.PLAYER.get:
-            raise IOError("%s : Sorry mplayer doesn't support this stream. "
-                          "Try mpv or download it" % song.title)
+        raise IOError("%s : Sorry mplayer doesn't support this stream. "
+                      "Use mpv or download it" % song.title)
 
     size = get_size(song.ytid, stream['url'])
     songdata = song.ytid, stream['ext'], int(size / (1024 ** 2))
@@ -1406,7 +1406,7 @@ def generate_real_playerargs(song, override, failcount):
     argsstr = Config.PLAYERARGS.get.strip()
     args = argsstr.split() if argsstr else []
 
-    if has_known_player():
+    if known_player_set():
         pd = g.playerargs_defaults[Config.PLAYER.get]
         args.append(pd["title"])
         args.append(song.title)
@@ -1497,6 +1497,13 @@ def playsong(song, failcount=0, override=False):
         if failcount < g.max_retries:
             failcount += 1
             return playsong(song, failcount=failcount, override=override)
+
+    except IOError as e:
+        # this may be cause by attempting to play a https stream with
+        # mplayer
+        g.message = c.r + str(e) + c.w
+        return
+
 
     songdata = "%s; %s; %s Mb" % songdata
     writestatus(songdata)
@@ -3059,6 +3066,7 @@ def clearcache():
 
     g.pafs = {}
     g.streams = {}
+    dbg("%scache cleared%s", c.p, c.w)
     g.message = "cache cleared"
 
 
