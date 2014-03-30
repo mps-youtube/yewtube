@@ -1200,13 +1200,21 @@ def get_tracks_from_json(jsons):
         cursong = Video(ytid=ytid, title=item['title'].strip(),
                         length=int(item['duration']))
 
+        likes = item.get('likeCount', "0")
+        likes = int(re.sub(r"\D", "", likes))
+        total = item.get('ratingCount', 0)
+        dislikes = total - likes
         g.meta[ytid] = dict(rating=unicode(item.get('rating', 0))[:4],
                             uploader=item['uploader'],
                             category=item['category'],
+                            aspect=item.get('aspectRatio', "custom"),
                             uploaded=yt_datetime(item['uploaded'])[1],
-                            likes=unicode(item.get('likeCount', 0)),
+                            likes=unicode(likes),
+                            dislikes=unicode(dislikes),
                             commentCount=unicode(item.get('commentCount', 0)),
+                            viewcount=unicode(item.get("viewCount", 0)),
                             title=item['title']
+
                             )
 
         songs.append(cursong)
