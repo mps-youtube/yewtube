@@ -385,6 +385,7 @@ class ConfigItem(object):
         self.maxval, self.minval = maxval, minval
         self.check_fn = check_fn
         self.require_known_player = False
+        self.allowed_values = []
 
     @property
     def get(self):
@@ -417,6 +418,10 @@ class ConfigItem(object):
         green = lambda x: "%s%s%s" % (c.g, x, c.w)
 
         # handle known player not set
+
+        if self.allowed_values and not value in self.allowed_values:
+            fail_msg = "%s must be one of * - not %s"
+            fail_msg = fail_msg.replace("*", ", ".join(self.allowed_values))
 
         if self.require_known_player and not known_player_set():
             fail_msg = "%s requires mpv or mplayer, can't set to %s"
@@ -559,6 +564,8 @@ class Config(object):
 
     """ Holds various configuration values. """
 
+    ORDER = ConfigItem("order", "relevance")
+    ORDER.allowed_values ="relevance published viewCount rating".split()
     MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
     PLAYER = ConfigItem("player", "mplayer")
@@ -1349,17 +1356,16 @@ def format_title(x, l=62):
     except KeyError:
         dbg("keyerror in format_title")
         return uea_rpad(l, x.title)
-        #return x.title
     data = {k: v.encode("utf8", "ignore") for k, v in data.items()}
     cols = dict(g=c.g, b=c.b, r=c.r, p=c.p, u=c.ul, y=c.y, w=c.w)
     data.update(cols)
 
-    #try:
-    out = formatstring.format(**data)
+    try:
+        out = formatstring.format(**data)
 
-    #except (KeyError) as e:
-        #dbg(str(e))
-        #return uea_rpad(l, title)
+    except (ValueError, KeyError) as e:
+        dbg(str(e))
+        return uea_rpad(l, title + "!BAD RESULT FORMAT!")
 
     trunc = l
 
@@ -1746,7 +1752,7 @@ def generate_search_qs(term, page):
         'safeSearch': "none",
         'max-results': Config.MAX_RESULTS.get,
         'paid-content': "false",
-        'orderby': 'relevance'
+        'orderby': Config.ORDER.get
     }
 
     if Config.SEARCH_MUSIC.get:
@@ -1759,7 +1765,7 @@ def usersearch(q_user, page=1, splash=True):
     """ Fetch uploads by a YouTube user. """
 
     query = generate_search_qs(q_user, page)
-    query['orderby'] = 'published'
+    #query['orderby'] = 'published'
 
     if query.get('category'):
         del query['category']
@@ -3416,16 +3422,17 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set fullscreen true|false{1} - output video content in full-screen mode
 {2}set max_res <number>{1} - play / download maximum video resolution height
 {2}set max_results <number>{1} - show <number> results when searching (max 50)
+{2}set order <relevance|published|viewCount|rating>{1} search result ordering
 {2}set player <player app>{1} - use <player app> for playback
 {2}set playerargs <args>{1} - use specified arguments with player
+{2}set result_format <format_string>{1} - set displayed fields for search \
+results
 {2}set search_music true|false{1} - search only music (all categories if false)
 {2}set show_mplayer_keys true|false{1} - show keyboard help for mplayer and mpv
 {2}set show_status true|false{1} - show status messages and progress
 {2}set show_video true|false{1} - show video output (audio only if false)
 {2}set window_pos <top|bottom>-<left|right>{1} - set player window position
 {2}set window_size <number>x<number>{1} - set player window width & height
-
-[Tip: you can use {2}1{1} and {2}0{1} in place of true and false]
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("tips", "Advanced Tips", """
@@ -3450,6 +3457,9 @@ Reversed ranges also work. eg., 5-2
 undo)
 
 {2}set player mpv{1} or {2}set player mplayer{1} - change player application
+
+Use {2}1{1} and {2}0{1} in place of true and false when using the {2}set{1} \
+command
 """.format(c.ul, c.w, c.y, c.r))
 ]
 

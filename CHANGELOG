@@ -2,9 +2,10 @@ Version 0.01.45 (development version, not yet released)
 
  - Added c <number> to view comments for a video
     (first 50 comments, no reply-comments)
-
  - Custom formatted result list using "set result-format" command
    Optionally shows rating, likes, uploader, date and comment-count in results
+ - Added "set order <published|viewCount|rating|relevance>" command for
+     specifying search result ordering
  - Added uploaded date in video info display (request #64)
  - Added likes / dislikes in video info display
  - Added support for age-restricted videos with encrypted signatures
