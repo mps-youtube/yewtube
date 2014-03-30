@@ -569,6 +569,7 @@ class Config(object):
     FULLSCREEN = ConfigItem("fullscreen", False)
     FULLSCREEN.require_known_player = True
     SHOW_STATUS = ConfigItem("show_status", True)
+    RESULT_FORMAT = ConfigItem("result_format", "{title} [{rating}]")
     DDIR = ConfigItem("ddir", get_default_ddir(), check_fn=check_ddir)
     SHOW_VIDEO = ConfigItem("show_video", False)
     SEARCH_MUSIC = ConfigItem("search_music", True)
@@ -615,6 +616,7 @@ class g(object):
 
     """ Class for holding globals that are needed throught the module. """
 
+    meta = {}
     command_line = False
     debug_mode = False
     urlopen = None
@@ -1187,8 +1189,18 @@ def get_tracks_from_json(jsons):
     songs = []
 
     for item in items:
-        cursong = Video(ytid=item['id'], title=item['title'].strip(),
+        ytid = item['id']
+        cursong = Video(ytid=ytid, title=item['title'].strip(),
                         length=int(item['duration']))
+
+        g.meta[ytid] = dict(rating=unicode(item.get('rating', 0))[:4],
+                            uploader=item['uploader'],
+                            category=item['category'],
+                            uploaded=yt_datetime(item['uploaded'])[1],
+                            likes=unicode(item.get('likeCount', 0)),
+                            commentCount=unicode(item.get('commentCount', 0)),
+                            title=item['title']
+                            )
 
         songs.append(cursong)
 
@@ -1257,11 +1269,19 @@ def playback_progress(idx, allsongs, repeat=False):
     return out
 
 
-def real_len(u):
+def real_len(u, alt=False):
     """ Try to determine width of strings displayed with monospace font. """
 
     ueaw = unicodedata.east_asian_width
-    widths = dict(W=2, F=2, A=1, N=0.75, H=0.5)
+    if alt:
+        #widths = dict(W=2, F=2, A=1, N=0.75, H=0.5)  # original
+        widths = dict(N=.75, Na=1, W=2, F=2, A=1)
+
+    else:
+        widths = dict(W=2, F=2, A=1, N=1, H=0.5)
+
+    #strip colour codes
+    #u = re.sub(r"\\x1b\[(?:\d{1,3})m", "", u)
     return int(round(sum(widths.get(ueaw(char), 1) for char in u)))
 
 
@@ -1285,6 +1305,16 @@ def uea_rpad(num, t):
     return t
 
 
+def yt_datetime(yt_date_time):
+    """ Return a time object and locale formated date string. """
+
+    time_obj = time.strptime(yt_date_time, "%Y-%m-%dT%H:%M:%S.000Z")
+    locale_date = time.strftime("%x", time_obj)
+    # strip first two digits of four digit year
+    short_date = re.sub(r"(\d\d\D\d\d\D)20(\d\d)$", r"\1\2", locale_date)
+    return time_obj, short_date
+
+
 def generate_playlist_display():
     """ Generate list of playlists. """
 
@@ -1302,16 +1332,56 @@ def generate_playlist_display():
         length = x.get('size') or "?"
         length = "%4s" % length
         title = x.get('title') or "unknown"
-        updated = time.strptime(x.get('updated'), "%Y-%m-%dT%H:%M:%S.000Z")
-        updated = time.strftime("%x", updated)
-        updated = re.sub(r"(\d\d\D\d\d\D)20(\d\d)$", r"\1\2", updated)
+        updated = yt_datetime(x.get('updated'))[1]
         title = uea_rpad(57, title)
         out += (fmtrow % (col, str(n + 1), title, updated, str(length), c.w))
 
     return out + "\n" * (5 - len(g.ytpls))
 
 
-def generate_songlist_display(song=False, zeromsg=None):
+def format_title(x, l=62):
+
+    formatstring = Config.RESULT_FORMAT.get
+    #dbg(g.meta[x.ytid]['title'])
+    try:
+        title = g.meta[x.ytid]['title']
+        data = g.meta[x.ytid]
+    except KeyError:
+        dbg("keyerror in format_title")
+        return uea_rpad(l, x.title)
+        #return x.title
+    data = {k: v.encode("utf8", "ignore") for k, v in data.items()}
+    cols = dict(g=c.g, b=c.b, r=c.r, p=c.p, u=c.ul, y=c.y, w=c.w)
+    data.update(cols)
+
+    #try:
+    out = formatstring.format(**data)
+
+    #except (KeyError) as e:
+        #dbg(str(e))
+        #return uea_rpad(l, title)
+
+    trunc = l
+
+    while real_len(out.decode("utf8")) > l and trunc >= 0:
+        if trunc == 0:
+            out = out[:-1]
+            continue
+
+        trunc -= 1
+        title = uea_trunc(trunc, title)
+        data['title'] = title.encode("utf8", "ignore")
+        out = formatstring.format(**data)
+
+    pad = 0
+    while real_len(out.decode("utf8")) < l:
+        out = out + " "
+
+    return out.decode("utf8")
+
+
+#def generate_songlist_display(song=False, zeromsg=None, frmat=None):
+def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     """ Generate list of choices from a song list."""
 
     if g.browse_mode == "ytpl":
@@ -1333,7 +1403,12 @@ def generate_songlist_display(song=False, zeromsg=None):
         length = fmt_time(x.length)
         length = " " * (8 - len(length)) + length
         title = x.title or "unknown title"
-        title = uea_rpad(62, title)
+
+        if frmat == "search":
+            title = format_title(x, 62)
+
+        else:
+            title = uea_rpad(62, title)
 
         if not song or song != songs[n]:
             out += (fmtrow % (col, str(n + 1), title, str(length), c.w))
@@ -1716,7 +1791,7 @@ def usersearch(q_user, page=1, splash=True):
         g.last_opened = ""
         g.last_search_query = {"user": q_user}
         g.current_page = page
-        g.content = generate_songlist_display()
+        g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = failmsg
@@ -1745,7 +1820,7 @@ def related_search(vitem, page=1, splash=True):
         g.last_opened = ""
         g.last_search_query = {"related": vitem}
         g.current_page = page
-        g.content = generate_songlist_display()
+        g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = "Related to %s%s%s not found" % (c.y, vitem.ytid, c.w)
@@ -1774,7 +1849,7 @@ def search(term, page=1, splash=True):
         g.last_search_query = {"term": original_term}
         g.browse_mode = "normal"
         g.current_page = page
-        g.content = generate_songlist_display()
+        g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
@@ -1961,10 +2036,10 @@ def fetch_comments(item):
 
     for n, com in enumerate(coms, 1):
         poster = com['author'][0]['name']['$t']
-        date = com['published']['$t'].rstrip(".000Z").replace("T", " ")
+        date = time.strftime("%c", yt_datetime(com['published']['$t'])[0])
         text = com['content']['$t']
         cid = ("%s/%s" % (n, len(coms)))
-        out = ("%s %-59s %s\n" % (cid, G(poster), date))
+        out = ("%s %-35s %s\n" % (cid, G(poster), date))
         out += y(text.strip())
         items.append(out)
 
@@ -1976,13 +2051,15 @@ def fetch_comments(item):
     pagenum = 0
 
     while True and 0 <= pagenum < len(pages):
+        pagecounter = "Page %s/%s" % (pagenum + 1, len(pages))
         page = pages[pagenum]
         pagetext = ("\n\n".join(page)).strip()
-        tpagesize = linecount(pagetext) + longlines(pagetext)
-        blanks = "\n" * (-2 + pagesize - tpagesize)
+        content_length = linecount(pagetext) + longlines(pagetext)
+        blanks = "\n" * (-2 + pagesize - content_length)
         g.content = pagetext + blanks
         screen_update()
-        print("Use [Enter] for next, [p] for previous, [q] to return:", end="")
+        print("%s : Use [Enter] for next, [p] for previous, [q] to return:"
+              % pagecounter, end="")
         v = compat_input()
 
         if v == "p":
@@ -2003,6 +2080,10 @@ def comments(number):
     if g.browse_mode == "normal":
         item = g.model.songs[int(number) - 1]
         fetch_comments(item)
+
+    else:
+        g.content = generate_songlist_display()
+        g.message = "Comments only available for video items"
 
 
 def _make_fname(song, ext=None, av=None):
@@ -2974,7 +3055,7 @@ def nextprev(np):
         norp = "next" if np == "n" else "previous"
         g.message = "No %s items to display" % norp
 
-    g.content = generate_songlist_display()
+    g.content = generate_songlist_display(frmat="search")
 
 
 def user_more(num):
@@ -3027,8 +3108,10 @@ def info(num):
         ytpl_desc = yt_playlist.get('description', "")
         g.content = generate_songlist_display()
 
-        created = time.strptime(p['created'], "%Y-%m-%dT%H:%M:%S.000Z")
-        updated = time.strptime(p['updated'], "%Y-%m-%dT%H:%M:%S.000Z")
+        #created = time.strptime(p['created'], "%Y-%m-%dT%H:%M:%S.000Z")
+        #updated = time.strptime(p['updated'], "%Y-%m-%dT%H:%M:%S.000Z")
+        created = yt_datetime(p['created'])[0]
+        updated = yt_datetime(p['updated'])[0]
         out = c.ul + "Playlist Info" + c.w + "\n\n"
         out += p['title']
         out += "\n" + ytpl_desc
@@ -3050,13 +3133,14 @@ def info(num):
         get_streams(item)
         p = get_pafy(item)
         i = py2utf8_decode
+        pub = time.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
         writestatus("Fetched")
         up = "Update Pafy to 0.3.42 to view likes/dislikes"
         out = c.ul + "Video Info" + c.w + "\n\n"
         out += i(p.title or "")
         out += "\n" + (p.description or "")
         out += i("\n\nAuthor     : " + str(p.author))
-        out += i("\nPublished  : " + str(p.published))
+        out += i("\nPublished  : " + time.strftime("%c", pub))
         out += i("\nView count : " + str(p.viewcount))
         out += i("\nRating     : " + str(p.rating)[:4])
         out += i("\nLikes      : " + str(getattr(p, "likes", up)))
