@@ -565,7 +565,7 @@ class Config(object):
     """ Holds various configuration values. """
 
     ORDER = ConfigItem("order", "relevance")
-    ORDER.allowed_values ="relevance published viewCount rating".split()
+    ORDER.allowed_values = "relevance published viewCount rating".split()
     MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
     PLAYER = ConfigItem("player", "mplayer")
@@ -1347,15 +1347,18 @@ def generate_playlist_display():
 
 
 def format_title(x, l=62):
+    """ Apply user specified format string to a search result item. """
 
     formatstring = Config.RESULT_FORMAT.get
-    #dbg(g.meta[x.ytid]['title'])
+
     try:
         title = g.meta[x.ytid]['title']
         data = g.meta[x.ytid]
+
     except KeyError:
         dbg("keyerror in format_title")
         return uea_rpad(l, x.title)
+
     data = {k: v.encode("utf8", "ignore") for k, v in data.items()}
     cols = dict(g=c.g, b=c.b, r=c.r, p=c.p, u=c.ul, y=c.y, w=c.w)
     data.update(cols)
@@ -1379,7 +1382,6 @@ def format_title(x, l=62):
         data['title'] = title.encode("utf8", "ignore")
         out = formatstring.format(**data)
 
-    pad = 0
     while real_len(out.decode("utf8")) < l:
         out = out + " "
 
