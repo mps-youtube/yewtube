@@ -500,6 +500,12 @@ class ConfigItem(object):
             return success_msg
 
 
+def check_console_width(val):
+    valid = True
+    message = "-" * val + "\n"
+    message += "console_width set to %s, try a lower value if above line ove"\
+        "rlaps" % val
+    return dict(valid=valid, message=message)
 def check_ddir(d):
     """ Check whether dir is a valid directory. """
 
@@ -567,6 +573,8 @@ class Config(object):
     ORDER = ConfigItem("order", "relevance")
     ORDER.allowed_values = "relevance published viewCount rating".split()
     MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
+    CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=80, maxval=880,
+                               check_fn=check_console_width)
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
     PLAYER = ConfigItem("player", "mplayer")
     PLAYERARGS = ConfigItem("playerargs", "")
@@ -1410,7 +1418,9 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         return logo(c.g) + "\n\n"
 
     fmtrow = "%s%-5s %s %-6s  %s\n"
-    fmthd = "%s%-5s %-64s %-6s%s\n"
+    #fmthd = "%s%-5s %-64s %-6s%s\n"
+    cw = Config.CONSOLE_WIDTH.get
+    fmthd = "%s%-5s %-XXs %-6s%s\n".replace("XX", str(cw - 16))
     head = (c.ul, "Item", "Title", "Length", c.w)
     out = "\n" + fmthd % head
 
@@ -1421,10 +1431,11 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         title = x.title or "unknown title"
 
         if frmat == "search":
-            title = format_title(x, 62)
+            #title = format_title(x, 62)
+            title = format_title(x, cw - 18)
 
         else:
-            title = uea_rpad(62, title)
+            title = uea_rpad(cw - 18, title)
 
         if not song or song != songs[n]:
             out += (fmtrow % (col, str(n + 1), title, str(length), c.w))
@@ -2061,8 +2072,9 @@ def fetch_comments(item):
         items.append(out)
 
     plain = lambda x: x.replace(c.y, "").replace(c.w, "").replace(c.g, "")
+    cw = Config.CONSOLE_WIDTH.get
     linecount = lambda x: sum(1 for char in x if char == "\n")
-    longlines = lambda x: sum(len(plain(line)) // 80 for line in x.split("\n"))
+    longlines = lambda x: sum(len(plain(line)) // cw for line in x.split("\n"))
     linecounter = lambda x: linecount(x) + longlines(x)
     pages = paginate(items, pagesize=pagesize, delim_fn=linecounter)
     pagenum = 0
