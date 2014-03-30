@@ -1212,7 +1212,7 @@ def get_tracks_from_json(jsons):
                             likes=unicode(likes),
                             dislikes=unicode(dislikes),
                             commentCount=unicode(item.get('commentCount', 0)),
-                            viewcount=unicode(item.get("viewCount", 0)),
+                            viewCount=unicode(item.get("viewCount", 0)),
                             title=item['title']
 
                             )
@@ -2030,6 +2030,7 @@ def fetch_comments(item):
         try:
             raw = g.urlopen(url).read().decode("utf8")
             g.url_memo[url] = raw
+            # TODO: check limit of g.url_memo
 
         except HTTPError:
             g.message = "No comments for %s" % item.title[:50]
