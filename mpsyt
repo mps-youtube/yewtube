@@ -2286,7 +2286,8 @@ def open_save_view(action, name):
             g.message = F("pl loaded") % name
             g.last_opened = name
             g.last_search_query = {}
-            g.content = generate_songlist_display()
+            #g.content = generate_songlist_display()
+            g.content = generate_songlist_display(frmat=None)
             kwa = {"song": g.model.songs[0], "delay": 0}
             t = threading.Thread(target=preload, kwargs=kwa)
             t.start()
@@ -2297,7 +2298,8 @@ def open_save_view(action, name):
             g.model.songs = list(saved.songs)
             g.message = F("pl viewed") % name
             g.last_opened = ""
-            g.content = generate_songlist_display()
+            g.content = generate_songlist_display(frmat=None)
+            #g.content = generate_songlist_display()
             kwa = {"song": g.model.songs[0], "delay": 0}
             t = threading.Thread(target=preload, kwargs=kwa)
             t.start()
@@ -2317,9 +2319,9 @@ def open_save_view(action, name):
             g.userpl[name] = Playlist(name, list(g.model.songs))
             g.message = F('pl saved') % name
             save_to_file()
-            g.content = generate_songlist_display()
+            g.content = generate_songlist_display(frmat=None)
 
-
+# TODO = add many to playlist repeatedly saves playlist!  Change to one save
 def open_view_bynum(action, num):
     """ Open or view a saved playlist by number. """
 
