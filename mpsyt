@@ -1221,8 +1221,8 @@ def get_tracks_from_json(jsons):
                             dislikes=unicode(dislikes),
                             commentCount=unicode(item.get('commentCount', 0)),
                             viewCount=unicode(item.get("viewCount", 0)),
-                            title=item['title']
-
+                            title=item['title'],
+                            length=unicode(fmt_time(cursong.length))
                             )
 
         songs.append(cursong)
@@ -1264,7 +1264,7 @@ def playback_progress(idx, allsongs, repeat=False):
     for n, song in enumerate(allsongs):
         length_orig = fmt_time(song.length)
         length = " " * (8 - len(length_orig)) + length_orig
-        i = uea_rpad(66, song.title), length, length_orig
+        i = uea_pad(66, song.title), length, length_orig
         fmt = (c.w, "  ", c.b, i[0], c.w, c.y, i[1], c.w)
 
         if n == idx:
@@ -1295,6 +1295,9 @@ def playback_progress(idx, allsongs, repeat=False):
 def real_len(u, alt=False):
     """ Try to determine width of strings displayed with monospace font. """
 
+    if type(u) == str:
+        u = u.decode("utf8")
+
     ueaw = unicodedata.east_asian_width
     if alt:
         #widths = dict(W=2, F=2, A=1, N=0.75, H=0.5)  # original
@@ -1317,13 +1320,29 @@ def uea_trunc(num, t):
     return t
 
 
-def uea_rpad(num, t):
+def uea_pad(num, t, direction="<", notrunc=False):
     """ Right pad with spaces taking into account East Asian width chars. """
 
-    t = uea_trunc(num, t)
+    direction = direction.strip() or "<"
+
+    if not notrunc:
+        t = uea_trunc(num, t)
 
     if real_len(t) < num:
-        t = t + (" " * (num - real_len(t)))
+        spaces = num - real_len(t)
+
+        if direction == "<":
+            t = t + (" " * (num - real_len(t)))
+
+        elif direction == ">":
+            t = (" " * (num - real_len(t))) + t
+
+        elif direction == "^":
+            right = False
+
+            while real_len(t) < num:
+                t = t + " " if right else " " + t
+                right = not right
 
     return t
 
@@ -1356,55 +1375,72 @@ def generate_playlist_display():
         length = "%4s" % length
         title = x.get('title') or "unknown"
         updated = yt_datetime(x.get('updated'))[1]
-        title = uea_rpad(57, title)
+        title = uea_pad(57, title)
         out += (fmtrow % (col, str(n + 1), title, updated, str(length), c.w))
 
     return out + "\n" * (5 - len(g.ytpls))
 
 
-def format_title(x, l=62):
+def format_row(viditem, length):
     """ Apply user specified format string to a search result item. """
 
-    formatstring = Config.RESULT_FORMAT.get
+    formatstring = Config.RESULT_FORMAT.get.decode("utf8")
 
     try:
-        title = g.meta[x.ytid]['title']
-        data = g.meta[x.ytid]
+        data = g.meta[viditem.ytid]
 
     except KeyError:
         dbg("keyerror in format_title")
-        return uea_rpad(l, x.title)
+        return uea_pad(length, viditem.title)
 
-    data = {k: v.encode("utf8", "ignore") for k, v in data.items()}
-    cols = dict(g=c.g, b=c.b, r=c.r, p=c.p, u=c.ul, y=c.y, w=c.w)
-    data.update(cols)
+    braces = r"{\w+(?:|\:[<>^]?[\d\.]+)}"
+    components = r"""{(?P<field>\w+)
+                    (?:\:)?
+                    (?P<direction>[><^]|)
+                    (?P<pad>|\d+)
+                    (?:
+                        (?:\.)
+                        (?P<precision>\d+)
+                    )?
+                    }"""
 
-    try:
-        out = formatstring.format(**data)
+    def strformat(j):
+        item = j.group(0)
+        g = re.match(components, item, re.VERBOSE|re.U)
 
-    except (ValueError, KeyError) as e:
-        dbg(str(e))
-        return uea_rpad(l, title + "!BAD RESULT FORMAT!")
+        try:
+            field, direction, pad, precision = g.groups()
 
-    trunc = l
+        except:
+            field = g.group("field")
 
-    while real_len(out.decode("utf8")) > l and trunc >= 0:
-        if trunc == 0:
-            out = out[:-1]
-            continue
+        if field in data:
+            value = data[field]
+            value = value.decode("utf8") if type(value) != unicode else value
 
-        trunc -= 1
-        title = uea_trunc(trunc, title)
-        data['title'] = title.encode("utf8", "ignore")
-        out = formatstring.format(**data)
+            if precision:
+                value = uea_trunc(int(precision), value)
 
-    while real_len(out.decode("utf8")) < l:
-        out = out + " "
+            if pad:
+                value = uea_pad(int(pad), value, direction, True)
 
-    return out.decode("utf8")
+            return value
+
+        else:
+            return item
 
 
-#def generate_songlist_display(song=False, zeromsg=None, frmat=None):
+    out = re.sub(braces, strformat, formatstring, re.U)
+
+    if real_len(out) > length:
+        out = uea_trunc(length, out)
+
+    if real_len(out) < length:
+        out = uea_pad(length, out, notrunc=True)
+
+    return out
+
+
 def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     """ Generate list of choices from a song list."""
 
@@ -1418,10 +1454,26 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         return logo(c.g) + "\n\n"
 
     fmtrow = "%s%-5s %s %-6s  %s\n"
-    #fmthd = "%s%-5s %-64s %-6s%s\n"
     cw = Config.CONSOLE_WIDTH.get
     fmthd = "%s%-5s %-XXs %-6s%s\n".replace("XX", str(cw - 16))
-    head = (c.ul, "Item", "Title", "Length", c.w)
+    hfields = dict(viewCount="Views",
+                   rating="Rating",
+                   title="Title",
+                   uploader="User",
+                   uploaded="Date",
+                   aspect="Aspect",
+                   length="Length",
+                   likes="Likes",
+                   dislikes="Dislikes",
+                   commentCount="Comments")
+    try:
+        hfields = Config.RESULT_FORMAT.get.format(**hfields)
+        hfields = hfields[:cw]
+
+    except (ValueError, KeyError):
+        hfields = "Details"
+
+    head = (c.ul, "Item", hfields, "Length", c.w)
     out = "\n" + fmthd % head
 
     for n, x in enumerate(songs):
@@ -1431,11 +1483,10 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         title = x.title or "unknown title"
 
         if frmat == "search":
-            #title = format_title(x, 62)
-            title = format_title(x, cw - 18)
+            title = format_row(x, cw - 18)
 
         else:
-            title = uea_rpad(cw - 18, title)
+            title = uea_pad(cw - 18, title)
 
         if not song or song != songs[n]:
             out += (fmtrow % (col, str(n + 1), title, str(length), c.w))
