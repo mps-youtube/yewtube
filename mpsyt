@@ -67,6 +67,7 @@ except ImportError:
 
 if sys.version_info[:2] >= (3, 0):
     # pylint: disable=E0611,F0401
+    unitype = str
     import pickle
     from urllib.request import build_opener
     from urllib.error import HTTPError, URLError
@@ -81,6 +82,7 @@ else:
     from urllib import urlencode
     py2utf8_encode = lambda x: x.encode("utf8")
     py2utf8_decode = lambda x: x.decode("utf8")
+    unitype = unicode
     compat_input = raw_input
 
 mswin = os.name == "nt"
@@ -1212,17 +1214,18 @@ def get_tracks_from_json(jsons):
         likes = int(re.sub(r"\D", "", likes))
         total = item.get('ratingCount', 0)
         dislikes = total - likes
-        g.meta[ytid] = dict(rating=unicode(item.get('rating', 0))[:4],
+        U = lambda x: x.encode("utf8")
+        g.meta[ytid] = dict(rating=str(item.get('rating', 0))[:4],
                             uploader=item['uploader'],
                             category=item['category'],
                             aspect=item.get('aspectRatio', "custom"),
                             uploaded=yt_datetime(item['uploaded'])[1],
-                            likes=unicode(likes),
-                            dislikes=unicode(dislikes),
-                            commentCount=unicode(item.get('commentCount', 0)),
-                            viewCount=unicode(item.get("viewCount", 0)),
+                            likes=str(likes),
+                            dislikes=str(dislikes),
+                            commentCount=str(item.get('commentCount', 0)),
+                            viewCount=str(item.get("viewCount", 0)),
                             title=item['title'],
-                            length=unicode(fmt_time(cursong.length))
+                            length=U(fmt_time(cursong.length))
                             )
 
         songs.append(cursong)
@@ -1295,7 +1298,7 @@ def playback_progress(idx, allsongs, repeat=False):
 def real_len(u, alt=False):
     """ Try to determine width of strings displayed with monospace font. """
 
-    if type(u) == str:
+    if type(u) != unitype:
         u = u.decode("utf8")
 
     ueaw = unicodedata.east_asian_width
@@ -1384,7 +1387,7 @@ def generate_playlist_display():
 def format_row(viditem, length):
     """ Apply user specified format string to a search result item. """
 
-    formatstring = Config.RESULT_FORMAT.get.decode("utf8")
+    formatstring = py2utf8_decode(Config.RESULT_FORMAT.get)
 
     try:
         data = g.meta[viditem.ytid]
@@ -1416,7 +1419,7 @@ def format_row(viditem, length):
 
         if field in data:
             value = data[field]
-            value = value.decode("utf8") if type(value) != unicode else value
+            value = value.decode("utf8") if type(value) != unitype else value
 
             if precision:
                 value = uea_trunc(int(precision), value)
