@@ -67,7 +67,7 @@ except ImportError:
 
 if sys.version_info[:2] >= (3, 0):
     # pylint: disable=E0611,F0401
-    unitype = str
+    uni = str
     import pickle
     from urllib.request import build_opener
     from urllib.error import HTTPError, URLError
@@ -82,7 +82,7 @@ else:
     from urllib import urlencode
     py2utf8_encode = lambda x: x.encode("utf8")
     py2utf8_decode = lambda x: x.decode("utf8")
-    unitype = unicode
+    uni = unicode
     compat_input = raw_input
 
 mswin = os.name == "nt"
@@ -1215,17 +1215,17 @@ def get_tracks_from_json(jsons):
         total = item.get('ratingCount', 0)
         dislikes = total - likes
         U = lambda x: x.encode("utf8")
-        g.meta[ytid] = dict(rating=str(item.get('rating', 0))[:4],
+        g.meta[ytid] = dict(rating=uni(item.get('rating', 0))[:4],
                             uploader=item['uploader'],
                             category=item['category'],
                             aspect=item.get('aspectRatio', "custom"),
                             uploaded=yt_datetime(item['uploaded'])[1],
-                            likes=str(likes),
-                            dislikes=str(dislikes),
-                            commentCount=str(item.get('commentCount', 0)),
-                            viewCount=str(item.get("viewCount", 0)),
+                            likes=uni(likes),
+                            dislikes=uni(dislikes),
+                            commentCount=uni(item.get('commentCount', 0)),
+                            viewCount=uni(item.get("viewCount", 0)),
                             title=item['title'],
-                            length=U(fmt_time(cursong.length))
+                            length=uni(fmt_time(cursong.length))
                             )
 
         songs.append(cursong)
@@ -1298,7 +1298,7 @@ def playback_progress(idx, allsongs, repeat=False):
 def real_len(u, alt=False):
     """ Try to determine width of strings displayed with monospace font. """
 
-    if type(u) != unitype:
+    if type(u) != uni:
         u = u.decode("utf8")
 
     ueaw = unicodedata.east_asian_width
@@ -1384,20 +1384,16 @@ def generate_playlist_display():
     return out + "\n" * (5 - len(g.ytpls))
 
 
-def format_row(viditem, length):
-    """ Apply user specified format string to a search result item. """
+def uea_format(match, replacements, exclusions=None):
+    """ Formats a regex match object of the format {name:^x.y} according
+    to Python str.format using replacements dictionary to lookup value
+    for "name" and not modifying any names in exclusions list.  Uses
+    uea widths to calculate lengths of unicode strings.
 
-    formatstring = py2utf8_decode(Config.RESULT_FORMAT.get)
+    """
 
-    try:
-        data = g.meta[viditem.ytid]
-
-    except KeyError:
-        dbg("keyerror in format_title")
-        return uea_pad(length, viditem.title)
-
-    braces = r"{\w+(?:|\:[<>^]?[\d\.]+)}"
-    components = r"""{(?P<field>\w+)
+    components = r"""
+                   {(?P<field>\w+)
                     (?:\:)?
                     (?P<direction>[><^]|)
                     (?P<pad>|\d+)
@@ -1405,35 +1401,71 @@ def format_row(viditem, length):
                         (?:\.)
                         (?P<precision>\d+)
                     )?
-                    }"""
+                   }"""
 
-    def strformat(j):
-        item = j.group(0)
-        g = re.match(components, item, re.VERBOSE|re.U)
+    item = match.group(0)
+    g = re.match(components, item, re.VERBOSE|re.U)
 
-        try:
-            field, direction, pad, precision = g.groups()
+    try:
+        field, direction, pad, precision = g.groups()
 
-        except:
-            field = g.group("field")
+    except:
+        field = g.group("field")
 
-        if field in data:
-            value = data[field]
-            value = value.decode("utf8") if type(value) != unitype else value
+    if field in replacements and (not exclusions or not field in exclusions):
+        value = replacements[field]
+        value = value.decode("utf8") if type(value) != uni else value
 
-            if precision:
-                value = uea_trunc(int(precision), value)
+        if precision:
+            value = uea_trunc(int(precision), value)
 
-            if pad:
-                value = uea_pad(int(pad), value, direction, True)
+        if pad:
+            value = uea_pad(int(pad), value, direction, True)
 
-            return value
+        return value
 
-        else:
-            return item
+    else:
+        return item
 
+
+def format_row(viditem, length):
+    """ Apply user specified format string to a search result item. """
+
+    formatstring = py2utf8_decode(Config.RESULT_FORMAT.get)
+
+    try:
+        viddata = g.meta[viditem.ytid]
+
+    except KeyError:
+        # just show title if no metadata stored
+        dbg("no metadata available")
+        return uea_pad(length, viditem.title)
+
+    braces = r"{\w+(?:|\:[<>^]?[\d\.]+)}"
+    title_re = r"{title(?:|\:[<>^]?[\d\.]+)}"
+
+    def strformat(match):
+        return uea_format(match, replacements=viddata, exclusions="title")
 
     out = re.sub(braces, strformat, formatstring, re.U)
+
+    # handle row too large
+    def titleformat(match):
+        return uea_format(match, replacements=viddata)
+
+    m = re.search(title_re, out, re.U)
+
+    if m:
+        title_fmt_spec = m.group(0)
+        formatted_title = titleformat(m)
+
+        while real_len(out.replace(m.group(0), formatted_title)) > length:
+            formatted_title = formatted_title[:-1]
+
+            if not len(formatted_title):
+                break
+
+        out = out.replace(m.group(0), formatted_title)
 
     if real_len(out) > length:
         out = uea_trunc(length, out)
