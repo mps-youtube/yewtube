@@ -575,7 +575,7 @@ class Config(object):
     ORDER = ConfigItem("order", "relevance")
     ORDER.allowed_values = "relevance published viewCount rating".split()
     MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
-    CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=80, maxval=880,
+    CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=70, maxval=880,
                                check_fn=check_console_width)
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
     PLAYER = ConfigItem("player", "mplayer")
@@ -801,8 +801,9 @@ def known_player_set():
 def showconfig(_):
     """ Dump config data. """
 
+    width = Config.CONSOLE_WIDTH.get - 27
     s = "  %s%-17s%s : %s\n"
-    out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * 40, c.w)
+    out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
 
     for setting in g.config:
         val = getattr(Config, setting)
@@ -1259,7 +1260,9 @@ def playback_progress(idx, allsongs, repeat=False):
 
     # pylint: disable=R0914
     # too many local variables
-    out = "  %s%-71s%s%s\n" % (c.ul, "Title", "Time", c.w)
+    cw = Config.CONSOLE_WIDTH.get
+    out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
+    out = out % (c.ul, "Title", "Time", c.w)
     show_key_help = (Config.PLAYER.get in ["mplayer", "mpv"]
                      and Config.SHOW_MPLAYER_KEYS.get)
     multi = len(allsongs) > 1
@@ -1267,7 +1270,7 @@ def playback_progress(idx, allsongs, repeat=False):
     for n, song in enumerate(allsongs):
         length_orig = fmt_time(song.length)
         length = " " * (8 - len(length_orig)) + length_orig
-        i = uea_pad(66, song.title), length, length_orig
+        i = uea_pad(cw - 14, song.title), length, length_orig
         fmt = (c.w, "  ", c.b, i[0], c.w, c.y, i[1], c.w)
 
         if n == idx:
@@ -1287,9 +1290,9 @@ def playback_progress(idx, allsongs, repeat=False):
 
     else:
         playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
-        out += "\n" + " " * 61 if multi else ""
+        out += "\n" + " " * (cw - 19) if multi else ""
 
-    fmt = playing, c.r, cur[0].strip()[:61], c.w, c.w, cur[2], c.w
+    fmt = playing, c.r, cur[0].strip()[:cw - 19], c.w, c.w, cur[2], c.w
     out += "%s    %s%s%s %s[%s]%s" % fmt
     out += "    REPEAT MODE" if repeat else ""
     return out
@@ -1771,8 +1774,10 @@ def mplayer_status(popen_object, prefix="", songlength=0):
             buff += char
 
 
-def make_status_line(match_object, songlength=0, progress_bar_size=30):
+def make_status_line(match_object, songlength=0):
     """ Format progress line output.  """
+
+    progress_bar_size = Config.CONSOLE_WIDTH.get - 50
 
     try:
         elapsed_s = int(match_object.group('elapsed_s') or '0')
