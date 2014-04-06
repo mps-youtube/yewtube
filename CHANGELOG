@@ -2,13 +2,20 @@ Version 0.01.45 (development version, not yet released)
 
  - Added c <number> to view comments for a video
     (first 50 comments, no reply-comments)
+
  - Custom formatted search result list using "set result-format" command
    Optionally shows rating, likes, dislikes, view-count, aspect-ratio,
-     uploader, upload-date and comment-count in search results
+     uploader, upload-date, category and comment-count in search results
+
  - Added "set order <published|viewCount|rating|relevance>" command for
      specifying search result ordering
+
+ - Added "set console-width" for setting output width (default 80)
+
  - Added uploaded date in video info display (request #64)
+
  - Added likes / dislikes in video info display
+
  - Added support for age-restricted videos with encrypted signatures
     (supported in pafy 0.3.42)
 
