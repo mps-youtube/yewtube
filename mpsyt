@@ -503,11 +503,14 @@ class ConfigItem(object):
 
 
 def check_console_width(val):
+    """ Show ruler to check console width. """
     valid = True
     message = "-" * val + "\n"
     message += "console_width set to %s, try a lower value if above line ove"\
         "rlaps" % val
     return dict(valid=valid, message=message)
+
+
 def check_ddir(d):
     """ Check whether dir is a valid directory. """
 
@@ -1215,7 +1218,6 @@ def get_tracks_from_json(jsons):
         likes = int(re.sub(r"\D", "", likes))
         total = item.get('ratingCount', 0)
         dislikes = total - likes
-        U = lambda x: x.encode("utf8")
         g.meta[ytid] = dict(rating=uni(item.get('rating', 0))[:4],
                             uploader=item['uploader'],
                             category=item['category'],
@@ -1305,6 +1307,7 @@ def real_len(u, alt=False):
         u = u.decode("utf8")
 
     ueaw = unicodedata.east_asian_width
+
     if alt:
         #widths = dict(W=2, F=2, A=1, N=0.75, H=0.5)  # original
         widths = dict(N=.75, Na=1, W=2, F=2, A=1)
@@ -1312,8 +1315,6 @@ def real_len(u, alt=False):
     else:
         widths = dict(W=2, F=2, A=1, N=1, H=0.5)
 
-    #strip colour codes
-    #u = re.sub(r"\\x1b\[(?:\d{1,3})m", "", u)
     return int(round(sum(widths.get(ueaw(char), 1) for char in u)))
 
 
@@ -1338,10 +1339,10 @@ def uea_pad(num, t, direction="<", notrunc=False):
         spaces = num - real_len(t)
 
         if direction == "<":
-            t = t + (" " * (num - real_len(t)))
+            t = t + (" " * spaces)
 
         elif direction == ">":
-            t = (" " * (num - real_len(t))) + t
+            t = (" " * spaces) + t
 
         elif direction == "^":
             right = False
@@ -1388,10 +1389,11 @@ def generate_playlist_display():
 
 
 def uea_format(match, replacements, exclusions=None):
-    """ Formats a regex match object of the format {name:^x.y} according
-    to Python str.format using replacements dictionary to lookup value
-    for "name" and not modifying any names in exclusions list.  Uses
-    uea widths to calculate lengths of unicode strings.
+    """ Format a regex match object of the format {name:^x.y}.
+
+    Formats according to Python str.format using replacements dictionary to
+    lookup value for "field" and not modifying any names in exclusions list.
+    Uses uea widths to calculate lengths of unicode strings.
 
     """
 
@@ -1407,13 +1409,13 @@ def uea_format(match, replacements, exclusions=None):
                    }"""
 
     item = match.group(0)
-    g = re.match(components, item, re.VERBOSE|re.U)
+    spec = re.match(components, item, re.VERBOSE | re.U)
 
-    try:
-        field, direction, pad, precision = g.groups()
+    #try:
+    field, direction, pad, precision = spec.groups()
 
-    except:
-        field = g.group("field")
+    #except:
+        #field = spec.group("field")
 
     if field in replacements and (not exclusions or not field in exclusions):
         value = replacements[field]
@@ -1448,20 +1450,21 @@ def format_row(viditem, length):
     title_re = r"{title(?:|\:[<>^]?[\d\.]+)}"
 
     def strformat(match):
+        """ Called by substition regex. """
         return uea_format(match, replacements=viddata, exclusions="title")
 
     out = re.sub(braces, strformat, formatstring, re.U)
 
-    # handle row too large
     def titleformat(match):
+        """ Called to format title. """
         return uea_format(match, replacements=viddata)
 
     m = re.search(title_re, out, re.U)
 
     if m:
-        title_fmt_spec = m.group(0)
         formatted_title = titleformat(m)
 
+        # handle row too large
         while real_len(out.replace(m.group(0), formatted_title)) > length:
             formatted_title = formatted_title[:-1]
 
@@ -1470,6 +1473,7 @@ def format_row(viditem, length):
 
         out = out.replace(m.group(0), formatted_title)
 
+    # Finally, ensure row is filled exactly
     if real_len(out) > length:
         out = uea_trunc(length, out)
 
@@ -1499,6 +1503,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
                    title="Title",
                    uploader="User",
                    uploaded="Date",
+                   category="Category",
                    aspect="Aspect",
                    length="Length",
                    likes="Likes",
@@ -2425,7 +2430,10 @@ def open_save_view(action, name):
             save_to_file()
             g.content = generate_songlist_display(frmat=None)
 
+
 # TODO = add many to playlist repeatedly saves playlist!  Change to one save
+
+
 def open_view_bynum(action, num):
     """ Open or view a saved playlist by number. """
 
