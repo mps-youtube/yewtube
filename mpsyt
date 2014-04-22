@@ -754,10 +754,11 @@ def init_cache():
             with open(g.CACHEFILE, "rb") as cf:
                 g.streams = pickle.load(cf)
 
-        except IOError:
+            dbg(c.g + "%s cached streams imported%s", str(len(g.streams)), c.w)
+
+        except (EOFError, IOError):
             dbg(c.r + "Cache file failed to open" + c.w)
 
-        dbg(c.g + "%s cached streams imported%s", str(len(g.streams)), c.w)
         prune_streams()
 
 
