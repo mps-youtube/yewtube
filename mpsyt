@@ -696,6 +696,12 @@ def get_version_info():
     out += ("\nMachine type   : %s" % platform.machine())
     out += ("\nArchitecture   : %s, %s" % platform.architecture())
     out += ("\nPlatform       : %s" % platform.platform())
+    envs = "TERM SHELL LANG LANGUAGE".split()
+
+    for env in envs:
+        value = os.environ.get(env)
+        out += "\nenv:%-11s: %s" % (env, value) if value else ""
+
     return out
 
 
