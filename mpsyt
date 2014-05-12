@@ -28,11 +28,13 @@ __version__ = "0.01.45"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
+from xml.etree import ElementTree as ET
 import unicodedata
 import collections
 import subprocess
 import threading
 import tempfile
+import difflib
 import logging
 import random
 import locale
@@ -74,7 +76,7 @@ if sys.version_info[:2] >= (3, 0):
     from urllib.parse import urlencode
     py2utf8_encode = lambda x: x
     py2utf8_decode = lambda x: x
-    compat_input = input
+    xinput = input
 
 else:
     from urllib2 import build_opener, HTTPError, URLError
@@ -83,29 +85,41 @@ else:
     py2utf8_encode = lambda x: x.encode("utf8")
     py2utf8_decode = lambda x: x.decode("utf8")
     uni = unicode
-    compat_input = raw_input
+    xinput = raw_input
 
 mswin = os.name == "nt"
-non_utf8 = mswin or not "UTF-8" in os.environ.get("LANG", "")
+non_utf8_environment = mswin or not "UTF-8" in os.environ.get("LANG", "")
 member_var = lambda x: not(x.startswith("__") or callable(x))
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
+utf8_encode = lambda x: x.encode("utf8") if type(x) == uni else x
+utf8_decode = lambda x: x.decode("utf8") if type(x) == byt else x
 
 
-def non_utf8_encode(txt):
+def utf8_replace(txt):
     """ Encoding for non UTF8 environments. """
 
-    if non_utf8:
-        sse = sys.stdout.encoding
-        txt = txt.encode(sse, "replace").decode("utf8", "ignore")
-
+    sse = sys.stdout.encoding
+    txt = txt.encode(sse, "replace").decode("utf8", "ignore")
     return txt
+
+
+def xenc(stuff):
+    """ Encode for non utf8 environments. """
+    stuff = utf8_replace(stuff) if non_utf8_environment else stuff
+    return stuff
+
+
+def xprint(stuff):
+    """ Compatible print. """
+
+    print(xenc(stuff))
 
 
 def mswinfn(filename):
     """ Fix filename for Windows. """
 
     if mswin:
-        filename = non_utf8_encode(filename)
+        filename = utf8_replace(filename) if non_utf8_environment else filename
         allowed = re.compile(r'[^\\/?*$\'"%&:<>|]')
         filename = "".join(x if allowed.match(x) else "_" for x in filename)
 
@@ -572,7 +586,7 @@ class Config(object):
     """ Holds various configuration values. """
 
     ORDER = ConfigItem("order", "relevance")
-    ORDER.allowed_values = "relevance published viewCount rating".split()
+    ORDER.allowed_values = "relevance date views rating".split()
     MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
     CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=70, maxval=880,
                                check_fn=check_console_width)
@@ -1172,7 +1186,7 @@ def mplayer_help(short=True):
     seek = u"[{0}\u2190{1}] seek [{0}\u2192{1}]"
     pause = u"[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
 
-    if non_utf8:
+    if non_utf8_environment:
         seek = "[{0}<-{1}] seek [{0}->{1}]"
         pause = "[{0}DN{1}] SEEK [{0}UP{1}]       [{0}space{1}] pause"
 
@@ -1249,8 +1263,9 @@ def screen_update():
     print(g.blank_text)
 
     if g.content:
-        g.content = non_utf8_encode(g.content)
-        print(py2utf8_encode(g.content))
+        x = g.content
+        x = utf8_replace(x) if non_utf8_environment else x
+        print(py2utf8_encode(x))
 
     if g.message:
         print(g.message)
@@ -1478,7 +1493,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     fmt = ["%{}{}s  ".format(x['sign'], x['size']) for x in columns]
     fmtrow = fmt[0:1] + ["%s  "] + fmt[2:]
     fmt, fmtrow = "".join(fmt).strip(), "".join(fmtrow).strip()
-    titles = tuple([x['heading'] for x in columns])
+    titles = tuple([x['heading'][:x['size']] for x in columns])
     hrow = c.ul + fmt % titles + c.w
     out = "\n" + hrow + "\n"
 
@@ -1828,6 +1843,8 @@ def _search(url, progtext, qs=None, splash=True):
 def generate_search_qs(term, page):
     """ Return query string. """
 
+    aliases = dict(relevance="relevance", date="published", rating="rating",
+                   views="viewCount")
     qs = {
         'q': term,
         'v': 2,
@@ -1836,7 +1853,7 @@ def generate_search_qs(term, page):
         'safeSearch': "none",
         'max-results': Config.MAX_RESULTS.get,
         'paid-content': "false",
-        'orderby': Config.ORDER.get
+        'orderby': aliases[Config.ORDER.get]
     }
 
     if Config.SEARCH_MUSIC.get:
@@ -2152,7 +2169,7 @@ def fetch_comments(item):
         screen_update()
         print("%s : Use [Enter] for next, [p] for previous, [q] to return:"
               % pagecounter, end="")
-        v = compat_input()
+        v = xinput()
 
         if v == "p":
             pagenum -= 1
@@ -2824,7 +2841,7 @@ def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
     g.content = content
     screen_update()
 
-    choice = compat_input(prompt)
+    choice = xinput(prompt)
 
     if choice in model:
         return model[choice]
@@ -3003,7 +3020,7 @@ def prompt_for_exit():
     screen_update()
 
     try:
-        userinput = compat_input(c.r + " > " + c.w)
+        userinput = xinput(c.r + " > " + c.w)
 
     except (KeyboardInterrupt, EOFError):
         quits(showlogo=False)
@@ -3388,7 +3405,265 @@ def clearcache():
     g.message = "cache cleared"
 
 
+def _do_query(url, query, err='query failed', cache=True, report=False):
+    """ Perform http request.
+
+    if cache is True, memo is utilised
+    if report is True, return whether response is from memo
+
+    """
+
+    # convert query to sorted list of tuples (needed for consistent url_memo)
+    query = [(k, query[k]) for k in sorted(query.keys())]
+    url = "%s?%s" % (url, urlencode(query))
+
+    #if cache and g.memo.get(url):
+        #return g.memo.get(url) if not report else (g.memo.get(url), True)
+
+    try:
+        wdata = g.urlopen(url).read()
+
+    except (URLError, HTTPError) as e:
+        g.message = "%s: %s (%s)" % (err, e, url)
+        g.content = logo(c.r)
+        return None if not report else (None, False)
+
+    #if cache and wdata:
+        #g.memo.add(url, wdata)
+
+    return wdata if not report else (wdata, False)
+
+
+def _best_song_match(songs, title, duration):
+    """ Select best matching song based on title, length.
+
+    Score from 0 to 1 where 1 is best.
+
+    """
+
+    # pylint: disable=R0914
+    seqmatch = difflib.SequenceMatcher
+    variance = lambda a, b: float(abs(a - b)) / max(a, b)
+    candidates = []
+
+    for song in songs:
+        dur, tit = int(song.length), song.title
+        dbg("-----")
+        dbg("%s %s %s %s", dur, duration, tit, title)
+        dbg("-----")
+        title_score = seqmatch(None, title, tit).ratio()
+        duration_score = 1 - variance(duration, dur)
+
+        # apply weightings
+        score = duration_score * .5 + title_score * .5
+        candidates.append((score, song))
+
+    best_score, best_song = max(candidates, key=lambda x: x[0])
+    percent_score = int(100 * best_score)
+    return best_song, percent_score
+
+
+def _match_tracks(artist, title, mb_tracks):
+    """ Match list of tracks in mb_tracks by performing multiple searches. """
+
+    #pylint: disable=R0914
+    title_artist_str = c.g + title + c.w, c.g + artist + c.w
+    xprint("\nSearching for %s by %s" % title_artist_str)
+    dtime = lambda x: time.strftime('%M:%S', time.gmtime(int(x)))
+
+    # do matching
+    for track in mb_tracks:
+        ttitle = track['title']
+        length = track['length']
+        xprint("Search :  %s%s - %s%s - %s" % (c.y, artist, ttitle, c.w,
+                                               dtime(length)))
+        q = utf8_encode("%s %s" % (ttitle, artist))
+        q = utf8_encode(ttitle) if artist == "Various Artists" else q
+        w = q + utf8_encode(" -cover -guitar -piano")
+        # TODO: ensure category is music
+        url = "https://gdata.youtube.com/feeds/api/videos"
+        query = generate_search_qs(w, 1)
+        have_results = _search(url, q, query, splash=False)
+        time.sleep(0.5)
+
+        if not have_results:
+            print(c.r + "Nothing matched :(\n" + c.w)
+            continue
+
+        results = g.model.songs
+        s, score = _best_song_match(results, artist + " " + ttitle, length)
+        cc = c.g if score > 89 else c.y
+        cc = c.r if score < 75 else cc
+        xprint("Matched:  %s%s%s - %s \n[%sMatch confidence: "
+               "%s%s]\n" % (c.y, s.title, c.w, fmt_time(s.length), cc, score, c.w))
+        yield s
+
+
+def _get_mb_tracks(albumid):
+    """ Get track listing from MusicBraiz by album id. """
+
+    ns = {'mb': 'http://musicbrainz.org/ns/mmd-2.0#'}
+    url = "http://musicbrainz.org/ws/2/release/" + albumid
+    query = {"inc": "recordings"}
+    wdata = _do_query(url, query, err='album search error')
+
+    if not wdata:
+        return None
+
+    root = ET.fromstring(wdata)
+    tlist = root.find("./mb:release/mb:medium-list/mb:medium/mb:track-list",
+                      namespaces=ns)
+    mb_songs = tlist.findall("mb:track", namespaces=ns)
+
+    tracks = []
+
+    for track in mb_songs:
+        title = track.find("./mb:recording/mb:title", namespaces=ns).text
+        rawlength = track.find("./mb:recording/mb:length", namespaces=ns).text
+        length = int(round(float(rawlength) / 1000))
+        tracks.append(dict(title=title, length=length, rawlength=rawlength))
+
+    return tracks
+
+
+def _get_mb_album(albumname, **kwa):
+    """ Return artist, album title and track count from MusicBrainz. """
+
+    url = "http://musicbrainz.org/ws/2/release/"
+    qargs = dict(
+        release='"%s"' % albumname,
+        primarytype=kwa.get("primarytype", "album"),
+        status=kwa.get("status", "official"))
+    qargs.update({k: '"%s"' % v for k, v in kwa.items()})
+    qargs = ["%s:%s" % item for item in qargs.items()]
+    qargs = {"query": " AND ".join(qargs)}
+    g.message = "Album search for '%s%s%s'" % (c.y, albumname, c.w)
+    wdata = _do_query(url, qargs)
+
+    if not wdata:
+        return None
+
+    ns = {'mb': 'http://musicbrainz.org/ns/mmd-2.0#'}
+    root = ET.fromstring(wdata)
+    rlist = root.find("mb:release-list", namespaces=ns)
+
+    if int(rlist.get('count')) == 0:
+        return None
+
+    album = rlist.find("mb:release", namespaces=ns)
+    artist = album.find("./mb:artist-credit/mb:name-credit/mb:artist",
+                        namespaces=ns).find("mb:name", namespaces=ns).text
+    title = album.find("mb:title", namespaces=ns).text
+    aid = album.get('id')
+    return dict(artist=artist, title=title, aid=aid)
+
+
+def search_album(term, page=1, splash=True):
+    """Search for albums. """
+
+    #pylint: disable=R0914,R0912
+    if not term:
+        show_message("Enter album name:", c.g, update=True)
+        term = xinput("> ")
+
+        if not term or len(term) < 2:
+            g.message = c.r + "Not enough input!" + c.w
+            g.content = generate_songlist_display()
+            return
+
+    album = _get_mb_album(term)
+
+    if not album:
+        show_message("Album '%s' not found!" % term)
+        return
+
+    out = "'%s' by %s%s%s\n\n" % (album['title'],
+                                  c.g, album['artist'], c.w)
+    out += ("[Enter] to continue, [q] to abort, or enter artist name for:\n"
+            "    %s" % (c.y + term + c.w + "\n"))
+
+    g.message, g.content = out, logo(c.b)
+    screen_update()
+    prompt = xenc("Artist? [%s] > " % album['artist'])
+    artistentry = xinput(prompt).strip()
+
+    if artistentry:
+
+        if artistentry == "q":
+            g.message = ("Album search abandoned!")
+            return
+
+        album = _get_mb_album(term, artist=artistentry)
+
+        if not album:
+            show_message("Album '%s' by '%s' not found!" % (term, artistentry))
+            return
+
+    title, artist = album['title'], album['artist']
+    mb_tracks = _get_mb_tracks(album['aid'])
+
+    if not mb_tracks:
+        show_message("Album '%s' by '%s' has 0 tracks!" % (title, artist))
+        return
+
+
+    msg = "%s%s%s by %s%s%s\n\n" % (c.g, title, c.w, c.g, artist, c.w)
+    msg += "Enter to begin matching or [q] to abort"
+    g.message = msg
+    g.content = "Tracks:\n"
+    for n, track in enumerate(mb_tracks, 1):
+        g.content += "%02s  %s" % (n, track['title'])
+        g.content += "\n"
+
+    #g.content = logo(c.b) + "\n\n"
+    screen_update()
+    entry = xinput("Continue? [Enter] > ")
+
+    if entry == "":
+        pass
+
+    else:
+        g.message = ("Album search abandoned!")
+        #show_message("Album search abandoned!")
+        return
+
+    songs = []
+    print(g.blank_text)
+    itt = _match_tracks(artist, title, mb_tracks)
+
+    while True:
+
+        try:
+            songs.append(next(itt))
+
+        except KeyboardInterrupt:
+            print("%sHalted!%s" % (c.r, c.w))
+            break
+
+        except StopIteration:
+            break
+
+
+    if songs:
+        print("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
+        xinput("Press Enter to continue")
+        g.model.songs = songs
+        g.message = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
+            c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
+        g.last_opened = ""
+        g.last_search_query = ""
+        g.current_page = page
+        g.content = generate_songlist_display()
+
+    else:
+        g.message = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
+        g.content = generate_songlist_display()
+        g.current_page = 1
+        g.last_search_query = ""
+
+
 g.helptext = [("basic", "Basics", """
+
 {0}Basic Usage{1}
 
 Use {2}/{1} or {2}.{1} to prefix your search query.  e.g., {2}/pink floyd{1}
@@ -3639,6 +3914,7 @@ def main():
         'shuffle_fn': r'\s*(shuffle)\s*$',
         'add_rm_all': r'(rm|add)\s(?:\*|all)$',
         'showconfig': r'(set|showconfig)\s*$',
+        'search_album': r'album\s*(.{0,500})',
         'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
         'open_save_view': r'(open|save|view)\s*(%s)$' % word,
         'songlist_mv_sw': r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})$',
@@ -3664,7 +3940,7 @@ def main():
             next_inp = next_inp.replace("[mpsyt-comma]", ",")
 
         try:
-            userinput = next_inp or compat_input(prompt).strip()
+            userinput = next_inp or xinput(prompt).strip()
 
         except (KeyboardInterrupt, EOFError):
             userinput = prompt_for_exit()
