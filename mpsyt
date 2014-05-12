@@ -221,7 +221,6 @@ def prune_streams():
     while len(g.streams) > g.max_cached_streams:
         g.streams.popitem(last=False)
 
-
     # prune time expired items
 
     now = time.time()
@@ -296,9 +295,8 @@ def get_streams(vid, force=False, callback=None, threeD=False):
     ps = p.allstreams if threeD else [x for x in p.allstreams if not x.threed]
 
     try:
-        # pylint: disable=W0612
         # test urls are valid
-        _ = [x.url for x in ps]
+        [x.url for x in ps]
 
     except TypeError:
         # refetch if problem
@@ -587,7 +585,7 @@ class Config(object):
     FULLSCREEN = ConfigItem("fullscreen", False)
     FULLSCREEN.require_known_player = True
     SHOW_STATUS = ConfigItem("show_status", True)
-    RESULT_FORMAT = ConfigItem("result_format", "{title} [{rating}]")
+    COLUMNS = ConfigItem("columns", "")
     DDIR = ConfigItem("ddir", get_default_ddir(), check_fn=check_ddir)
     SHOW_VIDEO = ConfigItem("show_video", False)
     SEARCH_MUSIC = ConfigItem("search_music", True)
@@ -651,7 +649,6 @@ class g(object):
     last_search_query = {}
     current_page = 1
     active = Playlist(name="active")
-    noblank = False
     text = {}
     userpl = {}
     ytpl = {}
@@ -803,7 +800,7 @@ def known_player_set():
 def showconfig(_):
     """ Dump config data. """
 
-    width = Config.CONSOLE_WIDTH.get - 27
+    width = Config.CONSOLE_WIDTH.get - 30
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
 
@@ -1243,8 +1240,7 @@ def get_tracks_from_json(jsons):
 def screen_update():
     """ Display content, show message, blank screen."""
 
-    if not g.noblank:
-        print(g.blank_text)
+    print(g.blank_text)
 
     if g.content:
         g.content = non_utf8_encode(g.content)
@@ -1254,7 +1250,6 @@ def screen_update():
         print(g.message)
 
     g.message = g.content = False
-    g.noblank = False
 
 
 def playback_progress(idx, allsongs, repeat=False):
@@ -1301,7 +1296,7 @@ def playback_progress(idx, allsongs, repeat=False):
 
 
 def num_repr(num):
-    """ Return up to four digit string representation of a number, eg 2.6m """
+    """ Return up to four digit string representation of a number, eg 2.6m. """
 
     if num <= 9999:
         return str(num)
@@ -1311,7 +1306,7 @@ def num_repr(num):
     sig = 3 if digits % 3 == 0 else 2
     rounded = int(round(num, int(sig - digits)))
     digits = digit_count(rounded)
-    suffix = "_kmBTqXXX"[(digits - 1) // 3]
+    suffix = "_kmBTqXYX"[(digits - 1) // 3]
     front = 3 if digits % 3 == 0 else digits % 3
 
     if not front == 1:
@@ -1391,8 +1386,9 @@ def generate_playlist_display():
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
 
+    cw = Config.CONSOLE_WIDTH.get
     fmtrow = "%s%-5s %s %-8s  %-2s%s\n"
-    fmthd = "%s%-5s %-57s %-9s %-5s%s\n"
+    fmthd = "%s%-5s %-{}s %-9s %-5s%s\n".format(cw - 23)
     head = (c.ul, "Item", "Playlist", "Updated", "Count", c.w)
     out = "\n" + fmthd % head
 
@@ -1402,110 +1398,51 @@ def generate_playlist_display():
         length = "%4s" % length
         title = x.get('title') or "unknown"
         updated = yt_datetime(x.get('updated'))[1]
-        title = uea_pad(57, title)
+        title = uea_pad(cw - 23, title)
         out += (fmtrow % (col, str(n + 1), title, updated, str(length), c.w))
 
     return out + "\n" * (5 - len(g.ytpls))
 
 
-def uea_format(match, replacements, exclusions=None):
-    """ Format a regex match object of the format {name:^x.y}.
+def get_user_columns():
+    """ Get columns from user config, return dict. """
+    total_size = 0
+    user_columns = Config.COLUMNS.get
+    user_columns = user_columns.replace(",", " ").split()
 
-    Formats according to Python str.format using replacements dictionary to
-    lookup value for "field" and not modifying any names in exclusions list.
-    Uses uea widths to calculate lengths of unicode strings.
+    defaults = {"views": dict(name="viewCount", size=4, heading="View"),
+                "rating": dict(name="rating", size=4, heading="Rtng"),
+                "comments": dict(name="commentCount", size=4, heading="Comm"),
+                "date": dict(name="uploaded", size=8, heading="Date"),
+                "user": dict(name="uploader", size=10, heading="User"),
+                "likes": dict(name="likes", size=4, heading="Like"),
+                "dislikes": dict(name="dislikes", size=4, heading="Dslk"),
+                "category": dict(name="category", size=8, heading="Category"),
+                }
 
-    """
+    ret = []
+    for column in user_columns:
+        namesize = column.split(":")
+        name = namesize[0]
 
-    components = r"""
-                   {(?P<field>\w+)
-                    (?:\:)?
-                    (?P<direction>[><^]|)
-                    (?P<pad>|\d+)
-                    (?:
-                        (?:\.)
-                        (?P<precision>\d+)
-                    )?
-                   }"""
+        if name in defaults:
+            z = defaults[name]
+            nm, sz, hd = z['name'], z['size'], z['heading']
 
-    item = match.group(0)
-    spec = re.match(components, item, re.VERBOSE | re.U)
+            if len(namesize) == 2 and namesize[1].isdigit():
+                sz = int(namesize[1])
 
-    #try:
-    field, direction, pad, precision = spec.groups()
+            total_size += sz
+            if total_size < Config.CONSOLE_WIDTH.get - 18:
+                ret.append(dict(name=nm, size=sz, heading=hd))
 
-    #except:
-        #field = spec.group("field")
-
-    if field in replacements and (not exclusions or not field in exclusions):
-        value = replacements[field]
-        value = value.decode("utf8") if type(value) != uni else value
-
-        if precision:
-            value = uea_trunc(int(precision), value)
-
-        if pad:
-            value = uea_pad(int(pad), value, direction, True)
-
-        return value
-
-    else:
-        return item
-
-
-def format_row(viditem, length):
-    """ Apply user specified format string to a search result item. """
-
-    formatstring = py2utf8_decode(Config.RESULT_FORMAT.get)
-
-    try:
-        viddata = g.meta[viditem.ytid]
-
-    except KeyError:
-        # just show title if no metadata stored
-        dbg("no metadata available")
-        return uea_pad(length, viditem.title)
-
-    braces = r"{\w+(?:|\:[<>^]?[\d\.]+)}"
-    title_re = r"{title(?:|\:[<>^]?[\d\.]+)}"
-
-    def strformat(match):
-        """ Called by substition regex. """
-        return uea_format(match, replacements=viddata, exclusions="title")
-
-    out = re.sub(braces, strformat, formatstring, re.U)
-
-    def titleformat(match):
-        """ Called to format title. """
-        return uea_format(match, replacements=viddata)
-
-    m = re.search(title_re, out, re.U)
-
-    if m:
-        formatted_title = titleformat(m)
-
-        # handle row too large
-        while real_len(out.replace(m.group(0), formatted_title)) > length:
-            formatted_title = formatted_title[:-1]
-
-            if not len(formatted_title):
-                break
-
-        out = out.replace(m.group(0), formatted_title)
-
-    # Finally, ensure row is filled exactly
-    if real_len(out) > length:
-        out = uea_trunc(length, out)
-
-    if real_len(out) < length:
-        out = uea_pad(length, out, notrunc=True)
-
-    return out
+    return ret
 
 
 def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     """ Generate list of choices from a song list."""
 
+    # pylint: disable=R0914
     if g.browse_mode == "ytpl":
         return generate_playlist_display()
 
@@ -1515,47 +1452,51 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         g.message = zeromsg or "Enter /search-term to search or [h]elp"
         return logo(c.g) + "\n\n"
 
-    fmtrow = "%s%-5s %s %-6s  %s\n"
-    cw = Config.CONSOLE_WIDTH.get
-    fmthd = "%s%-5s %-XXs %-6s%s\n".replace("XX", str(cw - 16))
-    hfields = dict(viewCount="Views",
-                   rating="Rating",
-                   title="Title",
-                   uploader="User",
-                   uploaded="Date",
-                   category="Category",
-                   aspect="Aspect",
-                   length="Length",
-                   likes="Likes",
-                   dislikes="Dislikes",
-                   commentCount="Comments")
-    try:
-        hfields = Config.RESULT_FORMAT.get.format(**hfields)
-        hfields = hfields[:cw]
+    have_meta = all(x.ytid in g.meta for x in songs)
+    user_columns = get_user_columns() if have_meta else []
+    maxlength = max(x.length for x in songs)
+    lengthsize = 8 if maxlength > 35999 else 7
+    lengthsize = 5 if maxlength < 6000 else lengthsize
+    reserved = 9 + lengthsize + len(user_columns)
+    cw = Config.CONSOLE_WIDTH.get - 1
+    title_size = cw - sum(1 + x['size'] for x in user_columns) - reserved
+    before = [{"name": "idx", "size": 3, "heading": "Num"},
+              {"name": "title", "size": title_size, "heading": "Title"}]
+    after = [{"name": "length", "size": lengthsize, "heading": "Time"}]
+    columns = before + user_columns + after
 
-    except (ValueError, KeyError):
-        hfields = "Details"
+    for n, column in enumerate(columns):
+        column['idx'] = n
+        column['sign'] = "-" if not column['name'] == "length" else ""
 
-    head = (c.ul, "Item", hfields, "Length", c.w)
-    out = "\n" + fmthd % head
+    fmt = ["%{}{}s  ".format(x['sign'], x['size']) for x in columns]
+    fmtrow = fmt[0:1] + ["%s  "] + fmt[2:]
+    fmt, fmtrow = "".join(fmt).strip(), "".join(fmtrow).strip()
+    titles = tuple([x['heading'] for x in columns])
+    hrow = c.ul + fmt % titles + c.w
+    out = "\n" + hrow + "\n"
 
     for n, x in enumerate(songs):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
-        length = fmt_time(x.length)
-        length = " " * (8 - len(length)) + length
-        title = x.title or "unknown title"
+        details = {'title': x.title, "length": fmt_time(x.length)}
+        details = g.meta[x.ytid].copy() if have_meta else details
+        otitle = details['title']
+        details['idx'] = uni(n + 1)
+        details['title'] = uea_pad(columns[1]['size'], otitle)
+        data = []
 
-        if frmat == "search":
-            title = format_row(x, cw - 18)
+        for z in columns:
+            fieldsize, field = z['size'], z['name']
 
-        else:
-            title = uea_pad(cw - 18, title)
+            if len(details[field]) > fieldsize:
+                details[field] = details[field][:fieldsize]
 
-        if not song or song != songs[n]:
-            out += (fmtrow % (col, str(n + 1), title, str(length), c.w))
+            data.append(details[field])
 
-        else:
-            out += (fmtrow % (c.p, str(n + 1), title, str(length), c.w))
+        line = fmtrow % tuple(data)
+        col = col if not song or song != songs[n] else c.p
+        line = col + line + c.w
+        out += line + "\n"
 
     return out + "\n" * (5 - len(songs)) if not song else out
 
