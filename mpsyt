@@ -1803,7 +1803,6 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
 
     # attach query string if supplied
     url = url + "?" + urlencode(qs) if qs else url
-    dbg(url)
     # use cached value if exists
     if url in g.url_memo:
         songs = g.url_memo[url]
@@ -1845,6 +1844,7 @@ def generate_search_qs(term, page):
 
     aliases = dict(relevance="relevance", date="published", rating="rating",
                    views="viewCount")
+    term = utf8_encode(term)
     qs = {
         'q': term,
         'v': 2,
@@ -3509,22 +3509,17 @@ def _match_tracks(artist, title, mb_tracks):
         #q = utf8_encode("%s %s" % (ttitle, artist))
         #q = utf8_encode(ttitle) if artist == "Various Artists" else q
         #w = q + utf8_encode(" -cover -guitar -piano")
-        q = "%s %s" % (ttitle, artist)
+        q = "%s %s" % (artist, ttitle)
         w = q = title if artist == "Various Artists" else q
-        # TODO: ensure category is music
-        # ignore cover versions
-        ignore = "guitar piano cover karaoke".split()
+        #ignore = "guitar piano cover karaoke".split()
 
-        for word in ignore:
-            if not word in w.lower():
-                w += " -%s" % word
+        #for word in ignore:
+            #if not word in w.lower():
+                #w += " -%s" % word
 
         url = "https://gdata.youtube.com/feeds/api/videos"
         query = generate_search_qs(w, 1)
-        stash = Config.SEARCH_MUSIC.get
-        Config.SEARCH_MUSIC.value=True
         have_results = _search(url, q, query, splash=False, pre_load=False)
-        Config.SEARCH_MUSIC.value=stash
         time.sleep(0.5)
 
         if not have_results:
@@ -3532,6 +3527,7 @@ def _match_tracks(artist, title, mb_tracks):
             continue
 
         results = g.model.songs
+        dbg(song.title for song in g.model.songs)
         s, score = _best_song_match(results, artist + " " + ttitle, length)
         cc = c.g if score > 85 else c.y
         cc = c.r if score < 75 else cc
@@ -3671,17 +3667,25 @@ def search_album(term, page=1, splash=True):
     print(g.blank_text)
     itt = _match_tracks(artist, title, mb_tracks)
 
-    while True:
+    stash = Config.SEARCH_MUSIC.get, Config.ORDER.get, Config.MAX_RESULTS.get
+    Config.SEARCH_MUSIC.value = True
+    Config.MAX_RESULTS.value = 50
+    Config.ORDER.value = "relevance"
 
-        try:
+
+    try:
+        while True:
             songs.append(next(itt))
 
-        except KeyboardInterrupt:
-            print("%sHalted!%s" % (c.r, c.w))
-            break
+    except KeyboardInterrupt:
+        print("%sHalted!%s" % (c.r, c.w))
 
-        except StopIteration:
-            break
+    except StopIteration:
+        pass
+
+    finally:
+        (Config.SEARCH_MUSIC.value, Config.ORDER.value,
+         Config.MAX_RESULTS.value) = stash
 
 
     if songs:
