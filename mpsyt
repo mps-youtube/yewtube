@@ -3621,7 +3621,7 @@ def search_album(term, page=1, splash=True):
 
     g.message, g.content = out, logo(c.b)
     screen_update()
-    prompt = xenc("Artist? [%s] > " % album['artist'])
+    prompt = xenc("Artist? [%s] > " % py2utf8_encode(album['artist']))
     artistentry = xinput(prompt).strip()
 
     if artistentry:
