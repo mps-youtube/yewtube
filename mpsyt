@@ -266,7 +266,6 @@ def get_pafy(item, force=False, callback=None):
 
     if not force and cached and cached.expiry > time.time():
         dbg("get pafy cache hit for %s", cached.title)
-        dbg("remaining time is %s", str(cached.expiry - time.time()))
         cached.fresh = False
         return cached
 
@@ -1797,14 +1796,14 @@ def make_status_line(match_object, songlength=0):
     return status_line
 
 
-def _search(url, progtext, qs=None, splash=True):
+def _search(url, progtext, qs=None, splash=True, pre_load=True):
     """ Perform memoized url fetch, display progtext. """
 
     g.message = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
 
     # attach query string if supplied
     url = url + "?" + urlencode(qs) if qs else url
-
+    dbg(url)
     # use cached value if exists
     if url in g.url_memo:
         songs = g.url_memo[url]
@@ -1826,12 +1825,13 @@ def _search(url, progtext, qs=None, splash=True):
             g.content = logo(c.r)
             return
 
-    if songs:
+    if songs and pre_load:
         # preload first result url
         kwa = {"song": songs[0], "delay": 0}
         t = threading.Thread(target=preload, kwargs=kwa)
         t.start()
 
+    if songs:
         # cache resuls
         g.url_memo[url] = songs[::]
         g.model.songs = songs
@@ -3405,6 +3405,17 @@ def clearcache():
     g.message = "cache cleared"
 
 
+def show_message(message, col=c.r, update=False):
+    """ Show message using col, update screen if required. """
+
+    g.content = generate_songlist_display()
+    g.message = col + message + c.w
+
+    if update:
+        screen_update()
+
+
+
 def _do_query(url, query, err='query failed', cache=True, report=False):
     """ Perform http request.
 
@@ -3446,12 +3457,30 @@ def _best_song_match(songs, title, duration):
     variance = lambda a, b: float(abs(a - b)) / max(a, b)
     candidates = []
 
+    ignore = "music video lyrics new lyrics video audio".split()
+    extra = "official original vevo".split()
+
+
     for song in songs:
         dur, tit = int(song.length), song.title
-        dbg("-----")
-        dbg("%s %s %s %s", dur, duration, tit, title)
-        dbg("-----")
-        title_score = seqmatch(None, title, tit).ratio()
+
+        for word in extra:
+            if word in tit.lower() and not word in title.lower():
+                pattern = re.compile(word, re.I)
+                tit = pattern.sub("", tit)
+
+        for word in ignore:
+            if word in tit.lower() and not word in title.lower():
+                pattern = re.compile(word, re.I)
+                tit = pattern.sub("", tit)
+                #tit = re.sub(word, "", tit, re.)
+
+        replacechars = re.compile(r"[\]\[\)\(\-]")
+        tit = replacechars.sub(" ", tit)
+        multiple_spaces = re.compile(r"(\s)(\s*)")
+        tit = multiple_spaces.sub(r"\1", tit)
+
+        title_score = seqmatch(None, title.lower(), tit.lower()).ratio()
         duration_score = 1 - variance(duration, dur)
 
         # apply weightings
@@ -3477,13 +3506,25 @@ def _match_tracks(artist, title, mb_tracks):
         length = track['length']
         xprint("Search :  %s%s - %s%s - %s" % (c.y, artist, ttitle, c.w,
                                                dtime(length)))
-        q = utf8_encode("%s %s" % (ttitle, artist))
-        q = utf8_encode(ttitle) if artist == "Various Artists" else q
-        w = q + utf8_encode(" -cover -guitar -piano")
+        #q = utf8_encode("%s %s" % (ttitle, artist))
+        #q = utf8_encode(ttitle) if artist == "Various Artists" else q
+        #w = q + utf8_encode(" -cover -guitar -piano")
+        q = "%s %s" % (ttitle, artist)
+        w = q = title if artist == "Various Artists" else q
         # TODO: ensure category is music
+        # ignore cover versions
+        ignore = "guitar piano cover karaoke".split()
+
+        for word in ignore:
+            if not word in w.lower():
+                w += " -%s" % word
+
         url = "https://gdata.youtube.com/feeds/api/videos"
         query = generate_search_qs(w, 1)
-        have_results = _search(url, q, query, splash=False)
+        stash = Config.SEARCH_MUSIC.get
+        Config.SEARCH_MUSIC.value=True
+        have_results = _search(url, q, query, splash=False, pre_load=False)
+        Config.SEARCH_MUSIC.value=stash
         time.sleep(0.5)
 
         if not have_results:
@@ -3492,7 +3533,7 @@ def _match_tracks(artist, title, mb_tracks):
 
         results = g.model.songs
         s, score = _best_song_match(results, artist + " " + ttitle, length)
-        cc = c.g if score > 89 else c.y
+        cc = c.g if score > 85 else c.y
         cc = c.r if score < 75 else cc
         xprint("Matched:  %s%s%s - %s \n[%sMatch confidence: "
                "%s%s]\n" % (c.y, s.title, c.w, fmt_time(s.length), cc, score, c.w))
@@ -3590,7 +3631,7 @@ def search_album(term, page=1, splash=True):
     if artistentry:
 
         if artistentry == "q":
-            g.message = ("Album search abandoned!")
+            show_message("Album search abandoned!")
             return
 
         album = _get_mb_album(term, artist=artistentry)
@@ -3623,8 +3664,7 @@ def search_album(term, page=1, splash=True):
         pass
 
     else:
-        g.message = ("Album search abandoned!")
-        #show_message("Album search abandoned!")
+        show_message("Album search abandoned!")
         return
 
     songs = []
@@ -3645,9 +3685,12 @@ def search_album(term, page=1, splash=True):
 
 
     if songs:
+        g.model.songs = songs
+        kwa = {"song": songs[0], "delay": 0}
+        t = threading.Thread(target=preload, kwargs=kwa)
+        t.start()
         print("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
         xinput("Press Enter to continue")
-        g.model.songs = songs
         g.message = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
             c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
         g.last_opened = ""
