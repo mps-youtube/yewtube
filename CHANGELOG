@@ -3,11 +3,14 @@ Version 0.01.45 (development version, not yet released)
  - Added c <number> to view comments for a video
     (first 50 comments, no reply-comments)
 
- - Custom formatted search result list using "set columns" command
-   Optionally shows rating, likes, dislikes, views, user, date, category
-   and comments (number of) 
+ - Added feature to match album tracks using MusicBrainz (vixus0)
+    To search albums, enter "album" optionally followed by album title
 
- - Added "set order <published|viewCount|rating|relevance>" command for
+ - Custom formatted search result list using "set columns" command
+   Optionally shows: rating, likes, dislikes, views, user, date, category
+   and comments (number of) in search results
+
+ - Added "set order <relevance|views|rating|date>" command for
      specifying search result ordering
 
  - Added "set console-width" for setting output width (default 80)
