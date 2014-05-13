@@ -653,7 +653,7 @@ class g(object):
     helptext = []
     max_retries = 3
     max_cached_streams = 1500
-    url_memo = {}
+    url_memo = collections.OrderedDict()
     model = Playlist(name="model")
     last_search_query = {}
     current_page = 1
@@ -1559,7 +1559,7 @@ def generate_real_playerargs(song, override, failcount):
     # handle no audio stream available, or m4a with mplayer
     # by switching to video stream and suppressing video output.
     if not stream and not video:
-        dbg(c.r + "no audio or mplayer m4a, using to video stream" + c.w)
+        dbg(c.r + "no audio or mplayer m4a, using video stream" + c.w)
         override = "a-v"
         video = True
         stream = select_stream(cached, q=q, audio=False, maxres=1600)
@@ -1826,7 +1826,7 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
 
     if songs:
         # cache resuls
-        g.url_memo[url] = songs[::]
+        add_to_url_memo(url, songs[::])
         g.model.songs = songs
         return True
 
@@ -2012,7 +2012,7 @@ def pl_search(term, page=1, splash=True, is_user=False):
             playlists = None
 
     if playlists:
-        g.url_memo[url] = playlists[::]
+        add_to_url_memo(url, playlists[::])
         g.last_search_query = {"playlists": {"term": term, "is_user": is_user}}
         g.browse_mode = "ytpl"
         g.current_page = page
@@ -2097,6 +2097,14 @@ def paginate(items, pagesize, spacing=2, delim_fn=None):
     return pages
 
 
+def add_to_url_memo(key, value):
+    """ Add to url memo, ensure url memo doesn't get too big. """
+
+    g.url_memo[key] = value
+
+    while len(g.url_memo) > 300:
+        g.url_memo.popitem(last=False)
+
 def fetch_comments(item):
     """ Fetch comments for item using gdata. """
 
@@ -2114,8 +2122,7 @@ def fetch_comments(item):
 
         try:
             raw = utf8_decode(g.urlopen(url).read())
-            g.url_memo[url] = raw
-            # TODO: check limit of g.url_memo
+            add_to_url_memo(url, raw)
 
         except HTTPError:
             g.message = "No comments for %s" % item.title[:50]
@@ -3457,6 +3464,7 @@ def _best_song_match(songs, title, duration):
 
     for song in songs:
         dur, tit = int(song.length), song.title
+        dbg("Title: %s, Duration: %s", tit, dur)
 
         for word in extra:
             if word in tit.lower() and not word in title.lower():
@@ -3467,7 +3475,6 @@ def _best_song_match(songs, title, duration):
             if word in tit.lower() and not word in title.lower():
                 pattern = re.compile(word, re.I)
                 tit = pattern.sub("", tit)
-                #tit = re.sub(word, "", tit, re.)
 
         replacechars = re.compile(r"[\]\[\)\(\-]")
         tit = replacechars.sub(" ", tit)
@@ -3476,6 +3483,8 @@ def _best_song_match(songs, title, duration):
 
         title_score = seqmatch(None, title.lower(), tit.lower()).ratio()
         duration_score = 1 - variance(duration, dur)
+        dbg("Title score: %s, Duration score: %s", title_score,
+            duration_score)
 
         # apply weightings
         score = duration_score * .5 + title_score * .5
@@ -3490,8 +3499,10 @@ def _match_tracks(artist, title, mb_tracks):
     """ Match list of tracks in mb_tracks by performing multiple searches. """
 
     #pylint: disable=R0914
+    dbg("artists is %s", artist)
+    dbg("title is %s", title)
     title_artist_str = c.g + title + c.w, c.g + artist + c.w
-    xprint("\nSearching for %s by %s" % title_artist_str)
+    xprint("\nSearching for %s by %s\n\n" % title_artist_str)
     dtime = lambda x: time.strftime('%M:%S', time.gmtime(int(x)))
 
     # do matching
@@ -3504,7 +3515,7 @@ def _match_tracks(artist, title, mb_tracks):
         #q = utf8_encode(ttitle) if artist == "Various Artists" else q
         #w = q + utf8_encode(" -cover -guitar -piano")
         q = "%s %s" % (artist, ttitle)
-        w = q = title if artist == "Various Artists" else q
+        w = q = ttitle if artist == "Various Artists" else q
         #ignore = "guitar piano cover karaoke".split()
 
         #for word in ignore:
@@ -3513,6 +3524,7 @@ def _match_tracks(artist, title, mb_tracks):
 
         url = "https://gdata.youtube.com/feeds/api/videos"
         query = generate_search_qs(w, 1)
+        dbg(query)
         have_results = _search(url, q, query, splash=False, pre_load=False)
         time.sleep(0.5)
 
@@ -3521,7 +3533,6 @@ def _match_tracks(artist, title, mb_tracks):
             continue
 
         results = g.model.songs
-        dbg(song.title for song in g.model.songs)
         s, score = _best_song_match(results, artist + " " + ttitle, length)
         cc = c.g if score > 85 else c.y
         cc = c.r if score < 75 else cc
@@ -3545,13 +3556,20 @@ def _get_mb_tracks(albumid):
     tlist = root.find("./mb:release/mb:medium-list/mb:medium/mb:track-list",
                       namespaces=ns)
     mb_songs = tlist.findall("mb:track", namespaces=ns)
-
     tracks = []
+    path = "./mb:recording/mb:"
 
     for track in mb_songs:
-        title = track.find("./mb:recording/mb:title", namespaces=ns).text
-        rawlength = track.find("./mb:recording/mb:length", namespaces=ns).text
-        length = int(round(float(rawlength) / 1000))
+
+        try:
+            title, length, rawlength = "unknown", 0, 0
+            title = track.find(path + "title", namespaces=ns).text
+            rawlength = track.find(path + "length", namespaces=ns).text
+            length = int(round(float(rawlength) / 1000))
+
+        except (ValueError, AttributeError):
+            xprint("not found")
+
         tracks.append(dict(title=title, length=length, rawlength=rawlength))
 
     return tracks
