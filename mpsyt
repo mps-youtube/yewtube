@@ -3734,6 +3734,7 @@ Then, when results are shown:
                   e.g., {2}1-3,5{1} plays items 1, 2, 3 and 5.
 
     {2}i <number>{1} - view information on video <number>
+    {2}c <number>{1} - view comments for video <number>
     {2}d <number>{1} - download video <number>
     {2}r <number>{1} - show videos related to video <number>
     {2}u <number>{1} - show videos uploaded by uploader of video <number>
@@ -3841,9 +3842,10 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set{1} - view current configuration
 {2}set <item> default{1} - set an item to its default value
 {2}set all default{1} - restore default settings
-
 {2}set checkupdate true|false{1} - check for updates on exit
 {2}set colours true|false{1} - use colours in display output
+{2}set columns <columns>{1} - select extra displayed fields in search results:
+     (valid: views comments rating date user likes dislikes category)
 {2}set ddir <download direcory>{1} - set where downloads are saved
 {2}set fullscreen true|false{1} - output video content in full-screen mode
 {2}set max_res <number>{1} - play / download maximum video resolution height
@@ -3851,8 +3853,6 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set order <relevance|published|viewCount|rating>{1} search result ordering
 {2}set player <player app>{1} - use <player app> for playback
 {2}set playerargs <args>{1} - use specified arguments with player
-{2}set result_format <format_string>{1} - set displayed fields for search \
-results
 {2}set search_music true|false{1} - search only music (all categories if false)
 {2}set show_mplayer_keys true|false{1} - show keyboard help for mplayer and mpv
 {2}set show_status true|false{1} - show status messages and progress
