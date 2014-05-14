@@ -4023,17 +4023,17 @@ def main():
 
         screen_update()
 
-if "--debug" in sys.argv:
+if "--debug" in sys.argv or os.environ.get("mpsytdebug") == "1":
     print(get_version_info())
-    sys.argv = [_x for _x in sys.argv if not "--debug" in _x]
+    list_update("--debug", sys.argv, remove=True)
     g.debug_mode = True
     g.blank_text = "--\n"
     logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
     logging.basicConfig(level=logging.DEBUG, filename=logfile)
     logging.getLogger("pafy").setLevel(logging.DEBUG)
 
-elif "--logging" in sys.argv:
-    sys.argv = [_x for _x in sys.argv if not "--logging" in _x]
+elif "--logging" in sys.argv or os.environ.get("mpsytlog") == "1":
+    list_update("--logging", sys.argv, remove=True)
     logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
     logging.basicConfig(level=logging.DEBUG, filename=logfile)
     logging.getLogger("pafy").setLevel(logging.DEBUG)
