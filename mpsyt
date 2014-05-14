@@ -1558,7 +1558,7 @@ def generate_real_playerargs(song, override, failcount):
 
     # handle no audio stream available, or m4a with mplayer
     # by switching to video stream and suppressing video output.
-    if not stream and not video:
+    if not stream and not video or failcount and not video:
         dbg(c.r + "no audio or mplayer m4a, using video stream" + c.w)
         override = "a-v"
         video = True
