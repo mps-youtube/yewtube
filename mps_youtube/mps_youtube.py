@@ -33,6 +33,7 @@ import unicodedata
 import collections
 import subprocess
 import threading
+import __main__
 import tempfile
 import difflib
 import logging
@@ -733,7 +734,6 @@ def process_cl_args(args):
 def init():
     """ Initial setup. """
 
-    import __main__
     __main__.Playlist = Playlist
     __main__.Video = Video
 
