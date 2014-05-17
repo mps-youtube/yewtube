@@ -5,11 +5,15 @@ mps-youtube
     :target: https://pypi.python.org/pypi/mps-youtube
 .. image:: https://pypip.in/d/mps-youtube/badge.png
     :target: https://pypi.python.org/pypi/mps-youtube
+.. image:: https://pypip.in/wheel/mps-youtube/badge.png
+    :target: http://pythonwheels.com/
+    :alt: Wheel Status
 
 
 Features
 --------
 - Search and play audio/video from YouTube
+- Search tracks of albums by album title
 - Search and import YouTube playlists
 - Create and save local playlists
 - Download audio/video
@@ -114,6 +118,13 @@ Information
 
 ``c3`` to view comments for item 4
 
+View Uploads / Related Videos
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``u 3`` to view more videos from uploader of item 3
+
+``r 3`` to view videos related to item 3
+
 Downloading
 ~~~~~~~~~~~
 
@@ -122,13 +133,6 @@ Downloading
 ``da 3-5, 7`` to download audio streams of items 3, 4, 5 and 7
 
 ``dv 3-5, 7`` to download video streams of items 3, 4, 5 and 7
-
-View Uploads / Related Videos
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-``u 3`` to view more videos from uploader of item 3
-
-``r 3`` to view videos related to item 3
 
 Playback
 ~~~~~~~~
@@ -247,6 +251,7 @@ To view configuration, enter ``set`` and to change any item enter:
 and will persist after exiting the program.  To reset all settings to default,
 use ``set all default`` or for a single item, ``set <item> default``
 
+
 Search All Categories
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -300,3 +305,4 @@ To play video content in fullscreen mode::
 Note: The above two settings can be overridden on a per-case basis by adding
 ``-w``, ``-f`` or ``-a`` to your selection to play the items in windowed, fullscreen
 or audio-only modes.  E.g., ``1,4,7 -f``
+
