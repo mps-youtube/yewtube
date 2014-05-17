@@ -21,8 +21,8 @@ setup(
     author_email="np1nagev@gmail.com",
     url="http://github.com/np1/mps-youtube",
     download_url="https://github.com/np1/mps-youtube/tarball/master",
-    py_modules=['mpsyt.py'],
-    entry_points=dict(console_scripts=['mpsyt = mpsyt:main']),
+    packages=['mps_youtube'],
+    entry_points=dict(console_scripts=['mpsyt = mps_youtube:mps_youtube.main']),
     install_requires=['Pafy'],
     package_data={"": ["LICENSE", "README.rst", "CHANGELOG"]},
     classifiers=[
