@@ -4,6 +4,7 @@
 
 https://np1.github.com/mps-youtube
 
+python setup.py sdist bdist_wheel
 """
 
 try:
@@ -29,6 +30,7 @@ setup(
         "Topic :: Utilities",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Multimedia :: Sound/Audio :: Players",
+        "Topic :: Multimedia :: Video",
         "Environment :: Console",
         "Environment :: Win32 (MS Windows)"
         "Environment :: MacOS X"
@@ -43,11 +45,8 @@ setup(
         "Intended Audience :: End Users/Desktop",
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.0",
-        "Programming Language :: Python :: 3.1",
-        "Programming Language :: Python :: 3.2",
+        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
         "Development Status :: 5 - Production/Stable",
