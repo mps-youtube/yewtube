@@ -94,10 +94,12 @@ Searching
 ~~~~~~~~~
 
 Enter your search term by prefixing it with a ``.`` or ``/`` character.
-    e.g., ``/daft punk``
+e.g., ``/daft punk``
 
-Prefix with ``..`` or ``//`` to search for YouTube playlists.  
-    e.g., ``..linux tutorials``
+To search for YouTube playlists, Prefix with ``..`` or ``//``.
+e.g., ``..linux tutorials``
+
+To search for tracks of an album, enter ``album`` followed by the album title.
 
 Enter ``n`` or ``p`` to go to the next / previous page of results
 
@@ -108,7 +110,9 @@ following commands:
 Information
 ~~~~~~~~~~~
 
-``i 3`` to view info on item 3
+``i3`` to view info on item 3
+
+``c3`` to view comments for item 4
 
 Downloading
 ~~~~~~~~~~~
