@@ -1229,7 +1229,8 @@ def get_tracks_from_json(jsons):
         likes = int(re.sub(r"\D", "", likes))
         total = item.get('ratingCount', 0)
         dislikes = total - likes
-        g.meta[ytid] = dict(rating=uni(item.get('rating', 0))[:4],
+        g.meta[ytid] = dict(rating=uni(item.get('rating',"0."))
+                            [:4].ljust(4, "0"),
                             uploader=item['uploader'],
                             category=item['category'],
                             aspect=item.get('aspectRatio', "custom"),
@@ -2705,15 +2706,15 @@ def show_help(choice):
 
              "invoke": "command commands mpsyt invocation".split(),
 
-             "search": ("user userpl pl pls n p url "
-                        "editing result results remove swop".split()),
+             "search": ("user userpl pl pls r n p url album "
+                        "editing result results related remove swop".split()),
 
              "edit": ("editing manupulate manipulating rm mv sw edit move "
                       "swap shuffle".split()),
 
              "tips": ("undump dump -f -w -a adv advanced".split(" ")),
 
-             "basic": ("basics r u i".split()),
+             "basic": ("basic comment basics c comments u i".split()),
 
              "config": ("set checkupdate colours colors ddir directory player "
                         "arguments args playerargs music search_music keys "
@@ -2722,7 +2723,7 @@ def show_help(choice):
                         " settings default reset configure audio results "
                         "max_results size lines rows height window "
                         "position window_pos quality resolution max_res "
-                        "".split()),
+                        "columns width console".split()),
 
              "playlists": ("save rename delete move rm ls mv sw add vp open"
                            " view".split())
@@ -3753,6 +3754,7 @@ Then, when results are shown:
 {2}//80's music{1}
 {2}n{1} and {2}p{1} - continue search to next/previous pages.
 
+{2}album <album title>{1} - Search for matching tracks using album title
 {2}user <username>{1} - list YouTube uploads by <username>.
 {2}user <username>/<query>{1} - as above, but matches <query>.
 {2}userpl <username>{1} - list YouTube playlists created by <username>.
@@ -3761,6 +3763,7 @@ Then, when results are shown:
 
 {2}r <number>{1} - show videos related to video <number>.
 {2}u <number>{1} - show videos uploaded by uploader of video <number>.
+{2}c <number>{1} - view comments for video <number>
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("edit", "Editing / Manipulating Results", """
@@ -3868,6 +3871,10 @@ Use {2}-w{1}, {2}-f{1} or {2}-a{1} with your choice to override the configured\
  setting and
 play items in windowed, fullscreen or audio modes.  E.g., 1-4 -a
 
+When specifying columns with {2}set columns{1} command, append :N to set\
+ width.
+    E.g.: {2}set columns date views user:17 likes{1}
+
 When using {2}open{1}, {2}view{1} or {2}play{1} to access a local playlist, \
 you can enter
 the first few characters instead of the whole name.
@@ -3886,6 +3893,29 @@ undo)
 
 Use {2}1{1} and {2}0{1} in place of true and false when using the {2}set{1} \
 command
+""".format(c.ul, c.w, c.y, c.r)),
+
+    ("new", "New Features", """
+{0}New Features in v0.01.46{1}
+
+ - Added {2}c <number>{1} to view comments for a video
+    (first 50 comments, no reply-comments)
+
+ - Added feature to match album tracks using MusicBrainz
+    To search albums, enter {2}album{1} optionally followed by album title
+
+ - Custom formatted search result list using {2}set columns{1} command
+   Optionally shows: rating, likes, dislikes, views, user, date, category
+   and comments (number of) in search results
+
+ - Added {2}set order <relevance|views|rating|date>{1} command for
+     specifying search result ordering
+
+ - Added {2}set console-width{1} for setting output width (default 80)
+
+ - Added uploaded date in video info display (request #64)
+
+ - Added likes / dislikes in video info display
 """.format(c.ul, c.w, c.y, c.r))
 ]
 
