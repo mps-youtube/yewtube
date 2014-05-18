@@ -882,8 +882,14 @@ def import_config():
         with open(g.CFFILE, "rb") as cf:
             saved_config = pickle.load(cf)
 
+
         for k, v in saved_config.items():
-            getattr(Config, k).value = v
+
+            try:
+                getattr(Config, k).value = v
+
+            except AttributeError:  # Ignore unrecognised data in config
+                pass
 
         # Update config files from versions <= 0.01.41
         if type(Config.PLAYERARGS.get) == list:
