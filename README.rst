@@ -305,4 +305,3 @@ To play video content in fullscreen mode::
 Note: The above two settings can be overridden on a per-case basis by adding
 ``-w``, ``-f`` or ``-a`` to your selection to play the items in windowed, fullscreen
 or audio-only modes.  E.g., ``1,4,7 -f``
-
