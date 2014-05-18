@@ -58,6 +58,18 @@ Comments
 
 A basic comments browser is available to view YouTube user comments.
 
+Music Album Matching
+~~~~~~~~~~~~~~~~~~~~
+
+.. image:: http://np1.github.io/mpsyt-images2/album-1.png
+
+.. image:: http://np1.github.io/mpsyt-images2/album-2.png
+
+An album title can be specified and mps-youtube will attempt to find matches for
+each track of the album, based on title and duration.  Type ``help search`` for
+more info.
+
+
 Customisation
 ~~~~~~~~~~~~~
 
