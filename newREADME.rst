@@ -80,9 +80,8 @@ Customisation
 Search results can be customised to display additional fields and ordered
 by various criteria.
 
-This image was created using the following commands;
+This image was created using the following commands::
 
-::
     set max-results 50
     set console-width 130
     set columns user:14 date comments rating likes dislikes category:9
