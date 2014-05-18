@@ -30,50 +30,38 @@ Screenshots
 
 Search
 ~~~~~~
-
 .. image:: http://np1.github.io/mpsyt-images2/std-search.png
 
 A standard search is performed by entering ``/`` followed by search terms
 
-E.g. the example above is the result of typing ``/rolling stones``
-
+E.g.: ``/ rolling stones``
 
 Local Playlists
 ~~~~~~~~~~~~~~~
-
-
 .. image:: http://np1.github.io/mpsyt-images2/local-playlists.png
 
-Search result items can easily be stored in local playlists using the 
-``add`` command.
-
+Search result items can easily be stored in local playlists using the ``add`` command.  
 
 YouTube Playlists
------------------
-
+~~~~~~~~~~~~~~~~~
 .. image:: http://np1.github.io/mpsyt-images2/playlist-search.png
 
 YouTube playlists can be searched and played or saved as local playlists
 
-
 Download
 ~~~~~~~~
-
 .. image:: http://np1.github.io/mpsyt-images2/download.png
 
 Content can be downloaded in various formats and resolutions
 
-
 Comments
 ~~~~~~~~
+.. image:: http://np1.github.io/mpsyt-images2/comments.png
 
 A basic comment browser is available by entering ``c <number>``
 
-.. image:: http://np1.github.io/mpsyt-images2/comments.png
-
 Customisation
 ~~~~~~~~~~~~~
-
 
 .. image:: http://np1.github.io/mpsyt-images2/customisation.png
 
@@ -121,8 +109,6 @@ Extract the mplayer.exe file, saving it to your mpsyt folder
 
 Upgrading
 ---------
-
-It is recommended you update to the latest version.
 
 Upgrade pip installation::
 
