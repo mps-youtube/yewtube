@@ -33,8 +33,10 @@ Search
 
 .. image:: http://np1.github.io/mpsyt-images2/std-search.png
 
-A standard search performed by entering `/` followed by search terms
-E.g.; the example above is the result of typing `/rolling stones`
+A standard search is performed by entering ``/`` followed by search terms
+
+E.g. the example above is the result of typing ``/rolling stones``
+
 
 Local Playlists
 ~~~~~~~~~~~~~~~
@@ -43,7 +45,7 @@ Local Playlists
 .. image:: http://np1.github.io/mpsyt-images2/local-playlists.png
 
 Search result items can easily be stored in local playlists using the 
-`add` command.
+``add`` command.
 
 
 YouTube Playlists
@@ -51,12 +53,11 @@ YouTube Playlists
 
 .. image:: http://np1.github.io/mpsyt-images2/playlist-search.png
 
-YouTube playlists can also be searched and played or saved as local playlists
+YouTube playlists can be searched and played or saved as local playlists
 
 
 Download
 ~~~~~~~~
-
 
 .. image:: http://np1.github.io/mpsyt-images2/download.png
 
@@ -66,7 +67,7 @@ Content can be downloaded in various formats and resolutions
 Comments
 ~~~~~~~~
 
-A basic comment browser is available by entering c `number`
+A basic comment browser is available by entering c ``number``
 
 .. image:: http://np1.github.io/mpsyt-images2/comments.png
 
@@ -77,14 +78,17 @@ Customisation
 .. image:: http://np1.github.io/mpsyt-images2/customisation.png
 
 Search results can be customised to display additional fields and ordered
-by various criteria. This image was created using the following commands;
+by various criteria.
 
-`set max-results 50`
-`set console-width 130`
-`set columns user:14 date comments rating likes dislikes category:9`
-`set order views`
+This image was created using the following commands;
 
-Type `help config` for help on configuration options
+..
+    set max-results 50
+    set console-width 130
+    set columns user:14 date comments rating likes dislikes category:9
+    set order views
+
+Type ``help config`` for help on configuration options
 
 
 
