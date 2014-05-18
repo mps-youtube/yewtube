@@ -32,8 +32,8 @@ setup(
         "Topic :: Multimedia :: Sound/Audio :: Players",
         "Topic :: Multimedia :: Video",
         "Environment :: Console",
-        "Environment :: Win32 (MS Windows)"
-        "Environment :: MacOS X"
+        "Environment :: Win32 (MS Windows)",
+        "Environment :: MacOS X",
         "Operating System :: POSIX :: Linux",
         "Operating System :: MacOS",
         "Operating System :: MacOS :: MacOS 9",
