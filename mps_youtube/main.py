@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.01.46"
+__version__ = "0.01.47"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -3900,7 +3900,7 @@ command
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("new", "New Features", """
-{0}New Features in v0.01.46{1}
+{0}New Features in v0.01.47{1}
 
  - Added {2}c <number>{1} to view comments for a video
     (first 50 comments, no reply-comments)
