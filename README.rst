@@ -73,7 +73,7 @@ more info.
 Customisation
 ~~~~~~~~~~~~~
 
-.. image:: http://np1.github.io/mpsyt-images2/customisation.png
+.. image:: http://np1.github.io/mpsyt-images2/customisation2.png
 
 Search results can be customised to display additional fields and ordered
 by various criteria.
@@ -81,8 +81,8 @@ by various criteria.
 This configuration was set up using the following commands::
 
     set max-results 50
-    set console-width 130
-    set columns user:14 date comments rating likes dislikes category:9
+    set console-width 120
+    set columns user:14 date comments rating likes dislikes category:9 views
     set order views
 
 Type ``help config`` for help on configuration options
