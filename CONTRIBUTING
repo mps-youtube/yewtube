@@ -1,5 +1,7 @@
 Contributions are very much appreciated!
 
+Pull requests should be based on and submitted to the "develop" branch.
+
 Please raise an issue to discuss what you plan to implement or change before 
 you start if it is going to involve a lot of work on your part.
 
@@ -7,7 +9,8 @@ Please keep pull requests specific, do not make many disparate changes or
 new features in one request.  A separate pull request for each feature change
 is preferred.
 
-Please ensure your changes work in Python 2.7+, 3.x and Windows.
+Please ensure your changes work in Python 2.7+, 3.3+ and Windows.
+
 
 Code conventions:
 -----------------
