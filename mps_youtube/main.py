@@ -2427,9 +2427,6 @@ def open_save_view(action, name):
             g.content = generate_songlist_display(frmat=None)
 
 
-# TODO = add many to playlist repeatedly saves playlist!  Change to one save
-
-
 def open_view_bynum(action, num):
     """ Open or view a saved playlist by number. """
 
@@ -3089,6 +3086,8 @@ def playlist_add(nums, playlist):
         dur = g.userpl[playlist].duration
         f = (len(nums), playlist, g.userpl[playlist].size, dur)
         g.message = F('added to saved pl') % f
+
+    if nums:
         save_to_file()
 
     g.content = generate_songlist_display()
