@@ -4097,7 +4097,7 @@ elif "--logging" in sys.argv or os.environ.get("mpsytlog") == "1":
     logging.basicConfig(level=logging.DEBUG, filename=logfile)
     logging.getLogger("pafy").setLevel(logging.DEBUG)
 
-elif "--autosize" in sys.argv or os.environ.get("autosize") == "1":
+if "--autosize" in sys.argv or os.environ.get("autosize") == "1":
     list_update("--autosize", sys.argv, remove=True)
     g.detectable_size = True
 
