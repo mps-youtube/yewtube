@@ -29,6 +29,7 @@ __author__ = "nagev"
 __license__ = "GPLv3"
 
 from xml.etree import ElementTree as ET
+from . import terminalsize
 import unicodedata
 import collections
 import subprocess
@@ -90,6 +91,20 @@ mswin = os.name == "nt"
 not_utf8_environment = mswin or not "UTF-8" in os.environ.get("LANG", "")
 member_var = lambda x: not(x.startswith("__") or callable(x))
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
+
+
+def getxy():
+    """ Get terminal size, return max width, max-results and max height. """
+    if g.detectable_size:
+        x, y = terminalsize.get_terminal_size()
+        max_results = y - 4 if y < 54 else 50
+        max_results = 1 if y <= 5 else max_results
+
+    else:
+        x, max_results = Config.CONSOLE_WIDTH.get, Config.MAX_RESULTS.get
+        y = max_results + 4
+
+    return x, y, max_results
 
 
 def utf8_replace(txt):
@@ -643,6 +658,7 @@ class g(object):
     """ Class for holding globals that are needed throught the module. """
 
     meta = {}
+    detectable_size = False
     command_line = False
     debug_mode = False
     urlopen = None
@@ -819,7 +835,8 @@ def known_player_set():
 def showconfig(_):
     """ Dump config data. """
 
-    width = Config.CONSOLE_WIDTH.get - 30
+    width, _, _x = getxy()
+    width -= 30
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
 
@@ -1282,7 +1299,7 @@ def playback_progress(idx, allsongs, repeat=False):
 
     # pylint: disable=R0914
     # too many local variables
-    cw = Config.CONSOLE_WIDTH.get
+    cw, _, _x = getxy()
     out = "  %s%-XXs%s%s\n".replace("XX", uni(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
     show_key_help = (Config.PLAYER.get in ["mplayer", "mpv"]
@@ -1411,7 +1428,7 @@ def generate_playlist_display():
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
 
-    cw = Config.CONSOLE_WIDTH.get
+    cw, _, _x = getxy()
     fmtrow = "%s%-5s %s %-8s  %-2s%s\n"
     fmthd = "%s%-5s %-{}s %-9s %-5s%s\n".format(cw - 23)
     head = (c.ul, "Item", "Playlist", "Updated", "Count", c.w)
@@ -1458,7 +1475,8 @@ def get_user_columns():
                 sz = int(namesize[1])
 
             total_size += sz
-            if total_size < Config.CONSOLE_WIDTH.get - 18:
+            cw, _, _r = getxy()
+            if total_size < cw - 18:
                 ret.append(dict(name=nm, size=sz, heading=hd))
 
     return ret
@@ -1483,7 +1501,8 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     lengthsize = 8 if maxlength > 35999 else 7
     lengthsize = 5 if maxlength < 6000 else lengthsize
     reserved = 9 + lengthsize + len(user_columns)
-    cw = Config.CONSOLE_WIDTH.get - 1
+    cw, _, _x = getxy()
+    cw -= 1
     title_size = cw - sum(1 + x['size'] for x in user_columns) - reserved
     before = [{"name": "idx", "size": 3, "heading": "Num"},
               {"name": "title", "size": title_size, "heading": "Title"}]
@@ -1768,7 +1787,8 @@ def mplayer_status(popen_object, prefix="", songlength=0):
 def make_status_line(match_object, songlength=0):
     """ Format progress line output.  """
 
-    progress_bar_size = Config.CONSOLE_WIDTH.get - 50
+    cw, _, _x = getxy()
+    progress_bar_size = cw - 50
 
     try:
         elapsed_s = int(match_object.group('elapsed_s') or '0')
@@ -1844,8 +1864,11 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
     return False
 
 
-def generate_search_qs(term, page):
+def generate_search_qs(term, page, result_count=None):
     """ Return query string. """
+
+    if not result_count:
+        _, _x, result_count = getxy()
 
     aliases = dict(relevance="relevance", date="published", rating="rating",
                    views="viewCount")
@@ -1854,9 +1877,9 @@ def generate_search_qs(term, page):
         'q': term,
         'v': 2,
         'alt': 'jsonc',
-        'start-index': ((page - 1) * Config.MAX_RESULTS.get + 1) or 1,
+        'start-index': ((page - 1) * result_count + 1) or 1,
         'safeSearch': "none",
-        'max-results': Config.MAX_RESULTS.get,
+        'max-results': result_count,
         'paid-content': "false",
         'orderby': aliases[Config.ORDER.get]
     }
@@ -1998,9 +2021,10 @@ def pl_search(term, page=1, splash=True, is_user=False):
     url = "https://gdata.youtube.com/feeds/api%s" % x
     prog = "user: " + term if is_user else term
     logging.info("playlist search for %s", prog)
-    start = (page - 1) * Config.MAX_RESULTS.get or 1
+    _, _x, max_results = getxy()
+    start = (page - 1) * max_results or 1
     qs = {"start-index": start,
-          "max-results": Config.MAX_RESULTS.get, "v": 2, 'alt': 'jsonc'}
+          "max-results": max_results, "v": 2, 'alt': 'jsonc'}
 
     # modify query string based on whether this is a user playlst search.
     if not is_user:
@@ -2116,11 +2140,13 @@ def add_to_url_memo(key, value):
     while len(g.url_memo) > 300:
         g.url_memo.popitem(last=False)
 
+
 def fetch_comments(item):
     """ Fetch comments for item using gdata. """
 
     # pylint: disable=R0914
-    pagesize = max(Config.MAX_RESULTS.get + 4, 10)
+    cw, ch, _ = getxy()
+    ch = max(ch, 10)
     ytid, title = item.ytid, item.title
     G = lambda x: c.g + x + c.w
     y = lambda x: c.y + x + c.w
@@ -2164,11 +2190,10 @@ def fetch_comments(item):
         items.append(out)
 
     plain = lambda x: x.replace(c.y, "").replace(c.w, "").replace(c.g, "")
-    cw = Config.CONSOLE_WIDTH.get
     linecount = lambda x: sum(1 for char in x if char == "\n")
     longlines = lambda x: sum(len(plain(line)) // cw for line in x.split("\n"))
     linecounter = lambda x: linecount(x) + longlines(x)
-    pages = paginate(items, pagesize=pagesize, delim_fn=linecounter)
+    pages = paginate(items, pagesize=ch, delim_fn=linecounter)
     pagenum = 0
 
     while True and 0 <= pagenum < len(pages):
@@ -2176,7 +2201,7 @@ def fetch_comments(item):
         page = pages[pagenum]
         pagetext = ("\n\n".join(page)).strip()
         content_length = linecount(pagetext) + longlines(pagetext)
-        blanks = "\n" * (-2 + pagesize - content_length)
+        blanks = "\n" * (-2 + ch - content_length)
         g.content = pagetext + blanks
         screen_update()
         print("%s : Use [Enter] for next, [p] for previous, [q] to return:"
@@ -3164,7 +3189,8 @@ def nextprev(np):
     good = False
 
     if np == "n":
-        if len(content) == Config.MAX_RESULTS.get and glsq:
+        _, _y, max_results = getxy()
+        if len(content) == max_results and glsq:
             g.current_page += 1
             good = True
 
@@ -3350,8 +3376,9 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
             parturl == g.last_search_query['playlist']:
 
         # go to pagenum
-        s = (pagenum - 1) * Config.MAX_RESULTS.get
-        e = pagenum * Config.MAX_RESULTS.get
+        _, _y, max_results = getxy()
+        s = (pagenum - 1) * max_results
+        e = pagenum * max_results
 
         if dumps:
             s, e = 0, 99999
@@ -3390,7 +3417,7 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
     g.browse_mode = "normal"
     g.ytpl = dict(name=ytpl_title, items=songs)
     g.current_page = 1
-    g.model.songs = songs[:Config.MAX_RESULTS.get]
+    g.model.songs = songs[:max_results]
     # preload first result url
     kwa = {"song": songs[0], "delay": 0}
     t = threading.Thread(target=preload, kwargs=kwa)
@@ -3534,7 +3561,7 @@ def _match_tracks(artist, title, mb_tracks):
                 #w += " -%s" % word
 
         url = "https://gdata.youtube.com/feeds/api/videos"
-        query = generate_search_qs(w, 1)
+        query = generate_search_qs(w, 1, result_count=50)
         dbg(query)
         have_results = _search(url, q, query, splash=False, pre_load=False)
         time.sleep(0.5)
@@ -3691,9 +3718,8 @@ def search_album(term, page=1, splash=True):
     print(g.blank_text)
     itt = _match_tracks(artist, title, mb_tracks)
 
-    stash = Config.SEARCH_MUSIC.get, Config.ORDER.get, Config.MAX_RESULTS.get
+    stash = Config.SEARCH_MUSIC.get, Config.ORDER.get
     Config.SEARCH_MUSIC.value = True
-    Config.MAX_RESULTS.value = 50
     Config.ORDER.value = "relevance"
 
 
@@ -3708,8 +3734,7 @@ def search_album(term, page=1, splash=True):
         pass
 
     finally:
-        (Config.SEARCH_MUSIC.value, Config.ORDER.value,
-         Config.MAX_RESULTS.value) = stash
+        Config.SEARCH_MUSIC.value, Config.ORDER.value = stash
 
 
     if songs:
@@ -4077,6 +4102,10 @@ elif "--logging" in sys.argv or os.environ.get("mpsytlog") == "1":
     logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
     logging.basicConfig(level=logging.DEBUG, filename=logfile)
     logging.getLogger("pafy").setLevel(logging.DEBUG)
+
+elif "--autosize" in sys.argv or os.environ.get("autosize") == "1":
+    list_update("--autosize", sys.argv, remove=True)
+    g.detectable_size = True
 
 dbg = logging.debug
 
