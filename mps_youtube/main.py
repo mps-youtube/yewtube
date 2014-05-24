@@ -835,7 +835,7 @@ def known_player_set():
 def showconfig(_):
     """ Dump config data. """
 
-    width, _, _x = getxy()
+    width = getxy()[0]
     width -= 30
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
@@ -1293,7 +1293,7 @@ def playback_progress(idx, allsongs, repeat=False):
 
     # pylint: disable=R0914
     # too many local variables
-    cw, _, _x = getxy()
+    cw = getxy()[0]
     out = "  %s%-XXs%s%s\n".replace("XX", uni(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
     show_key_help = (Config.PLAYER.get in ["mplayer", "mpv"]
@@ -1422,7 +1422,7 @@ def generate_playlist_display():
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
 
-    cw, _, _x = getxy()
+    cw = getxy()[0]
     fmtrow = "%s%-5s %s %-8s  %-2s%s\n"
     fmthd = "%s%-5s %-{}s %-9s %-5s%s\n".format(cw - 23)
     head = (c.ul, "Item", "Playlist", "Updated", "Count", c.w)
@@ -1469,7 +1469,7 @@ def get_user_columns():
                 sz = int(namesize[1])
 
             total_size += sz
-            cw, _, _r = getxy()
+            cw = getxy()[0]
             if total_size < cw - 18:
                 ret.append(dict(name=nm, size=sz, heading=hd))
 
@@ -1495,7 +1495,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     lengthsize = 8 if maxlength > 35999 else 7
     lengthsize = 5 if maxlength < 6000 else lengthsize
     reserved = 9 + lengthsize + len(user_columns)
-    cw, _, _x = getxy()
+    cw = getxy()[0]
     cw -= 1
     title_size = cw - sum(1 + x['size'] for x in user_columns) - reserved
     before = [{"name": "idx", "size": 3, "heading": "Num"},
@@ -1781,7 +1781,7 @@ def mplayer_status(popen_object, prefix="", songlength=0):
 def make_status_line(match_object, songlength=0):
     """ Format progress line output.  """
 
-    cw, _, _x = getxy()
+    cw = getxy()[0]
     progress_bar_size = cw - 50
 
     try:
@@ -1862,7 +1862,7 @@ def generate_search_qs(term, page, result_count=None):
     """ Return query string. """
 
     if not result_count:
-        _, _x, result_count = getxy()
+        result_count = getxy()[2]
 
     aliases = dict(relevance="relevance", date="published", rating="rating",
                    views="viewCount")
@@ -2015,7 +2015,7 @@ def pl_search(term, page=1, splash=True, is_user=False):
     url = "https://gdata.youtube.com/feeds/api%s" % x
     prog = "user: " + term if is_user else term
     logging.info("playlist search for %s", prog)
-    _, _x, max_results = getxy()
+    max_results = getxy()[2]
     start = (page - 1) * max_results or 1
     qs = {"start-index": start,
           "max-results": max_results, "v": 2, 'alt': 'jsonc'}
@@ -3183,7 +3183,7 @@ def nextprev(np):
     good = False
 
     if np == "n":
-        _, _y, max_results = getxy()
+        max_results = getxy()[2]
         if len(content) == max_results and glsq:
             g.current_page += 1
             good = True
@@ -3370,7 +3370,7 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
             parturl == g.last_search_query['playlist']:
 
         # go to pagenum
-        _, _y, max_results = getxy()
+        max_results = getxy()[2]
         s = (pagenum - 1) * max_results
         e = pagenum * max_results
 
