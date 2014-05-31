@@ -93,8 +93,8 @@ member_var = lambda x: not(x.startswith("__") or callable(x))
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 
 
-def getxy():
-    """ Get terminal size, return max width, max-results and max height. """
+def getxy(wh=None):
+    """ Get terminal size, terminal width and max-results. """
     if g.detectable_size:
         x, y = terminalsize.get_terminal_size()
         max_results = y - 4 if y < 54 else 50
@@ -104,7 +104,8 @@ def getxy():
         x, max_results = Config.CONSOLE_WIDTH.get, Config.MAX_RESULTS.get
         y = max_results + 4
 
-    return x, y, max_results
+    retval = dict(width=x, height=y, max_results=max_results)
+    return (x, y, max_results) if not wh else retval[wh]
 
 
 def utf8_replace(txt):
@@ -835,7 +836,7 @@ def known_player_set():
 def showconfig(_):
     """ Dump config data. """
 
-    width = getxy()[0]
+    width = getxy("width")
     width -= 30
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
@@ -1293,7 +1294,7 @@ def playback_progress(idx, allsongs, repeat=False):
 
     # pylint: disable=R0914
     # too many local variables
-    cw = getxy()[0]
+    cw = getxy("width")
     out = "  %s%-XXs%s%s\n".replace("XX", uni(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
     show_key_help = (Config.PLAYER.get in ["mplayer", "mpv"]
@@ -1422,7 +1423,7 @@ def generate_playlist_display():
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
 
-    cw = getxy()[0]
+    cw = getxy("width")
     fmtrow = "%s%-5s %s %-8s  %-2s%s\n"
     fmthd = "%s%-5s %-{}s %-9s %-5s%s\n".format(cw - 23)
     head = (c.ul, "Item", "Playlist", "Updated", "Count", c.w)
@@ -1469,7 +1470,7 @@ def get_user_columns():
                 sz = int(namesize[1])
 
             total_size += sz
-            cw = getxy()[0]
+            cw = getxy("width")
             if total_size < cw - 18:
                 ret.append(dict(name=nm, size=sz, heading=hd))
 
@@ -1495,7 +1496,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     lengthsize = 8 if maxlength > 35999 else 7
     lengthsize = 5 if maxlength < 6000 else lengthsize
     reserved = 9 + lengthsize + len(user_columns)
-    cw = getxy()[0]
+    cw = getxy("width")
     cw -= 1
     title_size = cw - sum(1 + x['size'] for x in user_columns) - reserved
     before = [{"name": "idx", "size": 3, "heading": "Num"},
@@ -1781,7 +1782,7 @@ def mplayer_status(popen_object, prefix="", songlength=0):
 def make_status_line(match_object, songlength=0):
     """ Format progress line output.  """
 
-    cw = getxy()[0]
+    cw = getxy("width")
     progress_bar_size = cw - 50
 
     try:
@@ -1862,7 +1863,7 @@ def generate_search_qs(term, page, result_count=None):
     """ Return query string. """
 
     if not result_count:
-        result_count = getxy()[2]
+        result_count = getxy("max_results")
 
     aliases = dict(relevance="relevance", date="published", rating="rating",
                    views="viewCount")
@@ -2015,7 +2016,7 @@ def pl_search(term, page=1, splash=True, is_user=False):
     url = "https://gdata.youtube.com/feeds/api%s" % x
     prog = "user: " + term if is_user else term
     logging.info("playlist search for %s", prog)
-    max_results = getxy()[2]
+    max_results = getxy("max_results")
     start = (page - 1) * max_results or 1
     qs = {"start-index": start,
           "max-results": max_results, "v": 2, 'alt': 'jsonc'}
@@ -3183,7 +3184,7 @@ def nextprev(np):
     good = False
 
     if np == "n":
-        max_results = getxy()[2]
+        max_results = getxy("max_results")
         if len(content) == max_results and glsq:
             g.current_page += 1
             good = True
@@ -3370,7 +3371,7 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
             parturl == g.last_search_query['playlist']:
 
         # go to pagenum
-        max_results = getxy()[2]
+        max_results = getxy("max_results")
         s = (pagenum - 1) * max_results
         e = pagenum * max_results
 
