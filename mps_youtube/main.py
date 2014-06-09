@@ -883,8 +883,14 @@ def import_config():
         with open(g.CFFILE, "rb") as cf:
             saved_config = pickle.load(cf)
 
+
         for k, v in saved_config.items():
-            getattr(Config, k).value = v
+
+            try:
+                getattr(Config, k).value = v
+
+            except AttributeError:  # Ignore unrecognised data in config
+                dbg("Unrecognised config item: %s", k)
 
         # Update config files from versions <= 0.01.41
         if type(Config.PLAYERARGS.get) == list:
@@ -2447,9 +2453,6 @@ def open_save_view(action, name):
             g.content = generate_songlist_display(frmat=None)
 
 
-# TODO = add many to playlist repeatedly saves playlist!  Change to one save
-
-
 def open_view_bynum(action, num):
     """ Open or view a saved playlist by number. """
 
@@ -3109,6 +3112,8 @@ def playlist_add(nums, playlist):
         dur = g.userpl[playlist].duration
         f = (len(nums), playlist, g.userpl[playlist].size, dur)
         g.message = F('added to saved pl') % f
+
+    if nums:
         save_to_file()
 
     g.content = generate_songlist_display()
