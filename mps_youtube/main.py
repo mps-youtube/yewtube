@@ -872,7 +872,7 @@ def import_config():
                 getattr(Config, k).value = v
 
             except AttributeError:  # Ignore unrecognised data in config
-                pass
+                dbg("Unrecognised config item: %s", k)
 
         # Update config files from versions <= 0.01.41
         if type(Config.PLAYERARGS.get) == list:
