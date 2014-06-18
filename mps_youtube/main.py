@@ -3371,12 +3371,12 @@ def dump(un):
 
 def plist(parturl, pagenum=1, splash=True, dumps=False):
     """ Import playlist created on website. """
+    max_results = getxy("max_results")
 
     if "playlist" in g.last_search_query and\
             parturl == g.last_search_query['playlist']:
 
         # go to pagenum
-        max_results = getxy("max_results")
         s = (pagenum - 1) * max_results
         e = pagenum * max_results
 
