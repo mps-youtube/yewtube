@@ -70,7 +70,6 @@ except ImportError:
 
 if sys.version_info[:2] >= (3, 0):
     # pylint: disable=E0611,F0401
-    uni = str
     import pickle
     from urllib.request import build_opener
     from urllib.error import HTTPError, URLError
@@ -1658,7 +1657,9 @@ def playsong(song, failcount=0, override=False):
     except IOError as e:
         # this may be cause by attempting to play a https stream with
         # mplayer
-        g.message = c.r + uni(e) + c.w
+        # ====
+        errmsg = e.message if hasattr(e, "message") else uni(e)
+        g.message = c.r + uni(errmsg) + c.w
         return
 
     songdata = "%s; %s; %s Mb" % songdata
