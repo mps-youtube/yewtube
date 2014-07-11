@@ -47,6 +47,7 @@ import json
 import sys
 import re
 import os
+import string
 
 
 try:
@@ -589,6 +590,7 @@ class Config(object):
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
     PLAYER = ConfigItem("player", "mplayer")
     PLAYERARGS = ConfigItem("playerargs", "")
+    NOTIFIER = ConfigItem("notifier", "")
     CHECKUPDATE = ConfigItem("checkupdate", True)
     SHOW_MPLAYER_KEYS = ConfigItem("show_mplayer_keys", True)
     SHOW_MPLAYER_KEYS.require_known_player = True
@@ -1710,6 +1712,10 @@ def launch_player(song, songdata, cmd):
             # fix for github issue 59
             if mswin and sys.version_info[:2] < (3, 0):
                 cmd = [x.encode("utf8", errors="replace") for x in cmd]
+
+            notifier = Config.NOTIFIER.get
+            if not notifier == '':
+                os.system(notifier + " '" + song.title + "'")
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
@@ -3857,6 +3863,7 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set fullscreen true|false{1} - output video content in full-screen mode
 {2}set max_res <number>{1} - play / download maximum video resolution height
 {2}set max_results <number>{1} - show <number> results when searching (max 50)
+{2}set notifier <notifier app>{1} - call <notifier app> with each new song title
 {2}set order <relevance|date|views|rating>{1} search result ordering
 {2}set player <player app>{1} - use <player app> for playback
 {2}set playerargs <args>{1} - use specified arguments with player
