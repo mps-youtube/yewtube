@@ -3783,11 +3783,11 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set columns <columns>{1} - select extra displayed fields in search results:
      (valid: views comments rating date user likes dislikes category)
 {2}set ddir <download direcory>{1} - set where downloads are saved
-{2}set overwrite true|false{1} - overwrite existing files (skip if false)
 {2}set fullscreen true|false{1} - output video content in full-screen mode
 {2}set max_res <number>{1} - play / download maximum video resolution height
 {2}set max_results <number>{1} - show <number> results when searching (max 50)
 {2}set order <relevance|date|views|rating>{1} search result ordering
+{2}set overwrite true|false{1} - overwrite existing files (skip if false)
 {2}set player <player app>{1} - use <player app> for playback
 {2}set playerargs <args>{1} - use specified arguments with player
 {2}set search_music true|false{1} - search only music (all categories if false)
