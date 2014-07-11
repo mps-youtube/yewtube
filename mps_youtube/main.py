@@ -601,6 +601,7 @@ class Config(object):
     SHOW_STATUS = ConfigItem("show_status", True)
     COLUMNS = ConfigItem("columns", "")
     DDIR = ConfigItem("ddir", get_default_ddir(), check_fn=check_ddir)
+    OVERWRITE = ConfigItem("overwrite", True)
     SHOW_VIDEO = ConfigItem("show_video", False)
     SEARCH_MUSIC = ConfigItem("search_music", True)
     WINDOW_POS = ConfigItem("window_pos", "", check_fn=check_win_pos)
@@ -2215,6 +2216,12 @@ def _download(song, filename, url=None, audio=False):
     # too many local variables
     # Instance of 'bool' has no 'url' member (some types not inferable)
 
+    if not Config.OVERWRITE.get:
+        if os.path.exists(filename):
+            print("File exists. Skipping %s%s%s ..\n" % (c.r, filename, c.w))
+            time.sleep(0.2)
+            return filename
+
     print("Downloading to %s%s%s ..\n" % (c.r, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
@@ -2690,7 +2697,7 @@ def show_help(choice):
                         " settings default reset configure audio results "
                         "max_results size lines rows height window "
                         "position window_pos quality resolution max_res "
-                        "columns width console".split()),
+                        "columns width console overwrite".split()),
 
              "playlists": ("save rename delete move rm ls mv sw add vp open"
                            " view".split())}
@@ -2936,6 +2943,7 @@ def download(dltype, num):
         args = (song, filename)
         kwargs = dict(url=None, audio=audio)
 
+    print(os.path.exists(filename))
     try:
         # perform download(s)
         dl_filenames = [args[1]]
@@ -3775,6 +3783,7 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set columns <columns>{1} - select extra displayed fields in search results:
      (valid: views comments rating date user likes dislikes category)
 {2}set ddir <download direcory>{1} - set where downloads are saved
+{2}set overwrite true|false{1} - overwrite existing files (skip if false)
 {2}set fullscreen true|false{1} - output video content in full-screen mode
 {2}set max_res <number>{1} - play / download maximum video resolution height
 {2}set max_results <number>{1} - show <number> results when searching (max 50)
