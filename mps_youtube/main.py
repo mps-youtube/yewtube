@@ -40,6 +40,7 @@ import logging
 import random
 import locale
 import socket
+import shlex
 import time
 import math
 import pafy
@@ -1616,6 +1617,9 @@ def generate_real_playerargs(song, override, failcount):
 def playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
     # pylint: disable=R0912
+    if Config.NOTIFIER.get:
+        subprocess.call(shlex.split(Config.NOTIFIER.get) + [song.title])
+
     # don't interrupt preloading:
     while song.ytid in g.preloading:
         writestatus("fetching item..")
@@ -1685,9 +1689,9 @@ def playsong(song, failcount=0, override=False):
 def launch_player(song, songdata, cmd):
     """ Launch player application. """
     try:
-        launch_notifier(song)
 
         if "mplayer" in Config.PLAYER.get:
+
             # fix for github issue 59
             if mswin and sys.version_info[:2] < (3, 0):
                 cmd = [x.encode("utf8", errors="replace") for x in cmd]
@@ -1699,6 +1703,7 @@ def launch_player(song, songdata, cmd):
         else:
             with open(os.devnull, "w") as devnull:
                 subprocess.call(cmd, stderr=devnull)
+
     except OSError:
         g.message = F('no player') % Config.PLAYER.get
         return
@@ -1710,17 +1715,6 @@ def launch_player(song, songdata, cmd):
         except (OSError, AttributeError, UnboundLocalError):
             pass
 
-def launch_notifier(song):
-    """ Launch notifier application. """
-
-    try:
-        notifier = Config.NOTIFIER.get
-        if not notifier == '':
-            notifierCmd = notifier + " '" + song.title + "'"
-            with open(os.devnull, "w") as devnull:
-                subprocess.call(notifierCmd, shell=True, stderr=devnull)
-    except OSError:
-        return
 
 def mplayer_status(popen_object, prefix="", songlength=0):
     """ Capture time progress from player output. Write status line. """
