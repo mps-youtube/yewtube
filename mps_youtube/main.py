@@ -1707,23 +1707,23 @@ def launch_player(song, songdata, cmd):
     try:
 
         if "mplayer" in Config.PLAYER.get:
-
             # fix for github issue 59
             if mswin and sys.version_info[:2] < (3, 0):
                 cmd = [x.encode("utf8", errors="replace") for x in cmd]
-
-            notifier = Config.NOTIFIER.get
-            if not notifier == '':
-                os.system(notifier + " '" + song.title + "'")
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
             mplayer_status(p, songdata + ";", song.length)
 
         else:
-
             with open(os.devnull, "w") as devnull:
                 subprocess.call(cmd, stderr=devnull)
+
+        notifier = Config.NOTIFIER.get
+        if not notifier == '':
+            notifierCmd = notifier + " '" + song.title + "'"
+            with open(os.devnull, "w") as devnull:
+                subprocess.call(notifierCmd, stderr=devnull)
 
     except OSError:
         g.message = F('no player') % Config.PLAYER.get
