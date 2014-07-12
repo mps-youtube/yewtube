@@ -2947,7 +2947,6 @@ def download(dltype, num):
         args = (song, filename)
         kwargs = dict(url=None, audio=audio)
 
-    print(os.path.exists(filename))
     try:
         # perform download(s)
         dl_filenames = [args[1]]
