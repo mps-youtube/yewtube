@@ -593,6 +593,7 @@ class Config(object):
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
     PLAYER = ConfigItem("player", "mplayer")
     PLAYERARGS = ConfigItem("playerargs", "")
+    NOTIFIER = ConfigItem("notifier", "")
     CHECKUPDATE = ConfigItem("checkupdate", True)
     SHOW_MPLAYER_KEYS = ConfigItem("show_mplayer_keys", True)
     SHOW_MPLAYER_KEYS.require_known_player = True
@@ -1684,9 +1685,9 @@ def playsong(song, failcount=0, override=False):
 def launch_player(song, songdata, cmd):
     """ Launch player application. """
     try:
+        launch_notifier(song)
 
         if "mplayer" in Config.PLAYER.get:
-
             # fix for github issue 59
             if mswin and sys.version_info[:2] < (3, 0):
                 cmd = [x.encode("utf8", errors="replace") for x in cmd]
@@ -1696,10 +1697,8 @@ def launch_player(song, songdata, cmd):
             mplayer_status(p, songdata + ";", song.length)
 
         else:
-
             with open(os.devnull, "w") as devnull:
                 subprocess.call(cmd, stderr=devnull)
-
     except OSError:
         g.message = F('no player') % Config.PLAYER.get
         return
@@ -1711,6 +1710,17 @@ def launch_player(song, songdata, cmd):
         except (OSError, AttributeError, UnboundLocalError):
             pass
 
+def launch_notifier(song):
+    """ Launch notifier application. """
+
+    try:
+        notifier = Config.NOTIFIER.get
+        if not notifier == '':
+            notifierCmd = notifier + " '" + song.title + "'"
+            with open(os.devnull, "w") as devnull:
+                subprocess.call(notifierCmd, shell=True, stderr=devnull)
+    except OSError:
+        return
 
 def mplayer_status(popen_object, prefix="", songlength=0):
     """ Capture time progress from player output. Write status line. """
@@ -3786,6 +3796,7 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set fullscreen true|false{1} - output video content in full-screen mode
 {2}set max_res <number>{1} - play / download maximum video resolution height
 {2}set max_results <number>{1} - show <number> results when searching (max 50)
+{2}set notifier <notifier app>{1} - call <notifier app> with each new song title
 {2}set order <relevance|date|views|rating>{1} search result ordering
 {2}set overwrite true|false{1} - overwrite existing files (skip if false)
 {2}set player <player app>{1} - use <player app> for playback
