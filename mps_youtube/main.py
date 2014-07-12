@@ -1705,6 +1705,7 @@ def launch_player(song, songdata, cmd):
     """ Launch player application. """
 
     try:
+        launch_notifier(song)
 
         if "mplayer" in Config.PLAYER.get:
             # fix for github issue 59
@@ -1718,13 +1719,6 @@ def launch_player(song, songdata, cmd):
         else:
             with open(os.devnull, "w") as devnull:
                 subprocess.call(cmd, stderr=devnull)
-
-        notifier = Config.NOTIFIER.get
-        if not notifier == '':
-            notifierCmd = notifier + " '" + song.title + "'"
-            with open(os.devnull, "w") as devnull:
-                subprocess.call(notifierCmd, stderr=devnull)
-
     except OSError:
         g.message = F('no player') % Config.PLAYER.get
         return
@@ -1736,6 +1730,17 @@ def launch_player(song, songdata, cmd):
         except (OSError, AttributeError, UnboundLocalError):
             pass
 
+def launch_notifier(song):
+    """ Launch notifier application. """
+
+    try:
+        notifier = Config.NOTIFIER.get
+        if not notifier == '':
+            notifierCmd = notifier + " '" + song.title + "'"
+            with open(os.devnull, "w") as devnull:
+                subprocess.call(notifierCmd, shell=True, stderr=devnull)
+    except OSError:
+        return
 
 def mplayer_status(popen_object, prefix="", songlength=0):
     """ Capture time progress from player output. Write status line. """
