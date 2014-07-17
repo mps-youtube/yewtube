@@ -2760,7 +2760,8 @@ def quits(showlogo=True):
         except (URLError, HTTPError, socket.timeout):
             pass
 
-    sys.exit(vermsg)
+    print(vermsg)
+    sys.exit()
 
 
 def get_dl_data(song, mediatype="any"):
@@ -3241,7 +3242,7 @@ def play_url(url, override):
         play(override, "1", "_")
 
     if g.command_line:
-        sys.exit("")
+        sys.exit()
 
 
 def dl_url(url):
@@ -3253,7 +3254,7 @@ def dl_url(url):
         download("download", "1")
 
     if g.command_line:
-        sys.exit("")
+        sys.exit()
 
 
 def yt_url(url, print_title=0):
