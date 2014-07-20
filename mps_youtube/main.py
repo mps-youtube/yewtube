@@ -67,6 +67,12 @@ try:
 except ImportError:
     has_readline = False
 
+try:
+    import xerox
+    has_xerox = True
+
+except ImportError:
+    has_xerox = False
 
 # Python 3 compatibility hack
 
@@ -2718,7 +2724,8 @@ def show_help(choice):
 
              "tips": ("undump dump -f -w -a adv advanced".split(" ")),
 
-             "basic": ("basic comment basics c comments u i".split()),
+             "basic": ("basic comment basics c copy clipboard comments u "
+                       "i".split()),
 
              "config": ("set checkupdate colours colors ddir directory player "
                         "arguments args playerargs music search_music keys "
@@ -2786,7 +2793,8 @@ def quits(showlogo=True):
         except (URLError, HTTPError, socket.timeout):
             pass
 
-    sys.exit(vermsg)
+    print(vermsg)
+    sys.exit()
 
 
 def get_dl_data(song, mediatype="any"):
@@ -3195,6 +3203,43 @@ def related(num):
     related_search(item)
 
 
+def clip_copy(num):
+    """ Copy item to clipboard. """
+    if g.browse_mode == "ytpl":
+
+        p = g.ytpls[int(num) - 1]
+        link = "https://youtube.com/playlist?list=%s" % p['link']
+
+    elif g.browse_mode == "normal":
+        item = (g.model.songs[int(num) - 1])
+        link = "https://youtube.com/watch?v=%s" % item.ytid
+
+    else:
+        g.message = "clipboard copy not valid in this mode"
+        g.content = generate_songlist_display()
+        return
+
+    if has_xerox:
+
+        try:
+            xerox.copy(link)
+            g.message = c.y + link + c.w + " copied"
+            g.content = generate_songlist_display()
+
+        except xerox.base.ToolNotFound as e:
+            print(link)
+            print("Error - couldn't copy to clipboard.")
+            print(e.__doc__)
+            print("")
+            xinput("Press Enter to continue.")
+            g.content = generate_songlist_display()
+
+    else:
+        g.message = "xerox module must be installed for clipboard support\n"
+        g.message += "see https://pypi.python.org/pypi/xerox/"
+        g.content = generate_songlist_display()
+
+
 def info(num):
     """ Get video description. """
     if g.browse_mode == "ytpl":
@@ -3268,7 +3313,7 @@ def play_url(url, override):
         play(override, "1", "_")
 
     if g.command_line:
-        sys.exit("")
+        sys.exit()
 
 
 def dl_url(url):
@@ -3280,7 +3325,7 @@ def dl_url(url):
         download("download", "1")
 
     if g.command_line:
-        sys.exit("")
+        sys.exit()
 
 
 def yt_url(url, print_title=0):
@@ -3703,6 +3748,7 @@ Then, when results are shown:
     {2}d <number>{1} - download video <number>
     {2}r <number>{1} - show videos related to video <number>
     {2}u <number>{1} - show videos uploaded by uploader of video <number>
+    {2}x <number>{1} - copy item <number> url to clipboard (requires xerox)
 
     {2}q{1}, {2}quit{1} - exit mpsyt
 """.format(c.ul, c.w, c.y, c.r)),
@@ -3956,6 +4002,7 @@ def main():
         'save_last': r'save\s*$',
         'pl_search': r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
         'setconfig': r'set\s+([-\w]+)\s*"?([^"]*)"?\s*$',
+        'clip_copy': r'x\s*(\d+)$',
         'down_many': r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
         'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
         'user_more': r'u\s?([\d]{1,4})$',
