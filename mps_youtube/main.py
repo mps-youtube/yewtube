@@ -3980,7 +3980,7 @@ def main():
         'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
         'user_more': r'u\s?([\d]{1,4})$',
         'clearcache': r'clearcache$',
-        'usersearch': r'user\s+([^\s].{2,})$',
+        'usersearch': r'user\s+([^\s].{1,})$',
         'shuffle_fn': r'\s*(shuffle)\s*$',
         'add_rm_all': r'(rm|add)\s(?:\*|all)$',
         'showconfig': r'(set|showconfig)\s*$',

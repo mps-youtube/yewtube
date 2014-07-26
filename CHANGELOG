@@ -10,6 +10,8 @@ Development version - not yet released
 - Added copy to clipboard feature - request #97
     (requires python xerox module and xclip on linux or pywin32 on windows)
 
+[Bugfix] - Accept two-character length usernames (#99)
+
 -------------------------------------------------------------------------------
 
 Version 0.01.46
