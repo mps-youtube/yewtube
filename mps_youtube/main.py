@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.01.46"
+__version__ = "0.01.47"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -40,6 +40,7 @@ import logging
 import random
 import locale
 import socket
+import shlex
 import time
 import math
 import pafy
@@ -65,12 +66,17 @@ try:
 except ImportError:
     has_readline = False
 
+try:
+    import xerox
+    has_xerox = True
+
+except ImportError:
+    has_xerox = False
 
 # Python 3 compatibility hack
 
 if sys.version_info[:2] >= (3, 0):
     # pylint: disable=E0611,F0401
-    uni = str
     import pickle
     from urllib.request import build_opener
     from urllib.error import HTTPError, URLError
@@ -84,17 +90,30 @@ else:
     uni, byt, xinput = unicode, str, raw_input
     uni = unicode
 
-utf8_encode = lambda x: x.encode("utf8") if type(x) == uni else x
-utf8_decode = lambda x: x.decode("utf8") if type(x) == byt else x
+
+def utf8_encode(x):
+    """ Encode Unicode. """
+    return x.encode("utf8") if type(x) == uni else x
+
+
+def utf8_decode(x):
+    """ Decode Unicode. """
+    return x.decode("utf8") if type(x) == byt else x
+
 mswin = os.name == "nt"
-not_utf8_environment = mswin or not "UTF-8" in os.environ.get("LANG", "")
-member_var = lambda x: not(x.startswith("__") or callable(x))
+not_utf8_environment = mswin or "UTF-8" not in os.environ.get("LANG", "")
+
+
+def member_var(x):
+    """ Return True if x is a member variable. """
+    return not(x.startswith("__") or callable(x))
+
+
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 
 
 def utf8_replace(txt):
     """ Replace unsupported characters in unicode string, returns unicode. """
-
     sse = sys.stdout.encoding
     txt = txt.encode(sse, "replace").decode("utf8", "ignore")
     return txt
@@ -108,13 +127,11 @@ def xenc(stuff):
 
 def xprint(stuff, end=None):
     """ Compatible print. """
-
     print(xenc(stuff), end=end)
 
 
 def mswinfn(filename):
     """ Fix filename for Windows. """
-
     if mswin:
         filename = utf8_replace(filename) if not_utf8_environment else filename
         allowed = re.compile(r'[^\\/?*$\'"%&:<>|]')
@@ -125,7 +142,6 @@ def mswinfn(filename):
 
 def get_default_ddir():
     """ Get system default Download directory, append mps dir. """
-
     user_home = os.path.expanduser("~")
     join, exists = os.path.join, os.path.exists
 
@@ -161,7 +177,6 @@ def get_default_ddir():
 
 def get_config_dir():
     """ Get user's configuration directory. Migrate to new mps name if old."""
-
     if mswin:
         confdir = os.environ["APPDATA"]
 
@@ -185,7 +200,6 @@ def get_config_dir():
 
 def has_exefile(filename):
     """ Check whether file exists in path and is executable. """
-
     paths = os.environ.get("PATH", []).split(os.pathsep)
     dbg("searching path for %s", filename)
 
@@ -204,7 +218,6 @@ def has_exefile(filename):
 
 def get_content_length(url, preloading=False):
     """ Return content length of a url. """
-
     prefix = "preload: " if preloading else ""
     dbg(c.y + prefix + "getting content-length header" + c.w)
     response = utf8_decode(g.urlopen(url))
@@ -218,6 +231,7 @@ class Video(object):
     """ Class to represent a YouTube video. """
 
     def __init__(self, ytid=None, title=None, length=None):
+        """ class members. """
         self.ytid = ytid
         self.title = title
         self.length = int(length)
@@ -225,7 +239,6 @@ class Video(object):
 
 def prune_streams():
     """ Keep cache size in check. """
-
     while len(g.pafs) > g.max_cached_streams:
         g.pafs.popitem(last=False)
 
@@ -256,8 +269,10 @@ def prune_streams():
 
 def get_pafy(item, force=False, callback=None):
     """ Get pafy object for an item. """
+    def nullfunc(x):
+        """ Function that returns None. """
+        return None
 
-    nullfunc = lambda x: None
     callback_fn = callback or nullfunc
     cached = g.pafs.get(item.ytid)
 
@@ -290,7 +305,6 @@ def get_pafy(item, force=False, callback=None):
 
 def get_streams(vid, force=False, callback=None, threeD=False):
     """ Get all streams as a dict.  callback function passed to get_pafy. """
-
     now = time.time()
     ytid = vid.ytid
     have_stream = g.streams.get(ytid) and g.streams[ytid]['expiry'] > now
@@ -332,13 +346,18 @@ def get_streams(vid, force=False, callback=None, threeD=False):
 
 def select_stream(slist, q=0, audio=False, m4a_ok=True, maxres=None):
     """ Select a stream from stream list. """
-
     maxres = maxres or Config.MAX_RES.get
     slist = slist['meta'] if type(slist) == dict else slist
     au_streams = [x for x in slist if x['mtype'] == "audio"]
 
-    okres = lambda x: int(x['quality'].split("x")[1]) <= maxres
-    getq = lambda x: int(x['quality'].split("x")[1])
+    def okres(x):
+        """ Return True if resolution is within user specified maxres. """
+        return int(x['quality'].split("x")[1]) <= maxres
+
+    def getq(x):
+        """ Return height aspect of resolution, eg 640x480 => 480. """
+        return int(x['quality'].split("x")[1])
+
     vo_streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
     vo_streams = sorted(vo_streams, key=getq, reverse=True)
 
@@ -359,7 +378,6 @@ def select_stream(slist, q=0, audio=False, m4a_ok=True, maxres=None):
 
 def get_size(ytid, url, preloading=False):
     """ Get size of stream, try stream cache first. """
-
     # try cached value
     stream = [x for x in g.streams[ytid]['meta'] if x['url'] == url][0]
     size = stream['size']
@@ -386,7 +404,6 @@ class ConfigItem(object):
         {valid: bool, message: success/fail mesage, value: value to set}
 
         """
-
         self.default = self.value = value
         self.name = name
         self.type = type(value)
@@ -398,13 +415,11 @@ class ConfigItem(object):
     @property
     def get(self):
         """ Return value. """
-
         return self.value
 
     @property
     def display(self):
         """ Return value in a format suitable for display. """
-
         retval = self.value
 
         if self.name == "max_res":
@@ -414,7 +429,6 @@ class ConfigItem(object):
 
     def set(self, value):
         """ Set value with checks. """
-
         # note: fail_msg should contain %s %s for self.name, value
         #       success_msg should not
         # pylint: disable=R0912
@@ -423,11 +437,10 @@ class ConfigItem(object):
         success_msg = fail_msg = ""
         value = value.strip()
         value_orig = value
-        green = lambda x: "%s%s%s" % (c.g, x, c.w)
 
         # handle known player not set
 
-        if self.allowed_values and not value in self.allowed_values:
+        if self.allowed_values and value not in self.allowed_values:
             fail_msg = "%s must be one of * - not %s"
             fail_msg = fail_msg.replace("*", ", ".join(self.allowed_values))
 
@@ -440,11 +453,11 @@ class ConfigItem(object):
 
             if value.upper() in "0 OFF NO DISABLED FALSE".split():
                 value = False
-                success_msg = "%s set to False" % green(self.name)
+                success_msg = "%s set to False" % c.c("g", self.name)
 
             elif value.upper() in "1 ON YES ENABLED TRUE".split():
                 value = True
-                success_msg = "%s set to True" % green(self.name)
+                success_msg = "%s set to True" % c.c("g", self.name)
 
             else:
                 fail_msg = "%s requires True/False, got %s"
@@ -468,19 +481,21 @@ class ConfigItem(object):
 
                 if not fail_msg:
                     dispval = value or "None"
-                    success_msg = "%s set to %s" % (green(self.name), dispval)
+                    success_msg = "%s set to %s" % (c.c("g", self.name),
+                                                    dispval)
 
         # handle space separated list
 
         elif self.type == list:
-            success_msg = "%s set to %s" % (green(self.name), value)
+            success_msg = "%s set to %s" % (c.c("g", self.name), value)
             value = value.split()
 
         # handle string values
 
         elif self.type == str:
             dispval = value or "None"
-            success_msg = "%s set to %s" % (green(self.name), green(dispval))
+            success_msg = "%s set to %s" % (c.c("g", self.name),
+                                            c.c("g", dispval))
 
         # handle failure
 
@@ -519,7 +534,6 @@ def check_console_width(val):
 
 def check_ddir(d):
     """ Check whether dir is a valid directory. """
-
     if os.path.isdir(d):
         message = "Downloads will be saved to " + c.y + d + c.w
         return dict(valid=True, message=message)
@@ -531,7 +545,6 @@ def check_ddir(d):
 
 def check_win_pos(pos):
     """ Check window position input. """
-
     if not pos.strip():
         return dict(valid=True, message="Window position not set (default)")
 
@@ -551,7 +564,6 @@ def check_win_pos(pos):
 
 def check_win_size(size):
     """ Check window size input. """
-
     if not size.strip():
         return dict(valid=True, message="Window size not set (default)")
 
@@ -568,7 +580,6 @@ def check_win_size(size):
 
 def check_colours(val):
     """ Check whether colour config value can be set. """
-
     if val and mswin and not has_colorama:
         message = "The colorama module needs to be installed for colour output"
         return dict(valid=False, message=message)
@@ -589,6 +600,7 @@ class Config(object):
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
     PLAYER = ConfigItem("player", "mplayer")
     PLAYERARGS = ConfigItem("playerargs", "")
+    NOTIFIER = ConfigItem("notifier", "")
     CHECKUPDATE = ConfigItem("checkupdate", True)
     SHOW_MPLAYER_KEYS = ConfigItem("show_mplayer_keys", True)
     SHOW_MPLAYER_KEYS.require_known_player = True
@@ -597,6 +609,7 @@ class Config(object):
     SHOW_STATUS = ConfigItem("show_status", True)
     COLUMNS = ConfigItem("columns", "")
     DDIR = ConfigItem("ddir", get_default_ddir(), check_fn=check_ddir)
+    OVERWRITE = ConfigItem("overwrite", True)
     SHOW_VIDEO = ConfigItem("show_video", False)
     SEARCH_MUSIC = ConfigItem("search_music", True)
     WINDOW_POS = ConfigItem("window_pos", "", check_fn=check_win_pos)
@@ -613,6 +626,7 @@ class Playlist(object):
     """ Representation of a playist, has list of songs. """
 
     def __init__(self, name=None, songs=None):
+        """ class members. """
         self.name = name
         self.creation = time.time()
         self.songs = songs or []
@@ -620,19 +634,16 @@ class Playlist(object):
     @property
     def is_empty(self):
         """ Return True / False if songs are populated or not. """
-
         return bool(not self.songs)
 
     @property
     def size(self):
         """ Return number of tracks. """
-
         return len(self.songs)
 
     @property
     def duration(self):
         """ Sum duration of the playlist. """
-
         duration = sum(s.length for s in self.songs)
         duration = time.strftime('%H:%M:%S', time.gmtime(int(duration)))
         return duration
@@ -649,7 +660,7 @@ class g(object):
     ytpls = []
     browse_mode = "normal"
     preloading = []
-    #expiry = 5 * 60 * 60  # 5 hours
+    # expiry = 5 * 60 * 60  # 5 hours
     blank_text = "\n" * 200
     helptext = []
     max_retries = 3
@@ -676,25 +687,24 @@ class g(object):
     CACHEFILE = os.path.join(get_config_dir(), "cache_py_" + sys.version[0:5])
     READLINE_FILE = None
     playerargs_defaults = {
-        "mpv": {"title": "--title",
-                "fs": "--fs",
-                "novid": "--no-video",
-                "ignidx": "--demuxer-lavf-o=fflags=+ignidx",
-                "geo": "--geometry"
-                },
-        "mplayer": {"title": "-title",
-                    "fs": "-fs",
-                    "novid": "-novideo",
-                    #"ignidx": "-lavfdopts o=fflags=+ignidx".split()
-                    "ignidx": "",
-                    "geo": "-geometry"
-                    }
-    }
+        "mpv": {
+            "title": "--title",
+            "fs": "--fs",
+            "novid": "--no-video",
+            "ignidx": "--demuxer-lavf-o=fflags=+ignidx",
+            "geo": "--geometry"},
+        "mplayer": {
+            "title": "-title",
+            "fs": "-fs",
+            "novid": "-novideo",
+            # "ignidx": "-lavfdopts o=fflags=+ignidx".split()
+            "ignidx": "",
+            "geo": "-geometry"}
+        }
 
 
 def get_version_info():
     """ Return version and platform info. """
-
     import platform
     out = ("\nmpsyt version  : %s " % __version__)
     out += ("\npafy version   : %s" % pafy.__version__)
@@ -714,7 +724,6 @@ def get_version_info():
 
 def process_cl_args(args):
     """ Process command line arguments. """
-
     if "--version" in args:
         print(get_version_info())
         print("")
@@ -733,7 +742,6 @@ def process_cl_args(args):
 
 def init():
     """ Initial setup. """
-
     __main__.Playlist = Playlist
     __main__.Video = Video
 
@@ -760,7 +768,6 @@ def init():
 
 def init_cache():
     """ Import cache file. """
-
     if os.path.isfile(g.CACHEFILE):
 
         try:
@@ -778,7 +785,6 @@ def init_cache():
 
 def init_readline():
     """ Enable readline for input history. """
-
     if g.command_line:
         return
 
@@ -792,7 +798,6 @@ def init_readline():
 
 def init_opener():
     """ Set up url opener. """
-
     opener = build_opener()
     ua = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; "
     ua += "Trident/5.0)"
@@ -802,7 +807,6 @@ def init_opener():
 
 def known_player_set():
     """ Return true if the set player is known. """
-
     for allowed_player in g.playerargs_defaults:
         regex = r'(?:^%s$)|(?:\b%s$)' % ((allowed_player,) * 2)
         match = re.search(regex, Config.PLAYER.get)
@@ -818,7 +822,6 @@ def known_player_set():
 
 def showconfig(_):
     """ Dump config data. """
-
     width = Config.CONSOLE_WIDTH.get - 30
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
@@ -839,7 +842,6 @@ def showconfig(_):
 
 def saveconfig():
     """ Save current config to file. """
-
     config = {setting: getattr(Config, setting).value for setting in g.config}
 
     with open(g.CFFILE, "wb") as cf:
@@ -850,7 +852,6 @@ def saveconfig():
 
 def savecache():
     """ Save stream cache. """
-
     with open(g.CACHEFILE, "wb") as cf:
         pickle.dump(g.streams, cf, protocol=2)
 
@@ -859,14 +860,18 @@ def savecache():
 
 def import_config():
     """ Override config if config file exists. """
-
     if os.path.exists(g.CFFILE):
 
         with open(g.CFFILE, "rb") as cf:
             saved_config = pickle.load(cf)
 
         for k, v in saved_config.items():
-            getattr(Config, k).value = v
+
+            try:
+                getattr(Config, k).value = v
+
+            except AttributeError:  # Ignore unrecognised data in config
+                dbg("Unrecognised config item: %s", k)
 
         # Update config files from versions <= 0.01.41
         if type(Config.PLAYERARGS.get) == list:
@@ -905,10 +910,14 @@ class c(object):
         ul = red = green = yellow = blue = pink = white = ""
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
+    @classmethod
+    def c(cls, colour, text):
+        """ Return coloured text. """
+        return getattr(cls, colour) + text + cls.w
+
 
 def setconfig(key, val):
     """ Set configuration variable. """
-
     key = key.replace("-", "_")
     if key.upper() == "ALL" and val.upper() == "DEFAULT":
 
@@ -946,7 +955,6 @@ def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
     textlib is the dictionary to use (defaults to g.text if not given)
 
     """
-
     textlib = textlib or g.text
 
     assert key in textlib
@@ -969,7 +977,6 @@ def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
 
 def init_text():
     """ Set up text. """
-
     g.text = {
 
         "exitmsg": ("**0mps-youtube - **1http://github.com/np1/mps-youtube**0"
@@ -982,13 +989,13 @@ def init_text():
         'no playlists': "*No saved playlists found!*",
         'no playlists_': (c.r, c.w),
         'pl bad name': '*&&* is not valid a valid name. Ensure it starts with'
-        ' a letter or _',
+                       ' a letter or _',
         'pl bad name_': (c.r, c.w),
         'pl not found': 'Playlist *&&* unknown. Saved playlists are shown '
-        'above',
+                        'above',
         'pl not found_': (c.r, c.w),
         'pl not found advise ls': 'Playlist "*&&*" not found. Use *ls* to '
-        'list',
+                                  'list',
         'pl not found advise ls_': (c.y, c.w, c.g, c.w),
         'pl empty': 'Playlist is empty!',
         'advise add': 'Use *add N* to add a track',
@@ -996,7 +1003,7 @@ def init_text():
         'advise search': 'Search for items and then use *add* to add them',
         'advise search_': (c.g, c.w),
         'no data': 'Error fetching data. Possible network issue.'
-        '\n*&&*',
+                   '\n*&&*',
         'no data_': (c.r, c.w),
         'use dot': 'Start your query with a *.* to perform a search',
         'use dot_': (c.g, c.w),
@@ -1006,14 +1013,14 @@ def init_text():
         'no player': '*&&* was not found on this system',
         'no player_': (c.y, c.w),
         'no pl match for rename': '*Couldn\'t find matching playlist to '
-        'rename*',
+                                  'rename*',
         'no pl match for rename_': (c.r, c.w),
         'invalid range': "*Invalid item / range entered!*",
         'invalid range_': (c.r, c.w),
         '-audio': "*Warning* - the filetype you selected (m4v) has no audio!",
         '-audio_': (c.y, c.w),
 
-        # Info messages
+        # Info messages..
 
         'select mux': ("Select [*&&*] to mux audio or [*Enter*] to download "
                        "without audio\nThis feature is experimental!"),
@@ -1029,7 +1036,7 @@ def init_text():
         'pl help': 'Enter *open <name or ID>* to load a playlist',
         'pl help_': (c.g, c.w),
         'added to pl': '*&&* tracks added (*&&* total [*&&*]). Use *vp* to '
-        'view',
+                       'view',
         'added to pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.g, c.w),
         'added to saved pl': '*&&* tracks added to *&&* (*&&* total [*&&*])',
         'added to saved pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.y, c.w),
@@ -1038,7 +1045,7 @@ def init_text():
         'song sw': ("Switched item *&&* with *&&*"),
         'song sw_': (c.y, c.w, c.y, c.w),
         'current pl': "This is the current playlist. Use *save <name>* to save"
-        " it",
+                      " it",
         'current pl_': (c.g, c.w),
         'help topic': ("  Enter *help <topic>* for specific help:"),
         'help topic_': (c.y, c.w),
@@ -1048,7 +1055,6 @@ def init_text():
 
 def save_to_file():
     """ Save playlists.  Called each time a playlist is saved or deleted. """
-
     with open(g.PLFILE, "wb") as plf:
         pickle.dump(g.userpl, plf, protocol=2)
 
@@ -1057,7 +1063,6 @@ def save_to_file():
 
 def open_from_file():
     """ Open playlists. Called once on script invocation. """
-
     try:
 
         with open(g.PLFILE, "rb") as plf:
@@ -1093,7 +1098,6 @@ def open_from_file():
 
 def convert_playlist_to_v2():
     """ Convert previous playlist file to v2 playlist. """
-
     # skip if previously done
     if os.path.isfile(g.PLFILE):
         return
@@ -1109,7 +1113,7 @@ def convert_playlist_to_v2():
     except IOError:
         sys.exit("Couldn't open old playlist file")
 
-    #rename old playlist file
+    # rename old playlist file
     backup = g.OLD_PLFILE + "_v1_backup"
 
     if os.path.isfile(backup):
@@ -1134,7 +1138,6 @@ def convert_playlist_to_v2():
 
 def logo(col=None, version=""):
     """ Return text logo. """
-
     col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
     LOGO = col + ("""\
 
@@ -1154,7 +1157,6 @@ def logo(col=None, version=""):
 
 def playlists_display():
     """ Produce a list of all playlists. """
-
     if not g.userpl:
         g.message = F("no playlists")
         return logo(c.y) + "\n\n" if g.model.is_empty else \
@@ -1197,7 +1199,6 @@ def mplayer_help(short=True):
 
 def fmt_time(seconds):
     """ Format number of seconds to %H:%M:%S. """
-
     hms = time.strftime('%H:%M:%S', time.gmtime(int(seconds)))
     H, M, S = hms.split(":")
 
@@ -1215,7 +1216,6 @@ def fmt_time(seconds):
 
 def get_tracks_from_json(jsons):
     """ Get search results from web page. """
-
     try:
         items = jsons['data']['items']
 
@@ -1233,20 +1233,19 @@ def get_tracks_from_json(jsons):
         likes = int(re.sub(r"\D", "", likes))
         total = item.get('ratingCount', 0)
         dislikes = total - likes
-        g.meta[ytid] = dict(rating=uni(item.get('rating',"0."))
-                            [:4].ljust(4, "0"),
-                            uploader=item['uploader'],
-                            category=item['category'],
-                            aspect=item.get('aspectRatio', "custom"),
-                            uploaded=yt_datetime(item['uploaded'])[1],
-                            likes=uni(num_repr(likes)),
-                            dislikes=uni(num_repr(dislikes)),
-                            commentCount=uni(num_repr(item.get('commentCount',
-                                                               0))),
-                            viewCount=uni(num_repr(item.get("viewCount", 0))),
-                            title=item['title'],
-                            length=uni(fmt_time(cursong.length))
-                            )
+        g.meta[ytid] = dict(
+            rating=uni(item.get('rating', "0."))
+            [:4].ljust(4, "0"),
+            uploader=item['uploader'],
+            category=item['category'],
+            aspect=item.get('aspectRatio', "custom"),
+            uploaded=yt_datetime(item['uploaded'])[1],
+            likes=uni(num_repr(likes)),
+            dislikes=uni(num_repr(dislikes)),
+            commentCount=uni(num_repr(item.get('commentCount', 0))),
+            viewCount=uni(num_repr(item.get("viewCount", 0))),
+            title=item['title'],
+            length=uni(fmt_time(cursong.length)))
 
         songs.append(cursong)
 
@@ -1259,7 +1258,6 @@ def get_tracks_from_json(jsons):
 
 def screen_update():
     """ Display content, show message, blank screen."""
-
     print(g.blank_text)
 
     if g.content:
@@ -1273,7 +1271,6 @@ def screen_update():
 
 def playback_progress(idx, allsongs, repeat=False):
     """ Generate string to show selected tracks, indicate current track. """
-
     # pylint: disable=R0914
     # too many local variables
     cw = Config.CONSOLE_WIDTH.get
@@ -1316,11 +1313,13 @@ def playback_progress(idx, allsongs, repeat=False):
 
 def num_repr(num):
     """ Return up to four digit string representation of a number, eg 2.6m. """
-
     if num <= 9999:
         return uni(num)
 
-    digit_count = lambda x: int(math.floor(math.log10(x)) + 1)
+    def digit_count(x):
+        """ Return number of digits. """
+        return int(math.floor(math.log10(x)) + 1)
+
     digits = digit_count(num)
     sig = 3 if digits % 3 == 0 else 2
     rounded = int(round(num, int(sig - digits)))
@@ -1336,14 +1335,13 @@ def num_repr(num):
 
 def real_len(u, alt=False):
     """ Try to determine width of strings displayed with monospace font. """
-
     if type(u) != uni:
         u = u.decode("utf8")
 
     ueaw = unicodedata.east_asian_width
 
     if alt:
-        #widths = dict(W=2, F=2, A=1, N=0.75, H=0.5)  # original
+        # widths = dict(W=2, F=2, A=1, N=0.75, H=0.5)  # original
         widths = dict(N=.75, Na=1, W=2, F=2, A=1)
 
     else:
@@ -1354,7 +1352,6 @@ def real_len(u, alt=False):
 
 def uea_trunc(num, t):
     """ Truncate to num chars taking into account East Asian width chars. """
-
     while real_len(t) > num:
         t = t[:-1]
 
@@ -1363,7 +1360,6 @@ def uea_trunc(num, t):
 
 def uea_pad(num, t, direction="<", notrunc=False):
     """ Right pad with spaces taking into account East Asian width chars. """
-
     direction = direction.strip() or "<"
 
     if not notrunc:
@@ -1390,7 +1386,6 @@ def uea_pad(num, t, direction="<", notrunc=False):
 
 def yt_datetime(yt_date_time):
     """ Return a time object and locale formated date string. """
-
     time_obj = time.strptime(yt_date_time, "%Y-%m-%dT%H:%M:%S.000Z")
     locale_date = time.strftime("%x", time_obj)
     # strip first two digits of four digit year
@@ -1400,7 +1395,6 @@ def yt_datetime(yt_date_time):
 
 def generate_playlist_display():
     """ Generate list of playlists. """
-
     if not g.ytpls:
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
@@ -1436,8 +1430,7 @@ def get_user_columns():
                 "user": dict(name="uploader", size=10, heading="User"),
                 "likes": dict(name="likes", size=4, heading="Like"),
                 "dislikes": dict(name="dislikes", size=4, heading="Dslk"),
-                "category": dict(name="category", size=8, heading="Category"),
-                }
+                "category": dict(name="category", size=8, heading="Category")}
 
     ret = []
     for column in user_columns:
@@ -1460,7 +1453,6 @@ def get_user_columns():
 
 def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     """ Generate list of choices from a song list."""
-
     # pylint: disable=R0914
     if g.browse_mode == "ytpl":
         return generate_playlist_display()
@@ -1522,14 +1514,12 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
 
 def writestatus(text, mute=False):
     """ Update status linei. """
-
     if not mute and Config.SHOW_STATUS.get:
         writeline(text)
 
 
 def writeline(text):
     """ Print text on same line. """
-
     spaces = 75 - len(text)
     sys.stdout.write(" " + text + (" " * spaces) + "\r")
     sys.stdout.flush()
@@ -1537,8 +1527,7 @@ def writeline(text):
 
 def list_update(item, lst, remove=False):
     """ Add or remove item from list, checking first to avoid exceptions. """
-
-    if not remove and not item in lst:
+    if not remove and item not in lst:
         lst.append(item)
 
     elif remove and item in lst:
@@ -1551,9 +1540,8 @@ def generate_real_playerargs(song, override, failcount):
     Return args and songdata status.
 
     """
-
-    #pylint: disable=R0914
-    #pylint: disable=R0912
+    # pylint: disable=R0914
+    # pylint: disable=R0912
     video = Config.SHOW_VIDEO.get
     video = True if override in ("fullscreen", "window") else video
     video = False if override == "audio" else video
@@ -1594,10 +1582,10 @@ def generate_real_playerargs(song, override, failcount):
 
         geometry = ""
 
-        if Config.WINDOW_SIZE.get and not "-geometry" in argsstr:
+        if Config.WINDOW_SIZE.get and "-geometry" not in argsstr:
             geometry = Config.WINDOW_SIZE.get
 
-        if Config.WINDOW_POS.get and not "-geometry" in argsstr:
+        if Config.WINDOW_POS.get and "-geometry" not in argsstr:
             wp = Config.WINDOW_POS.get
             xx = "+1" if "top" in wp else "-1"
             yy = "+1" if "left" in wp else "-1"
@@ -1634,8 +1622,10 @@ def generate_real_playerargs(song, override, failcount):
 
 def playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
-
     # pylint: disable=R0912
+    if Config.NOTIFIER.get:
+        subprocess.call(shlex.split(Config.NOTIFIER.get) + [song.title])
+
     # don't interrupt preloading:
     while song.ytid in g.preloading:
         writestatus("fetching item..")
@@ -1679,7 +1669,9 @@ def playsong(song, failcount=0, override=False):
     except IOError as e:
         # this may be cause by attempting to play a https stream with
         # mplayer
-        g.message = c.r + uni(e) + c.w
+        # ====
+        errmsg = e.message if hasattr(e, "message") else uni(e)
+        g.message = c.r + uni(errmsg) + c.w
         return
 
     songdata = "%s; %s; %s Mb" % songdata
@@ -1702,7 +1694,6 @@ def playsong(song, failcount=0, override=False):
 
 def launch_player(song, songdata, cmd):
     """ Launch player application. """
-
     try:
 
         if "mplayer" in Config.PLAYER.get:
@@ -1716,7 +1707,6 @@ def launch_player(song, songdata, cmd):
             mplayer_status(p, songdata + ";", song.length)
 
         else:
-
             with open(os.devnull, "w") as devnull:
                 subprocess.call(cmd, stderr=devnull)
 
@@ -1734,7 +1724,6 @@ def launch_player(song, songdata, cmd):
 
 def mplayer_status(popen_object, prefix="", songlength=0):
     """ Capture time progress from player output. Write status line. """
-
     # A: 175.6
     re_mplayer = re.compile(r"A:\s*(?P<elapsed_s>\d+)\.\d\s*")
     last_displayed_line = None
@@ -1761,7 +1750,6 @@ def mplayer_status(popen_object, prefix="", songlength=0):
 
 def make_status_line(match_object, songlength=0):
     """ Format progress line output.  """
-
     progress_bar_size = Config.CONSOLE_WIDTH.get - 50
 
     try:
@@ -1797,7 +1785,6 @@ def make_status_line(match_object, songlength=0):
 
 def _search(url, progtext, qs=None, splash=True, pre_load=True):
     """ Perform memoized url fetch, display progtext. """
-
     g.message = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
 
     # attach query string if supplied
@@ -1840,7 +1827,6 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
 
 def generate_search_qs(term, page):
     """ Return query string. """
-
     aliases = dict(relevance="relevance", date="published", rating="rating",
                    views="viewCount")
     term = utf8_encode(term)
@@ -1863,9 +1849,8 @@ def generate_search_qs(term, page):
 
 def usersearch(q_user, page=1, splash=True):
     """ Fetch uploads by a YouTube user. """
-
     query = generate_search_qs(q_user, page)
-    #query['orderby'] = 'published'
+    # query['orderby'] = 'published'
 
     if query.get('category'):
         del query['category']
@@ -1908,7 +1893,6 @@ def usersearch(q_user, page=1, splash=True):
 
 def related_search(vitem, page=1, splash=True):
     """ Fetch uploads by a YouTube user. """
-
     query = generate_search_qs(vitem.ytid, page)
     del query['q']
 
@@ -1937,7 +1921,6 @@ def related_search(vitem, page=1, splash=True):
 
 def search(term, page=1, splash=True):
     """ Perform search. """
-
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
         g.content = generate_songlist_display()
@@ -1966,7 +1949,6 @@ def search(term, page=1, splash=True):
 
 def user_pls(user, page=1, splash=True):
     """ Retrieve use playlists. """
-
     user = {"is_user": True, "term": user}
     return pl_search(user, page=page, splash=splash)
 
@@ -1977,7 +1959,6 @@ def pl_search(term, page=1, splash=True, is_user=False):
     term can be query str or dict indicating user playlist search.
 
     """
-
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
         g.content = generate_songlist_display()
@@ -2032,7 +2013,6 @@ def pl_search(term, page=1, splash=True, is_user=False):
 
 def get_pl_from_json(pldata):
     """ Process json playlist data. """
-
     try:
         items = pldata['data']['items']
 
@@ -2040,16 +2020,17 @@ def get_pl_from_json(pldata):
         items = []
 
     results = []
+
     for item in items:
-        results.append(dict(link=item.get("id"),
-                            size=item.get("size"),
-                            title=item.get("title"),
-                            author=item.get("author"),
-                            created=item.get("created"),
-                            updated=item.get("updated"),
-                            description=item.get("description")
-                            )
-                       )
+        results.append(dict(
+            link=item.get("id"),
+            size=item.get("size"),
+            title=item.get("title"),
+            author=item.get("author"),
+            created=item.get("created"),
+            updated=item.get("updated"),
+            description=item.get("description")))
+
     return results
 
 
@@ -2059,8 +2040,10 @@ def paginate(items, pagesize, spacing=2, delim_fn=None):
     item size is defined by delim_fn.
 
     """
+    def dfn(x):
+        """ Count lines. """
+        return sum(1 for char in x if char == "\n")
 
-    dfn = lambda x: sum(1 for char in x if char == "\n")
     delim_fn = dfn or delim_fn
     pages = []
     currentpage = []
@@ -2104,26 +2087,28 @@ def paginate(items, pagesize, spacing=2, delim_fn=None):
 
 def add_to_url_memo(key, value):
     """ Add to url memo, ensure url memo doesn't get too big. """
-
     g.url_memo[key] = value
 
     while len(g.url_memo) > 300:
         g.url_memo.popitem(last=False)
 
+
 def fetch_comments(item):
     """ Fetch comments for item using gdata. """
-
+    # pylint: disable=R0912
     # pylint: disable=R0914
     pagesize = max(Config.MAX_RESULTS.get + 4, 10)
     ytid, title = item.ytid, item.title
-    G = lambda x: c.g + x + c.w
-    y = lambda x: c.y + x + c.w
-    dbg("%sFetching coments for %s%s", c.y, y(ytid), c.w)
-    writestatus("Fetching comments for %s" % y(title[:55]))
+    # G = lambda x: c.g + x + c.w
+    # y = lambda x: c.y + x + c.w
+    # dbg("%sFetching coments for %s%s", c.y, y(ytid), c.w)
+    dbg("%sFetching coments for %s%s", c.c("y", ytid))
+    # writestatus("Fetching comments for %s" % y(title[:55]))
+    writestatus("Fetching comments for %s" % c.c("y", title[:55]))
     url = ("https://gdata.youtube.com/feeds/api/videos/%s/comments?alt="
            "json&v=2&orderby=published&max-results=50" % ytid)
 
-    if not url in g.url_memo:
+    if url not in g.url_memo:
 
         try:
             raw = utf8_decode(g.urlopen(url).read())
@@ -2153,15 +2138,28 @@ def fetch_comments(item):
         date = time.strftime("%c", yt_datetime(com['published']['$t'])[0])
         text = com['content']['$t']
         cid = ("%s/%s" % (n, len(coms)))
-        out = ("%s %-35s %s\n" % (cid, G(poster), date))
-        out += y(text.strip())
+        out = ("%s %-35s %s\n" % (cid, c.c("g", poster), date))
+        out += c.c("y", text.strip())
         items.append(out)
 
-    plain = lambda x: x.replace(c.y, "").replace(c.w, "").replace(c.g, "")
+    def plain(x):
+        """ Remove formatting. """
+        return x.replace(c.y, "").replace(c.w, "").replace(c.g, "")
+
     cw = Config.CONSOLE_WIDTH.get
-    linecount = lambda x: sum(1 for char in x if char == "\n")
-    longlines = lambda x: sum(len(plain(line)) // cw for line in x.split("\n"))
-    linecounter = lambda x: linecount(x) + longlines(x)
+
+    def linecount(x):
+        """ Return number of newlines. """
+        return sum(1 for char in x if char == "\n")
+
+    def longlines(x):
+        """ Return number of oversized lines. """
+        return sum(len(plain(line)) // cw for line in x.split("\n"))
+
+    def linecounter(x):
+        """ Return amount of space required. """
+        return linecount(x) + longlines(x)
+
     pages = paginate(items, pagesize=pagesize, delim_fn=linecounter)
     pagenum = 0
 
@@ -2191,7 +2189,6 @@ def fetch_comments(item):
 
 def comments(number):
     """ Receive use request to view comments. """
-
     if g.browse_mode == "normal":
         item = g.model.songs[int(number) - 1]
         fetch_comments(item)
@@ -2203,7 +2200,6 @@ def comments(number):
 
 def _make_fname(song, ext=None, av=None):
     """" Create download directory, generate filename. """
-
     # pylint: disable=E1103
     # Instance of 'bool' has no 'extension' member (some types not inferable)
     if not os.path.exists(Config.DDIR.get):
@@ -2229,6 +2225,12 @@ def _download(song, filename, url=None, audio=False):
     # pylint: disable=R0914
     # too many local variables
     # Instance of 'bool' has no 'url' member (some types not inferable)
+
+    if not Config.OVERWRITE.get:
+        if os.path.exists(filename):
+            print("File exists. Skipping %s%s%s ..\n" % (c.r, filename, c.w))
+            time.sleep(0.2)
+            return filename
 
     print("Downloading to %s%s%s ..\n" % (c.r, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
@@ -2283,7 +2285,6 @@ def _bi_range(start, end):
 
 def _parse_multi(choice, end=None):
     """ Handle ranges like 5-9, 9-5, 5- and -5. Return list of ints. """
-
     end = end or uni(g.model.size)
     pattern = r'(?<![-\d])(\d+-\d+|-\d+|\d+-|\d+)(?![-\d])'
     items = re.findall(pattern, choice)
@@ -2310,7 +2311,6 @@ def _parse_multi(choice, end=None):
 
 def _get_near_name(begin, items):
     """ Return the closest matching playlist name that starts with begin. """
-
     for name in sorted(items):
         if name.lower().startswith(begin.lower()):
             break
@@ -2323,7 +2323,6 @@ def _get_near_name(begin, items):
 
 def play_pl(name):
     """ Play a playlist by name. """
-
     if name.isdigit():
         name = int(name)
         name = sorted(g.userpl)[name - 1]
@@ -2341,19 +2340,17 @@ def play_pl(name):
     else:
         g.message = F("pl not found") % name
         g.content = playlists_display()
-        #return
 
 
 def save_last():
     """ Save command with no playlist name. """
-
     if g.last_opened:
         open_save_view("save", g.last_opened)
 
     else:
         saveas = ""
 
-        #save using artist name in postion 1
+        # save using artist name in postion 1
         if not g.model.is_empty:
             saveas = g.model.songs[0].title[:18].strip()
             saveas = re.sub(r"[^-\w]", "-", saveas, re.UNICODE)
@@ -2370,7 +2367,6 @@ def save_last():
 
 def open_save_view(action, name):
     """ Open, save or view a playlist by name.  Get closest name match. """
-
     if action == "open" or action == "view":
 
         saved = g.userpl.get(name)
@@ -2385,7 +2381,7 @@ def open_save_view(action, name):
             g.message = F("pl loaded") % name
             g.last_opened = name
             g.last_search_query = {}
-            #g.content = generate_songlist_display()
+            # g.content = generate_songlist_display()
             g.content = generate_songlist_display(frmat=None)
             kwa = {"song": g.model.songs[0], "delay": 0}
             t = threading.Thread(target=preload, kwargs=kwa)
@@ -2398,7 +2394,7 @@ def open_save_view(action, name):
             g.message = F("pl viewed") % name
             g.last_opened = ""
             g.content = generate_songlist_display(frmat=None)
-            #g.content = generate_songlist_display()
+            # g.content = generate_songlist_display()
             kwa = {"song": g.model.songs[0], "delay": 0}
             t = threading.Thread(target=preload, kwargs=kwa)
             t.start()
@@ -2421,12 +2417,8 @@ def open_save_view(action, name):
             g.content = generate_songlist_display(frmat=None)
 
 
-# TODO = add many to playlist repeatedly saves playlist!  Change to one save
-
-
 def open_view_bynum(action, num):
     """ Open or view a saved playlist by number. """
-
     srt = sorted(g.userpl)
     name = srt[int(num) - 1]
     open_save_view(action, name)
@@ -2434,7 +2426,6 @@ def open_view_bynum(action, num):
 
 def songlist_rm_add(action, songrange):
     """ Remove or add tracks. works directly on user input. """
-
     selection = _parse_multi(songrange)
 
     if action == "add":
@@ -2459,11 +2450,9 @@ def songlist_rm_add(action, songrange):
 
 def down_many(dltype, choice):
     """ Download multiple items. """
-
     choice = _parse_multi(choice)
     choice = list(set(choice))
-    getsong = lambda item: g.model.songs[int(item) - 1]
-    downsongs = [getsong(x) for x in choice]
+    downsongs = [g.model.songs[int(x) - 1] for x in choice]
     temp = g.model.songs[::]
     g.model.songs = downsongs[::]
     count = len(downsongs)
@@ -2472,7 +2461,6 @@ def down_many(dltype, choice):
 
     def handle_error(message):
         """ Handle error in download. """
-
         g.message = message
         g.content = disp
         screen_update()
@@ -2574,14 +2562,12 @@ def play(pre, choice, post=""):
 
 def play_all(pre, choice, post=""):
     """ Play all tracks in model (last displayed). shuffle/repeat if req'd."""
-
     options = pre + choice + post
     play(options, "1-" + uni(len(g.model.songs)))
 
 
 def ls():
     """ List user saved playlists. """
-
     if not g.userpl:
         g.message = F('no playlists')
         g.content = g.content or generate_songlist_display(zeromsg=g.message)
@@ -2593,7 +2579,6 @@ def ls():
 
 def vp():
     """ View current working playlist. """
-
     if g.active.is_empty:
         txt = F('advise search') if g.model.is_empty else F('advise add')
         g.message = F('pl empty') + " " + txt
@@ -2608,7 +2593,6 @@ def vp():
 
 def preload(song, delay=2, override=False):
     """  Get streams (runs in separate thread). """
-
     ytid = song.ytid
     g.preloading.append(ytid)
     time.sleep(delay)
@@ -2636,14 +2620,12 @@ def preload(song, delay=2, override=False):
 
 def reset_terminal():
     """ Reset terminal control character and modes for non Win OS's. """
-
     if not mswin:
         subprocess.call(["tset", "-c"])
 
 
 def play_range(songlist, shuffle=False, repeat=False, override=False):
     """ Play a range of songs, exit cleanly on keyboard interrupt. """
-
     if shuffle:
         random.shuffle(songlist)
 
@@ -2702,11 +2684,9 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
 def show_help(choice):
     """ Print help message. """
-
     helps = {"download": ("playback dl listen watch show repeat playing"
                           "show_video playurl dlurl d da dv all *"
-                          " play".split()
-                          ),
+                          " play".split()),
 
              "invoke": "command commands mpsyt invocation".split(),
 
@@ -2718,7 +2698,8 @@ def show_help(choice):
 
              "tips": ("undump dump -f -w -a adv advanced".split(" ")),
 
-             "basic": ("basic comment basics c comments u i".split()),
+             "basic": ("basic comment basics c copy clipboard comments u "
+                       "i".split()),
 
              "config": ("set checkupdate colours colors ddir directory player "
                         "arguments args playerargs music search_music keys "
@@ -2727,11 +2708,10 @@ def show_help(choice):
                         " settings default reset configure audio results "
                         "max_results size lines rows height window "
                         "position window_pos quality resolution max_res "
-                        "columns width console".split()),
+                        "columns width console overwrite".split()),
 
              "playlists": ("save rename delete move rm ls mv sw add vp open"
-                           " view".split())
-             }
+                           " view".split())}
 
     for topic, aliases in helps.items():
 
@@ -2744,7 +2724,11 @@ def show_help(choice):
     help_names = [x[0] for x in all_help]
     choice = _get_near_name(choice, help_names)
 
-    if choice == "menu" or not choice in help_names:
+    def indent(x):
+        """ Indent. """
+        return "\n  ".join(x.split("\n"))
+
+    if choice == "menu" or choice not in help_names:
         out += "  %sHelp Topics%s" % (c.ul, c.w)
         out += F('help topic', 2, 1)
 
@@ -2755,14 +2739,12 @@ def show_help(choice):
         g.content = out
 
     else:
-        indent = lambda x: "\n  ".join(x.split("\n"))
         choice = help_names.index(choice)
         g.content = indent(all_help[choice][2])
 
 
 def quits(showlogo=True):
     """ Exit the program. """
-
     if has_readline:
         readline.write_history_file(g.READLINE_FILE)
         dbg("Saved history file")
@@ -2785,13 +2767,15 @@ def quits(showlogo=True):
         except (URLError, HTTPError, socket.timeout):
             pass
 
-    sys.exit(vermsg)
+    print(vermsg)
+    sys.exit()
 
 
 def get_dl_data(song, mediatype="any"):
     """ Get filesize and metadata for all streams, return dict. """
-
-    mbsize = lambda x: uni(int(x / (1024 ** 2)))
+    def mbsize(x):
+        """ Return size in MB. """
+        return uni(int(x / (1024 ** 2)))
 
     p = get_pafy(song)
     dldata = []
@@ -2805,9 +2789,7 @@ def get_dl_data(song, mediatype="any"):
     for n, stream in enumerate(streams):
         sys.stdout.write(text + "-" * n + ">" + " " * (l - n - 1) + "<\r")
         sys.stdout.flush()
-        #---- line below can cause TypeError from pafy line 67 makeurl
-        #---- raw += "&signature=" + sig
-        #---- sig is NoneType
+
         try:
             size = mbsize(stream.get_filesize())
 
@@ -2832,7 +2814,6 @@ def get_dl_data(song, mediatype="any"):
 def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
                 footer=None, force=0):
     """ Generate a list of choice, returns item from model. """
-
     content = ""
 
     for x in header, theading, rows, footer:
@@ -2865,7 +2846,6 @@ def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
 
 def prompt_dl(song):
     """ Prompt user do choose a stream to dl.  Return (url, extension). """
-
     # pylint: disable=R0914
     dl_data, p = get_dl_data(song)
     dl_text = gen_dl_text(dl_data, song, p)
@@ -2895,7 +2875,6 @@ def prompt_dl(song):
 
 def gen_dl_text(ddata, song, p):
     """ Generate text for dl screen. """
-
     hdr = []
     hdr.append("  %s%s%s" % (c.r, song.title, c.w))
     author = utf8_decode(p.author)
@@ -2926,7 +2905,6 @@ def gen_dl_text(ddata, song, p):
 
 def download(dltype, num):
     """ Download a track. """
-
     # This function needs refactoring!
     # pylint: disable=R0912
     # pylint: disable=R0914
@@ -3020,7 +2998,6 @@ def download(dltype, num):
 
 def prompt_for_exit():
     """ Ask for exit confirmation. """
-
     g.message = c.r + "Press ctrl-c again to exit" + c.w
     g.content = generate_songlist_display()
     screen_update()
@@ -3036,7 +3013,6 @@ def prompt_for_exit():
 
 def playlist_remove(name):
     """ Delete a saved playlist by name - or purge working playlist if *all."""
-
     if name.isdigit() or g.userpl.get(name):
 
         if name.isdigit():
@@ -3055,7 +3031,6 @@ def playlist_remove(name):
 
 def songlist_mv_sw(action, a, b):
     """ Move a song or swap two songs. """
-
     i, j = int(a) - 1, int(b) - 1
 
     if action == "mv":
@@ -3071,7 +3046,6 @@ def songlist_mv_sw(action, a, b):
 
 def playlist_add(nums, playlist):
     """ Add selected song nums to saved playlist. """
-
     nums = _parse_multi(nums)
 
     if not g.userpl.get(playlist):
@@ -3083,6 +3057,8 @@ def playlist_add(nums, playlist):
         dur = g.userpl[playlist].duration
         f = (len(nums), playlist, g.userpl[playlist].size, dur)
         g.message = F('added to saved pl') % f
+
+    if nums:
         save_to_file()
 
     g.content = generate_songlist_display()
@@ -3090,19 +3066,17 @@ def playlist_add(nums, playlist):
 
 def playlist_rename_idx(_id, name):
     """ Rename a playlist by ID. """
-
     _id = int(_id) - 1
     playlist_rename(sorted(g.userpl)[_id] + " " + name)
 
 
 def playlist_rename(playlists):
     """ Rename a playlist using mv command. """
-
     # Deal with old playlist names that permitted spaces
     a, b = "", playlists.split(" ")
     while a not in g.userpl:
         a = (a + " " + (b.pop(0))).strip()
-        if not b and not a in g.userpl:
+        if not b and a not in g.userpl:
             g.message = F('no pl match for rename')
             g.content = g.content or playlists_display()
             return
@@ -3121,7 +3095,6 @@ def add_rm_all(action):
     remove all displayed songs from view.
 
     """
-
     if action == "rm":
         for n in reversed(range(0, len(g.model.songs))):
             g.model.songs.pop(n)
@@ -3135,7 +3108,6 @@ def add_rm_all(action):
 
 def nextprev(np):
     """ Get next / previous search results. """
-
     glsq = g.last_search_query
     content = g.model.songs
 
@@ -3180,7 +3152,6 @@ def nextprev(np):
 
 def user_more(num):
     """ Show more videos from user of vid num. """
-
     if g.browse_mode != "normal":
         g.message = "User uploads must refer to a specific video item"
         g.message = c.y + g.message + c.w
@@ -3195,7 +3166,6 @@ def user_more(num):
 
 def related(num):
     """ Show videos related to to vid num. """
-
     if g.browse_mode != "normal":
         g.message = "Related items must refer to a specific video item"
         g.message = c.y + g.message + c.w
@@ -3206,9 +3176,45 @@ def related(num):
     related_search(item)
 
 
+def clip_copy(num):
+    """ Copy item to clipboard. """
+    if g.browse_mode == "ytpl":
+
+        p = g.ytpls[int(num) - 1]
+        link = "https://youtube.com/playlist?list=%s" % p['link']
+
+    elif g.browse_mode == "normal":
+        item = (g.model.songs[int(num) - 1])
+        link = "https://youtube.com/watch?v=%s" % item.ytid
+
+    else:
+        g.message = "clipboard copy not valid in this mode"
+        g.content = generate_songlist_display()
+        return
+
+    if has_xerox:
+
+        try:
+            xerox.copy(link)
+            g.message = c.y + link + c.w + " copied"
+            g.content = generate_songlist_display()
+
+        except xerox.base.ToolNotFound as e:
+            print(link)
+            print("Error - couldn't copy to clipboard.")
+            print(e.__doc__)
+            print("")
+            xinput("Press Enter to continue.")
+            g.content = generate_songlist_display()
+
+    else:
+        g.message = "xerox module must be installed for clipboard support\n"
+        g.message += "see https://pypi.python.org/pypi/xerox/"
+        g.content = generate_songlist_display()
+
+
 def info(num):
     """ Get video description. """
-
     if g.browse_mode == "ytpl":
         p = g.ytpls[int(num) - 1]
 
@@ -3228,8 +3234,6 @@ def info(num):
         ytpl_desc = yt_playlist.get('description', "")
         g.content = generate_songlist_display()
 
-        #created = time.strptime(p['created'], "%Y-%m-%dT%H:%M:%S.000Z")
-        #updated = time.strptime(p['updated'], "%Y-%m-%dT%H:%M:%S.000Z")
         created = yt_datetime(p['created'])[0]
         updated = yt_datetime(p['updated'])[0]
         out = c.ul + "Playlist Info" + c.w + "\n\n"
@@ -3274,7 +3278,6 @@ def info(num):
 
 def play_url(url, override):
     """ Open and play a youtube video url. """
-
     override = override if override else "_"
     g.browse_mode = "normal"
     yt_url(url, print_title=1)
@@ -3283,12 +3286,11 @@ def play_url(url, override):
         play(override, "1", "_")
 
     if g.command_line:
-        sys.exit("")
+        sys.exit()
 
 
 def dl_url(url):
     """ Open and prompt for download of youtube video url. """
-
     g.browse_mode = "normal"
     yt_url(url)
 
@@ -3296,12 +3298,11 @@ def dl_url(url):
         download("download", "1")
 
     if g.command_line:
-        sys.exit("")
+        sys.exit()
 
 
 def yt_url(url, print_title=0):
     """ Acess a video by url. """
-
     try:
         p = pafy.new(url, basic=1, signature=0)
 
@@ -3323,7 +3324,6 @@ def yt_url(url, print_title=0):
 
 def dump(un):
     """ Show entire playlist. """
-
     if g.last_search_query.get("playlist") and not un:
         plist(g.last_search_query['playlist'], dumps=True)
 
@@ -3339,7 +3339,6 @@ def dump(un):
 
 def plist(parturl, pagenum=1, splash=True, dumps=False):
     """ Import playlist created on website. """
-
     if "playlist" in g.last_search_query and\
             parturl == g.last_search_query['playlist']:
 
@@ -3396,7 +3395,6 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
 
 def shuffle_fn(_):
     """ Shuffle displayed items. """
-
     random.shuffle(g.model.songs)
     g.message = c.y + "Items shuffled" + c.w
     g.content = generate_songlist_display()
@@ -3404,22 +3402,20 @@ def shuffle_fn(_):
 
 def clearcache():
     """ Clear cached items - for debugging use. """
-
     g.pafs = {}
     g.streams = {}
+    g.url_memo = collections.OrderedDict()
     dbg("%scache cleared%s", c.p, c.w)
     g.message = "cache cleared"
 
 
 def show_message(message, col=c.r, update=False):
     """ Show message using col, update screen if required. """
-
     g.content = generate_songlist_display()
     g.message = col + message + c.w
 
     if update:
         screen_update()
-
 
 
 def _do_query(url, query, err='query failed', cache=True, report=False):
@@ -3429,13 +3425,9 @@ def _do_query(url, query, err='query failed', cache=True, report=False):
     if report is True, return whether response is from memo
 
     """
-
     # convert query to sorted list of tuples (needed for consistent url_memo)
     query = [(k, query[k]) for k in sorted(query.keys())]
     url = "%s?%s" % (url, urlencode(query))
-
-    #if cache and g.memo.get(url):
-        #return g.memo.get(url) if not report else (g.memo.get(url), True)
 
     try:
         wdata = utf8_decode(g.urlopen(url).read())
@@ -3444,9 +3436,6 @@ def _do_query(url, query, err='query failed', cache=True, report=False):
         g.message = "%s: %s (%s)" % (err, e, url)
         g.content = logo(c.r)
         return None if not report else (None, False)
-
-    #if cache and wdata:
-        #g.memo.add(url, wdata)
 
     return wdata if not report else (wdata, False)
 
@@ -3457,27 +3446,29 @@ def _best_song_match(songs, title, duration):
     Score from 0 to 1 where 1 is best.
 
     """
-
     # pylint: disable=R0914
     seqmatch = difflib.SequenceMatcher
-    variance = lambda a, b: float(abs(a - b)) / max(a, b)
+
+    def variance(a, b):
+        """ Return difference ratio. """
+        return float(abs(a - b)) / max(a, b)
+
     candidates = []
 
     ignore = "music video lyrics new lyrics video audio".split()
     extra = "official original vevo".split()
-
 
     for song in songs:
         dur, tit = int(song.length), song.title
         dbg("Title: %s, Duration: %s", tit, dur)
 
         for word in extra:
-            if word in tit.lower() and not word in title.lower():
+            if word in tit.lower() and word not in title.lower():
                 pattern = re.compile(word, re.I)
                 tit = pattern.sub("", tit)
 
         for word in ignore:
-            if word in tit.lower() and not word in title.lower():
+            if word in tit.lower() and word not in title.lower():
                 pattern = re.compile(word, re.I)
                 tit = pattern.sub("", tit)
 
@@ -3502,13 +3493,15 @@ def _best_song_match(songs, title, duration):
 
 def _match_tracks(artist, title, mb_tracks):
     """ Match list of tracks in mb_tracks by performing multiple searches. """
-
-    #pylint: disable=R0914
+    # pylint: disable=R0914
     dbg("artists is %s", artist)
     dbg("title is %s", title)
     title_artist_str = c.g + title + c.w, c.g + artist + c.w
     xprint("\nSearching for %s by %s\n\n" % title_artist_str)
-    dtime = lambda x: time.strftime('%M:%S', time.gmtime(int(x)))
+
+    def dtime(x):
+        """ Format time to M:S. """
+        return time.strftime('%M:%S', time.gmtime(int(x)))
 
     # do matching
     for track in mb_tracks:
@@ -3516,17 +3509,8 @@ def _match_tracks(artist, title, mb_tracks):
         length = track['length']
         xprint("Search :  %s%s - %s%s - %s" % (c.y, artist, ttitle, c.w,
                                                dtime(length)))
-        #q = utf8_encode("%s %s" % (ttitle, artist))
-        #q = utf8_encode(ttitle) if artist == "Various Artists" else q
-        #w = q + utf8_encode(" -cover -guitar -piano")
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
-        #ignore = "guitar piano cover karaoke".split()
-
-        #for word in ignore:
-            #if not word in w.lower():
-                #w += " -%s" % word
-
         url = "https://gdata.youtube.com/feeds/api/videos"
         query = generate_search_qs(w, 1)
         dbg(query)
@@ -3542,13 +3526,13 @@ def _match_tracks(artist, title, mb_tracks):
         cc = c.g if score > 85 else c.y
         cc = c.r if score < 75 else cc
         xprint("Matched:  %s%s%s - %s \n[%sMatch confidence: "
-               "%s%s]\n" % (c.y, s.title, c.w, fmt_time(s.length), cc, score, c.w))
+               "%s%s]\n" % (c.y, s.title, c.w, fmt_time(s.length),
+                            cc, score, c.w))
         yield s
 
 
 def _get_mb_tracks(albumid):
     """ Get track listing from MusicBraiz by album id. """
-
     ns = {'mb': 'http://musicbrainz.org/ns/mmd-2.0#'}
     url = "http://musicbrainz.org/ws/2/release/" + albumid
     query = {"inc": "recordings"}
@@ -3582,7 +3566,6 @@ def _get_mb_tracks(albumid):
 
 def _get_mb_album(albumname, **kwa):
     """ Return artist, album title and track count from MusicBrainz. """
-
     url = "http://musicbrainz.org/ws/2/release/"
     qargs = dict(
         release='"%s"' % albumname,
@@ -3614,8 +3597,7 @@ def _get_mb_album(albumname, **kwa):
 
 def search_album(term, page=1, splash=True):
     """Search for albums. """
-
-    #pylint: disable=R0914,R0912
+    # pylint: disable=R0914,R0912
     if not term:
         show_message("Enter album name:", c.g, update=True)
         term = xinput("> ")
@@ -3661,7 +3643,6 @@ def search_album(term, page=1, splash=True):
         show_message("Album '%s' by '%s' has 0 tracks!" % (title, artist))
         return
 
-
     msg = "%s%s%s by %s%s%s\n\n" % (c.g, title, c.w, c.g, artist, c.w)
     msg += "Enter to begin matching or [q] to abort"
     g.message = msg
@@ -3670,7 +3651,6 @@ def search_album(term, page=1, splash=True):
         g.content += "%02s  %s" % (n, track['title'])
         g.content += "\n"
 
-    #g.content = logo(c.b) + "\n\n"
     screen_update()
     entry = xinput("Continue? [Enter] > ")
 
@@ -3690,7 +3670,6 @@ def search_album(term, page=1, splash=True):
     Config.MAX_RESULTS.value = 50
     Config.ORDER.value = "relevance"
 
-
     try:
         while True:
             songs.append(next(itt))
@@ -3704,7 +3683,6 @@ def search_album(term, page=1, splash=True):
     finally:
         (Config.SEARCH_MUSIC.value, Config.ORDER.value,
          Config.MAX_RESULTS.value) = stash
-
 
     if songs:
         g.model.songs = songs
@@ -3727,7 +3705,8 @@ def search_album(term, page=1, splash=True):
         g.last_search_query = ""
 
 
-g.helptext = [("basic", "Basics", """
+g.helptext = [
+    ("basic", "Basics", """
 
 {0}Basic Usage{1}
 
@@ -3743,10 +3722,10 @@ Then, when results are shown:
     {2}d <number>{1} - download video <number>
     {2}r <number>{1} - show videos related to video <number>
     {2}u <number>{1} - show videos uploaded by uploader of video <number>
+    {2}x <number>{1} - copy item <number> url to clipboard (requires xerox)
 
     {2}q{1}, {2}quit{1} - exit mpsyt
 """.format(c.ul, c.w, c.y, c.r)),
-
     ("search", "Searching and Retrieving", """
 {0}Searching and Retrieving{1}
 
@@ -3857,7 +3836,9 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set fullscreen true|false{1} - output video content in full-screen mode
 {2}set max_res <number>{1} - play / download maximum video resolution height
 {2}set max_results <number>{1} - show <number> results when searching (max 50)
+{2}set notifier <notifier app>{1} - call <notifier app> with each new song title
 {2}set order <relevance|date|views|rating>{1} search result ordering
+{2}set overwrite true|false{1} - overwrite existing files (skip if false)
 {2}set player <player app>{1} - use <player app> for playback
 {2}set playerargs <args>{1} - use specified arguments with player
 {2}set search_music true|false{1} - search only music (all categories if false)
@@ -3900,7 +3881,7 @@ command
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("new", "New Features", """
-{0}New Features in v0.01.46{1}
+{0}New Features in v0.01.47{1}
 
  - Added {2}c <number>{1} to view comments for a video
     (first 50 comments, no reply-comments)
@@ -3920,8 +3901,7 @@ command
  - Added uploaded date in video info display (request #64)
 
  - Added likes / dislikes in video info display
-""".format(c.ul, c.w, c.y, c.r))
-]
+""".format(c.ul, c.w, c.y, c.r))]
 
 
 def matchfunction(funcname, regex, userinput):
@@ -3930,7 +3910,6 @@ def matchfunction(funcname, regex, userinput):
     Call funcname, return True if matches.
 
     """
-
     if regex.match(userinput):
         matches = regex.match(userinput).groups()
         dbg("input: %s", userinput)
@@ -3959,9 +3938,7 @@ def matchfunction(funcname, regex, userinput):
 
 def main():
     """ Main control loop. """
-
     if not g.command_line:
-        g.content = generate_songlist_display()
         g.content = logo(col=c.g, version=__version__) + "\n"
         g.message = "Enter /search-term to search or [h]elp"
         screen_update()
@@ -3974,7 +3951,6 @@ def main():
     arg_inp = " ".join(sys.argv[1:])
 
     # input types
-    #yt = r'[^-_a-zA-Z0-9]?([-_a-zA-Z0-9]{11})[^-_a-zA-Z0-9]?
     word = r'[^\W\d][-\w\s]{,100}'
     rs = r'(?:repeat\s*|shuffle\s*|-a\s*|-f\s*|-w\s*)'
     regx = {
@@ -4000,11 +3976,12 @@ def main():
         'save_last': r'save\s*$',
         'pl_search': r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
         'setconfig': r'set\s+([-\w]+)\s*"?([^"]*)"?\s*$',
+        'clip_copy': r'x\s*(\d+)$',
         'down_many': r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
         'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
         'user_more': r'u\s?([\d]{1,4})$',
         'clearcache': r'clearcache$',
-        'usersearch': r'user\s+([^\s].{2,})$',
+        'usersearch': r'user\s+([^\s].{1,})$',
         'shuffle_fn': r'\s*(shuffle)\s*$',
         'add_rm_all': r'(rm|add)\s(?:\*|all)$',
         'showconfig': r'(set|showconfig)\s*$',
@@ -4016,9 +3993,7 @@ def main():
         'playlist_rename': r'mv\s*(%s\s+%s)$' % (word, word),
         'playlist_remove': r'rmp\s*(\d+|%s)$' % word,
         'open_view_bynum': r'(open|view)\s*(\d{1,4})$',
-        'playlist_rename_idx': r'mv\s*(\d{1,3})\s*(%s)\s*$' % word
-        #'play_url': r'(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$'
-    }
+        'playlist_rename_idx': r'mv\s*(\d{1,3})\s*(%s)\s*$' % word}
 
     # compile regexp's
     regx = {name: re.compile(val, re.UNICODE) for name, val in regx.items()}

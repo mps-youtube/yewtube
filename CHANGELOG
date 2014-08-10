@@ -1,3 +1,19 @@
+Version 0.01.47
+Development version - not yet released
+
+- Added option to show system notifications (Alex Nisnevich) #95
+    (can be used with libnotify - notify-send on linux)
+
+- Added overwrite true/false option for downloads (mtahmed) #93
+    (skips download if downloaded file already exists)
+
+- Added copy to clipboard feature - request #97
+    (requires python xerox module and xclip on linux or pywin32 on windows)
+
+[Bugfix] - Accept two-character length usernames (#99)
+
+-------------------------------------------------------------------------------
+
 Version 0.01.46
 May 18 2014
 
