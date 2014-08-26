@@ -3881,26 +3881,18 @@ command
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("new", "New Features", """
-{0}New Features in v0.01.47{1}
+{0}New Features in v0.01.48{1}
 
- - Added {2}c <number>{1} to view comments for a video
-    (first 50 comments, no reply-comments)
+ - Added option to show system notifications (Alex Nisnevich) #95
+    (can be used with libnotify - notify-send on linux)
 
- - Added feature to match album tracks using MusicBrainz
-    To search albums, enter {2}album{1} optionally followed by album title
+ - Added overwrite true/false option for downloads (mtahmed) #93
+    (skips download if downloaded file already exists)
 
- - Custom formatted search result list using {2}set columns{1} command
-   Optionally shows: rating, likes, dislikes, views, user, date, category
-   and comments (number of) in search results
+ - Added copy to clipboard feature
+    (requires python xerox module and xclip on linux or pywin32 on windows)
 
- - Added {2}set order <relevance|views|rating|date>{1} command for
-     specifying search result ordering
 
- - Added {2}set console-width{1} for setting output width (default 80)
-
- - Added uploaded date in video info display (request #64)
-
- - Added likes / dislikes in video info display
 """.format(c.ul, c.w, c.y, c.r))]
 
 
