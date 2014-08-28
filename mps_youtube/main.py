@@ -1893,6 +1893,12 @@ def usersearch(q_user, page=1, splash=True):
     else:
         user = q_user
         del query['q']
+
+        # issue # 106 - gdata v2 issue
+        # user video search fails with orderby and safeSearch parameters
+        del query['safeSearch']
+        del query['orderby']
+
         url = "https://gdata.youtube.com/feeds/api/users/%s/uploads" % user
         msg = "Video uploads by %s%s%s" % (c.y, user, c.w)
         failmsg = "User %s%s%s not found" % (c.y, user, c.w)
@@ -3433,6 +3439,7 @@ def clearcache():
     """ Clear cached items - for debugging use. """
     g.pafs = {}
     g.streams = {}
+    g.url_memo = collections.OrderedDict()
     dbg("%scache cleared%s", c.p, c.w)
     g.message = "cache cleared"
 
@@ -3907,26 +3914,18 @@ command
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("new", "New Features", """
-{0}New Features in v0.01.47{1}
+{0}New Features in v0.01.48{1}
 
- - Added {2}c <number>{1} to view comments for a video
-    (first 50 comments, no reply-comments)
+ - Added option to show system notifications (Alex Nisnevich) #95
+    (can be used with libnotify - notify-send on linux)
 
- - Added feature to match album tracks using MusicBrainz
-    To search albums, enter {2}album{1} optionally followed by album title
+ - Added overwrite true/false option for downloads (mtahmed) #93
+    (skips download if downloaded file already exists)
 
- - Custom formatted search result list using {2}set columns{1} command
-   Optionally shows: rating, likes, dislikes, views, user, date, category
-   and comments (number of) in search results
+ - Added copy to clipboard feature
+    (requires python xerox module and xclip on linux or pywin32 on windows)
 
- - Added {2}set order <relevance|views|rating|date>{1} command for
-     specifying search result ordering
 
- - Added {2}set console-width{1} for setting output width (default 80)
-
- - Added uploaded date in video info display (request #64)
-
- - Added likes / dislikes in video info display
 """.format(c.ul, c.w, c.y, c.r))]
 
 
@@ -4007,7 +4006,7 @@ def main():
         'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
         'user_more': r'u\s?([\d]{1,4})$',
         'clearcache': r'clearcache$',
-        'usersearch': r'user\s+([^\s].{2,})$',
+        'usersearch': r'user\s+([^\s].{1,})$',
         'shuffle_fn': r'\s*(shuffle)\s*$',
         'add_rm_all': r'(rm|add)\s(?:\*|all)$',
         'showconfig': r'(set|showconfig)\s*$',
