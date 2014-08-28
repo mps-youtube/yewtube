@@ -1869,6 +1869,12 @@ def usersearch(q_user, page=1, splash=True):
     else:
         user = q_user
         del query['q']
+
+        # issue # 106 - gdata v2 issue
+        # user video search fails with orderby and safeSearch parameters
+        del query['safeSearch']
+        del query['orderby']
+
         url = "https://gdata.youtube.com/feeds/api/users/%s/uploads" % user
         msg = "Video uploads by %s%s%s" % (c.y, user, c.w)
         failmsg = "User %s%s%s not found" % (c.y, user, c.w)
