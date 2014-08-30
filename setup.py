@@ -24,7 +24,7 @@ setup(
     download_url="https://github.com/np1/mps-youtube/tarball/master",
     packages=['mps_youtube'],
     entry_points=dict(console_scripts=['mpsyt = mps_youtube:main.main']),
-    install_requires=['Pafy'],
+    install_requires=['Pafy >= 0.3.62'],
     package_data={"": ["LICENSE", "README.rst", "CHANGELOG"]},
     classifiers=[
         "Topic :: Utilities",
