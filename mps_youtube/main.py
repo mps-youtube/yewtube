@@ -713,6 +713,8 @@ def get_version_info():
     out += ("\nMachine type   : %s" % platform.machine())
     out += ("\nArchitecture   : %s, %s" % platform.architecture())
     out += ("\nPlatform       : %s" % platform.platform())
+    out += ("\nsys.stdout.enc : %s" % sys.stdout.encoding)
+    out += ("\ndefault enc    : %s" % sys.getdefaultencoding())
     envs = "TERM SHELL LANG LANGUAGE".split()
 
     for env in envs:
