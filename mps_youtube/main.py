@@ -121,8 +121,11 @@ def utf8_replace(txt):
 
 def xenc(stuff):
     """ Replace unsupported characters. """
-    stuff = utf8_replace(stuff) if not_utf8_environment else stuff
-    return stuff
+    if g.isatty:
+        return utf8_replace(stuff) if not_utf8_environment else stuff
+
+    else:
+        return stuff.encode("utf8", errors="replace")
 
 
 def xprint(stuff, end=None):
@@ -657,6 +660,7 @@ class g(object):
     command_line = False
     debug_mode = False
     urlopen = None
+    isatty = sys.stdout.isatty()
     ytpls = []
     browse_mode = "normal"
     preloading = []
