@@ -1684,10 +1684,8 @@ def playsong(song, failcount=0, override=False):
     writestatus(songdata)
     dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
     dbg("calling %s", " ".join(cmd))
-    now = time.time()
-    launch_player(song, songdata, cmd)
-    fin = time.time()
-    failed = fin - now < 1.25 and song.length > 2
+    played = launch_player(song, songdata, cmd)
+    failed = not played
 
     if failed and failcount < g.max_retries:
         dbg(c.r + "stream failed to open" + c.w)
@@ -1710,11 +1708,15 @@ def launch_player(song, songdata, cmd):
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
-            mplayer_status(p, songdata + ";", song.length)
+            played = mplayer_status(p, songdata + ";", song.length)
 
         else:
             with open(os.devnull, "w") as devnull:
-                subprocess.call(cmd, stderr=devnull)
+                returncode = subprocess.call(cmd, stderr=devnull)
+
+            played = returncode == 0
+
+        return played
 
     except OSError:
         g.message = F('no player') % Config.PLAYER.get
@@ -1731,6 +1733,7 @@ def launch_player(song, songdata, cmd):
 def mplayer_status(popen_object, prefix="", songlength=0):
     """ Capture time progress from player output. Write status line. """
     # A: 175.6
+    played_something = False
     re_mplayer = re.compile(r"A:\s*(?P<elapsed_s>\d+)\.\d\s*")
     last_displayed_line = None
     buff = ''
@@ -1739,9 +1742,11 @@ def mplayer_status(popen_object, prefix="", songlength=0):
         char = popen_object.stdout.read(1).decode("utf-8", errors="ignore")
 
         if char in '\r\n':
+
             m = re_mplayer.match(buff)
 
             if m:
+                played_something = True
                 line = make_status_line(m, songlength)
 
                 if line != last_displayed_line:
@@ -1752,6 +1757,8 @@ def mplayer_status(popen_object, prefix="", songlength=0):
 
         else:
             buff += char
+
+    return played_something
 
 
 def make_status_line(match_object, songlength=0):
