@@ -1621,7 +1621,8 @@ def generate_real_playerargs(song, override, failcount):
             list_update("-prefer-ipv4", args)
 
         elif "mpv" in Config.PLAYER.get:
-            list_update("--really-quiet", args)
+            list_update("--really-quiet", args, remove=True)
+            list_update("--msglevel=all=no:statusline=status", args)
 
     return [Config.PLAYER.get] + args + [stream['url']], songdata
 
@@ -1698,17 +1699,22 @@ def playsong(song, failcount=0, override=False):
 
 def launch_player(song, songdata, cmd):
     """ Launch player application. """
+    # fix for github issue 59
+    if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
+        cmd = [x.encode("utf8", errors="replace") for x in cmd]
+
     try:
 
         if "mplayer" in Config.PLAYER.get:
 
-            # fix for github issue 59
-            if mswin and sys.version_info[:2] < (3, 0):
-                cmd = [x.encode("utf8", errors="replace") for x in cmd]
-
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
-            played = mplayer_status(p, songdata + ";", song.length)
+            played = player_status(p, songdata + ";", song.length)
+
+        elif "mpv" in Config.PLAYER.get:
+            p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
+                                 bufsize=1)
+            played = player_status(p, songdata + ";", song.length, mpv=True)
 
         else:
             with open(os.devnull, "w") as devnull:
@@ -1730,20 +1736,23 @@ def launch_player(song, songdata, cmd):
             pass
 
 
-def mplayer_status(popen_object, prefix="", songlength=0):
+def player_status(po_obj, prefix="", songlength=0, mpv=False):
     """ Capture time progress from player output. Write status line. """
     # A: 175.6
     played_something = False
     re_mplayer = re.compile(r"A:\s*(?P<elapsed_s>\d+)\.\d\s*")
+    re_mpv = re.compile(r".{,15}AV?:\s*(\d\d):(\d\d):(\d\d)")
+    re_player = re_mpv if mpv else re_mplayer
     last_displayed_line = None
     buff = ''
 
-    while popen_object.poll() is None:
-        char = popen_object.stdout.read(1).decode("utf-8", errors="ignore")
+    while po_obj.poll() is None:
+        stdstream = po_obj.stderr if mpv else po_obj.stdout
+        char = stdstream.read(1).decode("utf-8", errors="ignore")
 
         if char in '\r\n':
 
-            m = re_mplayer.match(buff)
+            m = re_player.match(buff)
 
             if m:
                 played_something = True
@@ -1766,10 +1775,16 @@ def make_status_line(match_object, songlength=0):
     progress_bar_size = Config.CONSOLE_WIDTH.get - 50
 
     try:
-        elapsed_s = int(match_object.group('elapsed_s') or '0')
+        h, m, s = map(int, match_object.groups())
+        elapsed_s = h * 3600 + m * 60 + s
 
     except ValueError:
-        return ""
+
+        try:
+            elapsed_s = int(match_object.group('elapsed_s') or '0')
+
+        except ValueError:
+            return ""
 
     display_s = elapsed_s
     display_h = display_m = 0
