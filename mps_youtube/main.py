@@ -1667,11 +1667,12 @@ def generate_real_playerargs(song, override, failcount):
 
         elif "mpv" in Config.PLAYER.get:
             list_update("--really-quiet", args, remove=True)
-            mpvv = g.mpv_version[0:2]
-            msglevel = pd["msglevel"]
-            msglevel = msglevel["<0.4"] if mpvv < (0, 4) else msglevel[">=0.4"]
-            #  undetected / negative version number assumed up-to-date
-            msglevel = msglevel[">=0.4"] if mpvv < (0, 0) else msglevel
+            msglevel = pd["msglevel"]["<0.4"]
+
+            #  undetected (negative) version number assumed up-to-date
+            if g.mpv_version[0:2] < (0, 0) or g.mpv_version[0:2] >= (0, 4):
+                msglevel = pd["msglevel"][">=0.4"]
+
             list_update(msglevel, args)
 
     return [Config.PLAYER.get] + args + [stream['url']], songdata
