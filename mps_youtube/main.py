@@ -201,6 +201,22 @@ def get_config_dir():
     return mps_confdir
 
 
+def get_mpv_version(exename="mpv"):
+    """ Get version of mpv as 3-tuple. """
+    o = utf8_decode(subprocess.check_output([exename, "--version"]))
+    re_ver = re.compile(r"%s (\d)\.(\d)\.(\d)" % exename)
+
+    for line in o.split("\n"):
+        m = re_ver.match(line)
+
+        if m:
+            v = tuple(map(int, m.groups()))
+            dbg("%s version %s.%s.%s detected", exename, *v)
+            return v
+
+    return 0, 0, 0
+
+
 def has_exefile(filename):
     """ Check whether file exists in path and is executable. """
     paths = os.environ.get("PATH", []).split(os.pathsep)
@@ -591,6 +607,26 @@ def check_colours(val):
         return dict(valid=True)
 
 
+def check_player(player):
+    """ Check player exefile exists and get mpv version. """
+    if has_exefile(player):
+
+        if "mpv" in player:
+            g.mpv_version = get_mpv_version()
+            version = "%s.%s.%s" % g.mpv_version
+            fmt = c.g, c.w, c.g, c.w, version
+            msg = "%splayer%s set to %smpv%s (version %s)" % fmt
+            return dict(valid=True, message=msg)
+
+        else:
+            msg = "%splayer%s set to %s%s%s" % (c.g, c.w, c.g, player, c.w)
+            return dict(valid=True, message=msg)
+
+    else:
+        msg = "Unknown player %s%s%s" % (c.r, player, c.w)
+        return dict(valid=False, message=msg)
+
+
 class Config(object):
 
     """ Holds various configuration values. """
@@ -601,7 +637,7 @@ class Config(object):
     CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=70, maxval=880,
                                check_fn=check_console_width)
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
-    PLAYER = ConfigItem("player", "mplayer")
+    PLAYER = ConfigItem("player", "mplayer", check_fn=check_player)
     PLAYERARGS = ConfigItem("playerargs", "")
     NOTIFIER = ConfigItem("notifier", "")
     CHECKUPDATE = ConfigItem("checkupdate", True)
@@ -662,6 +698,7 @@ class g(object):
     urlopen = None
     isatty = sys.stdout.isatty()
     ytpls = []
+    mpv_version = 0, 0, 0
     browse_mode = "normal"
     preloading = []
     # expiry = 5 * 60 * 60  # 5 hours
@@ -692,6 +729,8 @@ class g(object):
     READLINE_FILE = None
     playerargs_defaults = {
         "mpv": {
+            "msglevel": {"<0.4": "--msglevel=all=no:statusline=status",
+                         ">=0.4": "--msg-level=all=no:statusline=status"},
             "title": "--title",
             "fs": "--fs",
             "novid": "--no-video",
@@ -764,6 +803,11 @@ def init():
 
     else:
         import_config()
+
+    # check mpv version
+
+    if "mpv" in Config.PLAYER.get:
+        g.mpv_version = get_mpv_version()
 
     # setup colorama
     if has_colorama and mswin:
@@ -1622,7 +1666,10 @@ def generate_real_playerargs(song, override, failcount):
 
         elif "mpv" in Config.PLAYER.get:
             list_update("--really-quiet", args, remove=True)
-            list_update("--msglevel=all=no:statusline=status", args)
+            mpvv = g.mpv_version[0:2]
+            msglevel = pd["msglevel"]
+            msglevel = msglevel["<0.4"] if mpvv < (0, 4) else msglevel[">=0.4"]
+            list_update(msglevel, args)
 
     return [Config.PLAYER.get] + args + [stream['url']], songdata
 
