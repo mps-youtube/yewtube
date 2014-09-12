@@ -204,7 +204,7 @@ def get_config_dir():
 def get_mpv_version(exename="mpv"):
     """ Get version of mpv as 3-tuple. """
     o = utf8_decode(subprocess.check_output([exename, "--version"]))
-    re_ver = re.compile(r"%s (\d)\.(\d)\.(\d)" % exename)
+    re_ver = re.compile(r"%s (\d+)\.(\d+)\.(\d+)" % exename)
 
     for line in o.split("\n"):
         m = re_ver.match(line)
@@ -214,7 +214,8 @@ def get_mpv_version(exename="mpv"):
             dbg("%s version %s.%s.%s detected", exename, *v)
             return v
 
-    return 0, 0, 0
+    dbg("%sFailed to detect mpv version%s", c.r, c.w)
+    return -1, 0, 0
 
 
 def has_exefile(filename):
@@ -1669,6 +1670,8 @@ def generate_real_playerargs(song, override, failcount):
             mpvv = g.mpv_version[0:2]
             msglevel = pd["msglevel"]
             msglevel = msglevel["<0.4"] if mpvv < (0, 4) else msglevel[">=0.4"]
+            #  undetected / negative version number assumed up-to-date
+            msglevel = msglevel[">=0.4"] if mpvv < (0, 0) else msglevel
             list_update(msglevel, args)
 
     return [Config.PLAYER.get] + args + [stream['url']], songdata
