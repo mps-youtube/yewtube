@@ -2277,12 +2277,13 @@ def comments(number):
         g.message = "Comments only available for video items"
 
 
-def _make_fname(song, ext=None, av=None):
+def _make_fname(song, ext=None, av=None, subdir=None):
     """" Create download directory, generate filename. """
     # pylint: disable=E1103
     # Instance of 'bool' has no 'extension' member (some types not inferable)
-    if not os.path.exists(Config.DDIR.get):
-        os.makedirs(Config.DDIR.get)
+    ddir = os.path.join(Config.DDIR.get, subdir) if subdir else Config.DDIR.get
+    if not os.path.exists(ddir):
+        os.makedirs(ddir)
 
     streams = get_streams(song)
 
@@ -2294,8 +2295,7 @@ def _make_fname(song, ext=None, av=None):
         extension = stream['ext']
 
     filename = song.title[:59] + "." + extension
-    filename = os.path.join(Config.DDIR.get,
-                            mswinfn(filename.replace("/", "-")))
+    filename = os.path.join(ddir, mswinfn(filename.replace("/", "-")))
     return filename
 
 
@@ -2527,7 +2527,7 @@ def songlist_rm_add(action, songrange):
     g.content = generate_songlist_display()
 
 
-def down_many(dltype, choice):
+def down_many(dltype, choice, subdir=None):
     """ Download multiple items. """
     choice = _parse_multi(choice)
     choice = list(set(choice))
@@ -2555,7 +2555,7 @@ def down_many(dltype, choice):
             screen_update()
 
             try:
-                filename = _make_fname(song, None, av=av)
+                filename = _make_fname(song, None, av=av, subdir=subdir)
 
             except IOError as e:
                 handle_error("Error for %s: %s" % (song.title, uni(e)))
@@ -2586,6 +2586,55 @@ def down_many(dltype, choice):
         g.model.songs = temp[::]
         g.message = msg
         g.content = generate_songlist_display()
+
+
+def down_plist(dltype, parturl):
+    """Download playlist created on website."""
+    if "playlist" in g.last_search_query and\
+            parturl == g.last_search_query['playlist']:
+
+        s, e = 0, 99999
+
+        g.model.songs = g.ytpl['items'][s:e]
+        g.content = generate_songlist_display()
+        g.message = "Showing YouTube playlist: %s" % c.y + g.ytpl['name'] + c.w
+        g.current_page = pagenum
+        return
+
+    dbg("%sFetching playlist using pafy%s", c.y, c.w)
+    yt_playlist = pafy.get_playlist(parturl)
+    g.pafy_pls[parturl] = yt_playlist
+    ytpl_items = yt_playlist['items']
+    ytpl_title = yt_playlist['title']
+    g.content = generate_songlist_display()
+    songs = []
+
+    for item in ytpl_items:
+        # Create Video object, appends to songs
+        cur = Video(ytid=item['pafy'].videoid,
+                    title=item['pafy'].title,
+                    length=item['pafy'].length)
+        songs.append(cur)
+
+    if not ytpl_items:
+        dbg("got unexpected data or no search results")
+        return False
+
+    g.last_search_query = {"playlist": parturl}
+    g.browse_mode = "normal"
+    g.ytpl = dict(name=ytpl_title, items=songs)
+    g.model.songs = songs[::]
+    # preload first result url
+    kwa = {"song": songs[0], "delay": 0}
+    t = threading.Thread(target=preload, kwargs=kwa)
+    t.start()
+
+    g.content = generate_songlist_display()
+    g.message = "Showing YouTube playlist %s" % (c.y + ytpl_title + c.w)
+
+    audio = dltype.startswith("da")
+
+    down_many(dltype, "1-", ytpl_title)
 
 
 def play(pre, choice, post=""):
@@ -3850,6 +3899,8 @@ Then, when results are shown:
 {2}d <number>{1} - view downloads available for an item.
 {2}da <number(s)>{1} - download best available audio file(s).
 {2}dv <number(s)>{1} - download best available video file(s).
+{2}dapl <playlist url or id>{1} - download YouTube playlist audio by url or id.
+{2}dvpl <playlist url or id>{1} - download YouTube playlist video by url or id.
 {2}dlurl <url or id>{1} download a YouTube video by url or video id.
 {2}playurl <url or id>{1} play a YouTube video by url or id.
 
@@ -4024,6 +4075,7 @@ def main():
     # input types
     word = r'[^\W\d][-\w\s]{,100}'
     rs = r'(?:repeat\s*|shuffle\s*|-a\s*|-f\s*|-w\s*)'
+    pl = r'(?:.*=|)([-_a-zA-Z0-9]{18,50})(?:(?:\&\#).*|$)'
     regx = {
         'ls': r'ls$',
         'vp': r'vp$',
@@ -4032,7 +4084,7 @@ def main():
         'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
         'info': r'i\s*(\d{1,4})$',
         'quits': r'(?:q|quit|exit)$',
-        'plist': r'pl\s+(?:.*=|)([-_a-zA-Z0-9]{18,50})(?:(?:\&\#).*|$)',
+        'plist': r'pl\s+%s'% pl,
         'yt_url': r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
         'search': r'(?:search|\.|/)\s*([^./].{1,500})',
         'dl_url': r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
@@ -4051,6 +4103,7 @@ def main():
         'down_many': r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
         'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
         'user_more': r'u\s?([\d]{1,4})$',
+        'down_plist': r'(da|dv)pl\s+%s' % pl,
         'clearcache': r'clearcache$',
         'usersearch': r'user\s+([^\s].{1,})$',
         'shuffle_fn': r'\s*(shuffle)\s*$',
