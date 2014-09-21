@@ -1,6 +1,8 @@
 Version 0.01.47
 Development version - not yet released
 
+- Progress indicator now works with mpv (previously only mplayer)
+
 - Added option to show system notifications (Alex Nisnevich) #95
     (can be used with libnotify - notify-send on linux)
 
