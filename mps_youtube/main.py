@@ -2589,52 +2589,11 @@ def down_many(dltype, choice, subdir=None):
 
 
 def down_plist(dltype, parturl):
-    """Download playlist created on website."""
-    if "playlist" in g.last_search_query and\
-            parturl == g.last_search_query['playlist']:
-
-        s, e = 0, 99999
-
-        g.model.songs = g.ytpl['items'][s:e]
-        g.content = generate_songlist_display()
-        g.message = "Showing YouTube playlist: %s" % c.y + g.ytpl['name'] + c.w
-        g.current_page = pagenum
-        return
-
-    dbg("%sFetching playlist using pafy%s", c.y, c.w)
-    yt_playlist = pafy.get_playlist(parturl)
-    g.pafy_pls[parturl] = yt_playlist
-    ytpl_items = yt_playlist['items']
-    ytpl_title = yt_playlist['title']
-    g.content = generate_songlist_display()
-    songs = []
-
-    for item in ytpl_items:
-        # Create Video object, appends to songs
-        cur = Video(ytid=item['pafy'].videoid,
-                    title=item['pafy'].title,
-                    length=item['pafy'].length)
-        songs.append(cur)
-
-    if not ytpl_items:
-        dbg("got unexpected data or no search results")
-        return False
-
-    g.last_search_query = {"playlist": parturl}
-    g.browse_mode = "normal"
-    g.ytpl = dict(name=ytpl_title, items=songs)
-    g.model.songs = songs[::]
-    # preload first result url
-    kwa = {"song": songs[0], "delay": 0}
-    t = threading.Thread(target=preload, kwargs=kwa)
-    t.start()
-
-    g.content = generate_songlist_display()
-    g.message = "Showing YouTube playlist %s" % (c.y + ytpl_title + c.w)
-
-    audio = dltype.startswith("da")
-
-    down_many(dltype, "1-", ytpl_title)
+    """ Download Youtube playlist. """
+    plist(parturl, pagenum=1, splash=True, dumps=True)
+    title = g.pafy_pls[parturl]['title']
+    subdir = mswinfn(title.replace("/", "-"))
+    down_many(dltype, "1-", subdir=subdir)
 
 
 def play(pre, choice, post=""):
@@ -4084,7 +4043,7 @@ def main():
         'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
         'info': r'i\s*(\d{1,4})$',
         'quits': r'(?:q|quit|exit)$',
-        'plist': r'pl\s+%s'% pl,
+        'plist': r'pl\s+%s' % pl,
         'yt_url': r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
         'search': r'(?:search|\.|/)\s*([^./].{1,500})',
         'dl_url': r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
