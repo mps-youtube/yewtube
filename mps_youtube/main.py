@@ -2589,7 +2589,7 @@ def down_many(dltype, choice, subdir=None):
 
 
 def down_plist(dltype, parturl):
-    """ Download Youtube playlist. """
+    """ Download YouTube playlist. """
     plist(parturl, pagenum=1, splash=True, dumps=True)
     title = g.pafy_pls[parturl]['title']
     subdir = mswinfn(title.replace("/", "-"))
@@ -2991,12 +2991,25 @@ def gen_dl_text(ddata, song, p):
 
 
 def download(dltype, num):
-    """ Download a track. """
+    """ Download a track or playlist by menu item number. """
     # This function needs refactoring!
     # pylint: disable=R0912
     # pylint: disable=R0914
+    if g.browse_mode == "ytpl" and dltype in ("da", "dv"):
+        plid = g.ytpls[int(num) - 1]["link"]
+        plist(plid, pagenum=1, splash=True, dumps=True)
+        title = g.pafy_pls[plid]['title']
+        subdir = mswinfn(title.replace("/", "-"))
+        down_many(dltype, "1-", subdir=subdir)
+        return
 
-    if g.browse_mode != "normal":
+    elif g.browse_mode == "ytpl":
+        g.message = "Use da or dv to specify audio / video playlist download"
+        g.message = c.y + g.message + c.w
+        g.content = generate_songlist_display()
+        return
+
+    elif g.browse_mode != "normal":
         g.message = "Download must refer to a specific video item"
         g.message = c.y + g.message + c.w
         g.content = generate_songlist_display()
@@ -3425,7 +3438,7 @@ def dump(un):
 
 
 def plist(parturl, pagenum=1, splash=True, dumps=False):
-    """ Import playlist created on website. """
+    """ Retrieve YouTube playlist. """
     if "playlist" in g.last_search_query and\
             parturl == g.last_search_query['playlist']:
 
