@@ -2597,6 +2597,7 @@ def down_plist(dltype, parturl):
 
 
 def down_user_pls(dltype, user):
+    """ Download all user playlists. """
     user_pls(user)
     for pl in g.ytpls:
         down_plist(dltype, pl.get('link'))
@@ -3849,7 +3850,7 @@ Then, when results are shown:
 {2}user <username>{1} - list YouTube uploads by <username>.
 {2}user <username>/<query>{1} - as above, but matches <query>.
 {2}userpl <username>{1} - list YouTube playlists created by <username>.
-{2}pl <playlist url or id>{1} - Open YouTube playlist by url or id.
+{2}pl <url or id>{1} - Open YouTube playlist by url or id.
 {2}url <url or id>{1} - Retrieve specific YouTube video by url or id.
 
 {2}r <number>{1} - show videos related to video <number>.
@@ -3879,10 +3880,10 @@ Then, when results are shown:
 {2}d <number>{1} - view downloads available for an item.
 {2}da <number(s)>{1} - download best available audio file(s).
 {2}dv <number(s)>{1} - download best available video file(s).
-{2}dapl <playlist url or id>{1} - download YouTube playlist audio by url or id.
-{2}dvpl <playlist url or id>{1} - download YouTube playlist video by url or id.
-{2}daupl <username>{1} - download user's YouTube playlists audio.
-{2}dvupl <username>{1} - download user's YouTube playlists video.
+{2}dapl <url or id>{1} - download YouTube playlist (audio) by url or id.
+{2}dvpl <url or id>{1} - download YouTube playlist (video) by url or id.
+{2}daupl <username>{1} - download user's YouTube playlists (audio).
+{2}dvupl <username>{1} - download user's YouTube playlists (video).
 {2}dlurl <url or id>{1} download a YouTube video by url or video id.
 {2}playurl <url or id>{1} play a YouTube video by url or id.
 
