@@ -2596,6 +2596,14 @@ def down_plist(dltype, parturl):
     down_many(dltype, "1-", subdir=subdir)
 
 
+def down_user_pls(dltype, user):
+    user_pls(user)
+    for pl in g.ytpls:
+        down_plist(dltype, pl.get('link'))
+
+    return
+
+
 def play(pre, choice, post=""):
     """ Play choice.  Use repeat/random if appears in pre/post. """
     # pylint: disable=R0914
@@ -3873,6 +3881,8 @@ Then, when results are shown:
 {2}dv <number(s)>{1} - download best available video file(s).
 {2}dapl <playlist url or id>{1} - download YouTube playlist audio by url or id.
 {2}dvpl <playlist url or id>{1} - download YouTube playlist video by url or id.
+{2}daupl <username>{1} - download user's YouTube playlists audio.
+{2}dvupl <username>{1} - download user's YouTube playlists video.
 {2}dlurl <url or id>{1} download a YouTube video by url or video id.
 {2}playurl <url or id>{1} play a YouTube video by url or id.
 
@@ -4083,6 +4093,7 @@ def main():
         'showconfig': r'(set|showconfig)\s*$',
         'search_album': r'album\s*(.{0,500})',
         'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
+        'down_user_pls': r'(da|dv)upl\s+(.*)$',
         'open_save_view': r'(open|save|view)\s*(%s)$' % word,
         'songlist_mv_sw': r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})$',
         'songlist_rm_add': r'(rm|add)\s*(-?\d[-,\d\s]{,250})$',
