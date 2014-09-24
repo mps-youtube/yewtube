@@ -696,6 +696,7 @@ class g(object):
     meta = {}
     command_line = False
     debug_mode = False
+    preload_disabled = False
     urlopen = None
     isatty = sys.stdout.isatty()
     ytpls = []
@@ -784,6 +785,10 @@ def process_cl_args(args):
 
     g.command_line = "playurl" in args or "dlurl" in args
     g.blank_text = "" if g.command_line else g.blank_text
+
+    if "--no-preload" in sys.argv:
+        g.preload_disabled = True
+        list_update("--no-preload", sys.argv, remove=True)
 
 
 def init():
@@ -2689,6 +2694,9 @@ def vp():
 
 def preload(song, delay=2, override=False):
     """  Get streams (runs in separate thread). """
+    if g.preload_disabled:
+        return
+
     ytid = song.ytid
     g.preloading.append(ytid)
     time.sleep(delay)
