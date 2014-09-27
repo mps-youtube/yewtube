@@ -713,6 +713,7 @@ class g(object):
     detectable_size = False
     command_line = False
     debug_mode = False
+    preload_disabled = False
     urlopen = None
     isatty = sys.stdout.isatty()
     ytpls = []
@@ -801,6 +802,10 @@ def process_cl_args(args):
 
     g.command_line = "playurl" in args or "dlurl" in args
     g.blank_text = "" if g.command_line else g.blank_text
+
+    if "--no-preload" in sys.argv:
+        g.preload_disabled = True
+        list_update("--no-preload", sys.argv, remove=True)
 
 
 def init():
@@ -2615,11 +2620,20 @@ def down_many(dltype, choice, subdir=None):
 
 
 def down_plist(dltype, parturl):
-    """ Download Youtube playlist. """
+    """ Download YouTube playlist. """
     plist(parturl, pagenum=1, splash=True, dumps=True)
     title = g.pafy_pls[parturl]['title']
     subdir = mswinfn(title.replace("/", "-"))
     down_many(dltype, "1-", subdir=subdir)
+
+
+def down_user_pls(dltype, user):
+    """ Download all user playlists. """
+    user_pls(user)
+    for pl in g.ytpls:
+        down_plist(dltype, pl.get('link'))
+
+    return
 
 
 def play(pre, choice, post=""):
@@ -2706,6 +2720,9 @@ def vp():
 
 def preload(song, delay=2, override=False):
     """  Get streams (runs in separate thread). """
+    if g.preload_disabled:
+        return
+
     ytid = song.ytid
     g.preloading.append(ytid)
     time.sleep(delay)
@@ -3017,12 +3034,25 @@ def gen_dl_text(ddata, song, p):
 
 
 def download(dltype, num):
-    """ Download a track. """
+    """ Download a track or playlist by menu item number. """
     # This function needs refactoring!
     # pylint: disable=R0912
     # pylint: disable=R0914
+    if g.browse_mode == "ytpl" and dltype in ("da", "dv"):
+        plid = g.ytpls[int(num) - 1]["link"]
+        plist(plid, pagenum=1, splash=True, dumps=True)
+        title = g.pafy_pls[plid]['title']
+        subdir = mswinfn(title.replace("/", "-"))
+        down_many(dltype, "1-", subdir=subdir)
+        return
 
-    if g.browse_mode != "normal":
+    elif g.browse_mode == "ytpl":
+        g.message = "Use da or dv to specify audio / video playlist download"
+        g.message = c.y + g.message + c.w
+        g.content = generate_songlist_display()
+        return
+
+    elif g.browse_mode != "normal":
         g.message = "Download must refer to a specific video item"
         g.message = c.y + g.message + c.w
         g.content = generate_songlist_display()
@@ -3452,7 +3482,7 @@ def dump(un):
 
 
 def plist(parturl, pagenum=1, splash=True, dumps=False):
-    """ Import playlist created on website. """
+    """ Retrieve YouTube playlist. """
     max_results = getxy("max_results")
 
     if "playlist" in g.last_search_query and\
@@ -3855,7 +3885,7 @@ Then, when results are shown:
 {2}user <username>{1} - list YouTube uploads by <username>.
 {2}user <username>/<query>{1} - as above, but matches <query>.
 {2}userpl <username>{1} - list YouTube playlists created by <username>.
-{2}pl <playlist url or id>{1} - Open YouTube playlist by url or id.
+{2}pl <url or id>{1} - Open YouTube playlist by url or id.
 {2}url <url or id>{1} - Retrieve specific YouTube video by url or id.
 
 {2}r <number>{1} - show videos related to video <number>.
@@ -3885,8 +3915,10 @@ Then, when results are shown:
 {2}d <number>{1} - view downloads available for an item.
 {2}da <number(s)>{1} - download best available audio file(s).
 {2}dv <number(s)>{1} - download best available video file(s).
-{2}dapl <playlist url or id>{1} - download YouTube playlist audio by url or id.
-{2}dvpl <playlist url or id>{1} - download YouTube playlist video by url or id.
+{2}dapl <url or id>{1} - download YouTube playlist (audio) by url or id.
+{2}dvpl <url or id>{1} - download YouTube playlist (video) by url or id.
+{2}daupl <username>{1} - download user's YouTube playlists (audio).
+{2}dvupl <username>{1} - download user's YouTube playlists (video).
 {2}dlurl <url or id>{1} download a YouTube video by url or video id.
 {2}playurl <url or id>{1} play a YouTube video by url or id.
 
@@ -4097,6 +4129,7 @@ def main():
         'showconfig': r'(set|showconfig)\s*$',
         'search_album': r'album\s*(.{0,500})',
         'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
+        'down_user_pls': r'(da|dv)upl\s+(.*)$',
         'open_save_view': r'(open|save|view)\s*(%s)$' % word,
         'songlist_mv_sw': r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})$',
         'songlist_rm_add': r'(rm|add)\s*(-?\d[-,\d\s]{,250})$',

@@ -1,6 +1,11 @@
 Version 0.01.47
 Development version - not yet released
 
+- Enabled da and dv commands for playlist search results
+
+- Added dapl and dvpl to download YouTube playlist audio/video
+    by url/id to separate subdirectory (mtahmed) #110
+
 - Progress indicator now works with mpv (previously only mplayer)
 
 - Added option to show system notifications (Alex Nisnevich) #95
