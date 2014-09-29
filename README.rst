@@ -109,9 +109,9 @@ Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to
 
 Download mplayer for your CPU type from the "Build Selection table" `here <http://oss.netfarm.it/mplayer-win32.php>`_.
 
-Extract the `mplayer.exe` file, saving it to the folder that `mpsyt.exe` resides in (usually `C:\PythonXX\Scripts`) or to a folder in the system path.
+Extract the ``mplayer.exe`` file, saving it to the folder that ``mpsyt.exe`` resides in (usually ``C:\PythonXX\Scripts\``) or to a folder in the system path.
 
-Alternatively to mplayer, use mpv.exe which can be downloaded from: http://mpv.io/installation/
+Alternatively to mplayer, use ``mpv.exe`` which can be downloaded from: http://mpv.io/installation/
 
 
 Upgrading
