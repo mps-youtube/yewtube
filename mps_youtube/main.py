@@ -2299,7 +2299,8 @@ def _make_fname(song, ext=None, av=None, subdir=None):
         stream = select_stream(streams, 0, audio=av == "audio", m4a_ok=True)
         extension = stream['ext']
 
-    filename = song.title[:59] + "." + extension
+    # filename = song.title[:59] + "." + extension
+    filename = song.title + "." + extension
     filename = os.path.join(ddir, mswinfn(filename.replace("/", "-")))
     return filename
 
