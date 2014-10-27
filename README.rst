@@ -99,6 +99,10 @@ Install mplayer with `MacPorts <http://www.macports.org>`_::
 
     sudo port install MPlayer
 
+Or with `Homebrew <http://brew.sh>`_::
+
+    brew install mplayer
+
 
 Windows installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
