@@ -65,18 +65,14 @@ Music Album Matching
 
 .. image:: http://np1.github.io/mpsyt-images2/album-2.png
 
-An album title can be specified and mps-youtube will attempt to find matches for
-each track of the album, based on title and duration.  Type ``help search`` for
-more info.
-
+An album title can be specified and mps-youtube will attempt to find matches for each track of the album, based on title and duration.  Type ``help search`` for more info.  
 
 Customisation
 ~~~~~~~~~~~~~
 
 .. image:: http://np1.github.io/mpsyt-images2/customisation2.png
 
-Search results can be customised to display additional fields and ordered
-by various criteria.
+Search results can be customised to display additional fields and ordered by various criteria.
 
 This configuration was set up using the following commands::
 
@@ -111,10 +107,11 @@ Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to
 
     pip install colorama
 
-Download mplayer for your CPU type from the "Build Selection table" `here
-<http://oss.netfarm.it/mplayer-win32.php>`_. 
+Download mplayer for your CPU type from the "Build Selection table" `here <http://oss.netfarm.it/mplayer-win32.php>`_.
 
-Extract the mplayer.exe file, saving it to your mpsyt folder
+Extract the ``mplayer.exe`` file, saving it to the folder that ``mpsyt.exe`` resides in (usually ``C:\PythonXX\Scripts\``) or to a folder in the system path.
+
+Alternatively to mplayer, use ``mpv.exe`` which can be downloaded from: http://mpv.io/installation/
 
 
 Upgrading

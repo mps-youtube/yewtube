@@ -2325,7 +2325,8 @@ def _make_fname(song, ext=None, av=None, subdir=None):
         stream = select_stream(streams, 0, audio=av == "audio", m4a_ok=True)
         extension = stream['ext']
 
-    filename = song.title[:59] + "." + extension
+    # filename = song.title[:59] + "." + extension
+    filename = song.title + "." + extension
     filename = os.path.join(ddir, mswinfn(filename.replace("/", "-")))
     return filename
 
@@ -3121,15 +3122,14 @@ def download(dltype, num):
     if url_au:
         # multiplex
         muxapp = has_exefile("avconv") or has_exefile("ffmpeg")
-        mux_cmd = "APP -i BISH -vcodec h264 -i BASH -acodec copy -map 0:v:0"
-        mux_cmd += " -map 1:a:0 -threads 2 BOSH"
-        mux_cmd = mux_cmd.split()
-        mux_cmd[2], mux_cmd[6] = args[1], args_au[1]
-        mux_cmd[0], mux_cmd[15] = muxapp, args[1][:-3] + "mp4"
+        mux_cmd = "APP -i VIDEO -i AUDIO -c copy OUTPUT".split()
+        mux_cmd = "%s -i %s -i %s -c copy %s"
+        mux_cmd = [muxapp, "-i", args[1], "-i", args_au[1], "-c",
+                   "copy", args[1][:-3] + "mp4"]
 
         try:
             subprocess.call(mux_cmd)
-            g.message = "Saved to :" + c.g + mux_cmd[15] + c.w
+            g.message = "Saved to :" + c.g + mux_cmd[7] + c.w
             os.remove(args[1])
             os.remove(args_au[1])
 
