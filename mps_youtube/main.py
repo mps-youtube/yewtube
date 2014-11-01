@@ -554,6 +554,7 @@ def check_console_width(val):
 
 def check_ddir(d):
     """ Check whether dir is a valid directory. """
+    d = os.path.expanduser(d)
     if os.path.isdir(d):
         message = "Downloads will be saved to " + c.y + d + c.w
         return dict(valid=True, message=message)
