@@ -34,6 +34,7 @@ import collections
 import subprocess
 import threading
 import __main__
+import platform
 import tempfile
 import difflib
 import logging
@@ -751,7 +752,6 @@ class g(object):
 
 def get_version_info():
     """ Return version and platform info. """
-    import platform
     out = ("\nmpsyt version  : %s " % __version__)
     out += ("\npafy version   : %s" % pafy.__version__)
     out += ("\nPython version : %s" % sys.version)
