@@ -2407,10 +2407,6 @@ def _download(song, filename, url=None, audio=False):
     if audio and g.muxapp:
         remux_audio(filename)
 
-    else:
-        print("no muxapp found")
-        time.sleep(2)
-
     return filename
 
 
