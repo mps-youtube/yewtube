@@ -1,6 +1,8 @@
 Version 0.01.47
 Development version - not yet released
 
+- Auto detect terminal size on Linux and Mac
+
 - Enabled da and dv commands for playlist search results
 
 - Added dapl and dvpl to download YouTube playlist audio/video
@@ -17,7 +19,7 @@ Development version - not yet released
 - Added copy to clipboard feature - request #97
     (requires python xerox module and xclip on linux or pywin32 on windows)
 
-- Auto detect terminal size on Linux and Mac
+- Remux audio downloads for better file compatibility (#135)
 
 [Bugfix] - Accept two-character length usernames (#99)
 
