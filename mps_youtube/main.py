@@ -3823,6 +3823,154 @@ def search_album(term, page=1, splash=True):
         g.last_search_query = ""
 
 
+def matchfunction(funcname, regex, userinput):
+    """ Match userinput against regex.
+
+    Call funcname, return True if matches.
+
+    """
+    if regex.match(userinput):
+        matches = regex.match(userinput).groups()
+        dbg("input: %s", userinput)
+        dbg("function call: %s", funcname)
+        dbg("regx matches: %s", matches)
+
+        if g.debug_mode:
+            globals()[funcname](*matches)
+
+        else:
+
+            try:
+                globals()[funcname](*matches)
+
+            except IndexError:
+                g.message = F('invalid range')
+                g.content = g.content or generate_songlist_display()
+
+            except (ValueError, IOError) as e:
+                g.message = F('cant get track') % uni(e)
+                g.content = g.content or\
+                    generate_songlist_display(zeromsg=g.message)
+
+        return True
+
+
+def main():
+    """ Main control loop. """
+    if not g.command_line:
+        g.content = logo(col=c.g, version=__version__) + "\n"
+        g.message = "Enter /search-term to search or [h]elp"
+        screen_update()
+
+    # open playlists from file
+    convert_playlist_to_v2()
+    open_from_file()
+
+    # get cmd line input
+    arg_inp = " ".join(sys.argv[1:])
+
+    # input types
+    word = r'[^\W\d][-\w\s]{,100}'
+    rs = r'(?:repeat\s*|shuffle\s*|-a\s*|-f\s*|-w\s*)'
+    pl = r'(?:.*=|)([-_a-zA-Z0-9]{18,50})(?:(?:\&\#).*|$)'
+    regx = {
+        'ls': r'ls$',
+        'vp': r'vp$',
+        'top': r'top(|3m|6m|year|all)\s*$',
+        'dump': r'(un)?dump',
+        'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
+        'info': r'i\s*(\d{1,4})$',
+        'quits': r'(?:q|quit|exit)$',
+        'plist': r'pl\s+%s' % pl,
+        'yt_url': r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
+        'search': r'(?:search|\.|/)\s*([^./].{1,500})',
+        'dl_url': r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
+        'play_pl': r'play\s+(%s|\d+)$' % word,
+        'related': r'r\s?(\d{1,4})$',
+        'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
+        'play_url': r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
+        'comments': r'c\s?(\d{1,4})$',
+        'nextprev': r'(n|p)$',
+        'play_all': r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
+        'user_pls': r'u(?:ser)?pl\s(.*)$',
+        'save_last': r'save\s*$',
+        'pl_search': r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
+        'setconfig': r'set\s+([-\w]+)\s*"?([^"]*)"?\s*$',
+        'clip_copy': r'x\s*(\d+)$',
+        'down_many': r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
+        'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
+        'user_more': r'u\s?([\d]{1,4})$',
+        'down_plist': r'(da|dv)pl\s+%s' % pl,
+        'clearcache': r'clearcache$',
+        'usersearch': r'user\s+([^\s].{1,})$',
+        'shuffle_fn': r'\s*(shuffle)\s*$',
+        'add_rm_all': r'(rm|add)\s(?:\*|all)$',
+        'showconfig': r'(set|showconfig)\s*$',
+        'search_album': r'album\s*(.{0,500})',
+        'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
+        'down_user_pls': r'(da|dv)upl\s+(.*)$',
+        'open_save_view': r'(open|save|view)\s*(%s)$' % word,
+        'songlist_mv_sw': r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})$',
+        'songlist_rm_add': r'(rm|add)\s*(-?\d[-,\d\s]{,250})$',
+        'playlist_rename': r'mv\s*(%s\s+%s)$' % (word, word),
+        'playlist_remove': r'rmp\s*(\d+|%s)$' % word,
+        'open_view_bynum': r'(open|view)\s*(\d{1,4})$',
+        'playlist_rename_idx': r'mv\s*(\d{1,3})\s*(%s)\s*$' % word}
+
+    # compile regexp's
+    regx = {name: re.compile(val, re.UNICODE) for name, val in regx.items()}
+    prompt = "> "
+    arg_inp = arg_inp.replace(r",,", "[mpsyt-comma]")
+    arg_inp = arg_inp.split(",")
+
+    while True:
+        next_inp = ""
+
+        if len(arg_inp):
+            arg_inp, next_inp = arg_inp[1:], arg_inp[0].strip()
+            next_inp = next_inp.replace("[mpsyt-comma]", ",")
+
+        try:
+            userinput = next_inp or xinput(prompt).strip()
+
+        except (KeyboardInterrupt, EOFError):
+            userinput = prompt_for_exit()
+
+        for k, v in regx.items():
+            if matchfunction(k, v, userinput):
+                break
+
+        else:
+            g.content = g.content or generate_songlist_display()
+
+            if g.command_line:
+                g.content = ""
+
+            if userinput and not g.command_line:
+                g.message = c.b + "Bad syntax. Enter h for help" + c.w
+
+            elif userinput and g.command_line:
+                sys.exit("Bad syntax")
+
+        screen_update()
+
+if "--debug" in sys.argv or os.environ.get("mpsytdebug") == "1":
+    print(get_version_info())
+    list_update("--debug", sys.argv, remove=True)
+    g.debug_mode = True
+    g.blank_text = "--\n"
+    logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
+    logging.basicConfig(level=logging.DEBUG, filename=logfile)
+    logging.getLogger("pafy").setLevel(logging.DEBUG)
+
+elif "--logging" in sys.argv or os.environ.get("mpsytlog") == "1":
+    list_update("--logging", sys.argv, remove=True)
+    logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
+    logging.basicConfig(level=logging.DEBUG, filename=logfile)
+    logging.getLogger("pafy").setLevel(logging.DEBUG)
+
+dbg = logging.debug
+
 g.helptext = [
     ("basic", "Basics", """
 
@@ -4016,155 +4164,6 @@ command
 
 
 """.format(c.ul, c.w, c.y, c.r))]
-
-
-def matchfunction(funcname, regex, userinput):
-    """ Match userinput against regex.
-
-    Call funcname, return True if matches.
-
-    """
-    if regex.match(userinput):
-        matches = regex.match(userinput).groups()
-        dbg("input: %s", userinput)
-        dbg("function call: %s", funcname)
-        dbg("regx matches: %s", matches)
-
-        if g.debug_mode:
-            globals()[funcname](*matches)
-
-        else:
-
-            try:
-                globals()[funcname](*matches)
-
-            except IndexError:
-                g.message = F('invalid range')
-                g.content = g.content or generate_songlist_display()
-
-            except (ValueError, IOError) as e:
-                g.message = F('cant get track') % uni(e)
-                g.content = g.content or\
-                    generate_songlist_display(zeromsg=g.message)
-
-        return True
-
-
-def main():
-    """ Main control loop. """
-    if not g.command_line:
-        g.content = logo(col=c.g, version=__version__) + "\n"
-        g.message = "Enter /search-term to search or [h]elp"
-        screen_update()
-
-    # open playlists from file
-    convert_playlist_to_v2()
-    open_from_file()
-
-    # get cmd line input
-    arg_inp = " ".join(sys.argv[1:])
-
-    # input types
-    word = r'[^\W\d][-\w\s]{,100}'
-    rs = r'(?:repeat\s*|shuffle\s*|-a\s*|-f\s*|-w\s*)'
-    pl = r'(?:.*=|)([-_a-zA-Z0-9]{18,50})(?:(?:\&\#).*|$)'
-    regx = {
-        'ls': r'ls$',
-        'vp': r'vp$',
-        'top': r'top(|3m|6m|year|all)\s*$',
-        'dump': r'(un)?dump',
-        'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
-        'info': r'i\s*(\d{1,4})$',
-        'quits': r'(?:q|quit|exit)$',
-        'plist': r'pl\s+%s' % pl,
-        'yt_url': r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
-        'search': r'(?:search|\.|/)\s*([^./].{1,500})',
-        'dl_url': r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
-        'play_pl': r'play\s+(%s|\d+)$' % word,
-        'related': r'r\s?(\d{1,4})$',
-        'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
-        'play_url': r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
-        'comments': r'c\s?(\d{1,4})$',
-        'nextprev': r'(n|p)$',
-        'play_all': r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
-        'user_pls': r'u(?:ser)?pl\s(.*)$',
-        'save_last': r'save\s*$',
-        'pl_search': r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
-        'setconfig': r'set\s+([-\w]+)\s*"?([^"]*)"?\s*$',
-        'clip_copy': r'x\s*(\d+)$',
-        'down_many': r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
-        'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
-        'user_more': r'u\s?([\d]{1,4})$',
-        'down_plist': r'(da|dv)pl\s+%s' % pl,
-        'clearcache': r'clearcache$',
-        'usersearch': r'user\s+([^\s].{1,})$',
-        'shuffle_fn': r'\s*(shuffle)\s*$',
-        'add_rm_all': r'(rm|add)\s(?:\*|all)$',
-        'showconfig': r'(set|showconfig)\s*$',
-        'search_album': r'album\s*(.{0,500})',
-        'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
-        'down_user_pls': r'(da|dv)upl\s+(.*)$',
-        'open_save_view': r'(open|save|view)\s*(%s)$' % word,
-        'songlist_mv_sw': r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})$',
-        'songlist_rm_add': r'(rm|add)\s*(-?\d[-,\d\s]{,250})$',
-        'playlist_rename': r'mv\s*(%s\s+%s)$' % (word, word),
-        'playlist_remove': r'rmp\s*(\d+|%s)$' % word,
-        'open_view_bynum': r'(open|view)\s*(\d{1,4})$',
-        'playlist_rename_idx': r'mv\s*(\d{1,3})\s*(%s)\s*$' % word}
-
-    # compile regexp's
-    regx = {name: re.compile(val, re.UNICODE) for name, val in regx.items()}
-    prompt = "> "
-    arg_inp = arg_inp.replace(r",,", "[mpsyt-comma]")
-    arg_inp = arg_inp.split(",")
-
-    while True:
-        next_inp = ""
-
-        if len(arg_inp):
-            arg_inp, next_inp = arg_inp[1:], arg_inp[0].strip()
-            next_inp = next_inp.replace("[mpsyt-comma]", ",")
-
-        try:
-            userinput = next_inp or xinput(prompt).strip()
-
-        except (KeyboardInterrupt, EOFError):
-            userinput = prompt_for_exit()
-
-        for k, v in regx.items():
-            if matchfunction(k, v, userinput):
-                break
-
-        else:
-            g.content = g.content or generate_songlist_display()
-
-            if g.command_line:
-                g.content = ""
-
-            if userinput and not g.command_line:
-                g.message = c.b + "Bad syntax. Enter h for help" + c.w
-
-            elif userinput and g.command_line:
-                sys.exit("Bad syntax")
-
-        screen_update()
-
-if "--debug" in sys.argv or os.environ.get("mpsytdebug") == "1":
-    print(get_version_info())
-    list_update("--debug", sys.argv, remove=True)
-    g.debug_mode = True
-    g.blank_text = "--\n"
-    logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
-    logging.basicConfig(level=logging.DEBUG, filename=logfile)
-    logging.getLogger("pafy").setLevel(logging.DEBUG)
-
-elif "--logging" in sys.argv or os.environ.get("mpsytlog") == "1":
-    list_update("--logging", sys.argv, remove=True)
-    logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
-    logging.basicConfig(level=logging.DEBUG, filename=logfile)
-    logging.getLogger("pafy").setLevel(logging.DEBUG)
-
-dbg = logging.debug
 
 if __name__ == "__main__":
     init()
