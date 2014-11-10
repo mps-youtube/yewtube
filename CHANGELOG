@@ -4,7 +4,7 @@ Development version - not yet released
 - Enabled da and dv commands for playlist search results
 
 - Added dapl and dvpl to download YouTube playlist audio/video
-    by url/id to separate subdirectory (mtahmed) #110
+    by url/id to a separate subdirectory (mtahmed) #110
 
 - Progress indicator now works with mpv (previously only mplayer)
 
@@ -16,6 +16,8 @@ Development version - not yet released
 
 - Added copy to clipboard feature - request #97
     (requires python xerox module and xclip on linux or pywin32 on windows)
+
+- Auto detect terminal size on Linux and Mac
 
 [Bugfix] - Accept two-character length usernames (#99)
 
