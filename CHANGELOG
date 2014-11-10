@@ -19,6 +19,12 @@ Development version - not yet released
 
 [Bugfix] - Accept two-character length usernames (#99)
 
+[Bugfix] - Expand ~ character in download directory setting (punchagan)
+
+[Bugfix] - Don't truncate filename (YoussF) #122
+
+[Bugfix] - Exit with correct status code
+
 -------------------------------------------------------------------------------
 
 Version 0.01.46
