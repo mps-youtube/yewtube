@@ -4146,9 +4146,13 @@ elif "--logging" in sys.argv or os.environ.get("mpsytlog") == "1":
     logging.basicConfig(level=logging.DEBUG, filename=logfile)
     logging.getLogger("pafy").setLevel(logging.DEBUG)
 
-if "--autosize" in sys.argv or os.environ.get("autosize") == "1":
+if "--autosize" in sys.argv or platform.system() in ('Linux', 'Darwin'):
     list_update("--autosize", sys.argv, remove=True)
     g.detectable_size = True
+
+if "--no-autosize" in sys.argv:
+    list_update("--no-autosize", sys.argv, remove=True)
+    g.detectable_size = False
 
 dbg = logging.debug
 
@@ -4285,8 +4289,7 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
      (valid: views comments rating date user likes dislikes category)
 {2}set ddir <download direcory>{1} - set where downloads are saved
 {2}set fullscreen true|false{1} - output video content in full-screen mode
-{2}set max_res <number>{1} - play / download maximum video resolution height
-{2}set max_results <number>{1} - show <number> results when searching (max 50)
+{2}set max_res <number>{1} - play / download maximum video resolution height{3}
 {2}set notifier <notifier app>{1} - call <notifier app> with each new song title
 {2}set order <relevance|date|views|rating>{1} search result ordering
 {2}set overwrite true|false{1} - overwrite existing files (skip if false)
@@ -4298,7 +4301,9 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set show_video true|false{1} - show video output (audio only if false)
 {2}set window_pos <top|bottom>-<left|right>{1} - set player window position
 {2}set window_size <number>x<number>{1} - set player window width & height
-""".format(c.ul, c.w, c.y, c.r)),
+""".format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'
+           'sults when searching (max 50)'.format(c.y, c.w) if not
+           g.detectable_size else '')),
 
     ("tips", "Advanced Tips", """
 {0}Advanced Tips{1}
