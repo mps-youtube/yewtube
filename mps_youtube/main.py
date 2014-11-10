@@ -236,8 +236,11 @@ def get_mpv_version(exename="mpv"):
 
 
 def has_exefile(filename):
-    """ Check whether file exists in path and is executable. """
-    paths = os.environ.get("PATH", []).split(os.pathsep)
+    """ Check whether file exists in path and is executable.
+
+    Return path to file or False if not found
+    """
+    paths = [os.getcwd()] + os.environ.get("PATH", []).split(os.pathsep)
     dbg("searching path for %s", filename)
 
     for path in paths:
@@ -711,6 +714,7 @@ class g(object):
 
     """ Class for holding globals that are needed throught the module. """
 
+    muxapp = False
     meta = {}
     detectable_size = False
     command_line = False
@@ -836,6 +840,9 @@ def init():
     # setup colorama
     if has_colorama and mswin:
         init_colorama()
+
+    # find muxer app
+    g.muxapp = has_exefile("ffmpeg") or has_exefile("avconv")
 
     process_cl_args(sys.argv)
 
@@ -2332,6 +2339,28 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     return filename
 
 
+def remux_audio(filename):
+    """ Remux audio file. """
+    dbg("starting remux")
+    temp_file = filename + "." + uni(random.randint(10000, 99999))
+    os.rename(filename, temp_file)
+
+    cmd = [g.muxapp, "-y", "-i", temp_file, "-acodec", "copy", "-vn", filename]
+    dbg(cmd)
+
+    try:
+        with open(os.devnull, "w") as devnull:
+            subprocess.call(cmd, stdout=devnull, stderr=subprocess.STDOUT)
+
+    except OSError:
+        dbg("Failed to remux audio using %s", g.muxapp)
+        os.rename(temp_file, filename)
+
+    else:
+        os.unlink(temp_file)
+        dbg("remuxed audio file using %s" % g.muxapp)
+
+
 def _download(song, filename, url=None, audio=False):
     """ Download file, show status, return filename. """
     # pylint: disable=R0914
@@ -2374,6 +2403,13 @@ def _download(song, filename, url=None, audio=False):
         status = status_string.format(*stats)
         sys.stdout.write("\r" + status + ' ' * 4 + "\r")
         sys.stdout.flush()
+
+    if audio and g.muxapp:
+        remux_audio(filename)
+
+    else:
+        print("no muxapp found")
+        time.sleep(2)
 
     return filename
 
@@ -2988,8 +3024,7 @@ def prompt_dl(song):
     url, ext = menu_prompt(model, "Download number: ", *dl_text)
     url2 = ext2 = None
 
-    muxapp = has_exefile("avconv") or has_exefile("ffmpeg")
-    if ext == "m4v" and muxapp:
+    if ext == "m4v" and g.muxapp:
         dl_data, p = get_dl_data(song, mediatype="audio")
         dl_text = gen_dl_text(dl_data, song, p)
         au_choices = "1" if len(dl_data) == 1 else "1-%s" % len(dl_data)
@@ -3122,10 +3157,9 @@ def download(dltype, num):
 
     if url_au:
         # multiplex
-        muxapp = has_exefile("avconv") or has_exefile("ffmpeg")
         mux_cmd = "APP -i VIDEO -i AUDIO -c copy OUTPUT".split()
         mux_cmd = "%s -i %s -i %s -c copy %s"
-        mux_cmd = [muxapp, "-i", args[1], "-i", args_au[1], "-c",
+        mux_cmd = [g.muxapp, "-i", args[1], "-i", args_au[1], "-c",
                    "copy", args[1][:-3] + "mp4"]
 
         try:
