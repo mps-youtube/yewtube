@@ -465,6 +465,9 @@ class ConfigItem(object):
         if self.name == "max_res":
             retval = uni(retval) + "p"
 
+        if self.name == "encoder":
+            retval = str(retval) + " [%s]" % (uni(g.encoders[retval]['name']))
+
         return retval
 
     def set(self, value):
@@ -629,6 +632,21 @@ def check_colours(val):
         return dict(valid=True)
 
 
+def check_encoder(option):
+    """ Check encoder value is acceptable. """
+    encs = g.encoders
+
+    if option >= len(encs):
+        message = "%s%s%s is too high, type %sencoders%s to see valid values"
+        message = message % (c.y, option, c.w, c.g, c.w)
+        return dict(valid=False, message=message)
+
+    else:
+        message = "Encoder set to %s%s%s"
+        message = message % (c.y, encs[option]['name'], c.w)
+        return dict(valid=True, message=message)
+
+
 def check_player(player):
     """ Check player exefile exists and get mpv version. """
     if has_exefile(player):
@@ -661,6 +679,7 @@ class Config(object):
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
     PLAYER = ConfigItem("player", "mplayer", check_fn=check_player)
     PLAYERARGS = ConfigItem("playerargs", "")
+    ENCODER = ConfigItem("encoder", 0, minval=0, check_fn=check_encoder)
     NOTIFIER = ConfigItem("notifier", "")
     CHECKUPDATE = ConfigItem("checkupdate", True)
     SHOW_MPLAYER_KEYS = ConfigItem("show_mplayer_keys", True)
@@ -714,6 +733,9 @@ class g(object):
 
     """ Class for holding globals that are needed throught the module. """
 
+    transcoder_path = "auto"
+    delete_orig = True
+    encoders = []
     muxapp = False
     meta = {}
     detectable_size = False
@@ -748,6 +770,7 @@ class g(object):
     defaults = {setting: getattr(Config, setting) for setting in config}
     suffix = "3" if sys.version_info[:2] >= (3, 0) else ""
     CFFILE = os.path.join(get_config_dir(), "config")
+    TCFILE = os.path.join(get_config_dir(), "transcode")
     OLD_PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
     PLFILE = os.path.join(get_config_dir(), "playlist_v2")
     CACHEFILE = os.path.join(get_config_dir(), "cache_py_" + sys.version[0:5])
@@ -822,6 +845,7 @@ def init():
     init_readline()
     init_opener()
     init_cache()
+    init_transcode()
 
     # set player to mpv if no config file exists and mpv is installed
     E = os.path.exists
@@ -845,6 +869,107 @@ def init():
     g.muxapp = has_exefile("ffmpeg") or has_exefile("avconv")
 
     process_cl_args(sys.argv)
+
+
+def init_transcode():
+    """ Create transcoding presets if not present.
+
+    Read transcoding presets.
+    """
+    if not os.path.exists(g.TCFILE):
+        config_file_contents = """\
+# transcoding presets for mps-youtube
+# VERSION 0
+
+# change ENCODER_PATH to the path of ffmpeg / avconv or leave it as auto
+# to let mps-youtube attempt to find ffmpeg or avconv
+ENCODER_PATH: auto
+
+# Delete original file after encoding it
+# Set to False to keep the original downloaded file
+DELETE_ORIGINAL: True
+
+# ENCODING PRESETS
+
+# Encode ogg or m4a to mp3 256k
+name: MP3 256k
+extension: mp3
+valid for: ogg,m4a
+command: ENCODER_PATH -i IN -codec:a libmp3lame -b:a 256k OUT.EXT
+
+# Encode ogg or m4a to mp3 192k
+name: MP3 192k
+extension: mp3
+valid for: ogg,m4a
+command: ENCODER_PATH -i IN -codec:a libmp3lame -b:a 192k OUT.EXT
+
+# Encode ogg or m4a to mp3 highest quality vbr
+name: MP3 VBR best
+extension: mp3
+valid for: ogg,m4a
+command: ENCODER_PATH -i IN -codec:a libmp3lame -q:a 0 OUT.EXT
+
+# Encode ogg or m4a to mp3 high quality vbr
+name: MP3 VBR good
+extension: mp3
+valid for: ogg,m4a
+command: ENCODER_PATH -i IN -codec:a libmp3lame -q:a 2 OUT.EXT
+
+# Encode m4a to ogg
+name: OGG 256k
+extension: ogg
+valid for: m4a
+command: ENCODER_PATH -i IN -codec:a libvorbis -b:a 256k OUT.EXT
+
+# Encode ogg to m4a
+name: M4A 256k
+extension: m4a
+valid for: ogg
+command: ENCODER_PATH -i IN -strict experimental -codec:a aac -b:a 256k OUT.EXT
+
+# Encode ogg or m4a to wma v2
+name: Windows Media Audio v2
+extension: wma
+valid for: ogg,m4a
+command: ENCODER_PATH -i IN -codec:a wmav2 -q:a 0 OUT.EXT"""
+
+        with open(g.TCFILE, "w") as tcf:
+            tcf.write(config_file_contents)
+            dbg("generated transcoding config file")
+
+    else:
+        dbg("transcoding config file exists")
+
+    with open(g.TCFILE, "r") as tcf:
+        g.encoders = [dict(name="None", ext="COPY", valid="*")]
+        e = {}
+
+        for line in tcf.readlines():
+
+            if line.startswith("TRANSCODER_PATH:"):
+                m = re.match("TRANSCODER_PATH:(.*)", line).group(1)
+                g.transcoder_path = m.strip()
+
+            elif line.startswith("DELETE_ORIGINAL:"):
+                m = re.match("DELETE_ORIGINAL:(.*)", line).group(1)
+                do = m.strip().lower() in ("true", "yes", "enabled", "on")
+                g.delete_orig = do
+
+            elif line.startswith("name:"):
+                e['name'] = re.match("name:(.*)", line).group(1).strip()
+
+            elif line.startswith("extension:"):
+                e['ext'] = re.match("extension:(.*)", line).group(1).strip()
+
+            elif line.startswith("valid for:"):
+                e['valid'] = re.match("valid for:(.*)", line).group(1).strip()
+
+            elif line.startswith("command:"):
+                e['command'] = re.match("command:(.*)", line).group(1).strip()
+
+                if "name" in e and "ext" in e and "valid" in e:
+                    g.encoders.append(e)
+                    e = {}
 
 
 def init_cache():
@@ -913,6 +1038,13 @@ def showconfig(_):
 
         # don't show player specific settings if unknown player
         if not known_player_set() and val.require_known_player:
+            continue
+
+        # don't show max_results if auto determined
+        if g.detectable_size and setting == "MAX_RESULTS":
+            continue
+
+        if g.detectable_size and setting == "CONSOLE_WIDTH":
             continue
 
         out += s % (c.g, setting.lower(), c.w, val.display)
@@ -2361,6 +2493,45 @@ def remux_audio(filename):
         dbg("remuxed audio file using %s" % g.muxapp)
 
 
+def transcode(filename, enc_data):
+    """ Re encode a download. """
+    ext = filename.split(".")[-1]
+    base = filename.rstrip("." + ext)
+
+    exe = g.muxapp if g.transcoder_path == "auto" else g.transcoder_path
+
+    # ensure valid executable
+    if not exe or not os.path.exists(exe) or not os.access(exe, os.X_OK):
+        print("Encoding failed. Couldn't find a valid encoder :(\n")
+        time.sleep(2)
+        return filename
+
+    command = shlex.split(enc_data['command'])
+    newcom, outfn = command[::], ""
+
+    for n, d in enumerate(command):
+
+        if d == "ENCODER_PATH":
+            newcom[n] = exe
+
+        elif d == "IN":
+            newcom[n] = filename
+
+        elif d == "OUT":
+            newcom[n] = outfn = base
+
+        elif d == "OUT.EXT":
+            newcom[n] = outfn = base + "." + enc_data['ext']
+
+    # TODO: execute quietly?
+    returncode = subprocess.call(newcom)
+
+    if returncode == 0 and g.delete_orig:
+        os.unlink(filename)
+
+    return outfn
+
+
 def _download(song, filename, url=None, audio=False):
     """ Download file, show status, return filename. """
     # pylint: disable=R0914
@@ -2373,7 +2544,7 @@ def _download(song, filename, url=None, audio=False):
             time.sleep(0.2)
             return filename
 
-    print("Downloading to %s%s%s ..\n" % (c.r, filename, c.w))
+    print("Downloading to %s%s%s .." % (c.r, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
 
@@ -2404,7 +2575,15 @@ def _download(song, filename, url=None, audio=False):
         sys.stdout.write("\r" + status + ' ' * 4 + "\r")
         sys.stdout.flush()
 
-    if audio and g.muxapp:
+    # download done
+    active_encoder = g.encoders[Config.ENCODER.get]
+    ext = filename.split(".")[-1]
+    valid_ext = ext in active_encoder['valid'].split(",")
+
+    if Config.ENCODER.get != 0 and valid_ext:
+        filename = transcode(filename, active_encoder)
+
+    elif audio and g.muxapp:
         remux_audio(filename)
 
     return filename
@@ -2642,7 +2821,7 @@ def down_many(dltype, choice, subdir=None):
 
             g.model.songs.pop(0)
             msg = "Downloaded %s items" % count
-            g.message = "Downloaded " + c.g + song.title + c.w
+            g.message = "Saved to " + c.g + song.title + c.w
 
     except KeyboardInterrupt:
         msg = "Downloads interrupted!"
@@ -2851,6 +3030,8 @@ def show_help(choice):
     helps = {"download": ("playback dl listen watch show repeat playing"
                           "show_video playurl dlurl d da dv all *"
                           " play".split()),
+
+             "encode": "encoding transcoding transcode wma mp3 format".split(),
 
              "invoke": "command commands mpsyt invocation".split(),
 
@@ -3135,7 +3316,7 @@ def download(dltype, num):
         # perform download(s)
         dl_filenames = [args[1]]
         f = _download(*args, **kwargs)
-        g.message = "Downloaded " + c.g + f + c.w
+        g.message = "Saved to " + c.g + f + c.w
 
         if url_au:
             dl_filenames += [args_au[1]]
@@ -3880,6 +4061,20 @@ def search_album(term, page=1, splash=True):
         g.last_search_query = ""
 
 
+def show_encs():
+    """ Display available encoding presets. """
+    encs = g.encoders
+    out = ""
+
+    for x, e in enumerate(encs):
+        sel = " (%sselected%s)" % (c.y, c.w) if Config.ENCODER.get == x else ""
+        out += "%0d. %s%s\n" % (x, e['name'], sel)
+
+    g.content = out
+    message = "Enter %sset encoder <num>%s to select an encoder"
+    g.message = message % (c.g, c.w)
+
+
 def matchfunction(funcname, regex, userinput):
     """ Match userinput against regex.
 
@@ -3956,6 +4151,7 @@ def main():
         'clip_copy': r'x\s*(\d+)$',
         'down_many': r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
         'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
+        'show_encs': r'encoders?\s*$',
         'user_more': r'u\s?([\d]{1,4})$',
         'down_plist': r'(da|dv)pl\s+%s' % pl,
         'clearcache': r'clearcache$',
@@ -4114,6 +4310,21 @@ Then, when results are shown:
 {2}shuffle <number(s)>{1} - play specified items in random order.
 """.format(c.ul, c.w, c.y, c.r)),
 
+    ("encode", "Encoding to MP3 and other formats", """
+{0}Encoding to MP3 and other formats{1}
+
+Enter {2}encoders{1} to view available encoding presets
+Enter {2}set encoder <number>{1} to apply an encoding preset for downloads
+
+This feature requires that ffmpeg or avconv is installed on your system and is
+available in the system path.
+
+The encoding presets can be modified by editing the text config file which
+resides at:
+   {4}
+
+""".format(c.ul, c.w, c.y, c.r, g.TCFILE)),
+
     ("playlists", "Using Local Playlists", """
 {0}Using Local Playlists{1}
 
@@ -4168,6 +4379,7 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set columns <columns>{1} - select extra displayed fields in search results:
      (valid: views comments rating date user likes dislikes category)
 {2}set ddir <download direcory>{1} - set where downloads are saved
+{2}set encoder <number>{1} - set encoding preset for downloaded files
 {2}set fullscreen true|false{1} - output video content in full-screen mode
 {2}set max_res <number>{1} - play / download maximum video resolution height{3}
 {2}set notifier <notifier app>{1} - call <notifier app> with each new song title
