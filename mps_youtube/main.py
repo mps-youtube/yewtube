@@ -1357,23 +1357,23 @@ def convert_playlist_to_v2():
 def logo(col=None, version=""):
     """ Return text logo. """
     col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
-    logo = """\
+    logo_txt = r"""
                                              _         _
  _ __ ___  _ __  ___       _   _  ___  _   _| |_ _   _| |__   ___
-| '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \\
+| '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \
 | | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
 |_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
           |_|              |___/               """
-    logo = (col + logo + c.w) + ("v" + version if version else "")
-    lines = logo.split("\n")
+    logo_txt = (col + logo_txt + c.w) + ("v" + version if version else "")
+    lines = logo_txt.split("\n")
     length = max(len(x) for x in lines)
     x, y, _ = getxy()
     indent = (x - length - 1) // 2
     newlines = (y - 12) // 2
-    indent, newlines = map(lambda x: 0 if x < 0 else x, (indent, newlines))
+    indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
     lines = [" " * indent + l for l in lines]
-    logo =  "\n".join(lines) + "\n" * newlines
-    return logo if not g.debug_mode else ""
+    logo_txt = "\n".join(lines) + "\n" * newlines
+    return logo_txt if not g.debug_mode else ""
 
 
 def playlists_display():
