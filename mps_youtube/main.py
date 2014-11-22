@@ -4436,7 +4436,14 @@ command
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("new", "New Features", """
-{0}New Features in v0.01.48{1}
+{0}New Features in v0.02.00{1}
+
+ - Transcode audio to MP3 and other formats (requires ffmpeg or avconv)
+
+ - Auto detect terminal size (Linux/Mac)
+
+ - Added copy to clipboard feature
+    (requires python xerox module and xclip on linux or pywin32 on windows)
 
  - Added option to show system notifications (Alex Nisnevich) #95
     (can be used with libnotify - notify-send on linux)
@@ -4444,9 +4451,14 @@ command
  - Added overwrite true/false option for downloads (mtahmed) #93
     (skips download if downloaded file already exists)
 
- - Added copy to clipboard feature
-    (requires python xerox module and xclip on linux or pywin32 on windows)
+ - Playback progress indicator now works with mpv (previously only mplayer)
 
+ - Added dapl and dvpl to download YoutTube playlist audio/video by url/id
+     to a separate subdirectory (mtahmed) #110
+
+ - Enabled da and dv commands for playlist search results
+
+ - Remux audio downloads for better compatibility (requires ffmpeg or avconv)
 
 """.format(c.ul, c.w, c.y, c.r))]
 
