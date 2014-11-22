@@ -3479,7 +3479,7 @@ def dl_url(url):
 def yt_url(url, print_title=0):
     """ Acess a video by url. """
     try:
-        p = pafy.new(url, basic=1, signature=0)
+        p = pafy.new(url)
 
     except (IOError, ValueError) as e:
         g.message = c.r + uni(e) + c.w
