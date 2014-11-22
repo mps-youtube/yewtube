@@ -1353,20 +1353,23 @@ def convert_playlist_to_v2():
 def logo(col=None, version=""):
     """ Return text logo. """
     col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
-    LOGO = col + ("""\
-
-                88888b.d88b.  88888b.  .d8888b
-                888 "888 "88b 888 "88b 88K
-                888  888  888 888  888 "Y8888b.
-                888  888  888 888 d88P      X88
-                888  888  888 88888P"   88888P'
-                              888
-                              888   %s%s
-                              888%s%s"""
-                  % (c.w + "v" + version + " (YouTube)" if version else "",
-                     col, c.w, "\n\n"))
-
-    return LOGO + c.w if not g.debug_mode else ""
+    logo = """\
+                                             _         _
+ _ __ ___  _ __  ___       _   _  ___  _   _| |_ _   _| |__   ___
+| '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \\
+| | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
+|_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
+          |_|              |___/               """
+    logo = (col + logo + c.w) + ("v" + version if version else "")
+    lines = logo.split("\n")
+    length = max(len(x) for x in lines)
+    x, y, _ = getxy()
+    indent = (x - length - 1) // 2
+    newlines = (y - 12) // 2
+    indent, newlines = map(lambda x: 0 if x < 0 else x, (indent, newlines))
+    lines = [" " * indent + l for l in lines]
+    logo =  "\n".join(lines) + "\n" * newlines
+    return logo if not g.debug_mode else ""
 
 
 def playlists_display():
