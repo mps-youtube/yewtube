@@ -3106,14 +3106,14 @@ def quits(showlogo=True):
     if Config.CHECKUPDATE.get and showlogo:
         try:
             url = "https://github.com/np1/mps-youtube/raw/master/VERSION"
-            v = utf8_decode(g.urlopen(url).read())
+            v = utf8_decode(g.urlopen(url, timeout=1).read())
             v = re.search(r"^version\s*([\d\.]+)\s*$", v, re.MULTILINE)
             if v:
                 v = v.group(1)
                 if v > __version__:
                     vermsg += "\nA newer version is available (%s)\n" % v
         except (URLError, HTTPError, socket.timeout):
-            pass
+            dbg("check update timed out")
 
     print(vermsg)
     sys.exit()
