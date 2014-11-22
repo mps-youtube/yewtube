@@ -2801,7 +2801,7 @@ def down_many(dltype, choice, subdir=None):
         for song in downsongs:
             disp = generate_songlist_display()
             title = "Download Queue (%s):%s\n\n" % (av, c.w)
-            disp = re.sub(r"(Item\s*?Title.*?\n)", title, disp)
+            disp = re.sub(r"(Num\s*?Title.*?\n)", title, disp)
             g.content = disp
             screen_update()
 
