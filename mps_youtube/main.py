@@ -856,6 +856,10 @@ def init():
     else:
         import_config()
 
+    # ensure encoder is not set beyond range of available presets
+    if Config.ENCODER.get >= len(g.encoders):
+        Config.ENCODER.set("0")
+
     # check mpv version
 
     if "mpv" in Config.PLAYER.get:
@@ -4067,11 +4071,11 @@ def search_album(term, page=1, splash=True):
 def show_encs():
     """ Display available encoding presets. """
     encs = g.encoders
-    out = ""
+    out = "%sEncoding profiles:%s\n\n" % (c.ul, c.w)
 
     for x, e in enumerate(encs):
         sel = " (%sselected%s)" % (c.y, c.w) if Config.ENCODER.get == x else ""
-        out += "%0d. %s%s\n" % (x, e['name'], sel)
+        out += "  %0d. %s%s\n" % (x, e['name'], sel)
 
     g.content = out
     message = "Enter %sset encoder <num>%s to select an encoder"
