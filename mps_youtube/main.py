@@ -671,15 +671,14 @@ class Config(object):
 
     """ Holds various configuration values. """
 
-    defplayer = "mplayer.exe" if mswin else "mplayer"
-
     ORDER = ConfigItem("order", "relevance")
     ORDER.allowed_values = "relevance date views rating".split()
     MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
     CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=70, maxval=880,
                                check_fn=check_console_width)
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
-    PLAYER = ConfigItem("player", defplayer, check_fn=check_player)
+    PLAYER = ConfigItem("player", "mplayer" + ".exe" if mswin else "",
+                        check_fn=check_player)
     PLAYERARGS = ConfigItem("playerargs", "")
     ENCODER = ConfigItem("encoder", 0, minval=0, check_fn=check_encoder)
     NOTIFIER = ConfigItem("notifier", "")
@@ -795,6 +794,9 @@ class g(object):
             "geo": "-geometry"}
         }
 
+    # windows compatibility
+    playerargs_defaults['mpv.exe'] = playerargs_defaults['mpv']
+    playerargs_defaults['mplayer.exe'] = playerargs_defaults['mplayer']
 
 def get_version_info():
     """ Return version and platform info. """
@@ -875,7 +877,7 @@ def init():
     # check mpv version
 
     if "mpv" in Config.PLAYER.get:
-        g.mpv_version = get_mpv_version()
+        g.mpv_version = get_mpv_version(exename=Config.PLAYER.get)
 
     # setup colorama
     if has_colorama and mswin:
@@ -1034,10 +1036,7 @@ def init_opener():
 def known_player_set():
     """ Return true if the set player is known. """
     for allowed_player in g.playerargs_defaults:
-
-        if mswin:
-            allowed_player = re.escape(allowed_player + ".exe")
-
+        allowed_player = re.escape(allowed_player)
         regex = r'(?:^%s$)|(?:\b%s$)' % ((allowed_player,) * 2)
         match = re.search(regex, Config.PLAYER.get)
 
@@ -1519,8 +1518,7 @@ def playback_progress(idx, allsongs, repeat=False):
     cw = getxy("width")
     out = "  %s%-XXs%s%s\n".replace("XX", uni(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
-    show_key_help = (Config.PLAYER.get in ["mplayer", "mpv"]
-                     and Config.SHOW_MPLAYER_KEYS.get)
+    show_key_help = (known_player_set and Config.SHOW_MPLAYER_KEYS.get)
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
