@@ -2542,7 +2542,7 @@ def transcode(filename, enc_data):
     return outfn
 
 
-def _download(song, filename, url=None, audio=False):
+def _download(song, filename, url=None, audio=False, allow_transcode=True):
     """ Download file, show status, return filename. """
     # pylint: disable=R0914
     # too many local variables
@@ -2590,7 +2590,7 @@ def _download(song, filename, url=None, audio=False):
     ext = filename.split(".")[-1]
     valid_ext = ext in active_encoder['valid'].split(",")
 
-    if Config.ENCODER.get != 0 and valid_ext:
+    if Config.ENCODER.get != 0 and valid_ext and allow_transcode:
         filename = transcode(filename, active_encoder)
 
     elif audio and g.muxapp:
@@ -3330,7 +3330,7 @@ def download(dltype, num):
 
         if url_au:
             dl_filenames += [args_au[1]]
-            _download(*args_au, **kwargs)
+            _download(*args_au, allow_transcode=False, **kwargs)
 
     except KeyboardInterrupt:
         g.message = c.r + "Download halted!" + c.w
