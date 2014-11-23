@@ -1964,13 +1964,15 @@ def launch_player(song, songdata, cmd):
 
 def player_status(po_obj, prefix="", songlength=0, mpv=False):
     """ Capture time progress from player output. Write status line. """
-    # A: 175.6
+    # pylint: disable=R0914
     played_something = False
     re_mplayer = re.compile(r"A:\s*(?P<elapsed_s>\d+)\.\d\s*")
     re_mpv = re.compile(r".{,15}AV?:\s*(\d\d):(\d\d):(\d\d)")
+    re_volume = re.compile(r"Volume:\s*(?P<volume>\d+)\s*%")
     re_player = re_mpv if mpv else re_mplayer
     last_displayed_line = None
     buff = ''
+    volume_level = None
 
     while po_obj.poll() is None:
         stdstream = po_obj.stderr if mpv else po_obj.stdout
@@ -1978,11 +1980,16 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False):
 
         if char in '\r\n':
 
+            mv = re_volume.search(buff)
+
+            if mv:
+                volume_level = int(mv.group("volume"))
+
             m = re_player.match(buff)
 
             if m:
                 played_something = True
-                line = make_status_line(m, songlength)
+                line = make_status_line(m, songlength, volume=volume_level)
 
                 if line != last_displayed_line:
                     writestatus(prefix + (" " if prefix else "") + line)
@@ -1996,7 +2003,7 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False):
     return played_something
 
 
-def make_status_line(match_object, songlength=0):
+def make_status_line(match_object, songlength=0, volume=None):
     """ Format progress line output.  """
     cw = getxy("width")
     progress_bar_size = cw - 50
@@ -2031,10 +2038,17 @@ def make_status_line(match_object, songlength=0):
         ("[%.0f%%]" % pct).ljust(6)
     )
 
+    if volume:
+        progress_bar_size -= 10
+        vol_suffix = " vol: %d%%  " % volume
+
+    else:
+        vol_suffix = ""
+
     progress = int(math.ceil(pct / 100 * progress_bar_size))
     status_line += " [%s]" % ("=" * (progress - 1) +
                               ">").ljust(progress_bar_size, ' ')
-
+    status_line += vol_suffix
     return status_line
 
 
@@ -2505,9 +2519,7 @@ def remux_audio(filename):
 
 def transcode(filename, enc_data):
     """ Re encode a download. """
-    ext = filename.split(".")[-1]
     base = os.path.splitext(filename)[0]
-
     exe = g.muxapp if g.transcoder_path == "auto" else g.transcoder_path
 
     # ensure valid executable
