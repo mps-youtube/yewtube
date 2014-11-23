@@ -671,13 +671,15 @@ class Config(object):
 
     """ Holds various configuration values. """
 
+    defplayer = "mplayer.exe" if mswin else "mplayer"
+
     ORDER = ConfigItem("order", "relevance")
     ORDER.allowed_values = "relevance date views rating".split()
     MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
     CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=70, maxval=880,
                                check_fn=check_console_width)
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
-    PLAYER = ConfigItem("player", "mplayer", check_fn=check_player)
+    PLAYER = ConfigItem("player", defplayer, check_fn=check_player)
     PLAYERARGS = ConfigItem("playerargs", "")
     ENCODER = ConfigItem("encoder", 0, minval=0, check_fn=check_encoder)
     NOTIFIER = ConfigItem("notifier", "")
@@ -849,9 +851,19 @@ def init():
 
     # set player to mpv if no config file exists and mpv is installed
     E = os.path.exists
-    if not E(g.CFFILE) and not has_exefile("mplayer") and has_exefile("mpv"):
-        Config.PLAYER = ConfigItem("player", "mpv")
-        saveconfig()
+
+    if not E(g.CFFILE):
+        if not mswin:
+            if not has_exefile("mplayer") and has_exefile("mpv"):
+                Config.PLAYER = ConfigItem("player", "mpv",
+                                           check_fn=check_player)
+                saveconfig()
+
+        elif mswin:
+            if not has_exefile("mplayer.exe") and has_exefile("mpv.exe"):
+                Config.PLAYER = ConfigItem("player", "mpv.exe",
+                                           check_fn=check_player)
+                saveconfig()
 
     else:
         import_config()
@@ -870,7 +882,11 @@ def init():
         init_colorama()
 
     # find muxer app
-    g.muxapp = has_exefile("ffmpeg") or has_exefile("avconv")
+    if mswin:
+        g.muxapp = has_exefile("ffmpeg.exe") or has_exefile("avconv.exe")
+
+    else:
+        g.muxapp = has_exefile("ffmpeg") or has_exefile("avconv")
 
     process_cl_args(sys.argv)
 
@@ -1018,6 +1034,10 @@ def init_opener():
 def known_player_set():
     """ Return true if the set player is known. """
     for allowed_player in g.playerargs_defaults:
+
+        if mswin:
+            allowed_player = re.escape(allowed_player + ".exe")
+
         regex = r'(?:^%s$)|(?:\b%s$)' % ((allowed_player,) * 2)
         match = re.search(regex, Config.PLAYER.get)
 
@@ -2004,6 +2024,7 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False):
 
 def make_status_line(match_object, songlength=0, volume=None):
     """ Format progress line output.  """
+    # pylint: disable=R0914
     cw = getxy("width")
     progress_bar_size = cw - 50
 
