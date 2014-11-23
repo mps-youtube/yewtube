@@ -2506,7 +2506,7 @@ def remux_audio(filename):
 def transcode(filename, enc_data):
     """ Re encode a download. """
     ext = filename.split(".")[-1]
-    base = filename.rstrip("." + ext)
+    base = os.path.splitext(filename)[0]
 
     exe = g.muxapp if g.transcoder_path == "auto" else g.transcoder_path
 
