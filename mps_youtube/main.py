@@ -1718,7 +1718,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         details = {'title': x.title, "length": fmt_time(x.length)}
         details = g.meta[x.ytid].copy() if have_meta else details
         otitle = details['title']
-        details['idx'] = uni(n + 1)
+        details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)
         data = []
 
@@ -4078,7 +4078,7 @@ def show_encs():
 
     for x, e in enumerate(encs):
         sel = " (%sselected%s)" % (c.y, c.w) if Config.ENCODER.get == x else ""
-        out += "  %0d. %s%s\n" % (x, e['name'], sel)
+        out += "%2d. %s%s\n" % (x, e['name'], sel)
 
     g.content = out
     message = "Enter %sset encoder <num>%s to select an encoder"
