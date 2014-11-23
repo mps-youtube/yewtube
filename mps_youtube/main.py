@@ -1357,14 +1357,13 @@ def convert_playlist_to_v2():
 def logo(col=None, version=""):
     """ Return text logo. """
     col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
-    logo_txt = r"""
-                                             _         _
+    logo_txt = r"""                                             _         _
  _ __ ___  _ __  ___       _   _  ___  _   _| |_ _   _| |__   ___
 | '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \
 | | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
 |_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
-          |_|              |___/               """
-    logo_txt = (col + logo_txt + c.w) + ("v" + version if version else "")
+          |_|              |___/"""
+    logo_txt = (col + logo_txt + c.w) + ("     v" + version if version else "")
     lines = logo_txt.split("\n")
     length = max(len(x) for x in lines)
     x, y, _ = getxy()
