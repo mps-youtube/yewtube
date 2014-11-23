@@ -1477,7 +1477,7 @@ def get_tracks_from_json(jsons):
     return songs
 
 
-def screen_update():
+def screen_update(fill_blank=True):
     """ Display content, show message, blank screen."""
     print(g.blank_text)
 
@@ -1486,6 +1486,9 @@ def screen_update():
 
     if g.message:
         xprint(g.message)
+
+    elif fill_blank:
+        xprint("")
 
     g.message = g.content = False
 
@@ -2985,7 +2988,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             g.content = playback_progress(n, songlist, repeat=False)
 
             if not g.command_line:
-                screen_update()
+                screen_update(fill_blank=False)
 
             hasnext = len(songlist) > n + 1
 
@@ -3011,7 +3014,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             try:
                 for n, song in enumerate(songlist):
                     g.content = playback_progress(n, songlist, repeat=True)
-                    screen_update()
+                    screen_update(fill_blank=False)
                     hasnext = len(songlist) > n + 1
 
                     if hasnext:
