@@ -1,7 +1,7 @@
 Version 0.01.47
 Development version - not yet released
 
-- Auto detect terminal size on Linux and Mac
+- Auto detect terminal window size
 
 - Transcode audio to MP3 and other formats (requires ffmpeg or avconv)
 

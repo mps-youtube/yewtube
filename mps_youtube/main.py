@@ -740,7 +740,7 @@ class g(object):
     encoders = []
     muxapp = False
     meta = {}
-    detectable_size = False
+    detectable_size = True
     command_line = False
     debug_mode = False
     preload_disabled = False
@@ -4263,10 +4263,6 @@ elif "--logging" in sys.argv or os.environ.get("mpsytlog") == "1":
     logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
     logging.basicConfig(level=logging.DEBUG, filename=logfile)
     logging.getLogger("pafy").setLevel(logging.DEBUG)
-
-if "--autosize" in sys.argv or platform.system() in ('Linux', 'Darwin'):
-    list_update("--autosize", sys.argv, remove=True)
-    g.detectable_size = True
 
 if "--no-autosize" in sys.argv:
     list_update("--no-autosize", sys.argv, remove=True)
