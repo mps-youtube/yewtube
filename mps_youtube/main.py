@@ -1383,7 +1383,8 @@ def logo(col=None, version=""):
 | | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
 |_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
           |_|              |___/"""
-    logo_txt = (col + logo_txt + c.w) + ("     v" + version if version else "")
+    version = " v" + version if version else ""
+    logo_txt = col + logo_txt + c.w + version
     lines = logo_txt.split("\n")
     length = max(len(x) for x in lines)
     x, y, _ = getxy()
