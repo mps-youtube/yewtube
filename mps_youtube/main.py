@@ -798,6 +798,7 @@ class g(object):
     playerargs_defaults['mpv.exe'] = playerargs_defaults['mpv']
     playerargs_defaults['mplayer.exe'] = playerargs_defaults['mplayer']
 
+
 def get_version_info():
     """ Return version and platform info. """
     out = ("\nmpsyt version  : %s " % __version__)
@@ -1788,7 +1789,7 @@ def generate_real_playerargs(song, override, failcount):
     video = Config.SHOW_VIDEO.get
     video = True if override in ("fullscreen", "window") else video
     video = False if override == "audio" else video
-    m4a = not Config.PLAYER.get == "mplayer"
+    m4a = "mplayer" not in Config.PLAYER.get
     q, audio, cached = failcount, not video, g.streams[song.ytid]
     stream = select_stream(cached, q=q, audio=audio, m4a_ok=m4a)
 
@@ -2985,7 +2986,7 @@ def preload(song, delay=2, override=False):
 
     try:
         stream = get_streams(song)
-        m4a = not Config.PLAYER.get == "mplayer"
+        m4a = "mplayer" not in Config.PLAYER.get
         stream = select_stream(stream, audio=not video, m4a_ok=m4a)
 
         if not stream and not video:
