@@ -3138,22 +3138,25 @@ def quits(showlogo=True):
     savecache()
 
     msg = g.blank_text + logo(c.r, version=__version__) if showlogo else ""
-    vermsg = ""
     print(msg + F("exitmsg", 2))
 
     if Config.CHECKUPDATE.get and showlogo:
+
         try:
             url = "https://github.com/np1/mps-youtube/raw/master/VERSION"
             v = utf8_decode(g.urlopen(url, timeout=1).read())
             v = re.search(r"^version\s*([\d\.]+)\s*$", v, re.MULTILINE)
+
             if v:
                 v = v.group(1)
+
                 if v > __version__:
                     vermsg += "\nA newer version is available (%s)\n" % v
+                    print(vermsg)
+
         except (URLError, HTTPError, socket.timeout):
             dbg("check update timed out")
 
-    print(vermsg)
     sys.exit()
 
 
@@ -4151,7 +4154,7 @@ def matchfunction(funcname, regex, userinput):
 def main():
     """ Main control loop. """
     if not g.command_line:
-        g.content = logo(col=c.g, version=__version__) + "\n"
+        g.content = logo(col=c.g, version=__version__) + "\n\n"
         g.message = "Enter /search-term to search or [h]elp"
         screen_update()
 
