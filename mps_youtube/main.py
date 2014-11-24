@@ -3152,7 +3152,7 @@ def quits(showlogo=True):
                 v = v.group(1)
 
                 if v > __version__:
-                    vermsg += "\nA newer version is available (%s)\n" % v
+                    vermsg = "\nA newer version is available (%s)\n" % v
                     print(vermsg)
 
         except (URLError, HTTPError, socket.timeout):
