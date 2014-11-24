@@ -16,7 +16,7 @@ except ImportError:
 setup(
     name="mps-youtube",
     version="0.2.0",
-    description="Terminal based YouTube jukebox with playlist management",
+    description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="nagev",
     author_email="np1nagev@gmail.com",
