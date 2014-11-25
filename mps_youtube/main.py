@@ -663,7 +663,7 @@ def check_player(player):
             return dict(valid=True, message=msg)
 
     else:
-        msg = "Unknown player %s%s%s" % (c.r, player, c.w)
+        msg = "Player application %s%s%s not found" % (c.r, player, c.w)
         return dict(valid=False, message=msg)
 
 
@@ -852,21 +852,20 @@ def init():
     init_cache()
     init_transcode()
 
-    # set player to mpv if no config file exists and mpv is installed
+    # set player to mpv or mplayer if found, otherwise unset
     E = os.path.exists
+    suffix = ".exe" if mswin else ""
+    mplayer, mpv = "mplayer" + suffix, "mpv" + suffix
 
     if not E(g.CFFILE):
-        if not mswin:
-            if not has_exefile("mplayer") and has_exefile("mpv"):
-                Config.PLAYER = ConfigItem("player", "mpv",
-                                           check_fn=check_player)
-                saveconfig()
 
-        elif mswin:
-            if not has_exefile("mplayer.exe") and has_exefile("mpv.exe"):
-                Config.PLAYER = ConfigItem("player", "mpv.exe",
-                                           check_fn=check_player)
-                saveconfig()
+        if has_exefile(mpv):
+            Config.PLAYER = ConfigItem("player", mpv, check_fn=check_player)
+
+        elif has_exefile(mplayer):
+            Config.PLAYER = ConfigItem("player", mplayer, check_fn=check_player)
+
+        saveconfig()
 
     else:
         import_config()
@@ -1875,6 +1874,11 @@ def generate_real_playerargs(song, override, failcount):
 def playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
     # pylint: disable=R0912
+    if not Config.PLAYER.get:
+        g.message = "Player not configured! Enter %sset player <player_app> "\
+            "%s to set a player" % (c.g, c.w)
+        return
+
     if Config.NOTIFIER.get:
         subprocess.call(shlex.split(Config.NOTIFIER.get) + [song.title])
 
