@@ -677,7 +677,7 @@ class Config(object):
     CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=70, maxval=880,
                                check_fn=check_console_width)
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
-    PLAYER = ConfigItem("player", "mplayer" + ".exe" if mswin else "",
+    PLAYER = ConfigItem("player", "mplayer" + (".exe" if mswin else ""),
                         check_fn=check_player)
     PLAYERARGS = ConfigItem("playerargs", "")
     ENCODER = ConfigItem("encoder", 0, minval=0, check_fn=check_encoder)
