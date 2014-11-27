@@ -826,14 +826,14 @@ def get_version_info():
 def process_cl_args(args):
     """ Process command line arguments. """
     if "--version" in args:
-        print(get_version_info())
-        print("")
+        xprint(get_version_info())
+        xprint("")
         sys.exit()
 
     if "--help" in args:
 
         for x in g.helptext:
-            print(x[2])
+            xprint(x[2])
 
         sys.exit()
 
@@ -1316,7 +1316,7 @@ def open_from_file():
             save_to_file()
 
     except EOFError:
-        print("Error opening playlists from %s" % g.PLFILE)
+        xprint("Error opening playlists from %s" % g.PLFILE)
         sys.exit()
 
     # remove any cached urls from playlist file, these are now
@@ -1502,7 +1502,7 @@ def get_tracks_from_json(jsons):
 
 def screen_update(fill_blank=True):
     """ Display content, show message, blank screen."""
-    print(g.blank_text)
+    xprint(g.blank_text)
 
     if g.content:
         xprint(g.content)
@@ -2473,7 +2473,7 @@ def fetch_comments(item):
         blanks = "\n" * (-2 + ch - content_length)
         g.content = pagetext + blanks
         screen_update()
-        print("%s : Use [Enter] for next, [p] for previous, [q] to return:"
+        xprint("%s : Use [Enter] for next, [p] for previous, [q] to return:"
               % pagecounter, end="")
         v = xinput()
 
@@ -2552,7 +2552,7 @@ def transcode(filename, enc_data):
 
     # ensure valid executable
     if not exe or not os.path.exists(exe) or not os.access(exe, os.X_OK):
-        print("Encoding failed. Couldn't find a valid encoder :(\n")
+        xprint("Encoding failed. Couldn't find a valid encoder :(\n")
         time.sleep(2)
         return filename
 
@@ -2590,11 +2590,11 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
 
     if not Config.OVERWRITE.get:
         if os.path.exists(filename):
-            print("File exists. Skipping %s%s%s ..\n" % (c.r, filename, c.w))
+            xprint("File exists. Skipping %s%s%s ..\n" % (c.r, filename, c.w))
             time.sleep(0.2)
             return filename
 
-    print("Downloading to %s%s%s .." % (c.r, filename, c.w))
+    xprint("Downloading to %s%s%s .." % (c.r, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
 
@@ -3043,7 +3043,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
             except KeyboardInterrupt:
                 logging.info("Keyboard Interrupt")
-                print(c.w + "Stopping...                          ")
+                xprint(c.w + "Stopping...                          ")
                 reset_terminal()
                 g.message = c.y + "Playback halted" + c.w
                 break
@@ -3067,7 +3067,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
                     g.content = generate_songlist_display()
 
             except KeyboardInterrupt:
-                print(c.w + "Stopping...                          ")
+                xprint(c.w + "Stopping...                          ")
                 reset_terminal()
                 g.message = c.y + "Playback halted" + c.w
                 break
@@ -3147,7 +3147,7 @@ def quits(showlogo=True):
     savecache()
 
     msg = g.blank_text + logo(c.r, version=__version__) if showlogo else ""
-    print(msg + F("exitmsg", 2))
+    xprint(msg + F("exitmsg", 2))
 
     if Config.CHECKUPDATE.get and showlogo:
 
@@ -3161,7 +3161,7 @@ def quits(showlogo=True):
 
                 if v > __version__:
                     vermsg = "\nA newer version is available (%s)\n" % v
-                    print(vermsg)
+                    xprint(vermsg)
 
         except (URLError, HTTPError, socket.timeout):
             dbg("check update timed out")
@@ -3609,10 +3609,10 @@ def clip_copy(num):
             g.content = generate_songlist_display()
 
         except xerox.base.ToolNotFound as e:
-            print(link)
-            print("Error - couldn't copy to clipboard.")
-            print(e.__doc__)
-            print("")
+            xprint(link)
+            xprint("Error - couldn't copy to clipboard.")
+            xprint(e.__doc__)
+            xprint("")
             xinput("Press Enter to continue.")
             g.content = generate_songlist_display()
 
@@ -3728,7 +3728,7 @@ def yt_url(url, print_title=0):
         g.content = generate_songlist_display()
 
     if print_title:
-        print(v.title)
+        xprint(v.title)
 
 
 def dump(un):
@@ -3929,7 +3929,7 @@ def _match_tracks(artist, title, mb_tracks):
         time.sleep(0.5)
 
         if not have_results:
-            print(c.r + "Nothing matched :(\n" + c.w)
+            xprint(c.r + "Nothing matched :(\n" + c.w)
             continue
 
         results = g.model.songs
@@ -4073,7 +4073,7 @@ def search_album(term, page=1, splash=True):
         return
 
     songs = []
-    print(g.blank_text)
+    xprint(g.blank_text)
     itt = _match_tracks(artist, title, mb_tracks)
 
     stash = Config.SEARCH_MUSIC.get, Config.ORDER.get
@@ -4085,7 +4085,7 @@ def search_album(term, page=1, splash=True):
             songs.append(next(itt))
 
     except KeyboardInterrupt:
-        print("%sHalted!%s" % (c.r, c.w))
+        xprint("%sHalted!%s" % (c.r, c.w))
 
     except StopIteration:
         pass
@@ -4098,7 +4098,7 @@ def search_album(term, page=1, splash=True):
         kwa = {"song": songs[0], "delay": 0}
         t = threading.Thread(target=preload, kwargs=kwa)
         t.start()
-        print("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
+        xprint("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
         xinput("Press Enter to continue")
         g.message = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
             c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
@@ -4261,7 +4261,7 @@ def main():
         screen_update()
 
 if "--debug" in sys.argv or os.environ.get("mpsytdebug") == "1":
-    print(get_version_info())
+    xprint(get_version_info())
     list_update("--debug", sys.argv, remove=True)
     g.debug_mode = True
     g.blank_text = "--\n"
