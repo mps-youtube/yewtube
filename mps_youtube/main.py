@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -4478,7 +4478,7 @@ command
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("new", "New Features", """
-{0}New Features in v0.2.0{1}
+{0}New Features in v0.2.x{1}
 
  - Transcode audio to MP3 and other formats (requires ffmpeg or avconv)
 
