@@ -1878,7 +1878,7 @@ def generate_real_playerargs(song, override, failcount):
 def playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
     # pylint: disable=R0912
-    if not Config.PLAYER.get:
+    if not Config.PLAYER.get or not has_exefile(Config.PLAYER.get):
         g.message = "Player not configured! Enter %sset player <player_app> "\
             "%s to set a player" % (c.g, c.w)
         return
@@ -4478,14 +4478,11 @@ command
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("new", "New Features", """
-{0}New Features in v0.02.00{1}
+{0}New Features in v0.2.0{1}
 
  - Transcode audio to MP3 and other formats (requires ffmpeg or avconv)
 
- - Auto detect terminal size (Linux/Mac)
-
- - Added copy to clipboard feature
-    (requires python xerox module and xclip on linux or pywin32 on windows)
+ - Auto detect terminal size
 
  - Added option to show system notifications (Alex Nisnevich) #95
     (can be used with libnotify - notify-send on linux)
