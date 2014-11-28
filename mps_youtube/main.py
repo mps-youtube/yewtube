@@ -2020,21 +2020,17 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False, sockpath=None):
         s.connect(sockpath)
         cmd = {"command": ["observe_property", 1, "time-pos"]}
         s.send(json.dumps(cmd).encode() + b'\n')
-        while True:
-            data = s.recv(1024)
-            if not data:
-                break
+        for line in s.makefile():
             played_something = True
-            for i in data.decode().strip().split('\n'):
-                resp = json.loads(i)
-                if resp.get('event') == 'property-change' and resp['id'] == 1:
-                    m = int(resp['data'])
+            resp = json.loads(line)
+            if resp.get('event') == 'property-change' and resp['id'] == 1:
+                m = int(resp['data'])
 
-                    line = make_status_line(m, songlength)
+                line = make_status_line(m, songlength)
 
-                    if line != last_displayed_line:
-                        writestatus(prefix + (" " if prefix else "") + line)
-                        last_displayed_line = line
+                if line != last_displayed_line:
+                    writestatus(prefix + (" " if prefix else "") + line)
+                    last_displayed_line = line
 
     else:
         while po_obj.poll() is None:
