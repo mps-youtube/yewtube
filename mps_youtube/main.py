@@ -801,6 +801,7 @@ class g(object):
     # windows compatibility
     playerargs_defaults['mpv.exe'] = playerargs_defaults['mpv']
     playerargs_defaults['mplayer.exe'] = playerargs_defaults['mplayer']
+    usesock = False
 
 
 def get_version_info():
@@ -1863,14 +1864,18 @@ def generate_real_playerargs(song, override, failcount):
             list_update("-prefer-ipv4", args)
 
         elif "mpv" in Config.PLAYER.get:
-            list_update("--really-quiet", args, remove=True)
             msglevel = pd["msglevel"]["<0.4"]
 
             #  undetected (negative) version number assumed up-to-date
             if g.mpv_version[0:2] < (0, 0) or g.mpv_version[0:2] >= (0, 4):
                 msglevel = pd["msglevel"][">=0.4"]
 
-            list_update(msglevel, args)
+            g.usesock = (g.mpv_version[0:2] < (0, 0) or g.mpv_version[0:2] >= (0, 7)) and not mswin
+            if g.usesock:
+                list_update("--really-quiet", args)
+            else:
+                list_update("--really-quiet", args, remove=True)
+                list_update(msglevel, args)
 
     return [Config.PLAYER.get] + args + [stream['url']], songdata
 
@@ -1965,9 +1970,15 @@ def launch_player(song, songdata, cmd):
             played = player_status(p, songdata + ";", song.length)
 
         elif "mpv" in Config.PLAYER.get:
-            p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
-                                 bufsize=1)
-            played = player_status(p, songdata + ";", song.length, mpv=True)
+            sockpath = None
+            if g.usesock:
+                sockpath = '/tmp/mps-mpv.sock'
+                cmd.append('--input-unix-socket='+sockpath)
+                p = subprocess.Popen(cmd, shell=False)
+            else:
+                p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
+                                     bufsize=1)
+            played = player_status(p, songdata + ";", song.length, mpv=True, sockpath=sockpath)
 
         else:
             with open(os.devnull, "w") as devnull:
@@ -1989,7 +2000,7 @@ def launch_player(song, songdata, cmd):
             pass
 
 
-def player_status(po_obj, prefix="", songlength=0, mpv=False):
+def player_status(po_obj, prefix="", songlength=0, mpv=False, sockpath=None):
     """ Capture time progress from player output. Write status line. """
     # pylint: disable=R0914
     played_something = False
@@ -2001,31 +2012,54 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False):
     buff = ''
     volume_level = None
 
-    while po_obj.poll() is None:
-        stdstream = po_obj.stderr if mpv else po_obj.stdout
-        char = stdstream.read(1).decode("utf-8", errors="ignore")
+    if sockpath:
+        time.sleep(1)
+        s = socket.socket(socket.AF_UNIX)
+        s.connect(sockpath)
+        cmd = {"command": ["observe_property", 1, "time-pos"]}
+        s.send(json.dumps(cmd).encode() + b'\n')
+        while True:
+            data = s.recv(1024)
+            if not data:
+                break
+            played_something = True
+            for i in data.decode().strip().split('\n'):
+                resp = json.loads(i)
+                if resp.get('event') == 'property-change' and resp['id'] == 1:
+                    m = int(resp['data'])
 
-        if char in '\r\n':
+                    line = make_status_line(m, songlength)
 
-            mv = re_volume.search(buff)
+                    if line != last_displayed_line:
+                        writestatus(prefix + (" " if prefix else "") + line)
+                        last_displayed_line = line
 
-            if mv:
-                volume_level = int(mv.group("volume"))
+    else:
+        while po_obj.poll() is None:
+            stdstream = po_obj.stderr if mpv else po_obj.stdout
+            char = stdstream.read(1).decode("utf-8", errors="ignore")
 
-            m = re_player.match(buff)
+            if char in '\r\n':
 
-            if m:
-                played_something = True
-                line = make_status_line(m, songlength, volume=volume_level)
+                mv = re_volume.search(buff)
 
-                if line != last_displayed_line:
-                    writestatus(prefix + (" " if prefix else "") + line)
-                    last_displayed_line = line
+                if mv:
+                    volume_level = int(mv.group("volume"))
 
-            buff = ''
+                m = re_player.match(buff)
 
-        else:
-            buff += char
+                if m:
+                    played_something = True
+                    line = make_status_line(m, songlength, volume=volume_level)
+
+                    if line != last_displayed_line:
+                        writestatus(prefix + (" " if prefix else "") + line)
+                        last_displayed_line = line
+
+                buff = ''
+
+            else:
+                buff += char
 
     return played_something
 
@@ -2036,17 +2070,20 @@ def make_status_line(match_object, songlength=0, volume=None):
     cw = getxy("width")
     progress_bar_size = cw - 50
 
-    try:
-        h, m, s = map(int, match_object.groups())
-        elapsed_s = h * 3600 + m * 60 + s
-
-    except ValueError:
-
+    if isinstance(match_object, int):
+        elapsed_s = match_object
+    else:
         try:
-            elapsed_s = int(match_object.group('elapsed_s') or '0')
+            h, m, s = map(int, match_object.groups())
+            elapsed_s = h * 3600 + m * 60 + s
 
         except ValueError:
-            return ""
+
+            try:
+                elapsed_s = int(match_object.group('elapsed_s') or '0')
+
+            except ValueError:
+                return ""
 
     display_s = elapsed_s
     display_h = display_m = 0
