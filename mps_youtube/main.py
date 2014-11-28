@@ -1965,8 +1965,12 @@ def launch_player(song, songdata, cmd):
             played = player_status(p, songdata + ";", song.length)
 
         elif "mpv" in Config.PLAYER.get:
-            p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
-                                 bufsize=1)
+
+            p = subprocess.Popen(cmd, shell=False,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT,
+                                 bufsize=1
+                                 )
             played = player_status(p, songdata + ";", song.length, mpv=True)
 
         else:
@@ -2002,7 +2006,8 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False):
     volume_level = None
 
     while po_obj.poll() is None:
-        stdstream = po_obj.stderr if mpv else po_obj.stdout
+        #stdstream = po_obj.stderr if mpv else po_obj.stdout
+        stdstream = po_obj.stdout
         char = stdstream.read(1).decode("utf-8", errors="ignore")
 
         if char in '\r\n':
