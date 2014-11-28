@@ -1973,7 +1973,7 @@ def launch_player(song, songdata, cmd):
         elif "mpv" in Config.PLAYER.get:
             sockpath = None
             if g.usesock:
-                sockpath = '/tmp/mps-mpv.sock'
+                sockpath = tempfile.mktemp('.sock','mpsyt-mpv')
                 cmd.append('--input-unix-socket='+sockpath)
                 p = subprocess.Popen(cmd, shell=False)
             else:
@@ -1997,6 +1997,8 @@ def launch_player(song, songdata, cmd):
     finally:
         try:
             p.terminate()  # make sure to kill mplayer if mpsyt crashes
+            if sockpath:
+                os.unlink(sockpath)
 
         except (OSError, AttributeError, UnboundLocalError):
             pass
