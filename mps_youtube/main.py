@@ -1870,7 +1870,8 @@ def generate_real_playerargs(song, override, failcount):
             if g.mpv_version[0:2] < (0, 0) or g.mpv_version[0:2] >= (0, 4):
                 msglevel = pd["msglevel"][">=0.4"]
 
-            g.usesock = (g.mpv_version[0:2] < (0, 0) or g.mpv_version[0:2] >= (0, 7)) and not mswin
+            g.usesock = (g.mpv_version[0:2] < (0, 0) or \
+                         g.mpv_version[0:2] >= (0, 7)) and not mswin
             if g.usesock:
                 list_update("--really-quiet", args)
             else:
@@ -1978,7 +1979,8 @@ def launch_player(song, songdata, cmd):
             else:
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                      bufsize=1)
-            played = player_status(p, songdata + ";", song.length, mpv=True, sockpath=sockpath)
+            played = player_status(p, songdata + ";", song.length, mpv=True,
+                     sockpath=sockpath)
 
         else:
             with open(os.devnull, "w") as devnull:
