@@ -2472,7 +2472,7 @@ def fetch_comments(item):
         content_length = linecount(pagetext) + longlines(pagetext)
         blanks = "\n" * (-2 + ch - content_length)
         g.content = pagetext + blanks
-        screen_update()
+        screen_update(fill_blank=False)
         xprint("%s : Use [Enter] for next, [p] for previous, [q] to return:"
               % pagecounter, end="")
         v = xinput()
