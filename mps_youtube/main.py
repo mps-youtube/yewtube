@@ -1788,7 +1788,7 @@ def generate_real_playerargs(song, override, failcount):
                       "Use mpv or download it" % song.title)
 
     size = get_size(song.ytid, stream['url'])
-    songdata = song.ytid, stream['ext'], int(size / (1024 ** 2))
+    songdata = song.ytid, stream['ext'] + "@" + stream['quality'], int(size / (1024 ** 2))
 
     # pylint: disable=E1103
     # pylint thinks PLAYERARGS.get might be bool
@@ -2203,7 +2203,7 @@ def search(term, page=1, splash=True):
 
 
 def user_pls(user, page=1, splash=True):
-    """ Retrieve use playlists. """
+    """ Retrieve user playlists. """
     user = {"is_user": True, "term": user}
     return pl_search(user, page=page, splash=splash)
 
@@ -3635,6 +3635,12 @@ def info(num):
         out += i("\nCategory   : " + p.category)
         out += i("\nLink       : " + "https://youtube.com/watch?v=%s" %
                  p.videoid)
+        # Information on streams
+        out += i("\nAvailable streams:")
+        for s in p.allstreams:
+            out += i("\n  " + s.mediatype + " (" + s.extension + ") @ " + s.quality)
+
+
         out += i("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
         g.content = out
 
