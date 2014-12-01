@@ -1996,7 +1996,7 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False):
 def make_status_line(match_object, songlength=0):
     """ Format progress line output.  """
     cw = getxy("width")
-    progress_bar_size = cw - 50
+    progress_bar_size = cw - 54
 
     try:
         h, m, s = map(int, match_object.groups())
