@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.01.47"
+__version__ = "0.2.1"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -656,15 +656,19 @@ def check_player(player):
             version = "%s.%s.%s" % g.mpv_version
             fmt = c.g, c.w, c.g, c.w, version
             msg = "%splayer%s set to %smpv%s (version %s)" % fmt
-            return dict(valid=True, message=msg)
+            return dict(valid=True, message=msg, value=player)
 
         else:
             msg = "%splayer%s set to %s%s%s" % (c.g, c.w, c.g, player, c.w)
-            return dict(valid=True, message=msg)
+            return dict(valid=True, message=msg, value=player)
 
     else:
-        msg = "Unknown player %s%s%s" % (c.r, player, c.w)
-        return dict(valid=False, message=msg)
+        if mswin and not player.endswith(".exe"):
+            return check_player(player + ".exe")
+
+        else:
+            msg = "Player application %s%s%s not found" % (c.r, player, c.w)
+            return dict(valid=False, message=msg)
 
 
 class Config(object):
@@ -677,7 +681,8 @@ class Config(object):
     CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=70, maxval=880,
                                check_fn=check_console_width)
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
-    PLAYER = ConfigItem("player", "mplayer", check_fn=check_player)
+    PLAYER = ConfigItem("player", "mplayer" + (".exe" if mswin else ""),
+                        check_fn=check_player)
     PLAYERARGS = ConfigItem("playerargs", "")
     ENCODER = ConfigItem("encoder", 0, minval=0, check_fn=check_encoder)
     NOTIFIER = ConfigItem("notifier", "")
@@ -738,7 +743,7 @@ class g(object):
     encoders = []
     muxapp = False
     meta = {}
-    detectable_size = False
+    detectable_size = True
     command_line = False
     debug_mode = False
     preload_disabled = False
@@ -793,6 +798,10 @@ class g(object):
             "geo": "-geometry"}
         }
 
+    # windows compatibility
+    playerargs_defaults['mpv.exe'] = playerargs_defaults['mpv']
+    playerargs_defaults['mplayer.exe'] = playerargs_defaults['mplayer']
+
 
 def get_version_info():
     """ Return version and platform info. """
@@ -817,14 +826,14 @@ def get_version_info():
 def process_cl_args(args):
     """ Process command line arguments. """
     if "--version" in args:
-        print(get_version_info())
-        print("")
+        xprint(get_version_info())
+        xprint("")
         sys.exit()
 
     if "--help" in args:
 
         for x in g.helptext:
-            print(x[2])
+            xprint(x[2])
 
         sys.exit()
 
@@ -847,10 +856,19 @@ def init():
     init_cache()
     init_transcode()
 
-    # set player to mpv if no config file exists and mpv is installed
+    # set player to mpv or mplayer if found, otherwise unset
     E = os.path.exists
-    if not E(g.CFFILE) and not has_exefile("mplayer") and has_exefile("mpv"):
-        Config.PLAYER = ConfigItem("player", "mpv")
+    suffix = ".exe" if mswin else ""
+    mplayer, mpv = "mplayer" + suffix, "mpv" + suffix
+
+    if not E(g.CFFILE):
+
+        if has_exefile(mpv):
+            Config.PLAYER = ConfigItem("player", mpv, check_fn=check_player)
+
+        elif has_exefile(mplayer):
+            Config.PLAYER = ConfigItem("player", mplayer, check_fn=check_player)
+
         saveconfig()
 
     else:
@@ -863,14 +881,18 @@ def init():
     # check mpv version
 
     if "mpv" in Config.PLAYER.get:
-        g.mpv_version = get_mpv_version()
+        g.mpv_version = get_mpv_version(exename=Config.PLAYER.get)
 
     # setup colorama
     if has_colorama and mswin:
         init_colorama()
 
     # find muxer app
-    g.muxapp = has_exefile("ffmpeg") or has_exefile("avconv")
+    if mswin:
+        g.muxapp = has_exefile("ffmpeg.exe") or has_exefile("avconv.exe")
+
+    else:
+        g.muxapp = has_exefile("ffmpeg") or has_exefile("avconv")
 
     process_cl_args(sys.argv)
 
@@ -1018,6 +1040,7 @@ def init_opener():
 def known_player_set():
     """ Return true if the set player is known. """
     for allowed_player in g.playerargs_defaults:
+        allowed_player = re.escape(allowed_player)
         regex = r'(?:^%s$)|(?:\b%s$)' % ((allowed_player,) * 2)
         match = re.search(regex, Config.PLAYER.get)
 
@@ -1293,7 +1316,7 @@ def open_from_file():
             save_to_file()
 
     except EOFError:
-        print("Error opening playlists from %s" % g.PLFILE)
+        xprint("Error opening playlists from %s" % g.PLFILE)
         sys.exit()
 
     # remove any cached urls from playlist file, these are now
@@ -1357,14 +1380,14 @@ def convert_playlist_to_v2():
 def logo(col=None, version=""):
     """ Return text logo. """
     col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
-    logo_txt = r"""
-                                             _         _
+    logo_txt = r"""                                             _         _
  _ __ ___  _ __  ___       _   _  ___  _   _| |_ _   _| |__   ___
 | '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \
 | | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
 |_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
-          |_|              |___/               """
-    logo_txt = (col + logo_txt + c.w) + ("v" + version if version else "")
+          |_|              |___/"""
+    version = " v" + version if version else ""
+    logo_txt = col + logo_txt + c.w + version
     lines = logo_txt.split("\n")
     length = max(len(x) for x in lines)
     x, y, _ = getxy()
@@ -1477,15 +1500,18 @@ def get_tracks_from_json(jsons):
     return songs
 
 
-def screen_update():
+def screen_update(fill_blank=True):
     """ Display content, show message, blank screen."""
-    print(g.blank_text)
+    xprint(g.blank_text)
 
     if g.content:
         xprint(g.content)
 
     if g.message:
         xprint(g.message)
+
+    elif fill_blank:
+        xprint("")
 
     g.message = g.content = False
 
@@ -1497,8 +1523,7 @@ def playback_progress(idx, allsongs, repeat=False):
     cw = getxy("width")
     out = "  %s%-XXs%s%s\n".replace("XX", uni(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
-    show_key_help = (Config.PLAYER.get in ["mplayer", "mpv"]
-                     and Config.SHOW_MPLAYER_KEYS.get)
+    show_key_help = (known_player_set and Config.SHOW_MPLAYER_KEYS.get)
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
@@ -1715,7 +1740,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         details = {'title': x.title, "length": fmt_time(x.length)}
         details = g.meta[x.ytid].copy() if have_meta else details
         otitle = details['title']
-        details['idx'] = uni(n + 1)
+        details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)
         data = []
 
@@ -1768,7 +1793,7 @@ def generate_real_playerargs(song, override, failcount):
     video = Config.SHOW_VIDEO.get
     video = True if override in ("fullscreen", "window") else video
     video = False if override == "audio" else video
-    m4a = not Config.PLAYER.get == "mplayer"
+    m4a = "mplayer" not in Config.PLAYER.get
     q, audio, cached = failcount, not video, g.streams[song.ytid]
     stream = select_stream(cached, q=q, audio=audio, m4a_ok=m4a)
 
@@ -1853,6 +1878,11 @@ def generate_real_playerargs(song, override, failcount):
 def playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
     # pylint: disable=R0912
+    if not Config.PLAYER.get or not has_exefile(Config.PLAYER.get):
+        g.message = "Player not configured! Enter %sset player <player_app> "\
+            "%s to set a player" % (c.g, c.w)
+        return
+
     if Config.NOTIFIER.get:
         subprocess.call(shlex.split(Config.NOTIFIER.get) + [song.title])
 
@@ -1961,13 +1991,15 @@ def launch_player(song, songdata, cmd):
 
 def player_status(po_obj, prefix="", songlength=0, mpv=False):
     """ Capture time progress from player output. Write status line. """
-    # A: 175.6
+    # pylint: disable=R0914
     played_something = False
     re_mplayer = re.compile(r"A:\s*(?P<elapsed_s>\d+)\.\d\s*")
     re_mpv = re.compile(r".{,15}AV?:\s*(\d\d):(\d\d):(\d\d)")
+    re_volume = re.compile(r"Volume:\s*(?P<volume>\d+)\s*%")
     re_player = re_mpv if mpv else re_mplayer
     last_displayed_line = None
     buff = ''
+    volume_level = None
 
     while po_obj.poll() is None:
         stdstream = po_obj.stderr if mpv else po_obj.stdout
@@ -1975,11 +2007,16 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False):
 
         if char in '\r\n':
 
+            mv = re_volume.search(buff)
+
+            if mv:
+                volume_level = int(mv.group("volume"))
+
             m = re_player.match(buff)
 
             if m:
                 played_something = True
-                line = make_status_line(m, songlength)
+                line = make_status_line(m, songlength, volume=volume_level)
 
                 if line != last_displayed_line:
                     writestatus(prefix + (" " if prefix else "") + line)
@@ -1993,8 +2030,9 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False):
     return played_something
 
 
-def make_status_line(match_object, songlength=0):
+def make_status_line(match_object, songlength=0, volume=None):
     """ Format progress line output.  """
+    # pylint: disable=R0914
     cw = getxy("width")
     progress_bar_size = cw - 54
 
@@ -2028,10 +2066,17 @@ def make_status_line(match_object, songlength=0):
         ("[%.0f%%]" % pct).ljust(6)
     )
 
+    if volume:
+        progress_bar_size -= 10
+        vol_suffix = " vol: %d%%  " % volume
+
+    else:
+        vol_suffix = ""
+
     progress = int(math.ceil(pct / 100 * progress_bar_size))
     status_line += " [%s]" % ("=" * (progress - 1) +
                               ">").ljust(progress_bar_size, ' ')
-
+    status_line += vol_suffix
     return status_line
 
 
@@ -2427,8 +2472,8 @@ def fetch_comments(item):
         content_length = linecount(pagetext) + longlines(pagetext)
         blanks = "\n" * (-2 + ch - content_length)
         g.content = pagetext + blanks
-        screen_update()
-        print("%s : Use [Enter] for next, [p] for previous, [q] to return:"
+        screen_update(fill_blank=False)
+        xprint("%s : Use [Enter] for next, [p] for previous, [q] to return:"
               % pagecounter, end="")
         v = xinput()
 
@@ -2502,14 +2547,12 @@ def remux_audio(filename):
 
 def transcode(filename, enc_data):
     """ Re encode a download. """
-    ext = filename.split(".")[-1]
-    base = filename.rstrip("." + ext)
-
+    base = os.path.splitext(filename)[0]
     exe = g.muxapp if g.transcoder_path == "auto" else g.transcoder_path
 
     # ensure valid executable
     if not exe or not os.path.exists(exe) or not os.access(exe, os.X_OK):
-        print("Encoding failed. Couldn't find a valid encoder :(\n")
+        xprint("Encoding failed. Couldn't find a valid encoder :(\n")
         time.sleep(2)
         return filename
 
@@ -2539,7 +2582,7 @@ def transcode(filename, enc_data):
     return outfn
 
 
-def _download(song, filename, url=None, audio=False):
+def _download(song, filename, url=None, audio=False, allow_transcode=True):
     """ Download file, show status, return filename. """
     # pylint: disable=R0914
     # too many local variables
@@ -2547,11 +2590,11 @@ def _download(song, filename, url=None, audio=False):
 
     if not Config.OVERWRITE.get:
         if os.path.exists(filename):
-            print("File exists. Skipping %s%s%s ..\n" % (c.r, filename, c.w))
+            xprint("File exists. Skipping %s%s%s ..\n" % (c.r, filename, c.w))
             time.sleep(0.2)
             return filename
 
-    print("Downloading to %s%s%s .." % (c.r, filename, c.w))
+    xprint("Downloading to %s%s%s .." % (c.r, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
 
@@ -2587,7 +2630,7 @@ def _download(song, filename, url=None, audio=False):
     ext = filename.split(".")[-1]
     valid_ext = ext in active_encoder['valid'].split(",")
 
-    if Config.ENCODER.get != 0 and valid_ext:
+    if Config.ENCODER.get != 0 and valid_ext and allow_transcode:
         filename = transcode(filename, active_encoder)
 
     elif audio and g.muxapp:
@@ -2952,7 +2995,7 @@ def preload(song, delay=2, override=False):
 
     try:
         stream = get_streams(song)
-        m4a = not Config.PLAYER.get == "mplayer"
+        m4a = "mplayer" not in Config.PLAYER.get
         stream = select_stream(stream, audio=not video, m4a_ok=m4a)
 
         if not stream and not video:
@@ -2985,7 +3028,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             g.content = playback_progress(n, songlist, repeat=False)
 
             if not g.command_line:
-                screen_update()
+                screen_update(fill_blank=False)
 
             hasnext = len(songlist) > n + 1
 
@@ -3000,7 +3043,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
             except KeyboardInterrupt:
                 logging.info("Keyboard Interrupt")
-                print(c.w + "Stopping...                          ")
+                xprint(c.w + "Stopping...                          ")
                 reset_terminal()
                 g.message = c.y + "Playback halted" + c.w
                 break
@@ -3011,7 +3054,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             try:
                 for n, song in enumerate(songlist):
                     g.content = playback_progress(n, songlist, repeat=True)
-                    screen_update()
+                    screen_update(fill_blank=False)
                     hasnext = len(songlist) > n + 1
 
                     if hasnext:
@@ -3024,7 +3067,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
                     g.content = generate_songlist_display()
 
             except KeyboardInterrupt:
-                print(c.w + "Stopping...                          ")
+                xprint(c.w + "Stopping...                          ")
                 reset_terminal()
                 g.message = c.y + "Playback halted" + c.w
                 break
@@ -3104,22 +3147,25 @@ def quits(showlogo=True):
     savecache()
 
     msg = g.blank_text + logo(c.r, version=__version__) if showlogo else ""
-    vermsg = ""
-    print(msg + F("exitmsg", 2))
+    xprint(msg + F("exitmsg", 2))
 
     if Config.CHECKUPDATE.get and showlogo:
+
         try:
             url = "https://github.com/np1/mps-youtube/raw/master/VERSION"
             v = utf8_decode(g.urlopen(url, timeout=1).read())
             v = re.search(r"^version\s*([\d\.]+)\s*$", v, re.MULTILINE)
+
             if v:
                 v = v.group(1)
+
                 if v > __version__:
-                    vermsg += "\nA newer version is available (%s)\n" % v
+                    vermsg = "\nA newer version is available (%s)\n" % v
+                    xprint(vermsg)
+
         except (URLError, HTTPError, socket.timeout):
             dbg("check update timed out")
 
-    print(vermsg)
     sys.exit()
 
 
@@ -3327,7 +3373,7 @@ def download(dltype, num):
 
         if url_au:
             dl_filenames += [args_au[1]]
-            _download(*args_au, **kwargs)
+            _download(*args_au, allow_transcode=False, **kwargs)
 
     except KeyboardInterrupt:
         g.message = c.r + "Download halted!" + c.w
@@ -3563,10 +3609,10 @@ def clip_copy(num):
             g.content = generate_songlist_display()
 
         except xerox.base.ToolNotFound as e:
-            print(link)
-            print("Error - couldn't copy to clipboard.")
-            print(e.__doc__)
-            print("")
+            xprint(link)
+            xprint("Error - couldn't copy to clipboard.")
+            xprint(e.__doc__)
+            xprint("")
             xinput("Press Enter to continue.")
             g.content = generate_songlist_display()
 
@@ -3688,7 +3734,7 @@ def yt_url(url, print_title=0):
         g.content = generate_songlist_display()
 
     if print_title:
-        print(v.title)
+        xprint(v.title)
 
 
 def dump(un):
@@ -3889,7 +3935,7 @@ def _match_tracks(artist, title, mb_tracks):
         time.sleep(0.5)
 
         if not have_results:
-            print(c.r + "Nothing matched :(\n" + c.w)
+            xprint(c.r + "Nothing matched :(\n" + c.w)
             continue
 
         results = g.model.songs
@@ -4033,7 +4079,7 @@ def search_album(term, page=1, splash=True):
         return
 
     songs = []
-    print(g.blank_text)
+    xprint(g.blank_text)
     itt = _match_tracks(artist, title, mb_tracks)
 
     stash = Config.SEARCH_MUSIC.get, Config.ORDER.get
@@ -4045,7 +4091,7 @@ def search_album(term, page=1, splash=True):
             songs.append(next(itt))
 
     except KeyboardInterrupt:
-        print("%sHalted!%s" % (c.r, c.w))
+        xprint("%sHalted!%s" % (c.r, c.w))
 
     except StopIteration:
         pass
@@ -4058,7 +4104,7 @@ def search_album(term, page=1, splash=True):
         kwa = {"song": songs[0], "delay": 0}
         t = threading.Thread(target=preload, kwargs=kwa)
         t.start()
-        print("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
+        xprint("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
         xinput("Press Enter to continue")
         g.message = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
             c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
@@ -4081,7 +4127,7 @@ def show_encs():
 
     for x, e in enumerate(encs):
         sel = " (%sselected%s)" % (c.y, c.w) if Config.ENCODER.get == x else ""
-        out += "  %0d. %s%s\n" % (x, e['name'], sel)
+        out += "%2d. %s%s\n" % (x, e['name'], sel)
 
     g.content = out
     message = "Enter %sset encoder <num>%s to select an encoder"
@@ -4123,7 +4169,7 @@ def matchfunction(funcname, regex, userinput):
 def main():
     """ Main control loop. """
     if not g.command_line:
-        g.content = logo(col=c.g, version=__version__) + "\n"
+        g.content = logo(col=c.g, version=__version__) + "\n\n"
         g.message = "Enter /search-term to search or [h]elp"
         screen_update()
 
@@ -4221,7 +4267,7 @@ def main():
         screen_update()
 
 if "--debug" in sys.argv or os.environ.get("mpsytdebug") == "1":
-    print(get_version_info())
+    xprint(get_version_info())
     list_update("--debug", sys.argv, remove=True)
     g.debug_mode = True
     g.blank_text = "--\n"
@@ -4234,10 +4280,6 @@ elif "--logging" in sys.argv or os.environ.get("mpsytlog") == "1":
     logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
     logging.basicConfig(level=logging.DEBUG, filename=logfile)
     logging.getLogger("pafy").setLevel(logging.DEBUG)
-
-if "--autosize" in sys.argv or platform.system() in ('Linux', 'Darwin'):
-    list_update("--autosize", sys.argv, remove=True)
-    g.detectable_size = True
 
 if "--no-autosize" in sys.argv:
     list_update("--no-autosize", sys.argv, remove=True)
@@ -4442,14 +4484,11 @@ command
 """.format(c.ul, c.w, c.y, c.r)),
 
     ("new", "New Features", """
-{0}New Features in v0.02.00{1}
+{0}New Features in v0.2.x{1}
 
  - Transcode audio to MP3 and other formats (requires ffmpeg or avconv)
 
- - Auto detect terminal size (Linux/Mac)
-
- - Added copy to clipboard feature
-    (requires python xerox module and xclip on linux or pywin32 on windows)
+ - Auto detect terminal size
 
  - Added option to show system notifications (Alex Nisnevich) #95
     (can be used with libnotify - notify-send on linux)

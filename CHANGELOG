@@ -1,7 +1,14 @@
-Version 0.01.47
-Development version - not yet released
+Version 0.2.1
+27 November 2014
 
-- Auto detect terminal size on Linux and Mac
+[Bugfix] - Detect installed player on installation (#149)
+
+-------------------------------------------------------------------------------
+
+Version 0.2.0
+25 November 2014
+
+- Auto detect terminal window size
 
 - Transcode audio to MP3 and other formats (requires ffmpeg or avconv)
 
@@ -18,7 +25,7 @@ Development version - not yet released
 - Added overwrite true/false option for downloads (mtahmed) #93
     (skips download if downloaded file already exists)
 
-- Added copy to clipboard feature - request #97
+- Added copy to clipboard feature #97
     (requires python xerox module and xclip on linux or pywin32 on windows)
 
 - Remux audio downloads for better file compatibility (#135)

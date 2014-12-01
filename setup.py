@@ -15,8 +15,8 @@ except ImportError:
 
 setup(
     name="mps-youtube",
-    version="0.01.47",
-    description="Terminal based YouTube jukebox with playlist management",
+    version="0.2.1",
+    description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="nagev",
     author_email="np1nagev@gmail.com",
@@ -24,7 +24,7 @@ setup(
     download_url="https://github.com/np1/mps-youtube/tarball/master",
     packages=['mps_youtube'],
     entry_points=dict(console_scripts=['mpsyt = mps_youtube:main.main']),
-    install_requires=['Pafy >= 0.3.62'],
+    install_requires=['Pafy >= 0.3.66'],
     package_data={"": ["LICENSE", "README.rst", "CHANGELOG"]},
     classifiers=[
         "Topic :: Utilities",
