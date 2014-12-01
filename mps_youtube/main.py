@@ -1962,12 +1962,12 @@ def launch_player(song, songdata, cmd):
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
-            played = player_status(p, songdata + ";", song.length)
+            played = player_status(p, songdata + "; ", song.length)
 
         elif "mpv" in Config.PLAYER.get:
             p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                  bufsize=1)
-            played = player_status(p, songdata + ";", song.length, mpv=True)
+            played = player_status(p, songdata + "; ", song.length, mpv=True)
 
         else:
             with open(os.devnull, "w") as devnull:
@@ -1989,7 +1989,7 @@ def launch_player(song, songdata, cmd):
             pass
 
 
-def player_status(po_obj, prefix="", songlength=0, mpv=False):
+def player_status(po_obj, prefix, songlength=0, mpv=False):
     """ Capture time progress from player output. Write status line. """
     # pylint: disable=R0914
     played_something = False
@@ -2016,10 +2016,11 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False):
 
             if m:
                 played_something = True
-                line = make_status_line(m, songlength, volume=volume_level)
+                line = make_status_line(m, prefix, songlength,
+                                        volume=volume_level)
 
                 if line != last_displayed_line:
-                    writestatus(prefix + (" " if prefix else "") + line)
+                    writestatus(line)
                     last_displayed_line = line
 
             buff = ''
@@ -2030,12 +2031,9 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False):
     return played_something
 
 
-def make_status_line(match_object, songlength=0, volume=None):
+def make_status_line(match_object, prefix, songlength=0, volume=None):
     """ Format progress line output.  """
     # pylint: disable=R0914
-    cw = getxy("width")
-    progress_bar_size = cw - 54
-
     try:
         h, m, s = map(int, match_object.groups())
         elapsed_s = h * 3600 + m * 60 + s
@@ -2067,17 +2065,17 @@ def make_status_line(match_object, songlength=0, volume=None):
     )
 
     if volume:
-        progress_bar_size -= 10
-        vol_suffix = " vol: %d%%  " % volume
+        vol_suffix = " vol: %d%%" % volume
 
     else:
         vol_suffix = ""
 
-    progress = int(math.ceil(pct / 100 * progress_bar_size))
+    cw = getxy("width")
+    prog_bar_size = cw - len(prefix) - len(status_line) - len(vol_suffix) - 7
+    progress = int(math.ceil(pct / 100 * prog_bar_size))
     status_line += " [%s]" % ("=" * (progress - 1) +
-                              ">").ljust(progress_bar_size, ' ')
-    status_line += vol_suffix
-    return status_line
+                              ">").ljust(prog_bar_size, ' ')
+    return prefix + status_line + vol_suffix
 
 
 def _search(url, progtext, qs=None, splash=True, pre_load=True):
@@ -3681,12 +3679,6 @@ def info(num):
         out += i("\nCategory   : " + p.category)
         out += i("\nLink       : " + "https://youtube.com/watch?v=%s" %
                  p.videoid)
-        # Information on streams
-        out += i("\nAvailable streams:")
-        for s in p.allstreams:
-            out += i("\n  " + s.mediatype + " (" + s.extension + ") @ " + s.quality)
-
-
         out += i("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
         g.content = out
 
