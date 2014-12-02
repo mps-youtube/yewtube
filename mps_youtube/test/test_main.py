@@ -8,7 +8,8 @@ class TestMain(unittest.TestCase):
         self.assertEqual(mps.fmt_time(59), '00:59')
         self.assertEqual(mps.fmt_time(100), '01:40')
         self.assertEqual(mps.fmt_time(1000), '16:40')
-        self.assertEqual(mps.fmt_time(5000), '01:23:20')
+        self.assertEqual(mps.fmt_time(5000), '83:20')
+        self.assertEqual(mps.fmt_time(6500), '1:48:20')
         
     def test_num_repr(self):
         self.assertEqual(mps.num_repr(0), '0')
