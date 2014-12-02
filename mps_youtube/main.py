@@ -704,6 +704,7 @@ class Config(object):
     COLOURS = ConfigItem("colours",
                          False if mswin and not has_colorama else True,
                          check_fn=check_colours)
+    PROMPT_DOWNLOAD_AFTER_PLAY = ConfigItem("prompt_download_after_play", False)
 
 
 class Playlist(object):
@@ -1940,6 +1941,14 @@ def playsong(song, failcount=0, override=False):
     dbg("calling %s", " ".join(cmd))
     played = launch_player(song, songdata, cmd)
     failed = not played
+    if played and Config.PROMPT_DOWNLOAD_AFTER_PLAY.get:
+        dl = xinput("\nDownload previously played song? (%s) > " % song.title)
+        if dl.lower().startswith("y"):
+            def download_function():
+                filename = _make_fname(song, None, av="audio", subdir=get_default_ddir())
+                _download(song, filename, audio=True, verbose=False)
+            download_thread = threading.Thread(target=download_function)
+            download_thread.start()
 
     if failed and failcount < g.max_retries:
         dbg(c.r + "stream failed to open" + c.w)
@@ -2580,7 +2589,7 @@ def transcode(filename, enc_data):
     return outfn
 
 
-def _download(song, filename, url=None, audio=False, allow_transcode=True):
+def _download(song, filename, url=None, audio=False, allow_transcode=True, verbose=True):
     """ Download file, show status, return filename. """
     # pylint: disable=R0914
     # too many local variables
@@ -2588,11 +2597,13 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
 
     if not Config.OVERWRITE.get:
         if os.path.exists(filename):
-            xprint("File exists. Skipping %s%s%s ..\n" % (c.r, filename, c.w))
+            if verbose:
+                xprint("File exists. Skipping %s%s%s ..\n" % (c.r, filename, c.w))
             time.sleep(0.2)
             return filename
 
-    xprint("Downloading to %s%s%s .." % (c.r, filename, c.w))
+    if verbose:
+        xprint("Downloading to %s%s%s .." % (c.r, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
 
@@ -2620,8 +2631,9 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
             break
 
         status = status_string.format(*stats)
-        sys.stdout.write("\r" + status + ' ' * 4 + "\r")
-        sys.stdout.flush()
+        if verbose:
+            sys.stdout.write("\r" + status + ' ' * 4 + "\r")
+            sys.stdout.flush()
 
     # download done
     active_encoder = g.encoders[Config.ENCODER.get]
