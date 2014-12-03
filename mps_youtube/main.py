@@ -4452,6 +4452,7 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set show_video true|false{1} - show video output (audio only if false)
 {2}set window_pos <top|bottom>-<left|right>{1} - set player window position
 {2}set window_size <number>x<number>{1} - set player window width & height
+{2}set prompt_download_after_play true|false{1} - ask to download a song after it has played
 """.format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'
            'sults when searching (max 50)'.format(c.y, c.w) if not
            g.detectable_size else '')),
