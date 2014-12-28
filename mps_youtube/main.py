@@ -1814,7 +1814,7 @@ def generate_real_playerargs(song, override, failcount):
                       "Use mpv or download it" % song.title)
 
     size = get_size(song.ytid, stream['url'])
-    songdata = song.ytid, stream['ext'], int(size / (1024 ** 2))
+    songdata = song.ytid, stream['ext'] + "@" + stream['quality'], int(size / (1024 ** 2))
 
     # pylint: disable=E1103
     # pylint thinks PLAYERARGS.get might be bool
@@ -1968,7 +1968,7 @@ def launch_player(song, songdata, cmd):
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
-            played = player_status(p, songdata + ";", song.length)
+            played = player_status(p, songdata + "; ", song.length)
 
         elif "mpv" in Config.PLAYER.get:
             sockpath = None
@@ -1979,7 +1979,7 @@ def launch_player(song, songdata, cmd):
             else:
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                      bufsize=1)
-            played = player_status(p, songdata + ";", song.length, mpv=True,
+            played = player_status(p, songdata + "; ", song.length, mpv=True,
                      sockpath=sockpath)
 
         else:
@@ -2004,7 +2004,7 @@ def launch_player(song, songdata, cmd):
             pass
 
 
-def player_status(po_obj, prefix="", songlength=0, mpv=False, sockpath=None):
+def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
     """ Capture time progress from player output. Write status line. """
     # pylint: disable=R0914
     played_something = False
@@ -2028,10 +2028,10 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False, sockpath=None):
             if resp.get('event') == 'property-change' and resp['id'] == 1:
                 m = int(resp['data'])
 
-                line = make_status_line(m, songlength)
+                line = make_status_line(m, prefix, songlength)
 
                 if line != last_displayed_line:
-                    writestatus(prefix + (" " if prefix else "") + line)
+                    writestatus(line)
                     last_displayed_line = line
 
     else:
@@ -2050,10 +2050,11 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False, sockpath=None):
 
                 if m:
                     played_something = True
-                    line = make_status_line(m, songlength, volume=volume_level)
+                    line = make_status_line(m, prefix, songlength,
+                                            volume=volume_level)
 
                     if line != last_displayed_line:
-                        writestatus(prefix + (" " if prefix else "") + line)
+                        writestatus(line)
                         last_displayed_line = line
 
                 buff = ''
@@ -2064,12 +2065,9 @@ def player_status(po_obj, prefix="", songlength=0, mpv=False, sockpath=None):
     return played_something
 
 
-def make_status_line(match_object, songlength=0, volume=None):
+def make_status_line(match_object, prefix, songlength=0, volume=None):
     """ Format progress line output.  """
     # pylint: disable=R0914
-    cw = getxy("width")
-    progress_bar_size = cw - 50
-
     if isinstance(match_object, int):
         elapsed_s = match_object
     else:
@@ -2104,17 +2102,17 @@ def make_status_line(match_object, songlength=0, volume=None):
     )
 
     if volume:
-        progress_bar_size -= 10
-        vol_suffix = " vol: %d%%  " % volume
+        vol_suffix = " vol: %d%%" % volume
 
     else:
         vol_suffix = ""
 
-    progress = int(math.ceil(pct / 100 * progress_bar_size))
+    cw = getxy("width")
+    prog_bar_size = cw - len(prefix) - len(status_line) - len(vol_suffix) - 7
+    progress = int(math.ceil(pct / 100 * prog_bar_size))
     status_line += " [%s]" % ("=" * (progress - 1) +
-                              ">").ljust(progress_bar_size, ' ')
-    status_line += vol_suffix
-    return status_line
+                              ">").ljust(prog_bar_size, ' ')
+    return prefix + status_line + vol_suffix
 
 
 def _search(url, progtext, qs=None, splash=True, pre_load=True):
@@ -2285,7 +2283,7 @@ def search(term, page=1, splash=True):
 
 
 def user_pls(user, page=1, splash=True):
-    """ Retrieve use playlists. """
+    """ Retrieve user playlists. """
     user = {"is_user": True, "term": user}
     return pl_search(user, page=page, splash=splash)
 
@@ -2509,7 +2507,7 @@ def fetch_comments(item):
         content_length = linecount(pagetext) + longlines(pagetext)
         blanks = "\n" * (-2 + ch - content_length)
         g.content = pagetext + blanks
-        screen_update()
+        screen_update(fill_blank=False)
         xprint("%s : Use [Enter] for next, [p] for previous, [q] to return:"
               % pagecounter, end="")
         v = xinput()
