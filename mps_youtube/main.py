@@ -1870,8 +1870,9 @@ def generate_real_playerargs(song, override, failcount):
             if g.mpv_version[0:2] < (0, 0) or g.mpv_version[0:2] >= (0, 4):
                 msglevel = pd["msglevel"][">=0.4"]
 
-            g.usesock = (g.mpv_version[0:2] < (0, 0) or \
-                         g.mpv_version[0:2] >= (0, 7)) and not mswin
+            options = utf8_decode(subprocess.check_output([Config.PLAYER.get,
+                                                           "--list-options"]))
+            g.usesock = "--input-unix-socket" in options and not mswin
             if g.usesock:
                 list_update("--really-quiet", args)
             else:
