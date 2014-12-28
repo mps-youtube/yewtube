@@ -3058,10 +3058,9 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
     if shuffle:
         random.shuffle(songlist)
 
-    if not repeat:
-
+    while True:
         for n, song in enumerate(songlist):
-            g.content = playback_progress(n, songlist, repeat=False)
+            g.content = playback_progress(n, songlist, repeat=repeat)
 
             if not g.command_line:
                 screen_update(fill_blank=False)
@@ -3082,31 +3081,11 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
                 xprint(c.w + "Stopping...                          ")
                 reset_terminal()
                 g.message = c.y + "Playback halted" + c.w
+                repeat = False
                 break
 
-    elif repeat:
-
-        while True:
-            try:
-                for n, song in enumerate(songlist):
-                    g.content = playback_progress(n, songlist, repeat=True)
-                    screen_update(fill_blank=False)
-                    hasnext = len(songlist) > n + 1
-
-                    if hasnext:
-                        nex = songlist[n + 1]
-                        kwa = {"song": nex, "override": override}
-                        t = threading.Thread(target=preload, kwargs=kwa)
-                        t.start()
-
-                    playsong(song, override=override)
-                    g.content = generate_songlist_display()
-
-            except KeyboardInterrupt:
-                xprint(c.w + "Stopping...                          ")
-                reset_terminal()
-                g.message = c.y + "Playback halted" + c.w
-                break
+        if not repeat:
+            break
 
     g.content = generate_songlist_display()
 
