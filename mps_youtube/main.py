@@ -3102,6 +3102,8 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
                 n-=1
             else:
                 n+=1
+            if n == -1 and repeat:
+                n = len(songlist)-1
 
         if not repeat:
             break
