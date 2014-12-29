@@ -1969,7 +1969,7 @@ def launch_player(song, songdata, cmd):
     try:
         with tempfile.NamedTemporaryFile('w', prefix='mpsyt-input',
                                          delete=False) as file:
-            file.write('Q quit 42')
+            file.write('Q quit 42\n')
             input_file = file.name
 
         if "mplayer" in Config.PLAYER.get:
