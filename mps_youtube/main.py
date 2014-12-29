@@ -2008,10 +2008,10 @@ def launch_player(song, songdata, cmd):
 
     finally:
         try:
-            p.terminate()  # make sure to kill mplayer if mpsyt crashes
             os.unlink(input_file)
             if sockpath:
                 os.unlink(sockpath)
+            p.terminate()  # make sure to kill mplayer if mpsyt crashes
 
         except (OSError, AttributeError, UnboundLocalError):
             pass
