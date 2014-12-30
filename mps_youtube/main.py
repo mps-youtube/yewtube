@@ -2031,21 +2031,24 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
 
     if sockpath:
         time.sleep(1)
-        s = socket.socket(socket.AF_UNIX)
-        s.connect(sockpath)
-        cmd = {"command": ["observe_property", 1, "time-pos"]}
-        s.send(json.dumps(cmd).encode() + b'\n')
-        for line in s.makefile():
-            played_something = True
-            resp = json.loads(line)
-            if resp.get('event') == 'property-change' and resp['id'] == 1:
-                m = int(resp['data'])
+        try:
+            s = socket.socket(socket.AF_UNIX)
+            s.connect(sockpath)
+            cmd = {"command": ["observe_property", 1, "time-pos"]}
+            s.send(json.dumps(cmd).encode() + b'\n')
+            for line in s.makefile():
+                played_something = True
+                resp = json.loads(line)
+                if resp.get('event') == 'property-change' and resp['id'] == 1:
+                    m = int(resp['data'])
 
-                line = make_status_line(m, prefix, songlength)
+                    line = make_status_line(m, prefix, songlength)
 
-                if line != last_displayed_line:
-                    writestatus(line)
-                    last_displayed_line = line
+                    if line != last_displayed_line:
+                        writestatus(line)
+                        last_displayed_line = line
+        except socket.error:
+            pass
 
     else:
         while po_obj.poll() is None:
