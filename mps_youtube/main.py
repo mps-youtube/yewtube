@@ -3070,43 +3070,40 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
     if shuffle:
         random.shuffle(songlist)
 
-    while True:
-        n = 0
-        while 0 <= n <= len(songlist)-1:
-            song = songlist[n]
-            g.content = playback_progress(n, songlist, repeat=repeat)
+    n = 0
+    while 0 <= n <= len(songlist)-1:
+        song = songlist[n]
+        g.content = playback_progress(n, songlist, repeat=repeat)
 
-            if not g.command_line:
-                screen_update(fill_blank=False)
+        if not g.command_line:
+            screen_update(fill_blank=False)
 
-            hasnext = len(songlist) > n + 1
+        hasnext = len(songlist) > n + 1
 
-            if hasnext:
-                nex = songlist[n + 1]
-                kwa = {"song": nex, "override": override}
-                t = threading.Thread(target=preload, kwargs=kwa)
-                t.start()
+        if hasnext:
+            nex = songlist[n + 1]
+            kwa = {"song": nex, "override": override}
+            t = threading.Thread(target=preload, kwargs=kwa)
+            t.start()
 
-            try:
-                returncode = playsong(song, override=override)
+        try:
+            returncode = playsong(song, override=override)
 
-            except KeyboardInterrupt:
-                logging.info("Keyboard Interrupt")
-                xprint(c.w + "Stopping...                          ")
-                reset_terminal()
-                g.message = c.y + "Playback halted" + c.w
-                repeat = False
-                break
-
-            if returncode == 42:
-                n-=1
-            else:
-                n+=1
-            if n == -1 and repeat:
-                n = len(songlist)-1
-
-        if not repeat:
+        except KeyboardInterrupt:
+            logging.info("Keyboard Interrupt")
+            xprint(c.w + "Stopping...                          ")
+            reset_terminal()
+            g.message = c.y + "Playback halted" + c.w
             break
+
+        if returncode == 42:
+            n-=1
+        else:
+            n+=1
+        if n == -1 and repeat:
+            n = len(songlist)-1
+        elif n == len(songlist) and repeat:
+            n = 0
 
     g.content = generate_songlist_display()
 
