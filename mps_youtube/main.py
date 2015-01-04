@@ -1885,7 +1885,7 @@ def generate_real_playerargs(song, override, failcount):
 
 def playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
-    # pylint: disable=R0912
+    # pylint: disable=R0911,R0912
     if not Config.PLAYER.get or not has_exefile(Config.PLAYER.get):
         g.message = "Player not configured! Enter %sset player <player_app> "\
             "%s to set a player" % (c.g, c.w)
