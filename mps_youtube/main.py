@@ -1814,7 +1814,8 @@ def generate_real_playerargs(song, override, failcount):
                       "Use mpv or download it" % song.title)
 
     size = get_size(song.ytid, stream['url'])
-    songdata = song.ytid, stream['ext'] + "@" + stream['quality'], int(size / (1024 ** 2))
+    songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
+                int(size / (1024 ** 2)))
 
     # pylint: disable=E1103
     # pylint thinks PLAYERARGS.get might be bool
@@ -1974,14 +1975,14 @@ def launch_player(song, songdata, cmd):
         elif "mpv" in Config.PLAYER.get:
             sockpath = None
             if g.usesock:
-                sockpath = tempfile.mktemp('.sock','mpsyt-mpv')
+                sockpath = tempfile.mktemp('.sock', 'mpsyt-mpv')
                 cmd.append('--input-unix-socket='+sockpath)
                 p = subprocess.Popen(cmd, shell=False)
             else:
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                      bufsize=1)
             played = player_status(p, songdata + "; ", song.length, mpv=True,
-                     sockpath=sockpath)
+                                   sockpath=sockpath)
 
         else:
             with open(os.devnull, "w") as devnull:
@@ -2513,7 +2514,7 @@ def fetch_comments(item):
         g.content = pagetext + blanks
         screen_update(fill_blank=False)
         xprint("%s : Use [Enter] for next, [p] for previous, [q] to return:"
-              % pagecounter, end="")
+               % pagecounter, end="")
         v = xinput()
 
         if v == "p":
