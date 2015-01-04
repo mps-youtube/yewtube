@@ -1431,7 +1431,7 @@ def mplayer_help(short=True):
     # pylint: disable=W1402
 
     volume = "[{0}9{1}] volume [{0}0{1}]"
-    volume = volume if short else volume + "      [{0}ctrl-c{1}] return"
+    volume = volume if short else volume + "      [{0}q{1}] return"
     seek = u"[{0}\u2190{1}] seek [{0}\u2192{1}]"
     pause = u"[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
 
@@ -1439,7 +1439,10 @@ def mplayer_help(short=True):
         seek = "[{0}<-{1}] seek [{0}->{1}]"
         pause = "[{0}DN{1}] SEEK [{0}UP{1}]       [{0}space{1}] pause"
 
-    ret = "[{0}q{1}] %s" % ("return" if short else "next track")
+    single = "[{0}q{1}] return"
+    nextprev = "[{0}n{1}] next/prev [{0}p{1}]"
+    # ret = "[{0}q{1}] %s" % ("return" if short else "next track")
+    ret = single if short else nextprev
     fmt = "    %-20s       %-20s"
     lines = fmt % (seek, volume) + "\n" + fmt % (pause, ret)
     return lines.format(c.g, c.w)
@@ -1970,7 +1973,7 @@ def launch_player(song, songdata, cmd):
     try:
         with tempfile.NamedTemporaryFile('w', prefix='mpsyt-input',
                                          delete=False) as file:
-            file.write('Q quit 42\n')
+            file.write('k quit 42\nj quit\nq quit 43\np quit 42\nn quit\n')
             input_file = file.name
 
         if "mplayer" in Config.PLAYER.get:
@@ -3104,11 +3107,18 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             break
 
         if returncode == 42:
-            n-=1
+            n -= 1
+
+        elif returncode == 43:
+            g.message = c.y + "Playback stopped" + c.w
+            break
+
         else:
-            n+=1
+            n += 1
+
         if n == -1 and repeat:
             n = len(songlist)-1
+
         elif n == len(songlist) and repeat:
             n = 0
 
