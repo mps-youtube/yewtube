@@ -1962,7 +1962,7 @@ def playsong(song, failcount=0, override=False):
 
 def launch_player(song, songdata, cmd):
     """ Launch player application. """
-    cmd = cmd.copy()
+    cmd = cmd[::]
     # fix for github issue 59
     if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
         cmd = [x.encode("utf8", errors="replace") for x in cmd]
