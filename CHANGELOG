@@ -7,6 +7,9 @@ Development version - not yet released
 
 - Fix YouTube comments overshoot window size
 
+- Implement skip to previous track (ids1024) #175 #18 #14
+    Use n/p or j/k for next/prev track, q for quit (was ctrl-c)
+
 -------------------------------------------------------------------------------
 
 Version 0.2.1
