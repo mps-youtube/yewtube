@@ -1,12 +1,13 @@
 Version 0.2.2-dev
 Development version - not yet released
 
-- Show stream quality on status line (Brebiche38) #163 #134
+- Fix progress bar for mpv 0.7 (ids1024) #155 #161
+
+- Show stream quality on status line (Brebiche38) #134 #163
 
 - Fix YouTube comments overshoot window size
 
 -------------------------------------------------------------------------------
-
 
 Version 0.2.1
 27 November 2014
