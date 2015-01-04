@@ -3110,14 +3110,13 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             n -= 1
 
         elif returncode == 43:
-            g.message = c.y + "Playback stopped" + c.w
             break
 
         else:
             n += 1
 
-        if n == -1 and repeat:
-            n = len(songlist)-1
+        if n == -1:
+            n = len(songlist) - 1 if repeat else 0
 
         elif n == len(songlist) and repeat:
             n = 0
