@@ -1946,7 +1946,7 @@ def playsong(song, failcount=0, override=False):
     writestatus(songdata)
     dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
     dbg("calling %s", " ".join(cmd))
-    played = launch_player(song, songdata, cmd)
+    returncode, played = launch_player(song, songdata, cmd)
     failed = not played
 
     if failed and failcount < g.max_retries:
@@ -1955,24 +1955,34 @@ def playsong(song, failcount=0, override=False):
         writestatus("error: retrying")
         time.sleep(1.2)
         failcount += 1
-        playsong(song, failcount=failcount, override=override)
+        return playsong(song, failcount=failcount, override=override)
+
+    return returncode
 
 
 def launch_player(song, songdata, cmd):
     """ Launch player application. """
+    cmd = cmd.copy()
     # fix for github issue 59
     if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
         cmd = [x.encode("utf8", errors="replace") for x in cmd]
 
     try:
+        with tempfile.NamedTemporaryFile('w', prefix='mpsyt-input',
+                                         delete=False) as file:
+            file.write('Q quit 42\n')
+            input_file = file.name
 
         if "mplayer" in Config.PLAYER.get:
-
+            cmd.append('-input')
+            cmd.append('conf='+input_file)
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
             played = player_status(p, songdata + "; ", song.length)
+            returncode = p.wait()
 
         elif "mpv" in Config.PLAYER.get:
+            cmd.append('--input-conf='+input_file)
             sockpath = None
 
             if g.mpv_usesock:
@@ -1986,6 +1996,7 @@ def launch_player(song, songdata, cmd):
 
             played = player_status(p, songdata + "; ", song.length, mpv=True,
                                    sockpath=sockpath)
+            returncode = p.wait()
 
         else:
             with open(os.devnull, "w") as devnull:
@@ -1993,17 +2004,18 @@ def launch_player(song, songdata, cmd):
 
             played = returncode == 0
 
-        return played
+        return (returncode, played)
 
     except OSError:
         g.message = F('no player') % Config.PLAYER.get
-        return
+        return (None, None)
 
     finally:
         try:
-            p.terminate()  # make sure to kill mplayer if mpsyt crashes
+            os.unlink(input_file)
             if sockpath:
                 os.unlink(sockpath)
+            p.terminate()  # make sure to kill mplayer if mpsyt crashes
 
         except (OSError, AttributeError, UnboundLocalError):
             pass
@@ -3065,55 +3077,40 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
     if shuffle:
         random.shuffle(songlist)
 
-    if not repeat:
+    n = 0
+    while 0 <= n <= len(songlist)-1:
+        song = songlist[n]
+        g.content = playback_progress(n, songlist, repeat=repeat)
 
-        for n, song in enumerate(songlist):
-            g.content = playback_progress(n, songlist, repeat=False)
+        if not g.command_line:
+            screen_update(fill_blank=False)
 
-            if not g.command_line:
-                screen_update(fill_blank=False)
+        hasnext = len(songlist) > n + 1
 
-            hasnext = len(songlist) > n + 1
+        if hasnext:
+            nex = songlist[n + 1]
+            kwa = {"song": nex, "override": override}
+            t = threading.Thread(target=preload, kwargs=kwa)
+            t.start()
 
-            if hasnext:
-                nex = songlist[n + 1]
-                kwa = {"song": nex, "override": override}
-                t = threading.Thread(target=preload, kwargs=kwa)
-                t.start()
+        try:
+            returncode = playsong(song, override=override)
 
-            try:
-                playsong(song, override=override)
+        except KeyboardInterrupt:
+            logging.info("Keyboard Interrupt")
+            xprint(c.w + "Stopping...                          ")
+            reset_terminal()
+            g.message = c.y + "Playback halted" + c.w
+            break
 
-            except KeyboardInterrupt:
-                logging.info("Keyboard Interrupt")
-                xprint(c.w + "Stopping...                          ")
-                reset_terminal()
-                g.message = c.y + "Playback halted" + c.w
-                break
-
-    elif repeat:
-
-        while True:
-            try:
-                for n, song in enumerate(songlist):
-                    g.content = playback_progress(n, songlist, repeat=True)
-                    screen_update(fill_blank=False)
-                    hasnext = len(songlist) > n + 1
-
-                    if hasnext:
-                        nex = songlist[n + 1]
-                        kwa = {"song": nex, "override": override}
-                        t = threading.Thread(target=preload, kwargs=kwa)
-                        t.start()
-
-                    playsong(song, override=override)
-                    g.content = generate_songlist_display()
-
-            except KeyboardInterrupt:
-                xprint(c.w + "Stopping...                          ")
-                reset_terminal()
-                g.message = c.y + "Playback halted" + c.w
-                break
+        if returncode == 42:
+            n-=1
+        else:
+            n+=1
+        if n == -1 and repeat:
+            n = len(songlist)-1
+        elif n == len(songlist) and repeat:
+            n = 0
 
     g.content = generate_songlist_display()
 
