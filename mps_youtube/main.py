@@ -751,6 +751,7 @@ class g(object):
     isatty = sys.stdout.isatty()
     ytpls = []
     mpv_version = 0, 0, 0
+    mpv_usesock = False
     browse_mode = "normal"
     preloading = []
     # expiry = 5 * 60 * 60  # 5 hours
@@ -801,7 +802,6 @@ class g(object):
     # windows compatibility
     playerargs_defaults['mpv.exe'] = playerargs_defaults['mpv']
     playerargs_defaults['mplayer.exe'] = playerargs_defaults['mplayer']
-    usesock = False
 
 
 def get_version_info():
@@ -883,6 +883,9 @@ def init():
 
     if "mpv" in Config.PLAYER.get:
         g.mpv_version = get_mpv_version(exename=Config.PLAYER.get)
+        options = utf8_decode(subprocess.check_output(
+            [Config.PLAYER.get, "--list-options"]))
+        g.mpv_usesock = "--input-unix-socket" in options and not mswin
 
     # setup colorama
     if has_colorama and mswin:
@@ -1871,10 +1874,7 @@ def generate_real_playerargs(song, override, failcount):
             if g.mpv_version[0:2] < (0, 0) or g.mpv_version[0:2] >= (0, 4):
                 msglevel = pd["msglevel"][">=0.4"]
 
-            options = utf8_decode(subprocess.check_output([Config.PLAYER.get,
-                                                           "--list-options"]))
-            g.usesock = "--input-unix-socket" in options and not mswin
-            if g.usesock:
+            if g.mpv_usesock:
                 list_update("--really-quiet", args)
             else:
                 list_update("--really-quiet", args, remove=True)
@@ -1974,13 +1974,16 @@ def launch_player(song, songdata, cmd):
 
         elif "mpv" in Config.PLAYER.get:
             sockpath = None
-            if g.usesock:
+
+            if g.mpv_usesock:
                 sockpath = tempfile.mktemp('.sock', 'mpsyt-mpv')
-                cmd.append('--input-unix-socket='+sockpath)
+                cmd.append('--input-unix-socket=' + sockpath)
                 p = subprocess.Popen(cmd, shell=False)
+
             else:
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                      bufsize=1)
+
             played = player_status(p, songdata + "; ", song.length, mpv=True,
                                    sockpath=sockpath)
 
