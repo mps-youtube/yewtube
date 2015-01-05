@@ -885,7 +885,12 @@ def init():
         g.mpv_version = get_mpv_version(exename=Config.PLAYER.get)
         options = utf8_decode(subprocess.check_output(
             [Config.PLAYER.get, "--list-options"]))
-        g.mpv_usesock = "--input-unix-socket" in options and not mswin
+        # g.mpv_usesock = "--input-unix-socket" in options and not mswin
+
+        if "--input-unix-socket" in options and not mswin:
+            g.mpv_usesock = True
+            dbg(c.g + "mpv supports --input-unix-socket" + c.w)
+
 
     # setup colorama
     if has_colorama and mswin:
@@ -1991,7 +1996,8 @@ def launch_player(song, songdata, cmd):
             if g.mpv_usesock:
                 sockpath = tempfile.mktemp('.sock', 'mpsyt-mpv')
                 cmd.append('--input-unix-socket=' + sockpath)
-                p = subprocess.Popen(cmd, shell=False)
+                with open(os.devnull, "w") as devnull:
+                    p = subprocess.Popen(cmd, shell=False, stderr=devnull)
 
             else:
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
