@@ -2049,13 +2049,19 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
             s.connect(sockpath)
             cmd = {"command": ["observe_property", 1, "time-pos"]}
             s.send(json.dumps(cmd).encode() + b'\n')
+            cmd = {"command": ["observe_property", 2, "volume"]}
+            s.send(json.dumps(cmd).encode() + b'\n')
+            volume_level = m = None
             for line in s.makefile():
                 played_something = True
                 resp = json.loads(line)
                 if resp.get('event') == 'property-change' and resp['id'] == 1:
                     m = int(resp['data'])
-
-                    line = make_status_line(m, prefix, songlength)
+                elif resp.get('event') == 'property-change' and resp['id'] == 2:
+                    volume_level = int(resp['data'])
+                if m:
+                    line = make_status_line(m, prefix, songlength,
+                                            volume=volume_level)
 
                     if line != last_displayed_line:
                         writestatus(line)
