@@ -1983,6 +1983,9 @@ def launch_player(song, songdata, cmd):
 
         if "mplayer" in Config.PLAYER.get:
             cmd.append('-input')
+            if mswin:
+                # Mplayer does not recognize path starting with drive letter
+                input_file = input_file[2:]
             cmd.append('conf='+input_file)
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
