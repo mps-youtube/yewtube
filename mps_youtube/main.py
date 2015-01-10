@@ -218,7 +218,7 @@ def get_config_dir():
     return mps_confdir
 
 
-def get_mpv_version(exename="mpv"):
+def get_mpv_version(exename):
     """ Get version of mpv as 3-tuple. """
     o = utf8_decode(subprocess.check_output([exename, "--version"]))
     re_ver = re.compile(r"%s (\d+)\.(\d+)\.(\d+)" % exename)
@@ -652,7 +652,7 @@ def check_player(player):
     if has_exefile(player):
 
         if "mpv" in player:
-            g.mpv_version = get_mpv_version()
+            g.mpv_version = get_mpv_version(player)
             version = "%s.%s.%s" % g.mpv_version
             fmt = c.g, c.w, c.g, c.w, version
             msg = "%splayer%s set to %smpv%s (version %s)" % fmt
@@ -882,7 +882,7 @@ def init():
     # check mpv version
 
     if "mpv" in Config.PLAYER.get:
-        g.mpv_version = get_mpv_version(exename=Config.PLAYER.get)
+        g.mpv_version = get_mpv_version(Config.PLAYER.get)
         options = utf8_decode(subprocess.check_output(
             [Config.PLAYER.get, "--list-options"]))
         # g.mpv_usesock = "--input-unix-socket" in options and not mswin
