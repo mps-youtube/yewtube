@@ -799,10 +799,6 @@ class g(object):
             "geo": "-geometry"}
         }
 
-    # windows compatibility
-    playerargs_defaults['mpv.exe'] = playerargs_defaults['mpv']
-    playerargs_defaults['mplayer.exe'] = playerargs_defaults['mplayer']
-
 
 def get_version_info():
     """ Return version and platform info. """
@@ -1049,17 +1045,16 @@ def init_opener():
 def known_player_set():
     """ Return true if the set player is known. """
     for allowed_player in g.playerargs_defaults:
-        allowed_player = re.escape(allowed_player)
-        regex = r'(?:^%s$)|(?:\b%s$)' % ((allowed_player,) * 2)
+        regex = r'(?:\b%s($|\.[a-zA-Z0-9]+$))' % re.escape(allowed_player)
         match = re.search(regex, Config.PLAYER.get)
 
         if mswin:
             match = re.search(regex, Config.PLAYER.get, re.IGNORECASE)
 
         if match:
-            return True
+            return allowed_player
 
-    return False
+    return None
 
 
 def showconfig(_):
@@ -1833,8 +1828,9 @@ def generate_real_playerargs(song, override, failcount):
     argsstr = Config.PLAYERARGS.get.strip()
     args = argsstr.split() if argsstr else []
 
-    if known_player_set():
-        pd = g.playerargs_defaults[Config.PLAYER.get]
+    known_player = known_player_set()
+    if known_player:
+        pd = g.playerargs_defaults[known_player]
         args.append(pd["title"])
         args.append(song.title)
         novid_arg = pd["novid"]
