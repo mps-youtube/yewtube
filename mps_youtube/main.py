@@ -2815,6 +2815,7 @@ def save_last():
 
 def open_save_view(action, name):
     """ Open, save or view a playlist by name.  Get closest name match. """
+    name = name.replace(" ", "-")
     if action == "open" or action == "view":
 
         saved = g.userpl.get(name)
@@ -2858,7 +2859,6 @@ def open_save_view(action, name):
             g.content = generate_songlist_display()
 
         else:
-            name = name.replace(" ", "-")
             g.userpl[name] = Playlist(name, list(g.model.songs))
             g.message = F('pl saved') % name
             save_to_file()
