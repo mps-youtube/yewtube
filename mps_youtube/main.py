@@ -1955,7 +1955,7 @@ def playsong(song, failcount=0, override=False):
     dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
     dbg("calling %s", " ".join(cmd))
     returncode = launch_player(song, songdata, cmd)
-    failed = 0 < returncode < 42
+    failed = returncode not in (0, 42, 43)
 
     if failed and failcount < g.max_retries:
         dbg(c.r + "stream failed to open" + c.w)
@@ -2017,7 +2017,7 @@ def launch_player(song, songdata, cmd):
 
     except OSError:
         g.message = F('no player') % Config.PLAYER.get
-        return (None, None)
+        return None
 
     finally:
         try:
