@@ -34,7 +34,7 @@ import unicodedata
 import collections
 import subprocess
 import threading
-import __main__
+# import __main__
 import platform
 import tempfile
 import difflib
@@ -843,8 +843,10 @@ def process_cl_args(args):
 
 def init():
     """ Initial setup. """
-    __main__.Playlist = Playlist
-    __main__.Video = Video
+    # I believe these two lines once resolved a pickle error.
+    # perhaps no longer needed, commenting out.
+    # __main__.Playlist = Playlist
+    # __main__.Video = Video
 
     init_text()
     init_readline()
