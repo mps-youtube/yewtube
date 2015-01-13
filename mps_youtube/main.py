@@ -70,6 +70,7 @@ except ImportError:
     has_readline = False
 
 try:
+    # pylint: disable=F0401
     import xerox
     has_xerox = True
 
@@ -2037,7 +2038,7 @@ def launch_player(song, songdata, cmd):
 
 def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
     """ Capture time progress from player output. Write status line. """
-    # pylint: disable=R0914
+    # pylint: disable=R0914, R0912
     re_mplayer = re.compile(r"A:\s*(?P<elapsed_s>\d+)\.\d\s*")
     re_mpv = re.compile(r".{,15}AV?:\s*(\d\d):(\d\d):(\d\d)")
     re_volume = re.compile(r"Volume:\s*(?P<volume>\d+)\s*%")
