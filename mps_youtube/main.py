@@ -1965,7 +1965,6 @@ def playsong(song, failcount=0, override=False):
 
 def launch_player(song, songdata, cmd):
     """ Launch player application. """
-    cmd = cmd[::]
     # fix for github issue 59
     if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
         cmd = [x.encode("utf8", errors="replace") for x in cmd]
@@ -2012,8 +2011,6 @@ def launch_player(song, songdata, cmd):
         else:
             with open(os.devnull, "w") as devnull:
                 returncode = subprocess.call(cmd, stderr=devnull)
-
-            returncode == 0
 
         return returncode
 
