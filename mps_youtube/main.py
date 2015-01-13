@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 
 __version__ = "0.2.1"
+__notes__ = "dev version"
 __author__ = "nagev"
 __license__ = "GPLv3"
 
@@ -802,6 +803,7 @@ class g(object):
 def get_version_info():
     """ Return version and platform info. """
     out = ("\nmpsyt version  : %s " % __version__)
+    out += ("\n   notes       : %s" % __notes__)
     out += ("\npafy version   : %s" % pafy.__version__)
     out += ("\nPython version : %s" % sys.version)
     out += ("\nProcessor      : %s" % platform.processor())
