@@ -239,7 +239,8 @@ def has_exefile(filename):
 
     Return path to file or False if not found
     """
-    paths = [os.getcwd()] + os.environ.get("PATH", []).split(os.pathsep)
+    paths = [os.getcwd()] + os.environ.get("PATH", '').split(os.pathsep)
+    paths = [i for i in paths if i]
     dbg("searching path for %s", filename)
 
     for path in paths:
