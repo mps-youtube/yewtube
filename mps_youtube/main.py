@@ -90,7 +90,6 @@ else:
     import cPickle as pickle
     from urllib import urlencode
     uni, byt, xinput = unicode, str, raw_input
-    uni = unicode
 
 
 def utf8_encode(x):
@@ -240,7 +239,8 @@ def has_exefile(filename):
 
     Return path to file or False if not found
     """
-    paths = [os.getcwd()] + os.environ.get("PATH", []).split(os.pathsep)
+    paths = [os.getcwd()] + os.environ.get("PATH", '').split(os.pathsep)
+    paths = [i for i in paths if i]
     dbg("searching path for %s", filename)
 
     for path in paths:
@@ -772,7 +772,6 @@ class g(object):
     pafy_pls = {}  #
     last_opened = message = content = ""
     config = [x for x in sorted(dir(Config)) if member_var(x)]
-    configbool = [x for x in config if type(getattr(Config, x)) is bool]
     defaults = {setting: getattr(Config, setting) for setting in config}
     suffix = "3" if sys.version_info[:2] >= (3, 0) else ""
     CFFILE = os.path.join(get_config_dir(), "config")
@@ -2540,7 +2539,7 @@ def fetch_comments(item):
     pagenum = 0
     pages = paginate(items, pagesize=ch, delim_fn=linecounter)
 
-    while True and 0 <= pagenum < len(pages):
+    while 0 <= pagenum < len(pages):
         pagecounter = "Page %s/%s" % (pagenum + 1, len(pages))
         page = pages[pagenum]
         pagetext = ("\n\n".join(page)).strip()
@@ -4194,25 +4193,25 @@ def show_encs():
     g.message = message % (c.g, c.w)
 
 
-def matchfunction(funcname, regex, userinput):
+def matchfunction(func, regex, userinput):
     """ Match userinput against regex.
 
-    Call funcname, return True if matches.
+    Call func, return True if matches.
 
     """
     if regex.match(userinput):
         matches = regex.match(userinput).groups()
         dbg("input: %s", userinput)
-        dbg("function call: %s", funcname)
+        dbg("function call: %s", func.__name__)
         dbg("regx matches: %s", matches)
 
         if g.debug_mode:
-            globals()[funcname](*matches)
+            func(*matches)
 
         else:
 
             try:
-                globals()[funcname](*matches)
+                func(*matches)
 
             except IndexError:
                 g.message = F('invalid range')
@@ -4245,52 +4244,51 @@ def main():
     rs = r'(?:repeat\s*|shuffle\s*|-a\s*|-f\s*|-w\s*)'
     pl = r'(?:.*=|)([-_a-zA-Z0-9]{18,50})(?:(?:\&\#).*|$)'
     regx = {
-        'ls': r'ls$',
-        'vp': r'vp$',
-        'top': r'top(|3m|6m|year|all)\s*$',
-        'dump': r'(un)?dump',
-        'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
-        'info': r'i\s*(\d{1,4})$',
-        'quits': r'(?:q|quit|exit)$',
-        'plist': r'pl\s+%s' % pl,
-        'yt_url': r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
-        'search': r'(?:search|\.|/)\s*([^./].{1,500})',
-        'dl_url': r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
-        'play_pl': r'play\s+(%s|\d+)$' % word,
-        'related': r'r\s?(\d{1,4})$',
-        'download': r'(dv|da|d|dl|download)\s*(\d{1,4})$',
-        'play_url': r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
-        'comments': r'c\s?(\d{1,4})$',
-        'nextprev': r'(n|p)$',
-        'play_all': r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
-        'user_pls': r'u(?:ser)?pl\s(.*)$',
-        'save_last': r'save\s*$',
-        'pl_search': r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
-        'setconfig': r'set\s+([-\w]+)\s*"?([^"]*)"?\s*$',
-        'clip_copy': r'x\s*(\d+)$',
-        'down_many': r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
-        'show_help': r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
-        'show_encs': r'encoders?\s*$',
-        'user_more': r'u\s?([\d]{1,4})$',
-        'down_plist': r'(da|dv)pl\s+%s' % pl,
-        'clearcache': r'clearcache$',
-        'usersearch': r'user\s+([^\s].{1,})$',
-        'shuffle_fn': r'\s*(shuffle)\s*$',
-        'add_rm_all': r'(rm|add)\s(?:\*|all)$',
-        'showconfig': r'(set|showconfig)\s*$',
-        'search_album': r'album\s*(.{0,500})',
-        'playlist_add': r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
-        'down_user_pls': r'(da|dv)upl\s+(.*)$',
-        'open_save_view': r'(open|save|view)\s*(%s)$' % word,
-        'songlist_mv_sw': r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})$',
-        'songlist_rm_add': r'(rm|add)\s*(-?\d[-,\d\s]{,250})$',
-        'playlist_rename': r'mv\s*(%s\s+%s)$' % (word, word),
-        'playlist_remove': r'rmp\s*(\d+|%s)$' % word,
-        'open_view_bynum': r'(open|view)\s*(\d{1,4})$',
-        'playlist_rename_idx': r'mv\s*(\d{1,3})\s*(%s)\s*$' % word}
+        ls: r'ls$',
+        vp: r'vp$',
+        dump: r'(un)?dump',
+        play: r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
+        info: r'i\s*(\d{1,4})$',
+        quits: r'(?:q|quit|exit)$',
+        plist: r'pl\s+%s' % pl,
+        yt_url: r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
+        search: r'(?:search|\.|/)\s*([^./].{1,500})',
+        dl_url: r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
+        play_pl: r'play\s+(%s|\d+)$' % word,
+        related: r'r\s?(\d{1,4})$',
+        download: r'(dv|da|d|dl|download)\s*(\d{1,4})$',
+        play_url: r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
+        comments: r'c\s?(\d{1,4})$',
+        nextprev: r'(n|p)$',
+        play_all: r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
+        user_pls: r'u(?:ser)?pl\s(.*)$',
+        save_last: r'save\s*$',
+        pl_search: r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
+        setconfig: r'set\s+([-\w]+)\s*"?([^"]*)"?\s*$',
+        clip_copy: r'x\s*(\d+)$',
+        down_many: r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
+        show_help: r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
+        show_encs: r'encoders?\s*$',
+        user_more: r'u\s?([\d]{1,4})$',
+        down_plist: r'(da|dv)pl\s+%s' % pl,
+        clearcache: r'clearcache$',
+        usersearch: r'user\s+([^\s].{1,})$',
+        shuffle_fn: r'\s*(shuffle)\s*$',
+        add_rm_all: r'(rm|add)\s(?:\*|all)$',
+        showconfig: r'(set|showconfig)\s*$',
+        search_album: r'album\s*(.{0,500})',
+        playlist_add: r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % word,
+        down_user_pls: r'(da|dv)upl\s+(.*)$',
+        open_save_view: r'(open|save|view)\s*(%s)$' % word,
+        songlist_mv_sw: r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})$',
+        songlist_rm_add: r'(rm|add)\s*(-?\d[-,\d\s]{,250})$',
+        playlist_rename: r'mv\s*(%s\s+%s)$' % (word, word),
+        playlist_remove: r'rmp\s*(\d+|%s)$' % word,
+        open_view_bynum: r'(open|view)\s*(\d{1,4})$',
+        playlist_rename_idx: r'mv\s*(\d{1,3})\s*(%s)\s*$' % word}
 
     # compile regexp's
-    regx = {name: re.compile(val, re.UNICODE) for name, val in regx.items()}
+    regx = {func: re.compile(val, re.UNICODE) for func, val in regx.items()}
     prompt = "> "
     arg_inp = arg_inp.replace(r",,", "[mpsyt-comma]")
     arg_inp = arg_inp.split(",")
