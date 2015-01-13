@@ -17,6 +17,7 @@ Features
 - Search and import YouTube playlists
 - Create and save local playlists
 - Download audio/video
+- Convert to mp3 & other formats (requires ffmpeg or avconv)
 - View video comments
 - Works with Python 2.7+ and 3.x
 - Works with Windows, Linux and Mac OS X 
@@ -92,8 +93,8 @@ Using `pip <http://www.pip-installer.org>`_::
     
     [sudo] pip install mps-youtube
 
-Mac OS X installation notes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Additional Mac OS X installation notes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
 Install mplayer with `MacPorts <http://www.macports.org>`_::
 
@@ -104,8 +105,8 @@ Or with `Homebrew <http://brew.sh>`_::
     brew install mplayer
 
 
-Windows installation notes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Additional Windows installation notes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to get colors (optional)::
 
