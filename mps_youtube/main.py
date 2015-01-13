@@ -4370,7 +4370,7 @@ Then, when results are shown:
     {2}x <number>{1} - copy item <number> url to clipboard (requires xerox)
 
     {2}q{1}, {2}quit{1} - exit mpsyt
-""".format(c.ul, c.w, c.y, c.r)),
+""".format(c.ul, c.w, c.y)),
     ("search", "Searching and Retrieving", """
 {0}Searching and Retrieving{1}
 
@@ -4392,7 +4392,7 @@ Then, when results are shown:
 {2}r <number>{1} - show videos related to video <number>.
 {2}u <number>{1} - show videos uploaded by uploader of video <number>.
 {2}c <number>{1} - view comments for video <number>
-""".format(c.ul, c.w, c.y, c.r)),
+""".format(c.ul, c.w, c.y)),
 
     ("edit", "Editing / Manipulating Results", """
 {0}Editing and Manipulating Results{1}
@@ -4403,7 +4403,7 @@ Then, when results are shown:
 {2}save <name>{1} - save displayed items as a local playlist.
 
 {2}shuffle{1} - Shuffle the displayed results.
-""".format(c.ul, c.w, c.y, c.r)),
+""".format(c.ul, c.w, c.y)),
 
     ("download", "Downloading and Playback", """
 {0}Downloading and Playback{1}
@@ -4426,7 +4426,7 @@ Then, when results are shown:
 {2}all{1} or {2}*{1} - play all displayed items.
 {2}repeat <number(s)>{1} - play and repeat the specified items.
 {2}shuffle <number(s)>{1} - play specified items in random order.
-""".format(c.ul, c.w, c.y, c.r)),
+""".format(c.ul, c.w, c.y)),
 
     ("encode", "Encoding to MP3 and other formats", """
 {0}Encoding to MP3 and other formats{1}
@@ -4439,9 +4439,9 @@ available in the system path.
 
 The encoding presets can be modified by editing the text config file which
 resides at:
-   {4}
+   {3}
 
-""".format(c.ul, c.w, c.y, c.r, g.TCFILE)),
+""".format(c.ul, c.w, c.y, g.TCFILE)),
 
     ("playlists", "Using Local Playlists", """
 {0}Using Local Playlists{1}
@@ -4463,7 +4463,7 @@ resides at:
 {2}rm <number(s)>{1} - remove items from displayed results.
 {2}sw <number>,<number>{1} - swap two items.
 {2}mv <number>,<number>{1} - move item <number> to position <number>.
-""".format(c.ul, c.w, c.y, c.r)),
+""".format(c.ul, c.w, c.y)),
 
     ("invoke", "Invocation Parameters", """
 {0}Invocation{1}
@@ -4484,7 +4484,7 @@ commas (,).  E.g.,
   {2}mpsyt //the doors, 1, all -a{1} - open YouTube playlist and play audio
 
 If you need to enter an actual comma on the command line, use {2},,{1} instead.
-""".format(c.ul, c.w, c.y, c.r)),
+""".format(c.ul, c.w, c.y)),
 
     ("config", "Configuration Options", """
 {0}Configuration{1}
@@ -4544,7 +4544,7 @@ undo)
 
 Use {2}1{1} and {2}0{1} in place of true and false when using the {2}set{1} \
 command
-""".format(c.ul, c.w, c.y, c.r)),
+""".format(c.ul, c.w, c.y)),
 
     ("new", "New Features", """
 {0}New Features in v0.2.x{1}
@@ -4568,7 +4568,7 @@ command
 
  - Remux audio downloads for better compatibility (requires ffmpeg or avconv)
 
-""".format(c.ul, c.w, c.y, c.r))]
+""".format(c.ul, c.w, c.y))]
 
 if __name__ == "__main__":
     init()
