@@ -217,7 +217,7 @@ def get_config_dir():
     return mps_confdir
 
 
-def get_mpv_version(exename="mpv"):
+def get_mpv_version(exename):
     """ Get version of mpv as 3-tuple. """
     o = utf8_decode(subprocess.check_output([exename, "--version"]))
     re_ver = re.compile(r"%s (\d+)\.(\d+)\.(\d+)" % exename)
@@ -652,7 +652,7 @@ def check_player(player):
     if has_exefile(player):
 
         if "mpv" in player:
-            g.mpv_version = get_mpv_version()
+            g.mpv_version = get_mpv_version(player)
             version = "%s.%s.%s" % g.mpv_version
             fmt = c.g, c.w, c.g, c.w, version
             msg = "%splayer%s set to %smpv%s (version %s)" % fmt
@@ -798,10 +798,6 @@ class g(object):
             "geo": "-geometry"}
         }
 
-    # windows compatibility
-    playerargs_defaults['mpv.exe'] = playerargs_defaults['mpv']
-    playerargs_defaults['mplayer.exe'] = playerargs_defaults['mplayer']
-
 
 def get_version_info():
     """ Return version and platform info. """
@@ -881,7 +877,7 @@ def init():
     # check mpv version
 
     if "mpv" in Config.PLAYER.get:
-        g.mpv_version = get_mpv_version(exename=Config.PLAYER.get)
+        g.mpv_version = get_mpv_version(Config.PLAYER.get)
         options = utf8_decode(subprocess.check_output(
             [Config.PLAYER.get, "--list-options"]))
         # g.mpv_usesock = "--input-unix-socket" in options and not mswin
@@ -1048,17 +1044,16 @@ def init_opener():
 def known_player_set():
     """ Return true if the set player is known. """
     for allowed_player in g.playerargs_defaults:
-        allowed_player = re.escape(allowed_player)
-        regex = r'(?:^%s$)|(?:\b%s$)' % ((allowed_player,) * 2)
+        regex = r'(?:\b%s($|\.[a-zA-Z0-9]+$))' % re.escape(allowed_player)
         match = re.search(regex, Config.PLAYER.get)
 
         if mswin:
             match = re.search(regex, Config.PLAYER.get, re.IGNORECASE)
 
         if match:
-            return True
+            return allowed_player
 
-    return False
+    return None
 
 
 def showconfig(_):
@@ -1832,8 +1827,9 @@ def generate_real_playerargs(song, override, failcount):
     argsstr = Config.PLAYERARGS.get.strip()
     args = argsstr.split() if argsstr else []
 
-    if known_player_set():
-        pd = g.playerargs_defaults[Config.PLAYER.get]
+    known_player = known_player_set()
+    if known_player:
+        pd = g.playerargs_defaults[known_player]
         args.append(pd["title"])
         args.append(song.title)
         novid_arg = pd["novid"]
