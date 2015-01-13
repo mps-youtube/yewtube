@@ -4245,7 +4245,6 @@ def main():
     regx = {
         'ls': r'ls$',
         'vp': r'vp$',
-        'top': r'top(|3m|6m|year|all)\s*$',
         'dump': r'(un)?dump',
         'play': r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
         'info': r'i\s*(\d{1,4})$',
