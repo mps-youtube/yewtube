@@ -1954,8 +1954,8 @@ def playsong(song, failcount=0, override=False):
     writestatus(songdata)
     dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
     dbg("calling %s", " ".join(cmd))
-    returncode, played = launch_player(song, songdata, cmd)
-    failed = not played
+    returncode = launch_player(song, songdata, cmd)
+    failed = returncode not in (0, 42, 43)
 
     if failed and failcount < g.max_retries:
         dbg(c.r + "stream failed to open" + c.w)
@@ -1990,7 +1990,7 @@ def launch_player(song, songdata, cmd):
             cmd.append('conf='+input_file)
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
-            played = player_status(p, songdata + "; ", song.length)
+            player_status(p, songdata + "; ", song.length)
             returncode = p.wait()
 
         elif "mpv" in Config.PLAYER.get:
@@ -2007,21 +2007,21 @@ def launch_player(song, songdata, cmd):
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                      bufsize=1)
 
-            played = player_status(p, songdata + "; ", song.length, mpv=True,
-                                   sockpath=sockpath)
+            player_status(p, songdata + "; ", song.length, mpv=True,
+                          sockpath=sockpath)
             returncode = p.wait()
 
         else:
             with open(os.devnull, "w") as devnull:
                 returncode = subprocess.call(cmd, stderr=devnull)
 
-            played = returncode == 0
+            returncode == 0
 
-        return (returncode, played)
+        return returncode
 
     except OSError:
         g.message = F('no player') % Config.PLAYER.get
-        return (None, None)
+        return None
 
     finally:
         try:
@@ -2037,7 +2037,6 @@ def launch_player(song, songdata, cmd):
 def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
     """ Capture time progress from player output. Write status line. """
     # pylint: disable=R0914
-    played_something = False
     re_mplayer = re.compile(r"A:\s*(?P<elapsed_s>\d+)\.\d\s*")
     re_mpv = re.compile(r".{,15}AV?:\s*(\d\d):(\d\d):(\d\d)")
     re_volume = re.compile(r"Volume:\s*(?P<volume>\d+)\s*%")
@@ -2057,7 +2056,6 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
             s.send(json.dumps(cmd).encode() + b'\n')
             volume_level = m = None
             for line in s.makefile():
-                played_something = True
                 resp = json.loads(line)
                 if resp.get('event') == 'property-change' and resp['id'] == 1:
                     m = int(resp['data'])
@@ -2088,7 +2086,6 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                 m = re_player.match(buff)
 
                 if m:
-                    played_something = True
                     line = make_status_line(m, prefix, songlength,
                                             volume=volume_level)
 
@@ -2100,8 +2097,6 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
 
             else:
                 buff += char
-
-    return played_something
 
 
 def make_status_line(match_object, prefix, songlength=0, volume=None):
