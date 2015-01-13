@@ -886,7 +886,6 @@ def init():
             g.mpv_usesock = True
             dbg(c.g + "mpv supports --input-unix-socket" + c.w)
 
-
     # setup colorama
     if has_colorama and mswin:
         init_colorama()
@@ -1439,9 +1438,9 @@ def mplayer_help(short=True):
         pause = "[{0}DN{1}] SEEK [{0}UP{1}]       [{0}space{1}] pause"
 
     single = "[{0}q{1}] return"
-    nextprev = "[{0}n{1}] next/prev [{0}p{1}]"
+    next_prev = "[{0}n{1}] next/prev [{0}p{1}]"
     # ret = "[{0}q{1}] %s" % ("return" if short else "next track")
-    ret = single if short else nextprev
+    ret = single if short else next_prev
     fmt = "    %-20s       %-20s"
     lines = fmt % (seek, volume) + "\n" + fmt % (pause, ret)
     return lines.format(c.g, c.w)
@@ -1973,29 +1972,32 @@ def launch_player(song, songdata, cmd):
 
     try:
         with tempfile.NamedTemporaryFile('w', prefix='mpsyt-input',
-                                         delete=False) as file:
-            file.write('k quit 42\nj quit\nq quit 43\np quit 42\nn quit\n')
-            input_file = file.name
+                                         delete=False) as tmpfile:
+            tmpfile.write('k quit 42\nj quit\nq quit 43\np quit 42\nn quit\n')
+            input_file = tmpfile.name
 
         if "mplayer" in Config.PLAYER.get:
             cmd.append('-input')
+
             if mswin:
                 # Mplayer does not recognize path starting with drive letter,
                 # or with backslashes as a delimiter.
                 input_file = input_file[2:].replace('\\', '/')
-            cmd.append('conf='+input_file)
+
+            cmd.append('conf=' + input_file)
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
             player_status(p, songdata + "; ", song.length)
             returncode = p.wait()
 
         elif "mpv" in Config.PLAYER.get:
-            cmd.append('--input-conf='+input_file)
+            cmd.append('--input-conf=' + input_file)
             sockpath = None
 
             if g.mpv_usesock:
                 sockpath = tempfile.mktemp('.sock', 'mpsyt-mpv')
                 cmd.append('--input-unix-socket=' + sockpath)
+
                 with open(os.devnull, "w") as devnull:
                     p = subprocess.Popen(cmd, shell=False, stderr=devnull)
 
@@ -2022,8 +2024,10 @@ def launch_player(song, songdata, cmd):
     finally:
         try:
             os.unlink(input_file)
+
             if sockpath:
                 os.unlink(sockpath)
+
             p.terminate()  # make sure to kill mplayer if mpsyt crashes
 
         except (OSError, AttributeError, UnboundLocalError):
@@ -2043,6 +2047,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
 
     if sockpath:
         time.sleep(1)
+
         try:
             s = socket.socket(socket.AF_UNIX)
             s.connect(sockpath)
@@ -2051,12 +2056,16 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
             cmd = {"command": ["observe_property", 2, "volume"]}
             s.send(json.dumps(cmd).encode() + b'\n')
             volume_level = m = None
+
             for line in s.makefile():
                 resp = json.loads(line)
+
                 if resp.get('event') == 'property-change' and resp['id'] == 1:
                     m = int(resp['data'])
+
                 elif resp.get('event') == 'property-change' and resp['id'] == 2:
                     volume_level = int(resp['data'])
+
                 if m:
                     line = make_status_line(m, prefix, songlength,
                                             volume=volume_level)
@@ -2064,10 +2073,12 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                     if line != last_displayed_line:
                         writestatus(line)
                         last_displayed_line = line
+
         except socket.error:
             pass
 
     else:
+
         while po_obj.poll() is None:
             stdstream = po_obj.stderr if mpv else po_obj.stdout
             char = stdstream.read(1).decode("utf-8", errors="ignore")
@@ -2100,6 +2111,7 @@ def make_status_line(match_object, prefix, songlength=0, volume=None):
     # pylint: disable=R0914
     if isinstance(match_object, int):
         elapsed_s = match_object
+
     else:
         try:
             h, m, s = map(int, match_object.groups())
