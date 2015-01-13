@@ -90,7 +90,6 @@ else:
     import cPickle as pickle
     from urllib import urlencode
     uni, byt, xinput = unicode, str, raw_input
-    uni = unicode
 
 
 def utf8_encode(x):
@@ -772,7 +771,6 @@ class g(object):
     pafy_pls = {}  #
     last_opened = message = content = ""
     config = [x for x in sorted(dir(Config)) if member_var(x)]
-    configbool = [x for x in config if type(getattr(Config, x)) is bool]
     defaults = {setting: getattr(Config, setting) for setting in config}
     suffix = "3" if sys.version_info[:2] >= (3, 0) else ""
     CFFILE = os.path.join(get_config_dir(), "config")
@@ -2540,7 +2538,7 @@ def fetch_comments(item):
     pagenum = 0
     pages = paginate(items, pagesize=ch, delim_fn=linecounter)
 
-    while True and 0 <= pagenum < len(pages):
+    while 0 <= pagenum < len(pages):
         pagecounter = "Page %s/%s" % (pagenum + 1, len(pages))
         page = pages[pagenum]
         pagetext = ("\n\n".join(page)).strip()
