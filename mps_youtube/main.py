@@ -1981,8 +1981,8 @@ def launch_player(song, songdata, cmd):
         confpath = Config.MPV_INPUT_CONF.get
     conf = ''
     if confpath:
-        with open(confpath) as file:
-            conf = file.read() + '\n'
+        with open(confpath) as conffile:
+            conf = conffile.read() + '\n'
     conf = conf.replace("playlist_prev", "quit 42")
     conf = conf.replace("pt_step -1", "quit 42")
     conf = conf.replace("playlist_next", "quit 43")
@@ -3150,11 +3150,11 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         if returncode == 42:
             n -= 1
 
-        elif returncode in (43, None):
-            n += 1
+        elif returncode == 0:
+            break
 
         else:
-            break
+            n += 1
 
         if n == -1:
             n = len(songlist) - 1 if repeat else 0
