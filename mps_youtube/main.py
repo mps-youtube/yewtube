@@ -706,6 +706,8 @@ class Config(object):
     COLOURS = ConfigItem("colours",
                          False if mswin and not has_colorama else True,
                          check_fn=check_colours)
+    MPV_INPUT_CONF = ConfigItem("mpv_input_conf", '')
+    MPLAYER_INPUT_CONF = ConfigItem("mplayer_input_conf", '')
 
 
 class Playlist(object):
@@ -1974,10 +1976,28 @@ def launch_player(song, songdata, cmd):
     if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
         cmd = [x.encode("utf8", errors="replace") for x in cmd]
 
+    confpath = Config.MPLAYER_INPUT_CONF.get
+    if "mpv" in Config.PLAYER.get:
+        confpath = Config.MPV_INPUT_CONF.get
+    conf = ''
+    if confpath:
+        with open(confpath) as file:
+            conf = file.read() + '\n'
+    conf = conf.replace("playlist_prev", "quit 42")
+    conf = conf.replace("pt_step -1", "quit 42")
+    conf = conf.replace("playlist_next", "quit 43")
+    conf = conf.replace("pt_step 1", "quit 43")
+    standard_cmds = ['> quit 43\n', '< quit 42\n', 'NEXT quit 43\n',
+                     'PREV quit 42\n', 'ENTER quit 43\n']
+    bound_keys = [i.split()[0] for i in conf.splitlines() if i.split()]
+    for i in standard_cmds:
+        key = i.split()[0]
+        if key not in bound_keys:
+            conf += i
     try:
         with tempfile.NamedTemporaryFile('w', prefix='mpsyt-input',
                                          delete=False) as tmpfile:
-            tmpfile.write('k quit 42\nj quit\nq quit 43\np quit 42\nn quit\n')
+            tmpfile.write(conf)
             input_file = tmpfile.name
 
         if "mplayer" in Config.PLAYER.get:
@@ -3130,11 +3150,11 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         if returncode == 42:
             n -= 1
 
-        elif returncode == 43:
-            break
+        elif returncode in (43, None):
+            n += 1
 
         else:
-            n += 1
+            break
 
         if n == -1:
             n = len(songlist) - 1 if repeat else 0
