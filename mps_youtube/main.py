@@ -1983,12 +1983,13 @@ def launch_player(song, songdata, cmd):
     if confpath:
         with open(confpath) as conffile:
             conf = conffile.read() + '\n'
+    conf = conf.replace("quit", "quit 43")
     conf = conf.replace("playlist_prev", "quit 42")
     conf = conf.replace("pt_step -1", "quit 42")
-    conf = conf.replace("playlist_next", "quit 43")
-    conf = conf.replace("pt_step 1", "quit 43")
-    standard_cmds = ['> quit 43\n', '< quit 42\n', 'NEXT quit 43\n',
-                     'PREV quit 42\n', 'ENTER quit 43\n']
+    conf = conf.replace("playlist_next", "quit")
+    conf = conf.replace("pt_step 1", "quit")
+    standard_cmds = ['q quit 43\n', '> quit\n', '< quit 42\n', 'NEXT quit\n',
+                     'PREV quit 42\n', 'ENTER quit\n']
     bound_keys = [i.split()[0] for i in conf.splitlines() if i.split()]
     for i in standard_cmds:
         key = i.split()[0]
@@ -3150,7 +3151,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         if returncode == 42:
             n -= 1
 
-        elif returncode == 0:
+        elif returncode == 43:
             break
 
         else:
