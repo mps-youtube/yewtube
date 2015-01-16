@@ -60,5 +60,7 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
     ],
     long_description=open("README.rst").read(),
-    options={"py2exe": {"excludes": "readline, win32api, win32con"}}
+    options={"py2exe": {"excludes": "readline, win32api, win32con, xerox",
+	                "bundle_files": 1}},
+    zipfile=None
 )
