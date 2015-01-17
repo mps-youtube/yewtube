@@ -1995,6 +1995,8 @@ def launch_player(song, songdata, cmd):
         key = i.split()[0]
         if key not in bound_keys:
             conf += i
+
+    sockpath = None
     try:
         with tempfile.NamedTemporaryFile('w', prefix='mpsyt-input',
                                          delete=False) as tmpfile:
@@ -2017,7 +2019,6 @@ def launch_player(song, songdata, cmd):
 
         elif "mpv" in Config.PLAYER.get:
             cmd.append('--input-conf=' + input_file)
-            sockpath = None
 
             if g.mpv_usesock:
                 sockpath = tempfile.mktemp('.sock', 'mpsyt-mpv')
