@@ -2038,6 +2038,7 @@ def launch_player(song, songdata, cmd):
         else:
             with open(os.devnull, "w") as devnull:
                 returncode = subprocess.call(cmd, stderr=devnull)
+            p = None
 
         return returncode
 
@@ -2046,16 +2047,13 @@ def launch_player(song, songdata, cmd):
         return None
 
     finally:
-        try:
-            os.unlink(input_file)
+        os.unlink(input_file)
 
-            if sockpath:
-                os.unlink(sockpath)
+        if sockpath:
+            os.unlink(sockpath)
 
+        if p and p.poll() is None:
             p.terminate()  # make sure to kill mplayer if mpsyt crashes
-
-        except (OSError, AttributeError, UnboundLocalError):
-            pass
 
 
 def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
