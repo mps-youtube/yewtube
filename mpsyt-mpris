@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+import mps_youtube
+from mps_youtube import mpris
+from threading import Thread
+
+# initialize mpris warapper and start listening
+mpris_wrapper = mpris.Mpris2Controller()
+mpris_wrapper.acquire()
+t = Thread(target=mpris_wrapper.run)
+t.daemon = True
+t.start()
+
+# run main app
+mps_youtube.main.main()
+
+# cleanup - release dbus objects
+mpris_wrapper.release()

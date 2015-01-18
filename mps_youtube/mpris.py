@@ -291,7 +291,3 @@ class Mpris2MediaPlayer(dbus.service.Object):
     def PropertiesChanged(self, interface_name, changed_properties,
                           invalidated_properties):
         pass
-
-mpris = Mpris2Controller()
-mpris.acquire()
-mpris.run()
