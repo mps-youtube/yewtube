@@ -706,6 +706,8 @@ class Config(object):
     COLOURS = ConfigItem("colours",
                          False if mswin and not has_colorama else True,
                          check_fn=check_colours)
+    MPV_INPUT_CONF = ConfigItem("mpv_input_conf", '')
+    MPLAYER_INPUT_CONF = ConfigItem("mplayer_input_conf", '')
 
 
 class Playlist(object):
@@ -1974,10 +1976,31 @@ def launch_player(song, songdata, cmd):
     if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
         cmd = [x.encode("utf8", errors="replace") for x in cmd]
 
+    confpath = Config.MPLAYER_INPUT_CONF.get
+    if "mpv" in Config.PLAYER.get:
+        confpath = Config.MPV_INPUT_CONF.get
+    conf = ''
+    if confpath:
+        with open(confpath) as conffile:
+            conf = conffile.read() + '\n'
+    conf = conf.replace("quit", "quit 43")
+    conf = conf.replace("playlist_prev", "quit 42")
+    conf = conf.replace("pt_step -1", "quit 42")
+    conf = conf.replace("playlist_next", "quit")
+    conf = conf.replace("pt_step 1", "quit")
+    standard_cmds = ['q quit 43\n', '> quit\n', '< quit 42\n', 'NEXT quit\n',
+                     'PREV quit 42\n', 'ENTER quit\n']
+    bound_keys = [i.split()[0] for i in conf.splitlines() if i.split()]
+    for i in standard_cmds:
+        key = i.split()[0]
+        if key not in bound_keys:
+            conf += i
+
+    sockpath = None
     try:
         with tempfile.NamedTemporaryFile('w', prefix='mpsyt-input',
                                          delete=False) as tmpfile:
-            tmpfile.write('k quit 42\nj quit\nq quit 43\np quit 42\nn quit\n')
+            tmpfile.write(conf)
             input_file = tmpfile.name
 
         if "mplayer" in Config.PLAYER.get:
@@ -1996,7 +2019,6 @@ def launch_player(song, songdata, cmd):
 
         elif "mpv" in Config.PLAYER.get:
             cmd.append('--input-conf=' + input_file)
-            sockpath = None
 
             if g.mpv_usesock:
                 sockpath = tempfile.mktemp('.sock', 'mpsyt-mpv')
@@ -2016,6 +2038,7 @@ def launch_player(song, songdata, cmd):
         else:
             with open(os.devnull, "w") as devnull:
                 returncode = subprocess.call(cmd, stderr=devnull)
+            p = None
 
         return returncode
 
@@ -2024,16 +2047,13 @@ def launch_player(song, songdata, cmd):
         return None
 
     finally:
-        try:
-            os.unlink(input_file)
+        os.unlink(input_file)
 
-            if sockpath:
-                os.unlink(sockpath)
+        if sockpath:
+            os.unlink(sockpath)
 
+        if p and p.poll() is None:
             p.terminate()  # make sure to kill mplayer if mpsyt crashes
-
-        except (OSError, AttributeError, UnboundLocalError):
-            pass
 
 
 def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
