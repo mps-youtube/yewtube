@@ -721,7 +721,7 @@ class Playlist(object):
     @property
     def is_empty(self):
         """ Return True / False if songs are populated or not. """
-        return bool(not self.songs)
+        return not self.songs
 
     @property
     def size(self):
