@@ -858,11 +858,10 @@ def init():
     init_transcode()
 
     # set player to mpv or mplayer if found, otherwise unset
-    E = os.path.exists
     suffix = ".exe" if mswin else ""
     mplayer, mpv = "mplayer" + suffix, "mpv" + suffix
 
-    if not E(g.CFFILE):
+    if not os.path.exists(g.CFFILE):
 
         if has_exefile(mpv):
             Config.PLAYER = ConfigItem("player", mpv, check_fn=check_player)
