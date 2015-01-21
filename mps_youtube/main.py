@@ -115,7 +115,8 @@ def member_var(x):
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 
 
-def getxy(wh=None):
+XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
+def getxy():
     """ Get terminal size, terminal width and max-results. """
     if g.detectable_size:
         x, y = terminalsize.get_terminal_size()
@@ -126,8 +127,7 @@ def getxy(wh=None):
         x, max_results = Config.CONSOLE_WIDTH.get, Config.MAX_RESULTS.get
         y = max_results + 4
 
-    retval = dict(width=x, height=y, max_results=max_results)
-    return (x, y, max_results) if not wh else retval[wh]
+    return XYTuple(x, y, max_results)
 
 
 def utf8_replace(txt):
@@ -1064,7 +1064,7 @@ def known_player_set():
 
 def showconfig(_):
     """ Dump config data. """
-    width = getxy("width")
+    width = getxy().width
     width -= 30
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
@@ -1532,7 +1532,7 @@ def playback_progress(idx, allsongs, repeat=False):
     """ Generate string to show selected tracks, indicate current track. """
     # pylint: disable=R0914
     # too many local variables
-    cw = getxy("width")
+    cw = getxy().width
     out = "  %s%-XXs%s%s\n".replace("XX", uni(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
     show_key_help = (known_player_set and Config.SHOW_MPLAYER_KEYS.get)
@@ -1657,7 +1657,7 @@ def generate_playlist_display():
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
 
-    cw = getxy("width")
+    cw = getxy.width
     fmtrow = "%s%-5s %s %-8s  %-2s%s\n"
     fmthd = "%s%-5s %-{}s %-9s %-5s%s\n".format(cw - 23)
     head = (c.ul, "Item", "Playlist", "Updated", "Count", c.w)
@@ -1703,7 +1703,7 @@ def get_user_columns():
                 sz = int(namesize[1])
 
             total_size += sz
-            cw = getxy("width")
+            cw = getxy().width
             if total_size < cw - 18:
                 ret.append(dict(name=nm, size=sz, heading=hd))
 
@@ -1728,7 +1728,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     lengthsize = 8 if maxlength > 35999 else 7
     lengthsize = 5 if maxlength < 6000 else lengthsize
     reserved = 9 + lengthsize + len(user_columns)
-    cw = getxy("width")
+    cw = getxy().width
     cw -= 1
     title_size = cw - sum(1 + x['size'] for x in user_columns) - reserved
     before = [{"name": "idx", "size": 3, "heading": "Num"},
@@ -2171,7 +2171,7 @@ def make_status_line(match_object, prefix, songlength=0, volume=None):
     else:
         vol_suffix = ""
 
-    cw = getxy("width")
+    cw = getxy().width
     prog_bar_size = cw - len(prefix) - len(status_line) - len(vol_suffix) - 7
     progress = int(math.ceil(pct / 100 * prog_bar_size))
     status_line += " [%s]" % ("=" * (progress - 1) +
@@ -2224,7 +2224,7 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
 def generate_search_qs(term, page, result_count=None):
     """ Return query string. """
     if not result_count:
-        result_count = getxy("max_results")
+        result_count = getxy().max_results
 
     aliases = dict(relevance="relevance", date="published", rating="rating",
                    views="viewCount")
@@ -2372,7 +2372,7 @@ def pl_search(term, page=1, splash=True, is_user=False):
     url = "https://gdata.youtube.com/feeds/api%s" % x
     prog = "user: " + term if is_user else term
     logging.info("playlist search for %s", prog)
-    max_results = getxy("max_results")
+    max_results = getxy().max_results
     start = (page - 1) * max_results or 1
     qs = {"start-index": start,
           "max-results": max_results, "v": 2, 'alt': 'jsonc'}
@@ -3628,7 +3628,7 @@ def nextprev(np):
     good = False
 
     if np == "n":
-        max_results = getxy("max_results")
+        max_results = getxy().max_results
         if len(content) == max_results and glsq:
             g.current_page += 1
             good = True
@@ -3838,7 +3838,7 @@ def dump(un):
 
 def plist(parturl, pagenum=1, splash=True, dumps=False):
     """ Retrieve YouTube playlist. """
-    max_results = getxy("max_results")
+    max_results = getxy().max_results
 
     if "playlist" in g.last_search_query and\
             parturl == g.last_search_query['playlist']:
