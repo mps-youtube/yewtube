@@ -248,12 +248,10 @@ def has_exefile(filename):
     for path in paths:
         exepath = os.path.join(path, filename)
 
-        if os.path.exists(exepath):
-            if os.path.isfile(exepath):
-
-                if os.access(exepath, os.X_OK):
-                    dbg("found at %s", exepath)
-                    return exepath
+        if os.path.isfile(exepath):
+            if os.access(exepath, os.X_OK):
+                dbg("found at %s", exepath)
+                return exepath
 
     return False
 
