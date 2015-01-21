@@ -2074,19 +2074,19 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
             s.send(json.dumps(cmd).encode() + b'\n')
             cmd = {"command": ["observe_property", 2, "volume"]}
             s.send(json.dumps(cmd).encode() + b'\n')
-            volume_level = m = None
+            volume_level = elapsed_s = None
 
             for line in s.makefile():
                 resp = json.loads(line)
 
                 if resp.get('event') == 'property-change' and resp['id'] == 1:
-                    m = int(resp['data'])
+                    elapsed_s = int(resp['data'])
 
                 elif resp.get('event') == 'property-change' and resp['id'] == 2:
                     volume_level = int(resp['data'])
 
-                if m:
-                    line = make_status_line(m, prefix, songlength,
+                if elapsed_s:
+                    line = make_status_line(elapsed_s, prefix, songlength,
                                             volume=volume_level)
 
                     if line != last_displayed_line:
@@ -2109,10 +2109,23 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                 if mv:
                     volume_level = int(mv.group("volume"))
 
-                m = re_player.match(buff)
+                match_object = re_player.match(buff)
 
-                if m:
-                    line = make_status_line(m, prefix, songlength,
+                if match_object:
+
+                    try:
+                        h, m, s = map(int, match_object.groups())
+                        elapsed_s = h * 3600 + m * 60 + s
+
+                    except ValueError:
+
+                        try:
+                            elapsed_s = int(match_object.group('elapsed_s') or '0')
+
+                        except ValueError:
+                            continue
+
+                    line = make_status_line(elapsed_s, prefix, songlength,
                                             volume=volume_level)
 
                     if line != last_displayed_line:
@@ -2125,24 +2138,9 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                 buff += char
 
 
-def make_status_line(match_object, prefix, songlength=0, volume=None):
+def make_status_line(elapsed_s, prefix, songlength=0, volume=None):
     """ Format progress line output.  """
     # pylint: disable=R0914
-    if isinstance(match_object, int):
-        elapsed_s = match_object
-
-    else:
-        try:
-            h, m, s = map(int, match_object.groups())
-            elapsed_s = h * 3600 + m * 60 + s
-
-        except ValueError:
-
-            try:
-                elapsed_s = int(match_object.group('elapsed_s') or '0')
-
-            except ValueError:
-                return ""
 
     display_s = elapsed_s
     display_h = display_m = 0
