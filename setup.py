@@ -31,7 +31,7 @@ setup(
     packages=['mps_youtube'],
     entry_points=dict(console_scripts=['mpsyt = mps_youtube:main.main']),
     console=['mpsyt'],
-    install_requires=['Pafy >= 0.3.66'],
+    install_requires=['Pafy >= 0.3.68'],
     package_data={"": ["LICENSE", "README.rst", "CHANGELOG"]},
     classifiers=[
         "Topic :: Utilities",
