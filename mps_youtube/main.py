@@ -1654,7 +1654,7 @@ def generate_playlist_display():
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
 
-    cw = getxy.width
+    cw = getxy().width
     fmtrow = "%s%-5s %s %-8s  %-2s%s\n"
     fmthd = "%s%-5s %-{}s %-9s %-5s%s\n".format(cw - 23)
     head = (c.ul, "Item", "Playlist", "Updated", "Count", c.w)
