@@ -82,13 +82,13 @@ except ImportError:
 if sys.version_info[:2] >= (3, 0):
     # pylint: disable=E0611,F0401
     import pickle
-    from urllib.request import build_opener
+    from urllib.request import urlopen
     from urllib.error import HTTPError, URLError
     from urllib.parse import urlencode
     uni, byt, xinput = str, bytes, input
 
 else:
-    from urllib2 import build_opener, HTTPError, URLError
+    from urllib2 import urlopen, HTTPError, URLError
     import cPickle as pickle
     from urllib import urlencode
     uni, byt, xinput = unicode, str, raw_input
@@ -260,7 +260,7 @@ def get_content_length(url, preloading=False):
     """ Return content length of a url. """
     prefix = "preload: " if preloading else ""
     dbg(c.y + prefix + "getting content-length header" + c.w)
-    response = utf8_decode(g.urlopen(url))
+    response = utf8_decode(urlopen(url))
     headers = response.headers
     cl = headers['content-length']
     return int(cl)
@@ -749,7 +749,6 @@ class g(object):
     command_line = False
     debug_mode = False
     preload_disabled = False
-    urlopen = None
     isatty = sys.stdout.isatty()
     ytpls = []
     mpv_version = 0, 0, 0
@@ -853,7 +852,6 @@ def init():
 
     init_text()
     init_readline()
-    init_opener()
     init_cache()
     init_transcode()
 
@@ -1033,15 +1031,6 @@ def init_readline():
         if os.path.exists(g.READLINE_FILE):
             readline.read_history_file(g.READLINE_FILE)
             dbg(c.g + "Read history file" + c.w)
-
-
-def init_opener():
-    """ Set up url opener. """
-    opener = build_opener()
-    ua = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; "
-    ua += "Trident/5.0)"
-    opener.addheaders = [("User-Agent", ua)]
-    g.urlopen = opener.open
 
 
 def known_player_set():
@@ -2192,7 +2181,7 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
 
         # perform fetch
         try:
-            wdata = utf8_decode(g.urlopen(url).read())
+            wdata = utf8_decode(urlopen(url).read())
             wdata = json.loads(wdata)
             songs = get_tracks_from_json(wdata)
 
@@ -2386,7 +2375,7 @@ def pl_search(term, page=1, splash=True, is_user=False):
         g.message = "Searching playlists for %s" % c.y + prog + c.w
         screen_update()
         try:
-            wpage = utf8_decode(g.urlopen(url).read())
+            wpage = utf8_decode(urlopen(url).read())
             pldata = json.loads(wpage)
             playlists = get_pl_from_json(pldata)
         except HTTPError:
@@ -2507,7 +2496,7 @@ def fetch_comments(item):
     if url not in g.url_memo:
 
         try:
-            raw = utf8_decode(g.urlopen(url).read())
+            raw = utf8_decode(urlopen(url).read())
             add_to_url_memo(url, raw)
 
         except HTTPError:
@@ -2697,7 +2686,7 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
         stream = select_stream(streams, 0, audio=audio, m4a_ok=True)
         url = stream['url']
 
-    resp = g.urlopen(url)
+    resp = urlopen(url)
     total = int(resp.info()['Content-Length'].strip())
     chunksize, bytesdone, t0 = 16384, 0, time.time()
     outfh = open(filename, 'wb')
@@ -3238,7 +3227,7 @@ def quits(showlogo=True):
 
         try:
             url = "https://github.com/np1/mps-youtube/raw/master/VERSION"
-            v = utf8_decode(g.urlopen(url, timeout=1).read())
+            v = utf8_decode(urlopen(url, timeout=1).read())
             v = re.search(r"^version\s*([\d\.]+)\s*$", v, re.MULTILINE)
 
             if v:
@@ -3926,7 +3915,7 @@ def _do_query(url, query, err='query failed', cache=True, report=False):
     url = "%s?%s" % (url, urlencode(query))
 
     try:
-        wdata = utf8_decode(g.urlopen(url).read())
+        wdata = utf8_decode(urlopen(url).read())
 
     except (URLError, HTTPError) as e:
         g.message = "%s: %s (%s)" % (err, e, url)
