@@ -96,12 +96,12 @@ else:
 
 def utf8_encode(x):
     """ Encode Unicode. """
-    return x.encode("utf8") if type(x) == uni else x
+    return x.encode("utf8") if isinstance(x, uni) else x
 
 
 def utf8_decode(x):
     """ Decode Unicode. """
-    return x.decode("utf8") if type(x) == byt else x
+    return x.decode("utf8") if isinstance(x, byt) else x
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in os.environ.get("LANG", "")
@@ -387,7 +387,7 @@ def get_streams(vid, force=False, callback=None, threeD=False):
 def select_stream(slist, q=0, audio=False, m4a_ok=True, maxres=None):
     """ Select a stream from stream list. """
     maxres = maxres or Config.MAX_RES.get
-    slist = slist['meta'] if type(slist) == dict else slist
+    slist = slist['meta'] if isinstance(slist, dict) else slist
     au_streams = [x for x in slist if x['mtype'] == "audio"]
 
     def okres(x):
@@ -1110,7 +1110,7 @@ def import_config():
                 dbg("Unrecognised config item: %s", k)
 
         # Update config files from versions <= 0.01.41
-        if type(Config.PLAYERARGS.get) == list:
+        if isinstance(Config.PLAYERARGS.get, list):
             Config.WINDOW_POS.value = "top-right"
             redundant = ("-really-quiet --really-quiet -prefer-ipv4 -nolirc "
                          "-fs --fs".split())
@@ -1579,7 +1579,7 @@ def num_repr(num):
 
 def real_len(u, alt=False):
     """ Try to determine width of strings displayed with monospace font. """
-    if type(u) != uni:
+    if not isinstance(u, uni):
         u = u.decode("utf8")
 
     ueaw = unicodedata.east_asian_width
@@ -3289,12 +3289,12 @@ def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
     content = ""
 
     for x in header, theading, rows, footer:
-        if type(x) == list:
+        if isinstance(x, list):
 
             for line in x:
                 content += line + "\n"
 
-        elif type(x) == str:
+        elif isinstance(x, str):
             content += x + "\n"
 
     g.content = content
