@@ -706,6 +706,7 @@ class Config(object):
                          check_fn=check_colours)
     MPV_INPUT_CONF = ConfigItem("mpv_input_conf", '')
     MPLAYER_INPUT_CONF = ConfigItem("mplayer_input_conf", '')
+    DOWNLOAD_COMMAND = ConfigItem("download_command", '')
 
 
 class Playlist(object):
@@ -2686,27 +2687,32 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
         stream = select_stream(streams, 0, audio=audio, m4a_ok=True)
         url = stream['url']
 
-    resp = urlopen(url)
-    total = int(resp.info()['Content-Length'].strip())
-    chunksize, bytesdone, t0 = 16384, 0, time.time()
-    outfh = open(filename, 'wb')
+    if Config.DOWNLOAD_COMMAND.get:
+        subprocess.check_call(Config.DOWNLOAD_COMMAND.get.replace('%u', url
+                                ).replace('%f', filename), shell=True)
 
-    while True:
-        chunk = resp.read(chunksize)
-        outfh.write(chunk)
-        elapsed = time.time() - t0
-        bytesdone += len(chunk)
-        rate = (bytesdone / 1024) / elapsed
-        eta = (total - bytesdone) / (rate * 1024)
-        stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate, eta)
+    else:
+        resp = urlopen(url)
+        total = int(resp.info()['Content-Length'].strip())
+        chunksize, bytesdone, t0 = 16384, 0, time.time()
+        outfh = open(filename, 'wb')
 
-        if not chunk:
-            outfh.close()
-            break
+        while True:
+            chunk = resp.read(chunksize)
+            outfh.write(chunk)
+            elapsed = time.time() - t0
+            bytesdone += len(chunk)
+            rate = (bytesdone / 1024) / elapsed
+            eta = (total - bytesdone) / (rate * 1024)
+            stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate, eta)
 
-        status = status_string.format(*stats)
-        sys.stdout.write("\r" + status + ' ' * 4 + "\r")
-        sys.stdout.flush()
+            if not chunk:
+                outfh.close()
+                break
+
+            status = status_string.format(*stats)
+            sys.stdout.write("\r" + status + ' ' * 4 + "\r")
+            sys.stdout.flush()
 
     # download done
     active_encoder = g.encoders[Config.ENCODER.get]
