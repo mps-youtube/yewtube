@@ -20,7 +20,7 @@ def get_terminal_size():
     http://stackoverflow.com/questions/566746/how-to-get-console-window-width-in-python
     """
     current_os = platform.system()
-    tuple_xy = None, None
+    tuple_xy = None
 
     if current_os == 'Windows':
         tuple_xy = _get_terminal_size_windows()
@@ -107,6 +107,6 @@ def _get_terminal_size_linux():
             cr = (os.environ['LINES'], os.environ['COLUMNS'])
 
         except:
-            return None, None
+            return
 
     return int(cr[1]), int(cr[0])
