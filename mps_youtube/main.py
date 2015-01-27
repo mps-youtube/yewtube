@@ -2057,15 +2057,13 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
         s = socket.socket(socket.AF_UNIX)
 
         tries = 0
-        while tries < 10:
+        while tries < 10 and po_obj.poll() is None:
             time.sleep(.5)
             try:
                 s.connect(sockpath)
                 break
             except socket.error:
                 pass
-            if po_obj.poll() is not None: # Process not running
-                return
             tries += 1
         else:
             return
