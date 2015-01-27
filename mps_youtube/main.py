@@ -2054,11 +2054,20 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
     volume_level = None
 
     if sockpath:
-        time.sleep(1)
+        s = socket.socket(socket.AF_UNIX)
+
+        tries = 0
+        while tries < 10:
+            time.sleep(.5)
+            try:
+                s.connect(sockpath)
+                break
+            except socket.error:
+                pass
+        else:
+            return
 
         try:
-            s = socket.socket(socket.AF_UNIX)
-            s.connect(sockpath)
             cmd = {"command": ["observe_property", 1, "time-pos"]}
             s.send(json.dumps(cmd).encode() + b'\n')
             cmd = {"command": ["observe_property", 2, "volume"]}
