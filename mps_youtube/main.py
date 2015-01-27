@@ -2064,6 +2064,9 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                 break
             except socket.error:
                 pass
+            if po_obj.poll() is not None: # Process not running
+                return
+            tries += 1
         else:
             return
 
