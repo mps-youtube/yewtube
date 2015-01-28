@@ -96,12 +96,12 @@ else:
 
 def utf8_encode(x):
     """ Encode Unicode. """
-    return x.encode("utf8") if type(x) == uni else x
+    return x.encode("utf8") if isinstance(x, uni) else x
 
 
 def utf8_decode(x):
     """ Decode Unicode. """
-    return x.decode("utf8") if type(x) == byt else x
+    return x.decode("utf8") if isinstance(x, byt) else x
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in os.environ.get("LANG", "")
@@ -387,7 +387,7 @@ def get_streams(vid, force=False, callback=None, threeD=False):
 def select_stream(slist, q=0, audio=False, m4a_ok=True, maxres=None):
     """ Select a stream from stream list. """
     maxres = maxres or Config.MAX_RES.get
-    slist = slist['meta'] if type(slist) == dict else slist
+    slist = slist['meta'] if isinstance(slist, dict) else slist
     au_streams = [x for x in slist if x['mtype'] == "audio"]
 
     def okres(x):
@@ -706,6 +706,7 @@ class Config(object):
                          check_fn=check_colours)
     MPV_INPUT_CONF = ConfigItem("mpv_input_conf", '')
     MPLAYER_INPUT_CONF = ConfigItem("mplayer_input_conf", '')
+    DOWNLOAD_COMMAND = ConfigItem("download_command", '')
 
 
 class Playlist(object):
@@ -1110,7 +1111,7 @@ def import_config():
                 dbg("Unrecognised config item: %s", k)
 
         # Update config files from versions <= 0.01.41
-        if type(Config.PLAYERARGS.get) == list:
+        if isinstance(Config.PLAYERARGS.get, list):
             Config.WINDOW_POS.value = "top-right"
             redundant = ("-really-quiet --really-quiet -prefer-ipv4 -nolirc "
                          "-fs --fs".split())
@@ -1579,7 +1580,7 @@ def num_repr(num):
 
 def real_len(u, alt=False):
     """ Try to determine width of strings displayed with monospace font. """
-    if type(u) != uni:
+    if not isinstance(u, uni):
         u = u.decode("utf8")
 
     ueaw = unicodedata.east_asian_width
@@ -2696,27 +2697,32 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
         stream = select_stream(streams, 0, audio=audio, m4a_ok=True)
         url = stream['url']
 
-    resp = urlopen(url)
-    total = int(resp.info()['Content-Length'].strip())
-    chunksize, bytesdone, t0 = 16384, 0, time.time()
-    outfh = open(filename, 'wb')
+    if Config.DOWNLOAD_COMMAND.get:
+        subprocess.check_call(Config.DOWNLOAD_COMMAND.get.replace('%u', url
+                                ).replace('%f', filename), shell=True)
 
-    while True:
-        chunk = resp.read(chunksize)
-        outfh.write(chunk)
-        elapsed = time.time() - t0
-        bytesdone += len(chunk)
-        rate = (bytesdone / 1024) / elapsed
-        eta = (total - bytesdone) / (rate * 1024)
-        stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate, eta)
+    else:
+        resp = urlopen(url)
+        total = int(resp.info()['Content-Length'].strip())
+        chunksize, bytesdone, t0 = 16384, 0, time.time()
+        outfh = open(filename, 'wb')
 
-        if not chunk:
-            outfh.close()
-            break
+        while True:
+            chunk = resp.read(chunksize)
+            outfh.write(chunk)
+            elapsed = time.time() - t0
+            bytesdone += len(chunk)
+            rate = (bytesdone / 1024) / elapsed
+            eta = (total - bytesdone) / (rate * 1024)
+            stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate, eta)
 
-        status = status_string.format(*stats)
-        sys.stdout.write("\r" + status + ' ' * 4 + "\r")
-        sys.stdout.flush()
+            if not chunk:
+                outfh.close()
+                break
+
+            status = status_string.format(*stats)
+            sys.stdout.write("\r" + status + ' ' * 4 + "\r")
+            sys.stdout.flush()
 
     # download done
     active_encoder = g.encoders[Config.ENCODER.get]
@@ -3299,12 +3305,12 @@ def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
     content = ""
 
     for x in header, theading, rows, footer:
-        if type(x) == list:
+        if isinstance(x, list):
 
             for line in x:
                 content += line + "\n"
 
-        elif type(x) == str:
+        elif isinstance(x, str):
             content += x + "\n"
 
     g.content = content
