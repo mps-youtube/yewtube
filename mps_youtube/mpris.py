@@ -24,7 +24,10 @@ import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
-import subprocess
+from threading import Thread
+import json
+import socket
+import time
 
 IDENTITY = 'mps-youtube'
 
@@ -65,11 +68,27 @@ class Mpris2Controller(object):
         self._acquire_bus()
         self._add_interfaces()
 
-    def run(self):
+    def run(self, connection):
         """
             Runs main loop, processing all calls
+            binds on connection (Pipe) and listens player changes
         """
-        self.main_loop.run()
+        t = Thread(target=self.main_loop.run)
+        t.daemon = True
+        t.start()
+        self.listenstatus(connection)
+
+    def listenstatus(self, conn):
+        """
+            Notifies interfaces that player connection changed
+        """
+        try:
+            while True:
+                # receive path for socket to use
+                sockpath = conn.recv()
+                self.mpris.bindplayer(sockpath)
+        except:
+            pass
 
     def _acquire_bus(self):
         """
@@ -98,6 +117,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
 
     def __init__(self, bus):
         dbus.service.Object.__init__(self, bus, MPRIS_PATH)
+        self.socket = None
         self.properties = {
             ROOT_INTERFACE : {
                 'read_only' : {
@@ -137,6 +157,35 @@ class Mpris2MediaPlayer(dbus.service.Object):
             },
         }
 
+    def bindplayer(self, sockpath):
+        time.sleep(1) # give it some time so socket could be properly created
+        try:
+            self.socket = socket.socket(socket.AF_UNIX)
+            self.socket.connect(sockpath)
+            
+            self._sendcommand({"command": ["observe_property", 1, "time-pos"]})
+            self._sendcommand({"command": ["observe_property", 2, "volume"]})
+            self._sendcommand({"command": ["observe_property", 3, "pause"]})
+
+            for line in self.socket.makefile():
+                resp = json.loads(line)
+
+                if resp.get('event') == 'property-change' and resp['name'] == 'pause':
+                    if resp['data'] == True:
+                        self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Paused'
+                    else:
+                        self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Playing'
+
+                    # elif resp.get('event') == 'property-change' and resp['id'] == 2:
+                    #     volume_level = int(resp['data'])
+
+        except socket.error:
+            self.socket = None
+
+    def _sendcommand(self, command):
+        if self.socket:
+            self.socket.send(json.dumps(command).encode() + b'\n')
+
     """
         implementing org.mpris.MediaPlayer2
     """
@@ -165,14 +214,14 @@ class Mpris2MediaPlayer(dbus.service.Object):
         """
             Skips to the next track in the tracklist.
         """
-        subprocess.Popen(['xdotool', 'search', '--class', 'mpsyt', 'key', 'n'])
+        self._sendcommand({ "command": ["quit"] })
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Previous(self):
         """
             Skips to the previous track in the tracklist.
         """
-        subprocess.Popen(['xdotool', 'search', '--class', 'mpsyt', 'key', 'p'])
+        self._sendcommand({ "command": ["quit", 42] })
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Pause(self):
@@ -180,7 +229,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Pauses playback.
             If playback is already paused, this has no effect.
         """
-        subprocess.Popen(['xdotool', 'search', '--class', 'mpsyt', 'key', 'space'])
+        self._sendcommand({ "command": ["set_property", "pause", True] })
 
     @dbus.service.method(PLAYER_INTERFACE)
     def PlayPause(self):
@@ -188,21 +237,24 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Pauses playback.
             If playback is already paused, resumes playback.
         """
-        subprocess.Popen(['xdotool', 'search', '--class', 'mpsyt', 'key', 'space'])
+        if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Playing':
+            self._sendcommand({ "command": ["set_property", "pause", False] })
+        else:
+            self._sendcommand({ "command": ["set_property", "pause", True] })
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Stop(self):
         """
             Stops playback.
         """
-        subprocess.Popen(['xdotool', 'search', '--class', 'mpsyt', 'key', 'q'])
+        self._sendcommand({ "command": ["quit", 43] })
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Play(self):
         """
             Starts or resumes playback.
         """
-        subprocess.Popen(['xdotool', 'search', '--class', 'mpsyt', 'key', 'space'])
+        self._sendcommand({ "command": ["set_property", "pause", False] })
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='x')
     def Seek(self, offset):
@@ -291,3 +343,10 @@ class Mpris2MediaPlayer(dbus.service.Object):
     def PropertiesChanged(self, interface_name, changed_properties,
                           invalidated_properties):
         pass
+
+def main(connection):
+    conn = connection
+    mprisctl = Mpris2Controller()
+    mprisctl.acquire()
+    mprisctl.run(connection)
+    mprisctl.release()

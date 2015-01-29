@@ -35,6 +35,7 @@ import unicodedata
 import collections
 import subprocess
 import threading
+import multiprocessing
 # import __main__
 import platform
 import tempfile
@@ -748,6 +749,7 @@ class g(object):
     ytpls = []
     mpv_version = 0, 0, 0
     mpv_usesock = False
+    mprisctl = None
     browse_mode = "normal"
     preloading = []
     # expiry = 5 * 60 * 60  # 5 hours
@@ -893,6 +895,16 @@ def init():
 
     else:
         g.muxapp = has_exefile("ffmpeg") or has_exefile("avconv")
+
+    # initialize remote interface
+    try:
+        import mpris
+        g.mprisctl, conn = multiprocessing.Pipe()
+        t = multiprocessing.Process(target=mpris.main, args=(conn,))
+        t.daemon = True
+        t.start()
+    except:
+        pass
 
     process_cl_args(sys.argv)
 
@@ -2024,6 +2036,9 @@ def launch_player(song, songdata, cmd):
 
                 with open(os.devnull, "w") as devnull:
                     p = subprocess.Popen(cmd, shell=False, stderr=devnull)
+
+                if g.mprisctl:
+                    g.mprisctl.send(sockpath)
 
             else:
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
