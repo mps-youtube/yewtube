@@ -84,14 +84,18 @@ class Mpris2Controller(object):
         """
         try:
             while True:
-                # receive path for socket to use
                 data = conn.recv()
                 if isinstance(data, tuple):
                     timepos, volume, pause = data
-                    self.mpris.setstatus(timepos, volume, pause)
+                    self.mpris.setproperty('pause', pause)
+                    self.mpris.setproperty('volume', volume)
+                    self.mpris.setproperty('time-pos', timepos)
                 else:
-                    sockpath = data
-                    self.mpris.bindplayer(sockpath)
+                    path = data
+                    if ".sock" in path:
+                        self.mpris.bindmpv(path)
+                    elif ".fifo" in path:
+                        self.mpris.bindmplayer(path)
         except:
             pass
 
@@ -123,6 +127,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
     def __init__(self, bus):
         dbus.service.Object.__init__(self, bus, MPRIS_PATH)
         self.socket = None
+        self.fifo = None
         self.properties = {
             ROOT_INTERFACE : {
                 'read_only' : {
@@ -162,43 +167,69 @@ class Mpris2MediaPlayer(dbus.service.Object):
             },
         }
 
-    def bindplayer(self, sockpath):
+    def bindmpv(self, sockpath):
         time.sleep(1) # give it some time so socket could be properly created
         try:
             self.socket = socket.socket(socket.AF_UNIX)
             self.socket.connect(sockpath)
             
-            self._sendcommand({"command": ["observe_property", 1, "time-pos"]})
-            self._sendcommand({"command": ["observe_property", 2, "volume"]})
-            self._sendcommand({"command": ["observe_property", 3, "pause"]})
+            self._sendcommand(["observe_property", 1, "time-pos"])
+            self._sendcommand(["observe_property", 2, "volume"])
+            self._sendcommand(["observe_property", 3, "pause"])
 
             for line in self.socket.makefile():
                 resp = json.loads(line)
 
-                if resp.get('event') == 'property-change' and resp['name'] == 'pause':
-                    if resp['data'] == True:
-                        self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Paused'
-                    else:
-                        self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Playing'
-
-                    # elif resp.get('event') == 'property-change' and resp['id'] == 2:
-                    #     volume_level = int(resp['data'])
+                if resp.get('event') == 'property-change':
+                    self.setproperty(resp['name'], resp['data'])
+                elif resp.get('event') == 'end-file':
+                    self.setproperty('stop', True)
 
         except socket.error:
             self.socket = None
 
-        self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Stopped'
+    def bindmplayer(self, fifopath):
+        time.sleep(1) # give it some time so fifo could be properly created
+        try:
+            self.fifo = open(fifopath, 'w')
 
-    def setstatus(self, timepos, volume, pause):
-        if pause:
-            self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Paused'
-        else:
-            self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Playing'
-        #TODO: Implement timepos and volume
+        except:
+            self.fifo = None
+
+    def setproperty(self, name, val):
+        """
+            Properly sets properties on player interface
+        """
+        print("setting property " + name + ' ' + str(val))
+        if name == 'pause':
+            if val:
+                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Paused'
+            else:
+                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Playing'
+
+            self.PropertiesChanged(PLAYER_INTERFACE, { 'PlaybackStatus': 
+                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] }, [])
+        elif name == 'stop':
+            if val:
+                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Stopped'
+            else:
+                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Playing'
+
+            self.PropertiesChanged(PLAYER_INTERFACE, { 'PlaybackStatus': 
+                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] },
+                    ['Metadata', 'Position'])
+        elif name == 'volume':
+            pass
+        elif name == 'time-pos':
+            pass
 
     def _sendcommand(self, command):
         if self.socket:
-            self.socket.send(json.dumps(command).encode() + b'\n')
+            self.socket.send(json.dumps({"command": command}).encode() + b'\n')
+        elif self.fifo:
+            cmd = " ".join([str(i) for i in command]) + '\n'
+            self.fifo.write(cmd)
+            self.fifo.flush()
 
     """
         implementing org.mpris.MediaPlayer2
@@ -228,14 +259,14 @@ class Mpris2MediaPlayer(dbus.service.Object):
         """
             Skips to the next track in the tracklist.
         """
-        self._sendcommand({ "command": ["quit"] })
+        self._sendcommand(["quit"])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Previous(self):
         """
             Skips to the previous track in the tracklist.
         """
-        self._sendcommand({ "command": ["quit", 42] })
+        self._sendcommand(["quit", 42])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Pause(self):
@@ -243,7 +274,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Pauses playback.
             If playback is already paused, this has no effect.
         """
-        self._sendcommand({ "command": ["set_property", "pause", True] })
+        self._sendcommand(["set_property", "pause", True])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def PlayPause(self):
@@ -252,23 +283,23 @@ class Mpris2MediaPlayer(dbus.service.Object):
             If playback is already paused, resumes playback.
         """
         if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Playing':
-            self._sendcommand({ "command": ["set_property", "pause", False] })
+            self._sendcommand(["set_property", "pause", False])
         else:
-            self._sendcommand({ "command": ["set_property", "pause", True] })
+            self._sendcommand(["set_property", "pause", True])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Stop(self):
         """
             Stops playback.
         """
-        self._sendcommand({ "command": ["quit", 43] })
+        self._sendcommand(["quit", 43])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Play(self):
         """
             Starts or resumes playback.
         """
-        self._sendcommand({ "command": ["set_property", "pause", False] })
+        self._sendcommand(["set_property", "pause", False])
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='x')
     def Seek(self, offset):

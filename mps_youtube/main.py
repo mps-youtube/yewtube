@@ -2011,6 +2011,7 @@ def launch_player(song, songdata, cmd):
 
     input_file = get_input_file()
     sockpath = None
+    fifopath = None
 
     try:
         if "mplayer" in Config.PLAYER.get:
@@ -2022,6 +2023,13 @@ def launch_player(song, songdata, cmd):
                 input_file = input_file[2:].replace('\\', '/')
 
             cmd.append('conf=' + input_file)
+
+            if g.mprisctl:
+                fifopath = tempfile.mktemp('.fifo', 'mpsyt-mpv')
+                os.mkfifo(fifopath)
+                cmd.extend(['-input', 'file=' + fifopath])
+                g.mprisctl.send(fifopath)
+
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
             player_status(p, songdata + "; ", song.length)
@@ -2064,6 +2072,9 @@ def launch_player(song, songdata, cmd):
 
         if sockpath:
             os.unlink(sockpath)
+
+        if fifopath:
+            os.unlink(fifopath)
 
         if p and p.poll() is None:
             p.terminate()  # make sure to kill mplayer if mpsyt crashes
