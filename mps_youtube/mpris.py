@@ -90,6 +90,8 @@ class Mpris2Controller(object):
                     self.mpris.setproperty('pause', pause)
                     self.mpris.setproperty('volume', volume)
                     self.mpris.setproperty('time-pos', timepos)
+                elif data == 'stop':
+                    self.mpris.setproperty('stop', True)
                 else:
                     path = data
                     if ".sock" in path:

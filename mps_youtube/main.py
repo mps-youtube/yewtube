@@ -2180,6 +2180,9 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
             else:
                 buff += char
 
+        if g.mprisctl:
+            g.mprisctl.send('stop')
+
 
 def make_status_line(elapsed_s, prefix, songlength=0, volume=None):
     """ Format progress line output.  """
