@@ -182,6 +182,8 @@ class Mpris2MediaPlayer(dbus.service.Object):
         except socket.error:
             self.socket = None
 
+        self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Stopped'
+
     def _sendcommand(self, command):
         if self.socket:
             self.socket.send(json.dumps(command).encode() + b'\n')
