@@ -85,8 +85,13 @@ class Mpris2Controller(object):
         try:
             while True:
                 # receive path for socket to use
-                sockpath = conn.recv()
-                self.mpris.bindplayer(sockpath)
+                data = conn.recv()
+                if isinstance(data, tuple):
+                    timepos, volume, pause = data
+                    self.mpris.setstatus(timepos, volume, pause)
+                else:
+                    sockpath = data
+                    self.mpris.bindplayer(sockpath)
         except:
             pass
 
@@ -183,6 +188,13 @@ class Mpris2MediaPlayer(dbus.service.Object):
             self.socket = None
 
         self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Stopped'
+
+    def setstatus(self, timepos, volume, pause):
+        if pause:
+            self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Paused'
+        else:
+            self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Playing'
+        #TODO: Implement timepos and volume
 
     def _sendcommand(self, command):
         if self.socket:

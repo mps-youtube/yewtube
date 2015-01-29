@@ -2123,6 +2123,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
             pass
 
     else:
+        elapsed_s = 0
 
         while po_obj.poll() is None:
             stdstream = po_obj.stderr if mpv else po_obj.stdout
@@ -2158,6 +2159,10 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                     if line != last_displayed_line:
                         writestatus(line)
                         last_displayed_line = line
+
+                paused = ("PAUSE" in buff) or ("Paused" in buff)
+                if g.mprisctl:
+                    g.mprisctl.send((elapsed_s, volume_level, paused))
 
                 buff = ''
 
