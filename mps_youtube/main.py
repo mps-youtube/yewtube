@@ -898,7 +898,7 @@ def init():
 
     # initialize remote interface
     try:
-        import mpris
+        from . import mpris
         g.mprisctl, conn = multiprocessing.Pipe()
         t = multiprocessing.Process(target=mpris.main, args=(conn,))
         t.daemon = True
