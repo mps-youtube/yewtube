@@ -2025,7 +2025,7 @@ def launch_player(song, songdata, cmd):
             cmd.append('conf=' + input_file)
 
             if g.mprisctl:
-                fifopath = tempfile.mktemp('.fifo', 'mpsyt-mpv')
+                fifopath = tempfile.mktemp('.fifo', 'mpsyt-mplayer')
                 os.mkfifo(fifopath)
                 cmd.extend(['-input', 'file=' + fifopath])
                 g.mprisctl.send(('fifo', fifopath))
