@@ -161,9 +161,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                     'CanControl' : True,
                 },
                 'read_write' : {
-                    'LoopStatus' : 'None',
                     'Rate' : 1.0,
-                    'Shuffle' : False,
                     'Volume' : 1.0,
                 },
             },
