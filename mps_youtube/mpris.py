@@ -205,26 +205,46 @@ class Mpris2MediaPlayer(dbus.service.Object):
         """
         print("setting property " + name + ' ' + str(val))
         if name == 'pause':
+            oldval = self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus']
+            newval = None
             if val:
-                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Paused'
+                newval = 'Paused'
             else:
-                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Playing'
+                newval = 'Playing'
 
-            self.PropertiesChanged(PLAYER_INTERFACE, { 'PlaybackStatus': 
-                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] }, [])
+            if newval != oldval:
+                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = newval
+                self.PropertiesChanged(PLAYER_INTERFACE, { 'PlaybackStatus': newval }, [])
+
         elif name == 'stop':
+            oldval = self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus']
+            newval = None
             if val:
-                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Stopped'
+                newval = 'Stopped'
             else:
-                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = 'Playing'
+                newval = 'Playing'
 
-            self.PropertiesChanged(PLAYER_INTERFACE, { 'PlaybackStatus': 
-                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] },
+            if newval != oldval:
+                self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] = newval
+                self.PropertiesChanged(PLAYER_INTERFACE, { 'PlaybackStatus': newval },
                     ['Metadata', 'Position'])
-        elif name == 'volume':
-            pass
-        elif name == 'time-pos':
-            pass
+
+        elif name == 'volume' and val:
+            oldval = self.properties[PLAYER_INTERFACE]['read_write']['Volume']
+            newval = val / 100
+
+            if newval != oldval:
+                self.properties[PLAYER_INTERFACE]['read_write']['Volume'] = newval
+                self.PropertiesChanged(PLAYER_INTERFACE, { 'Volume': newval }, [])
+
+        elif name == 'time-pos' and val:
+            oldval = self.properties[PLAYER_INTERFACE]['read_only']['Position']
+            newval = dbus.Int64(val * 10**6)
+
+            if newval != oldval:
+                self.properties[PLAYER_INTERFACE]['read_only']['Position'] = newval
+            if abs(newval - oldval) >= 4 * 10**6:
+                self.Seeked(newval)
 
     def _sendcommand(self, command):
         if self.socket:
