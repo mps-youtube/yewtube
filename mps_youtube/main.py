@@ -2171,6 +2171,9 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                         writestatus(line)
                         last_displayed_line = line
 
+                if buff.startswith('ANS_volume='):
+                    volume_level = round(float(buff.split('=')[1]))
+
                 paused = ("PAUSE" in buff) or ("Paused" in buff)
                 if g.mprisctl:
                     g.mprisctl.send((elapsed_s, volume_level, paused))

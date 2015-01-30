@@ -194,6 +194,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
         time.sleep(1) # give it some time so fifo could be properly created
         try:
             self.fifo = open(fifopath, 'w')
+            self._sendcommand(['get_property', 'volume'])
 
         except:
             self.fifo = None
