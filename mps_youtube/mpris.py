@@ -200,6 +200,9 @@ class Mpris2MediaPlayer(dbus.service.Object):
     def setproperty(self, name, val):
         """
             Properly sets properties on player interface
+
+            don't use this method from dbus interface, all values should
+            be set from player (to keep them correct)
         """
         if name == 'pause':
             oldval = self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus']
@@ -395,9 +398,8 @@ class Mpris2MediaPlayer(dbus.service.Object):
     def Set(self, interface_name, property_name, new_value):
         if interface_name in self.properties:
             if property_name in self.properties[interface_name]['read_write']:
-                self.properties[interface_name]['read_write'][property_name] = new_value
-                self.PropertiesChanged(interface_name,
-                    { property_name: new_value }, [])
+                if property_name == 'Volume':
+                    self._sendcommand(["set_property", "volume", new_value * 100])
         else:
             raise dbus.exceptions.DBusException(
                 'com.example.UnknownInterface',
