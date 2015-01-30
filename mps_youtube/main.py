@@ -2029,6 +2029,7 @@ def launch_player(song, songdata, cmd):
                 os.mkfifo(fifopath)
                 cmd.extend(['-input', 'file=' + fifopath])
                 g.mprisctl.send(('fifo', fifopath))
+                g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
@@ -2047,6 +2048,7 @@ def launch_player(song, songdata, cmd):
 
                 if g.mprisctl:
                     g.mprisctl.send(('socket', sockpath))
+                    g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
 
             else:
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,

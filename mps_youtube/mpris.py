@@ -28,6 +28,7 @@ from threading import Thread
 import json
 import socket
 import time
+import re
 
 IDENTITY = 'mps-youtube'
 
@@ -88,7 +89,7 @@ class Mpris2Controller(object):
                 if isinstance(data, tuple):
                     name, val = data
                     if name == 'socket':
-                        self.mpris.bindmpv(val)
+                        Thread(target=self.mpris.bindmpv, args=(val,)).start()
                     elif name == 'fifo':
                         self.mpris.bindmplayer(val)
                     else:
@@ -240,6 +241,22 @@ class Mpris2MediaPlayer(dbus.service.Object):
                 self.properties[PLAYER_INTERFACE]['read_only']['Position'] = newval
             if abs(newval - oldval) >= 4 * 10**6:
                 self.Seeked(newval)
+
+        elif name == 'metadata' and val:
+            trackid, title, length = val
+            # sanitize ytid - it uses '-_' which are not valid in dbus paths
+            trackid = re.sub('[^a-zA-Z0-9]', '', trackid)
+
+            oldval = self.properties[PLAYER_INTERFACE]['read_only']['Metadata']
+            newval = {
+                'mpris:trackid' : dbus.ObjectPath(
+                    '/CurrentPlaylist/ytid/' + trackid, variant_level=1),
+                'mpris:length' : dbus.Int64(length * 10**6, variant_level=1),
+                'xesam:title' : dbus.String(title, variant_level=1) }
+
+            if newval != oldval:
+                self.properties[PLAYER_INTERFACE]['read_only']['Metadata'] = newval
+                self.PropertiesChanged(PLAYER_INTERFACE, { 'Metadata': newval }, [])
 
     def _sendcommand(self, command):
         if self.socket:
