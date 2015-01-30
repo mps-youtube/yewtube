@@ -133,8 +133,8 @@ class Mpris2MediaPlayer(dbus.service.Object):
                     'CanRaise' : False,
                     'HasTrackList' : False,
                     'Identity' : IDENTITY,
-                    'SupportedUriSchemes' : ['file', 'http'],
-                    'SupportedMimeTypes' : ['audio/mpeg'],
+                    'SupportedUriSchemes' : [],
+                    'SupportedMimeTypes' : [],
                 },
                 'read_write' : {
                     'Fullscreen' : False,
