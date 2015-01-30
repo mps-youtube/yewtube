@@ -226,7 +226,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
 
         elif name == 'volume' and val:
             oldval = self.properties[PLAYER_INTERFACE]['read_write']['Volume']
-            newval = val / 100
+            newval = float(val) / 100
 
             if newval != oldval:
                 self.properties[PLAYER_INTERFACE]['read_write']['Volume'] = newval
@@ -395,6 +395,8 @@ class Mpris2MediaPlayer(dbus.service.Object):
             if property_name in self.properties[interface_name]['read_write']:
                 if property_name == 'Volume':
                     self._sendcommand(["set_property", "volume", new_value * 100])
+                    if self.fifo: # fix for mplayer (force update)
+                        self._sendcommand(['get_property', 'volume'])
         else:
             raise dbus.exceptions.DBusException(
                 'com.example.UnknownInterface',
