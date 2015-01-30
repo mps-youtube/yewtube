@@ -157,7 +157,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                     'CanGoPrevious' : True,
                     'CanPlay' : True,
                     'CanPause' : True,
-                    'CanSeek' : False,
+                    'CanSeek' : True,
                     'CanControl' : True,
                 },
                 'read_write' : {
@@ -203,7 +203,6 @@ class Mpris2MediaPlayer(dbus.service.Object):
         """
             Properly sets properties on player interface
         """
-        print("setting property " + name + ' ' + str(val))
         if name == 'pause':
             oldval = self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus']
             newval = None
@@ -333,7 +332,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Seeks forward in the current track by the specified number
             of microseconds.
         """
-        pass
+        self._sendcommand(["seek", offset / 10**6])
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='ox')
     def SetPosition(self, track_id, position):
@@ -346,7 +345,8 @@ class Mpris2MediaPlayer(dbus.service.Object):
 
             Sets the current track position in microseconds.
         """
-        pass
+        if track_id == self.properties[PLAYER_INTERFACE]['read_only']['Metadata']['mpris:trackid']:
+            self._sendcommand(["seek", offset / 10**6, 2])
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='s')
     def OpenUri(self, uri):
