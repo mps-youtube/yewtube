@@ -2090,6 +2090,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
     last_displayed_line = None
     buff = ''
     volume_level = None
+    last_pos = None
 
     if sockpath:
         s = socket.socket(socket.AF_UNIX)
@@ -2175,7 +2176,8 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                     volume_level = round(float(buff.split('=')[1]))
 
                 paused = ("PAUSE" in buff) or ("Paused" in buff)
-                if g.mprisctl:
+                if (elapsed_s != last_pos or paused) and g.mprisctl:
+                    last_pos = elapsed_s
                     g.mprisctl.send((elapsed_s, volume_level, paused))
 
                 buff = ''
