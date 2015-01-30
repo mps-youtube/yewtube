@@ -2028,7 +2028,7 @@ def launch_player(song, songdata, cmd):
                 fifopath = tempfile.mktemp('.fifo', 'mpsyt-mpv')
                 os.mkfifo(fifopath)
                 cmd.extend(['-input', 'file=' + fifopath])
-                g.mprisctl.send(fifopath)
+                g.mprisctl.send(('fifo', fifopath))
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
@@ -2046,7 +2046,7 @@ def launch_player(song, songdata, cmd):
                     p = subprocess.Popen(cmd, shell=False, stderr=devnull)
 
                 if g.mprisctl:
-                    g.mprisctl.send(sockpath)
+                    g.mprisctl.send(('socket', sockpath))
 
             else:
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
@@ -2178,7 +2178,9 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                 paused = ("PAUSE" in buff) or ("Paused" in buff)
                 if (elapsed_s != last_pos or paused) and g.mprisctl:
                     last_pos = elapsed_s
-                    g.mprisctl.send((elapsed_s, volume_level, paused))
+                    g.mprisctl.send(('pause', paused))
+                    g.mprisctl.send(('volume', volume_level))
+                    g.mprisctl.send(('time-pos', elapsed_s))
 
                 buff = ''
 
@@ -2186,7 +2188,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                 buff += char
 
         if g.mprisctl:
-            g.mprisctl.send('stop')
+            g.mprisctl.send(('stop', True))
 
 
 def make_status_line(elapsed_s, prefix, songlength=0, volume=None):

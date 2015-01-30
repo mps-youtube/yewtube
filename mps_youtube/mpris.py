@@ -86,18 +86,13 @@ class Mpris2Controller(object):
             while True:
                 data = conn.recv()
                 if isinstance(data, tuple):
-                    timepos, volume, pause = data
-                    self.mpris.setproperty('pause', pause)
-                    self.mpris.setproperty('volume', volume)
-                    self.mpris.setproperty('time-pos', timepos)
-                elif data == 'stop':
-                    self.mpris.setproperty('stop', True)
-                else:
-                    path = data
-                    if ".sock" in path:
-                        self.mpris.bindmpv(path)
-                    elif ".fifo" in path:
-                        self.mpris.bindmplayer(path)
+                    name, val = data
+                    if name == 'socket':
+                        self.mpris.bindmpv(val)
+                    elif name == 'fifo':
+                        self.mpris.bindmplayer(val)
+                    else:
+                        self.mpris.setproperty(name, val)
         except:
             pass
 
