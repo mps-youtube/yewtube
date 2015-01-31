@@ -225,7 +225,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                 self.PropertiesChanged(PLAYER_INTERFACE, { 'PlaybackStatus': newval },
                     ['Metadata', 'Position'])
 
-        elif name == 'volume' and val:
+        elif name == 'volume' and val is not None:
             oldval = self.properties[PLAYER_INTERFACE]['read_write']['Volume']
             newval = float(val) / 100
 
