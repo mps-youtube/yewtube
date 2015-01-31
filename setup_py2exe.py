@@ -13,11 +13,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-try:
-    import py2exe # Add py2exe command
-
-except ImportError:
-    pass
+import py2exe
 
 setup(
     name="mps-youtube",
