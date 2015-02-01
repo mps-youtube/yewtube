@@ -164,17 +164,32 @@ class Mpris2MediaPlayer(dbus.service.Object):
         }
 
     def bindmpv(self, sockpath):
-        time.sleep(1) # give it some time so socket could be properly created
+        self.socket = socket.socket(socket.AF_UNIX)
+        # wait on socket initialization
+        tries = 0
+        while tries < 10:
+            time.sleep(.5)
+            try:
+                self.socket.connect(sockpath)
+                break
+            except socket.error:
+                pass
+            tries += 1
+        else:
+            self.socket = None
+
         try:
-            self.socket = socket.socket(socket.AF_UNIX)
-            self.socket.connect(sockpath)
-            
+            observe_full = False
             self._sendcommand(["observe_property", 1, "time-pos"])
-            self._sendcommand(["observe_property", 2, "volume"])
-            self._sendcommand(["observe_property", 3, "pause"])
 
             for line in self.socket.makefile():
                 resp = json.loads(line)
+
+                # deals with race condition, when this was called too early
+                if resp.get('event') == 'property-change' and not observe_full:
+                    self._sendcommand(["observe_property", 2, "volume"])
+                    self._sendcommand(["observe_property", 3, "pause"])
+                    observe_full = True
 
                 if resp.get('event') == 'property-change':
                     self.setproperty(resp['name'], resp['data'])

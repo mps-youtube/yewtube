@@ -2110,14 +2110,19 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
             return
 
         try:
+            observe_full = False
             cmd = {"command": ["observe_property", 1, "time-pos"]}
-            s.send(json.dumps(cmd).encode() + b'\n')
-            cmd = {"command": ["observe_property", 2, "volume"]}
             s.send(json.dumps(cmd).encode() + b'\n')
             volume_level = elapsed_s = None
 
             for line in s.makefile():
                 resp = json.loads(line)
+
+                # deals with race condition, when this was called too early
+                if resp.get('event') == 'property-change' and not observe_full:
+                    cmd = {"command": ["observe_property", 2, "volume"]}
+                    s.send(json.dumps(cmd).encode() + b'\n')
+                    observe_full = True
 
                 if resp.get('event') == 'property-change' and resp['id'] == 1:
                     elapsed_s = int(resp['data'])
