@@ -1951,12 +1951,11 @@ def playsong(song, failcount=0, override=False):
     return returncode
 
 
-def launch_player(song, songdata, cmd):
-    """ Launch player application. """
-    # fix for github issue 59
-    if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
-        cmd = [x.encode("utf8", errors="replace") for x in cmd]
+def get_input_file():
+    """ Check for existence of custom input file.
 
+    Return file name of temp input file with mpsyt mappings included
+    """
     confpath = conf = ''
 
     if "mpv" in Config.PLAYER.get:
@@ -1989,8 +1988,16 @@ def launch_player(song, songdata, cmd):
     with tempfile.NamedTemporaryFile('w', prefix='mpsyt-input',
                                      delete=False) as tmpfile:
         tmpfile.write(conf)
-        input_file = tmpfile.name
+        return tmpfile.name
 
+
+def launch_player(song, songdata, cmd):
+    """ Launch player application. """
+    # fix for github issue 59
+    if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
+        cmd = [x.encode("utf8", errors="replace") for x in cmd]
+
+    input_file = get_input_file()
     sockpath = None
 
     try:
