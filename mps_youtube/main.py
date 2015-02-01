@@ -113,9 +113,9 @@ def member_var(x):
 
 
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
-
-
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
+
+
 def getxy():
     """ Get terminal size, terminal width and max-results. """
     if g.detectable_size:
@@ -1987,7 +1987,7 @@ def launch_player(song, songdata, cmd):
             conf += i
 
     with tempfile.NamedTemporaryFile('w', prefix='mpsyt-input',
-                                         delete=False) as tmpfile:
+                                     delete=False) as tmpfile:
         tmpfile.write(conf)
         input_file = tmpfile.name
 
@@ -2124,7 +2124,8 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                     except ValueError:
 
                         try:
-                            elapsed_s = int(match_object.group('elapsed_s') or '0')
+                            elapsed_s = int(match_object.group('elapsed_s')
+                                            or '0')
 
                         except ValueError:
                             continue
@@ -2671,7 +2672,6 @@ def transcode(filename, enc_data):
         elif d == "OUT.EXT":
             newcom[n] = outfn = base + "." + enc_data['ext']
 
-    # TODO: execute quietly?
     returncode = subprocess.call(newcom)
 
     if returncode == 0 and g.delete_orig:
