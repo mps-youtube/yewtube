@@ -2078,6 +2078,9 @@ def launch_player(song, songdata, cmd):
         if fifopath:
             os.unlink(fifopath)
 
+        if g.mprisctl:
+            g.mprisctl.send(('stop', True))
+
         if p and p.poll() is None:
             p.terminate()  # make sure to kill mplayer if mpsyt crashes
 
@@ -2193,9 +2196,6 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
 
             else:
                 buff += char
-
-        if g.mprisctl:
-            g.mprisctl.send(('stop', True))
 
 
 def make_status_line(elapsed_s, prefix, songlength=0, volume=None):
