@@ -13,6 +13,8 @@ try:
 except ImportError:
     from distutils.core import setup
 
+import py2exe
+
 setup(
     name="mps-youtube",
     version="0.2.1",
@@ -24,6 +26,7 @@ setup(
     download_url="https://github.com/np1/mps-youtube/tarball/master",
     packages=['mps_youtube'],
     entry_points=dict(console_scripts=['mpsyt = mps_youtube:main.main']),
+    console=['mpsyt'],
     install_requires=['Pafy >= 0.3.68'],
     package_data={"": ["LICENSE", "README.rst", "CHANGELOG"]},
     classifiers=[
@@ -52,5 +55,8 @@ setup(
         "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
     ],
-    long_description=open("README.rst").read()
+    long_description=open("README.rst").read(),
+    options={"py2exe": {"excludes": "readline, win32api, win32con, xerox",
+	                "bundle_files": 1}},
+    zipfile=None
 )
