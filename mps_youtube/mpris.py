@@ -74,7 +74,7 @@ class Mpris2Controller(object):
             Runs main loop, processing all calls
             binds on connection (Pipe) and listens player changes
         """
-        t = Thread(target=self.main_loop.run)
+        t = Thread(target=self._run_main_loop)
         t.daemon = True
         t.start()
         self.listenstatus(connection)
@@ -112,6 +112,16 @@ class Mpris2Controller(object):
             Connects all interfaces to D-Bus
         """
         self.mpris = Mpris2MediaPlayer(self.bus)
+
+    def _run_main_loop(self):
+        """
+            Runs glib main loop, ignoring keyboard interrupts
+        """
+        while True:
+            try:
+                self.main_loop.run()
+            except KeyboardInterrupt:
+                pass
 
 
 class Mpris2MediaPlayer(dbus.service.Object):
