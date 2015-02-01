@@ -4571,26 +4571,15 @@ command
 """.format(c.ul, c.w, c.y)),
 
     ("new", "New Features", """
-{0}New Features in v0.2.x{1}
+{0}New Features in v0.2.2{1}
 
- - Transcode audio to MP3 and other formats (requires ffmpeg or avconv)
+ - Display playing resolution / bitrate in status line (Brebiche38)
 
- - Auto detect terminal size
+ - Skip to previously played item (ids1024)
 
- - Added option to show system notifications (Alex Nisnevich) #95
-    (can be used with libnotify - notify-send on linux)
+ - Enable custom keymap using mplayer/mpv input.conf file (ids1024)
 
- - Added overwrite true/false option for downloads (mtahmed) #93
-    (skips download if downloaded file already exists)
-
- - Playback progress indicator now works with mpv (previously only mplayer)
-
- - Added dapl and dvpl to download YoutTube playlist audio/video by url/id
-     to a separate subdirectory (mtahmed) #110
-
- - Enabled da and dv commands for playlist search results
-
- - Remux audio downloads for better compatibility (requires ffmpeg or avconv)
+ - Enable custom downloader application (ids1024)
 
 """.format(c.ul, c.w, c.y))]
 
