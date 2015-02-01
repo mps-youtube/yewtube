@@ -208,12 +208,8 @@ def get_config_dir():
         confdir = os.path.join(os.path.expanduser("~"), '.config')
 
     mps_confdir = os.path.join(confdir, "mps-youtube")
-    old_confdir = os.path.join(confdir, "pms-youtube")
 
-    if os.path.exists(old_confdir) and not os.path.exists(mps_confdir):
-        os.rename(old_confdir, mps_confdir)
-
-    elif not os.path.exists(mps_confdir):
+    if not os.path.exists(mps_confdir):
         os.makedirs(mps_confdir)
 
     return mps_confdir
@@ -704,8 +700,6 @@ class Config(object):
     COLOURS = ConfigItem("colours",
                          False if mswin and not has_colorama else True,
                          check_fn=check_colours)
-    MPV_INPUT_CONF = ConfigItem("mpv_input_conf", '')
-    MPLAYER_INPUT_CONF = ConfigItem("mplayer_input_conf", '')
     DOWNLOAD_COMMAND = ConfigItem("download_command", '')
 
 
@@ -1963,13 +1957,20 @@ def launch_player(song, songdata, cmd):
     if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
         cmd = [x.encode("utf8", errors="replace") for x in cmd]
 
-    confpath = Config.MPLAYER_INPUT_CONF.get
+    confpath = conf = ''
+
     if "mpv" in Config.PLAYER.get:
-        confpath = Config.MPV_INPUT_CONF.get
-    conf = ''
-    if confpath:
+        confpath = os.path.join(get_config_dir(), "mpv-input.conf")
+
+    elif "mplayer" in Config.PLAYER.get:
+        confpath = os.path.join(get_config_dir(), "mplayer-input.conf")
+
+    if os.path.isfile(confpath):
+        dbg("using %s for input key file", confpath)
+
         with open(confpath) as conffile:
             conf = conffile.read() + '\n'
+
     conf = conf.replace("quit", "quit 43")
     conf = conf.replace("playlist_prev", "quit 42")
     conf = conf.replace("pt_step -1", "quit 42")
@@ -1978,18 +1979,21 @@ def launch_player(song, songdata, cmd):
     standard_cmds = ['q quit 43\n', '> quit\n', '< quit 42\n', 'NEXT quit\n',
                      'PREV quit 42\n', 'ENTER quit\n']
     bound_keys = [i.split()[0] for i in conf.splitlines() if i.split()]
+
     for i in standard_cmds:
         key = i.split()[0]
+
         if key not in bound_keys:
             conf += i
 
-    sockpath = None
-    try:
-        with tempfile.NamedTemporaryFile('w', prefix='mpsyt-input',
+    with tempfile.NamedTemporaryFile('w', prefix='mpsyt-input',
                                          delete=False) as tmpfile:
-            tmpfile.write(conf)
-            input_file = tmpfile.name
+        tmpfile.write(conf)
+        input_file = tmpfile.name
 
+    sockpath = None
+
+    try:
         if "mplayer" in Config.PLAYER.get:
             cmd.append('-input')
 
