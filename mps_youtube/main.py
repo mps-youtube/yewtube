@@ -1432,7 +1432,7 @@ def mplayer_help(short=True):
         pause = "[{0}DN{1}] SEEK [{0}UP{1}]       [{0}space{1}] pause"
 
     single = "[{0}q{1}] return"
-    next_prev = "[{0}n{1}] next/prev [{0}p{1}]"
+    next_prev = "[{0}>{1}] next/prev [{0}<{1}]"
     # ret = "[{0}q{1}] %s" % ("return" if short else "next track")
     ret = single if short else next_prev
     fmt = "    %-20s       %-20s"
