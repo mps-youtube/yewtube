@@ -29,8 +29,9 @@ import json
 import socket
 import time
 import re
+import os
 
-IDENTITY = 'mps-youtube'
+IDENTITY = 'mps-youtube.instance' + str(os.getpid())
 
 BUS_NAME = 'org.mpris.MediaPlayer2.' + IDENTITY
 ROOT_INTERFACE = 'org.mpris.MediaPlayer2'
