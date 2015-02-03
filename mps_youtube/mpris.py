@@ -346,7 +346,11 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Pauses playback.
             If playback is already paused, this has no effect.
         """
-        self._sendcommand(["set_property", "pause", True])
+        if self.mpv:
+            self._sendcommand(["set_property", "pause", True])
+        else:
+            if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Paused': 
+                self._sendcommand(['pause'])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def PlayPause(self):
@@ -371,7 +375,11 @@ class Mpris2MediaPlayer(dbus.service.Object):
         """
             Starts or resumes playback.
         """
-        self._sendcommand(["set_property", "pause", False])
+        if self.mpv:
+            self._sendcommand(["set_property", "pause", False])
+        else:
+            if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Playing': 
+                self._sendcommand(['pause'])
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='x')
     def Seek(self, offset):
