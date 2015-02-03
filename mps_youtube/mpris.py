@@ -354,10 +354,10 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Pauses playback.
             If playback is already paused, resumes playback.
         """
-        if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Playing':
-            self._sendcommand(["set_property", "pause", False])
+        if self.mpv:
+            self._sendcommand(["cycle", "pause"])
         else:
-            self._sendcommand(["set_property", "pause", True])
+            self._sendcommand(["pause"])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Stop(self):
