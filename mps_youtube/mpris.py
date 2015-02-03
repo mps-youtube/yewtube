@@ -91,8 +91,10 @@ class Mpris2Controller(object):
                     name, val = data
                     if name == 'socket':
                         Thread(target=self.mpris.bindmpv, args=(val,)).start()
-                    elif name == 'fifo':
-                        self.mpris.bindmplayer(val)
+                    elif name == 'mplayer-fifo':
+                        self.mpris.bindfifo(val)
+                    elif name == 'mpv-fifo':
+                        self.mpris.bindfifo(val, mpv=True)
                     else:
                         self.mpris.setproperty(name, val)
         except:
@@ -137,6 +139,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
         dbus.service.Object.__init__(self, bus, MPRIS_PATH)
         self.socket = None
         self.fifo = None
+        self.mpv = False
         self.properties = {
             ROOT_INTERFACE : {
                 'read_only' : {
@@ -175,6 +178,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
         }
 
     def bindmpv(self, sockpath):
+        self.mpv = True
         self.socket = socket.socket(socket.AF_UNIX)
         # wait on socket initialization
         tries = 0
@@ -207,12 +211,14 @@ class Mpris2MediaPlayer(dbus.service.Object):
 
         except socket.error:
             self.socket = None
+            self.mpv = False
 
-    def bindmplayer(self, fifopath):
+    def bindfifo(self, fifopath, mpv=False):
         time.sleep(1) # give it some time so fifo could be properly created
         try:
             self.fifo = open(fifopath, 'w')
             self._sendcommand(['get_property', 'volume'])
+            self.mpv = mpv
 
         except:
             self.fifo = None
@@ -286,6 +292,13 @@ class Mpris2MediaPlayer(dbus.service.Object):
         if self.socket:
             self.socket.send(json.dumps({"command": command}).encode() + b'\n')
         elif self.fifo:
+            command = command[:]
+            for x, i in enumerate(command):
+                if i is True:
+                    command[x] = 'yes' if self.mpv else 1
+                elif i is False:
+                    command[x] = 'no' if self.mpv else 0
+
             cmd = " ".join([str(i) for i in command]) + '\n'
             self.fifo.write(cmd)
             self.fifo.flush()
