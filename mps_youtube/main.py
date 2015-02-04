@@ -2028,7 +2028,7 @@ def launch_player(song, songdata, cmd):
                 fifopath = tempfile.mktemp('.fifo', 'mpsyt-mplayer')
                 os.mkfifo(fifopath)
                 cmd.extend(['-input', 'file=' + fifopath])
-                g.mprisctl.send(('mplayer-fifo', fifopath))
+                g.mprisctl.send(('fifo', fifopath))
                 g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
@@ -2055,7 +2055,7 @@ def launch_player(song, songdata, cmd):
                     fifopath = tempfile.mktemp('.fifo', 'mpsyt-mpv')
                     os.mkfifo(fifopath)
                     cmd.append('--input-file=' + fifopath)
-                    g.mprisctl.send(('mpv-fifo', fifopath))
+                    g.mprisctl.send(('fifo', fifopath))
                     g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
 
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
