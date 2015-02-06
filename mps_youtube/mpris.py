@@ -130,12 +130,16 @@ class Mpris2Controller(object):
 class Mpris2MediaPlayer(dbus.service.Object):
 
     """
+        main dbus object for MPRIS2
         implementing interfaces:
             org.mpris.MediaPlayer2
             org.mpris.MediaPlayer2.Player
     """
 
     def __init__(self, bus):
+        """
+            initializes mpris object on dbus
+        """
         dbus.service.Object.__init__(self, bus, MPRIS_PATH)
         self.socket = None
         self.fifo = None
@@ -178,6 +182,9 @@ class Mpris2MediaPlayer(dbus.service.Object):
         }
 
     def bindmpv(self, sockpath):
+        """
+            init JSON IPC for new versions of mpv >= 0.7
+        """
         self.mpv = True
         self.socket = socket.socket(socket.AF_UNIX)
         # wait on socket initialization
@@ -200,7 +207,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             for line in self.socket.makefile():
                 resp = json.loads(line)
 
-                # deals with race condition, when this was called too early
+                # deals with bug in mpv 0.7 - 0.7.3
                 if resp.get('event') == 'property-change' and not observe_full:
                     self._sendcommand(["observe_property", 2, "volume"])
                     self._sendcommand(["observe_property", 3, "pause"])
@@ -214,6 +221,9 @@ class Mpris2MediaPlayer(dbus.service.Object):
             self.mpv = False
 
     def bindfifo(self, fifopath, mpv=False):
+        """
+            init command fifo for mplayer and old versions of mpv
+        """
         time.sleep(1) # give it some time so fifo could be properly created
         try:
             self.fifo = open(fifopath, 'w')
@@ -289,6 +299,9 @@ class Mpris2MediaPlayer(dbus.service.Object):
                 self.PropertiesChanged(PLAYER_INTERFACE, { 'Metadata': newval }, [])
 
     def _sendcommand(self, command):
+        """
+            sends commands to binded player
+        """
         if self.socket:
             self.socket.send(json.dumps({"command": command}).encode() + b'\n')
         elif self.fifo:
@@ -397,7 +410,8 @@ class Mpris2MediaPlayer(dbus.service.Object):
         """
             TrackId - o (track_id)
                 The currently playing track's identifier.
-                If this does not match the id of the currently-playing track, the call is ignored as "stale".
+                If this does not match the id of the currently-playing track,
+                the call is ignored as "stale".
             Position - x (position)
                 Track position in microseconds.
 
@@ -434,11 +448,17 @@ class Mpris2MediaPlayer(dbus.service.Object):
     @dbus.service.method(dbus_interface=PROPERTIES_INTERFACE,
                          in_signature='ss', out_signature='v')
     def Get(self, interface_name, property_name):
+        """
+            getter for org.freedesktop.DBus.Properties on this object
+        """
         return self.GetAll(interface_name)[property_name]
 
     @dbus.service.method(dbus_interface=PROPERTIES_INTERFACE,
                          in_signature='s', out_signature='a{sv}')
     def GetAll(self, interface_name):
+        """
+            getter for org.freedesktop.DBus.Properties on this object
+        """
         if interface_name in self.properties:
             t = self.properties[interface_name]['read_only'].copy()
             t.update(self.properties[interface_name]['read_write'])
@@ -453,6 +473,9 @@ class Mpris2MediaPlayer(dbus.service.Object):
     @dbus.service.method(dbus_interface=PROPERTIES_INTERFACE,
                          in_signature='ssv')
     def Set(self, interface_name, property_name, new_value):
+        """
+            setter for org.freedesktop.DBus.Properties on this object
+        """
         if interface_name in self.properties:
             if property_name in self.properties[interface_name]['read_write']:
                 if property_name == 'Volume':
@@ -469,10 +492,19 @@ class Mpris2MediaPlayer(dbus.service.Object):
                          signature='sa{sv}as')
     def PropertiesChanged(self, interface_name, changed_properties,
                           invalidated_properties):
+        """
+            signal for org.freedesktop.DBus.Properties on this object
+
+            this informs of changed properties
+        """
         pass
 
 def main(connection):
-    conn = connection
+    """
+        runs mpris interface and listens for changes
+        connection - pipe to communicate with this module
+    """
+
     mprisctl = Mpris2Controller()
     mprisctl.acquire()
     mprisctl.run(connection)

@@ -2128,7 +2128,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
             for line in s.makefile():
                 resp = json.loads(line)
 
-                # deals with race condition, when this was called too early
+                # deals with bug in mpv 0.7 - 0.7.3
                 if resp.get('event') == 'property-change' and not observe_full:
                     cmd = {"command": ["observe_property", 2, "volume"]}
                     s.send(json.dumps(cmd).encode() + b'\n')
