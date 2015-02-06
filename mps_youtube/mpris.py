@@ -91,8 +91,10 @@ class Mpris2Controller(object):
                     name, val = data
                     if name == 'socket':
                         Thread(target=self.mpris.bindmpv, args=(val,)).start()
-                    elif name == 'fifo':
+                    elif name == 'mplayer-fifo':
                         self.mpris.bindfifo(val)
+                    elif name == 'mpv-fifo':
+                        self.mpris.bindfifo(val, mpv=True)
                     else:
                         self.mpris.setproperty(name, val)
         except:
@@ -137,6 +139,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
         dbus.service.Object.__init__(self, bus, MPRIS_PATH)
         self.socket = None
         self.fifo = None
+        self.mpv = False
         self.properties = {
             ROOT_INTERFACE : {
                 'read_only' : {
@@ -175,9 +178,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
         }
 
     def bindmpv(self, sockpath):
-        """
-            init JSON IPC for new versions of mpv >= 0.7
-        """
+        self.mpv = True
         self.socket = socket.socket(socket.AF_UNIX)
         # wait on socket initialization
         tries = 0
@@ -210,15 +211,14 @@ class Mpris2MediaPlayer(dbus.service.Object):
 
         except socket.error:
             self.socket = None
+            self.mpv = False
 
-    def bindfifo(self, fifopath):
-        """
-            init command fifo for mplayer and old versions of mpv
-        """
+    def bindfifo(self, fifopath, mpv=False):
         time.sleep(1) # give it some time so fifo could be properly created
         try:
             self.fifo = open(fifopath, 'w')
             self._sendcommand(['get_property', 'volume'])
+            self.mpv = mpv
 
         except:
             self.fifo = None
@@ -295,9 +295,9 @@ class Mpris2MediaPlayer(dbus.service.Object):
             command = command[:]
             for x, i in enumerate(command):
                 if i is True:
-                    command[x] = 'yes'
+                    command[x] = 'yes' if self.mpv else 1
                 elif i is False:
-                    command[x] = 'no'
+                    command[x] = 'no' if self.mpv else 0
 
             cmd = " ".join([str(i) for i in command]) + '\n'
             self.fifo.write(cmd)
@@ -346,7 +346,11 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Pauses playback.
             If playback is already paused, this has no effect.
         """
-        self._sendcommand(["set_property", "pause", True])
+        if self.mpv:
+            self._sendcommand(["set_property", "pause", True])
+        else:
+            if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Paused': 
+                self._sendcommand(['pause'])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def PlayPause(self):
@@ -354,10 +358,10 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Pauses playback.
             If playback is already paused, resumes playback.
         """
-        if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] == 'Playing':
-            self._sendcommand(["set_property", "pause", True])
+        if self.mpv:
+            self._sendcommand(["cycle", "pause"])
         else:
-            self._sendcommand(["set_property", "pause", False])
+            self._sendcommand(["pause"])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Stop(self):
@@ -371,7 +375,11 @@ class Mpris2MediaPlayer(dbus.service.Object):
         """
             Starts or resumes playback.
         """
-        self._sendcommand(["set_property", "pause", False])
+        if self.mpv:
+            self._sendcommand(["set_property", "pause", False])
+        else:
+            if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Playing': 
+                self._sendcommand(['pause'])
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='x')
     def Seek(self, offset):
