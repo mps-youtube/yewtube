@@ -230,7 +230,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             self._sendcommand(['get_property', 'volume'])
             self.mpv = mpv
 
-        except:
+        except IOError:
             self.fifo = None
 
     def setproperty(self, name, val):
@@ -335,9 +335,9 @@ class Mpris2MediaPlayer(dbus.service.Object):
         """
         pass
 
-    """
-        implementing org.mpris.MediaPlayer2.Player
-    """
+    #
+    # implementing org.mpris.MediaPlayer2.Player
+    #
 
     @dbus.service.method(dbus_interface=PLAYER_INTERFACE)
     def Next(self):
