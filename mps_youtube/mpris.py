@@ -152,8 +152,8 @@ class Mpris2MediaPlayer(dbus.service.Object):
                     'CanRaise' : False,
                     'HasTrackList' : False,
                     'Identity' : IDENTITY,
-                    'SupportedUriSchemes' : [],
-                    'SupportedMimeTypes' : [],
+                    'SupportedUriSchemes' : dbus.Array([], 's', 1),
+                    'SupportedMimeTypes' : dbus.Array([], 's', 1),
                 },
                 'read_write' : {
                     'Fullscreen' : False,
