@@ -903,7 +903,7 @@ def init():
         t = multiprocessing.Process(target=mpris.main, args=(conn,))
         t.daemon = True
         t.start()
-    except:
+    except ImportError:
         pass
 
     process_cl_args(sys.argv)

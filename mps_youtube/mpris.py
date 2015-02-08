@@ -97,7 +97,7 @@ class Mpris2Controller(object):
                         self.mpris.bindfifo(val, mpv=True)
                     else:
                         self.mpris.setproperty(name, val)
-        except:
+        except IOError:
             pass
 
     def _acquire_bus(self):
@@ -316,9 +316,9 @@ class Mpris2MediaPlayer(dbus.service.Object):
             self.fifo.write(cmd)
             self.fifo.flush()
 
-    """
-        implementing org.mpris.MediaPlayer2
-    """
+    #
+    # implementing org.mpris.MediaPlayer2
+    #
 
     @dbus.service.method(dbus_interface=ROOT_INTERFACE)
     def Raise(self):
@@ -418,7 +418,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Sets the current track position in microseconds.
         """
         if track_id == self.properties[PLAYER_INTERFACE]['read_only']['Metadata']['mpris:trackid']:
-            self._sendcommand(["seek", offset / 10**6, 2])
+            self._sendcommand(["seek", position / 10**6, 2])
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='s')
     def OpenUri(self, uri):
@@ -441,9 +441,9 @@ class Mpris2MediaPlayer(dbus.service.Object):
         """
         pass
 
-    """
-        implementing org.freedesktop.DBus.Properties
-    """
+    #
+    # implementing org.freedesktop.DBus.Properties
+    #
 
     @dbus.service.method(dbus_interface=PROPERTIES_INTERFACE,
                          in_signature='ss', out_signature='v')
@@ -468,7 +468,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             raise dbus.exceptions.DBusException(
                 'com.example.UnknownInterface',
                 'This object does not implement the %s interface'
-                    % interface_name)
+                % interface_name)
 
     @dbus.service.method(dbus_interface=PROPERTIES_INTERFACE,
                          in_signature='ssv')
@@ -486,7 +486,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             raise dbus.exceptions.DBusException(
                 'com.example.UnknownInterface',
                 'This object does not implement the %s interface'
-                    % interface_name)
+                % interface_name)
 
     @dbus.service.signal(dbus_interface=PROPERTIES_INTERFACE,
                          signature='sa{sv}as')
