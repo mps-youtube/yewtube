@@ -2687,11 +2687,45 @@ def transcode(filename, enc_data):
     return outfn
 
 
+def external_download(filename, url):
+    """ Perform download using external application. """
+    cmd = Config.DOWNLOAD_COMMAND.get
+    ddir, basename = Config.DDIR.get, os.path.basename(filename)
+    cmd_list = shlex.split(cmd)
+
+    def list_string_sub(orig, repl, lst):
+        """ Replace substrings for items in a list. """
+        return [x if orig not in x else x.replace(orig, repl) for x in lst]
+
+    cmd_list = list_string_sub("%F", filename, cmd_list)
+    cmd_list = list_string_sub("%d", ddir, cmd_list)
+    cmd_list = list_string_sub("%f", basename, cmd_list)
+    cmd_list = list_string_sub("%u", url, cmd_list)
+    dbg("Downloading using: %s", " ".join(cmd_list))
+    subprocess.call(cmd_list)
+
+
 def _download(song, filename, url=None, audio=False, allow_transcode=True):
-    """ Download file, show status, return filename. """
+    """ Download file, show status.
+
+    Return filename or None in case of user specified download command.
+
+    """
     # pylint: disable=R0914
     # too many local variables
     # Instance of 'bool' has no 'url' member (some types not inferable)
+
+    if not url:
+        streams = get_streams(song)
+        stream = select_stream(streams, 0, audio=audio, m4a_ok=True)
+        url = stream['url']
+
+    # if an external download command is set, use it
+    if Config.DOWNLOAD_COMMAND.get:
+        title = c.y + os.path.splitext(os.path.basename(filename))[0] + c.w
+        xprint("Downloading %s using custom command" % title)
+        external_download(filename, url)
+        return None
 
     if not Config.OVERWRITE.get:
         if os.path.exists(filename):
@@ -2703,39 +2737,28 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
 
-    if not url:
-        streams = get_streams(song)
-        stream = select_stream(streams, 0, audio=audio, m4a_ok=True)
-        url = stream['url']
+    resp = urlopen(url)
+    total = int(resp.info()['Content-Length'].strip())
+    chunksize, bytesdone, t0 = 16384, 0, time.time()
+    outfh = open(filename, 'wb')
 
-    if Config.DOWNLOAD_COMMAND.get:
-        subprocess.check_call(Config.DOWNLOAD_COMMAND.get.replace('%u', url
-                                ).replace('%f', filename), shell=True)
+    while True:
+        chunk = resp.read(chunksize)
+        outfh.write(chunk)
+        elapsed = time.time() - t0
+        bytesdone += len(chunk)
+        rate = (bytesdone / 1024) / elapsed
+        eta = (total - bytesdone) / (rate * 1024)
+        stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate, eta)
 
-    else:
-        resp = urlopen(url)
-        total = int(resp.info()['Content-Length'].strip())
-        chunksize, bytesdone, t0 = 16384, 0, time.time()
-        outfh = open(filename, 'wb')
+        if not chunk:
+            outfh.close()
+            break
 
-        while True:
-            chunk = resp.read(chunksize)
-            outfh.write(chunk)
-            elapsed = time.time() - t0
-            bytesdone += len(chunk)
-            rate = (bytesdone / 1024) / elapsed
-            eta = (total - bytesdone) / (rate * 1024)
-            stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate, eta)
+        status = status_string.format(*stats)
+        sys.stdout.write("\r" + status + ' ' * 4 + "\r")
+        sys.stdout.flush()
 
-            if not chunk:
-                outfh.close()
-                break
-
-            status = status_string.format(*stats)
-            sys.stdout.write("\r" + status + ' ' * 4 + "\r")
-            sys.stdout.flush()
-
-    # download done
     active_encoder = g.encoders[Config.ENCODER.get]
     ext = filename.split(".")[-1]
     valid_ext = ext in active_encoder['valid'].split(",")
@@ -3355,7 +3378,8 @@ def prompt_dl(song):
     url, ext = menu_prompt(model, "Download number: ", *dl_text)
     url2 = ext2 = None
 
-    if ext == "m4v" and g.muxapp:
+    if ext == "m4v" and g.muxapp and not Config.DOWNLOAD_COMMAND.get:
+        # offer mux if not using external downloader
         dl_data, p = get_dl_data(song, mediatype="audio")
         dl_text = gen_dl_text(dl_data, song, p)
         au_choices = "1" if len(dl_data) == 1 else "1-%s" % len(dl_data)
@@ -3470,7 +3494,8 @@ def download(dltype, num):
         # perform download(s)
         dl_filenames = [args[1]]
         f = _download(*args, **kwargs)
-        g.message = "Saved to " + c.g + f + c.w
+        if f:
+            g.message = "Saved to " + c.g + f + c.w
 
         if url_au:
             dl_filenames += [args_au[1]]
@@ -4300,7 +4325,8 @@ def main():
         user_pls: r'u(?:ser)?pl\s(.*)$',
         save_last: r'save\s*$',
         pl_search: r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
-        setconfig: r'set\s+([-\w]+)\s*"?([^"]*)"?\s*$',
+        # setconfig: r'set\s+([-\w]+)\s*"?([^"]*)"?\s*$',
+        setconfig: r'set\s+([-\w]+)\s*(.*?)s*$',
         clip_copy: r'x\s*(\d+)$',
         down_many: r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
         show_help: r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
