@@ -807,11 +807,14 @@ def get_version_info():
     out += ("\nPlatform       : %s" % platform.platform())
     out += ("\nsys.stdout.enc : %s" % sys.stdout.encoding)
     out += ("\ndefault enc    : %s" % sys.getdefaultencoding())
+    out += ("\nConfig dir     : %s" % get_config_dir())
     envs = "TERM SHELL LANG LANGUAGE".split()
 
     for env in envs:
         value = os.environ.get(env)
         out += "\nenv:%-11s: %s" % (env, value) if value else ""
+
+
 
     return out
 
@@ -1397,7 +1400,7 @@ def playlists_display():
             generate_songlist_display()
 
     maxname = max(len(a) for a in g.userpl)
-    out = "      {0}Saved Playlists{1}\n".format(c.ul, c.w)
+    out = "      {0}Local Playlists{1}\n".format(c.ul, c.w)
     start = "      "
     fmt = "%s%s%-3s %-" + uni(maxname + 3) + "s%s %s%-7s%s %-5s%s"
     head = (start, c.b, "ID", "Name", c.b, c.b, "Count", c.b, "Duration", c.w)
@@ -3205,7 +3208,11 @@ def show_help(choice):
                           "show_video playurl dlurl d da dv all *"
                           " play".split()),
 
-             "encode": "encoding transcoding transcode wma mp3 format".split(),
+             "dl-command": ("dlcmd dl-cmd download-cmd dl_cmd download_cmd "
+                            "download-command download_command".split()),
+
+             "encode": ("encoding transcoding transcode wma mp3 format "
+                        "encode encoder".split()),
 
              "invoke": "command commands mpsyt invocation".split(),
 
@@ -4329,7 +4336,7 @@ def main():
         setconfig: r'set\s+([-\w]+)\s*(.*?)s*$',
         clip_copy: r'x\s*(\d+)$',
         down_many: r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
-        show_help: r'(?:help|h)(?:\s+(-?\w+)\s*)?$',
+        show_help: r'(?:help|h)(?:\s+([-_a-zA-Z]+)\s*)?$',
         show_encs: r'encoders?\s*$',
         user_more: r'u\s?([\d]{1,4})$',
         down_plist: r'(da|dv)pl\s+%s' % pl,
@@ -4485,6 +4492,28 @@ Then, when results are shown:
 {2}shuffle <number(s)>{1} - play specified items in random order.
 """.format(c.ul, c.w, c.y)),
 
+    ("dl-command", "Downloading Using External Application", """
+{0}Download Using A Custom Application{1}
+
+Use {2}set download_command <command>{1} to specify a custom command to use for
+downloading.
+
+mps-youtube will make the following substitutions:
+
+%u - url of the remote file to download
+%d - download directory as set in DDIR in mps-youtube config
+%f - filename (determined by title and filetype)
+%F - full file path (%d/%f)
+
+for example, to download using aria2c (http://aria2.sourceforge.net), enter:
+
+    {2}set download_command aria2c --dir=%d --out=%f %u{1}
+
+Note that using a custom download command does not support transcoding the
+downloaded file to another format using mps-youtube.
+""".format(c.ul, c.w, c.y)),
+
+
     ("encode", "Encoding to MP3 and other formats", """
 {0}Encoding to MP3 and other formats{1}
 
@@ -4497,7 +4526,6 @@ available in the system path.
 The encoding presets can be modified by editing the text config file which
 resides at:
    {3}
-
 """.format(c.ul, c.w, c.y, g.TCFILE)),
 
     ("playlists", "Using Local Playlists", """
@@ -4554,6 +4582,7 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set columns <columns>{1} - select extra displayed fields in search results:
      (valid: views comments rating date user likes dislikes category)
 {2}set ddir <download direcory>{1} - set where downloads are saved
+{2}set download_command <command>{1} - type {2}help dl-command{1} for info
 {2}set encoder <number>{1} - set encoding preset for downloaded files
 {2}set fullscreen true|false{1} - output video content in full-screen mode
 {2}set max_res <number>{1} - play / download maximum video resolution height{3}
@@ -4612,7 +4641,7 @@ command
 
  - Enable custom keymap using mplayer/mpv input.conf file (ids1024)
 
- - Enable custom downloader application (ids1024)
+ - Enable custom downloader application (ids1024 & np1)
 
 """.format(c.ul, c.w, c.y))]
 
