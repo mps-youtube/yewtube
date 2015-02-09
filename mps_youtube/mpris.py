@@ -33,9 +33,9 @@ import time
 import re
 import os
 
-IDENTITY = 'mps-youtube.instance' + str(os.getpid())
+IDENTITY = 'mps-youtube'
 
-BUS_NAME = 'org.mpris.MediaPlayer2.' + IDENTITY
+BUS_NAME = 'org.mpris.MediaPlayer2.' + IDENTITY + '.instance' + str(os.getpid())
 ROOT_INTERFACE = 'org.mpris.MediaPlayer2'
 PLAYER_INTERFACE = 'org.mpris.MediaPlayer2.Player'
 PROPERTIES_INTERFACE = 'org.freedesktop.DBus.Properties'
