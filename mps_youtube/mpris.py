@@ -213,6 +213,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                 if resp.get('event') == 'property-change' and not observe_full:
                     self._sendcommand(["observe_property", 2, "volume"])
                     self._sendcommand(["observe_property", 3, "pause"])
+                    self._sendcommand(["observe_property", 4, "seeking"])
                     observe_full = True
 
                 if resp.get('event') == 'property-change':
@@ -299,6 +300,11 @@ class Mpris2MediaPlayer(dbus.service.Object):
             if newval != oldval:
                 self.properties[PLAYER_INTERFACE]['read_only']['Metadata'] = newval
                 self.PropertiesChanged(PLAYER_INTERFACE, { 'Metadata': newval }, [])
+
+        elif name == 'seeking':
+            # send signal to keep time-pos synced between player and client
+            if not val:
+                self.Seeked(self.properties[PLAYER_INTERFACE]['read_only']['Position'])
 
     def _sendcommand(self, command):
         """
