@@ -814,8 +814,6 @@ def get_version_info():
         value = os.environ.get(env)
         out += "\nenv:%-11s: %s" % (env, value) if value else ""
 
-
-
     return out
 
 
