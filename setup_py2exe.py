@@ -20,7 +20,7 @@ setup(
     version="0.2.1",
     description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
-    author="nagev",
+    author="np1",
     author_email="np1nagev@gmail.com",
     url="http://github.com/np1/mps-youtube",
     download_url="https://github.com/np1/mps-youtube/tarball/master",

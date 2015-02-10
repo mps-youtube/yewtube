@@ -5,7 +5,7 @@ mps-youtube.
 
 https://github.com/np1/mps-youtube
 
-Copyright (C) 2014 nagev
+Copyright (C) 2014, 2015 np1 and contributors
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 __notes__ = "dev version"
-__author__ = "nagev"
+__author__ = "np1"
 __license__ = "GPLv3"
 
 from xml.etree import ElementTree as ET
@@ -1213,7 +1213,7 @@ def init_text():
 
         "exitmsg": ("**0mps-youtube - **1http://github.com/np1/mps-youtube**0"
                     "\nReleased under the GPLv3 license\n"
-                    "(c) 2014 nagev**2\n"""),
+                    "(c) 2014, 2015 np1 and contributors**2\n"""),
         "_exitmsg": (c.r, c.b, c.w),
 
         # Error / Warning messages
