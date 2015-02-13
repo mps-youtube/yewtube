@@ -8,7 +8,7 @@ Development version - not yet released
 - Fix YouTube comments overshoot window size
 
 - Implement skip to previous track (ids1024) #175 #18 #14
-    Use n/p or j/k for next/prev track, q for quit (was ctrl-c)
+    Use > and < keys for next and prev track, q for quit (was ctrl-c)
 
 -------------------------------------------------------------------------------
 
