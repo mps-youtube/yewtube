@@ -3480,11 +3480,17 @@ def download(dltype, num):
             # download user selected stream(s)
             filename = _make_fname(song, ext)
             args = (song, filename, url)
-            kwargs = {}
 
             if url_au and ext_au:
+                # downloading video and audio stream for muxing
+                audio = False
                 filename_au = _make_fname(song, ext_au)
                 args_au = (song, filename_au, url_au)
+
+            else:
+                audio = ext in ("m4a", "ogg")
+
+            kwargs = dict(audio=audio)
 
     elif best:
         # set updownload without prompt
