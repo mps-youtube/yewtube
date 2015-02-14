@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.2.2"
-__notes__ = "released 14 Feb 2015"
+__version__ = "0.2.3-dev"
+__notes__ = "Development version"
 __author__ = "np1"
 __license__ = "GPLv3"
 
