@@ -15,7 +15,7 @@ except ImportError:
 
 setup(
     name="mps-youtube",
-    version="0.2.1",
+    version="0.2.2",
     description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="np1",
