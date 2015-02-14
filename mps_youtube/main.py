@@ -2629,13 +2629,38 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     filename = os.path.join(ddir, mswinfn(filename.replace("/", "-")))
     return filename
 
-def remux_audio(filename):
-    """ Remux audio file. """
+def extract_metadata(name):
+    """ Try to determine metadata from video title. """
+
+    seps = name.count(" - ")
+    artist = title = None
+
+    if seps == 1:
+
+        pos = name.find(" - ")
+        artist = name[:pos].strip()
+        title = name[pos + 3:].strip()
+
+    else:
+        title = name.strip()
+
+    return dict(artist=artist, title=title)
+
+
+def remux_audio(filename, title):
+    """ Remux audio file. Insert limited metadata tags """
     dbg("starting remux")
     temp_file = filename + "." + uni(random.randint(10000, 99999))
     os.rename(filename, temp_file)
+    meta  = extract_metadata(title)
+    metadata = ["title=%s" % meta["title"]]
 
-    cmd = [g.muxapp, "-y", "-i", temp_file, "-acodec", "copy", "-vn", filename]
+    if meta["artist"]:
+        metadata = ["title=%s" % meta["title"], "-metadata",
+                    "artist=%s" % meta["artist"]]
+
+    cmd = [g.muxapp, "-y", "-i", temp_file, "-acodec", "copy", "-metadata"]
+    cmd += metadata + ["-vn", filename]
     dbg(cmd)
 
     try:
@@ -2763,11 +2788,11 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     ext = filename.split(".")[-1]
     valid_ext = ext in active_encoder['valid'].split(",")
 
+    if audio and g.muxapp:
+        remux_audio(filename, song.title)
+
     if Config.ENCODER.get != 0 and valid_ext and allow_transcode:
         filename = transcode(filename, active_encoder)
-
-    elif audio and g.muxapp:
-        remux_audio(filename)
 
     return filename
 
