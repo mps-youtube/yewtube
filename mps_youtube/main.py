@@ -4336,7 +4336,7 @@ def main():
         save_last: r'save\s*$',
         pl_search: r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$',
         # setconfig: r'set\s+([-\w]+)\s*"?([^"]*)"?\s*$',
-        setconfig: r'set\s+([-\w]+)\s*(.*?)s*$',
+        setconfig: r'set\s+([-\w]+)\s*(.*?)\s*$',
         clip_copy: r'x\s*(\d+)$',
         down_many: r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$',
         show_help: r'(?:help|h)(?:\s+([-_a-zA-Z]+)\s*)?$',
