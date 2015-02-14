@@ -2629,7 +2629,6 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     filename = os.path.join(ddir, mswinfn(filename.replace("/", "-")))
     return filename
 
-
 def remux_audio(filename):
     """ Remux audio file. """
     dbg("starting remux")
@@ -3057,7 +3056,7 @@ def play(pre, choice, post=""):
         repeat = "repeat" in pre + post
         novid = "-a" in pre + post
         fs = "-f" in pre + post
-        nofs = "-w" in pre + post
+        nofs = "-w" in pre + post or "-v" in pre + post
 
         if (novid and fs) or (novid and nofs) or (nofs and fs):
             raise IOError("Conflicting override options specified")
@@ -4313,7 +4312,7 @@ def main():
 
     # input types
     word = r'[^\W\d][-\w\s]{,100}'
-    rs = r'(?:repeat\s*|shuffle\s*|-a\s*|-f\s*|-w\s*)'
+    rs = r'(?:repeat\s*|shuffle\s*|-a\s*|-v\s*|-f\s*|-w\s*)'
     pl = r'(?:.*=|)([-_a-zA-Z0-9]{18,50})(?:(?:\&\#).*|$)'
     regx = {
         ls: r'ls$',
