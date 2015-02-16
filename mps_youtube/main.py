@@ -1306,6 +1306,20 @@ def open_from_file():
             g.userpl = {}
             save_to_file()
 
+    except AttributeError:
+        # playlist is from a time when this module was __main__
+        # https://github.com/np1/mps-youtube/issues/214
+        import __main__
+        __main__.Playlist = Playlist
+        __main__.Video = Video
+
+        with open(g.PLFILE, "rb") as plf:
+            g.userpl = pickle.load(plf)
+
+        save_to_file()
+        xprint("Updated playlist file. Please restart mpsyt")
+        sys.exit()
+
     except EOFError:
         xprint("Error opening playlists from %s" % g.PLFILE)
         sys.exit()
