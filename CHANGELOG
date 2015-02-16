@@ -1,5 +1,16 @@
+Version 0.2.3
+17 February 2015
+
+ - Fix issue with opening old playlist file (#214)
+ - Fix issue with "set" command
+ - Metadata tagging of downloaded audio files
+     requires ffmpeg or avconv
+     early impelementation, uses YouTube video title, needs more work
+
+-------------------------------------------------------------------------------
+
 Version 0.2.2
-14 February 2014
+14 February 2015
 
 - Implement skip to previous track (ids1024) #175 #18 #14
     Use > and < keys for next and prev track, q for quit (was ctrl-c)
