@@ -287,7 +287,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                 self.Seeked(newval)
 
         elif name == 'metadata' and val:
-            trackid, title, length = val
+            trackid, title, length, arturl = val
             # sanitize ytid - it uses '-_' which are not valid in dbus paths
             trackid = re.sub('[^a-zA-Z0-9]', '', trackid)
 
@@ -296,6 +296,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                 'mpris:trackid' : dbus.ObjectPath(
                     '/CurrentPlaylist/ytid/' + trackid, variant_level=1),
                 'mpris:length' : dbus.Int64(length * 10**6, variant_level=1),
+                'mpris:artUrl' : dbus.String(arturl, variant_level=1),
                 'xesam:title' : dbus.String(title, variant_level=1) }
 
             if newval != oldval:
