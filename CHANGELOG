@@ -1,14 +1,37 @@
-Version 0.2.2-dev
-Development version - not yet released
+Version 0.2.3
+17 February 2015
 
-- Fix progress bar for mpv 0.7 (ids1024) #155 #161
+ - Fix issue with opening old playlist file (#214)
+ - Fix issue with "set" command
+ - Metadata tagging of downloaded audio files
+     requires ffmpeg or avconv
+     early impelementation, uses YouTube video title, needs more work
+
+-------------------------------------------------------------------------------
+
+Version 0.2.2
+14 February 2015
+
+- Implement skip to previous track (ids1024) #175 #18 #14
+    Use > and < keys for next and prev track, q for quit (was ctrl-c)
+    mpv / mplayer input.conf can be imported to use custom keymappings
+
+- Implement optional external download application (ids1024 and np1) #198 #132
+    enter "help dl-command" for more info
 
 - Show stream quality on status line (Brebiche38) #134 #163
 
+- Implement support for creating Windows builds with py2exe (ids1024) #190
+    Use setup.py in py2exe branch
+
+- Fix progress bar for mpv 0.7 (ids1024) #155 #161
+    Resolves issues with playback looping
+
+- Fix mps-youtube does not run on FreeBSD (nivit)
+
 - Fix YouTube comments overshoot window size
 
-- Implement skip to previous track (ids1024) #175 #18 #14
-    Use n/p or j/k for next/prev track, q for quit (was ctrl-c)
+- Fix issue with audio remux when using `d` download command
 
 -------------------------------------------------------------------------------
 

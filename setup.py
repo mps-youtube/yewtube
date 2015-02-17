@@ -15,16 +15,16 @@ except ImportError:
 
 setup(
     name="mps-youtube",
-    version="0.2.1",
+    version="0.2.3",
     description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
-    author="nagev",
+    author="np1",
     author_email="np1nagev@gmail.com",
     url="http://github.com/np1/mps-youtube",
     download_url="https://github.com/np1/mps-youtube/tarball/master",
     packages=['mps_youtube'],
     entry_points=dict(console_scripts=['mpsyt = mps_youtube:main.main']),
-    install_requires=['Pafy >= 0.3.72'],
+    install_requires=['pafy >= 0.3.72'],
     package_data={"": ["LICENSE", "README.rst", "CHANGELOG"]},
     classifiers=[
         "Topic :: Utilities",
