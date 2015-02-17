@@ -35,7 +35,6 @@ import unicodedata
 import collections
 import subprocess
 import threading
-# import __main__
 import platform
 import tempfile
 import difflib
@@ -2643,9 +2642,9 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     filename = os.path.join(ddir, mswinfn(filename.replace("/", "-")))
     return filename
 
+
 def extract_metadata(name):
     """ Try to determine metadata from video title. """
-
     seps = name.count(" - ")
     artist = title = None
 
@@ -2662,11 +2661,11 @@ def extract_metadata(name):
 
 
 def remux_audio(filename, title):
-    """ Remux audio file. Insert limited metadata tags """
+    """ Remux audio file. Insert limited metadata tags. """
     dbg("starting remux")
     temp_file = filename + "." + uni(random.randint(10000, 99999))
     os.rename(filename, temp_file)
-    meta  = extract_metadata(title)
+    meta = extract_metadata(title)
     metadata = ["title=%s" % meta["title"]]
 
     if meta["artist"]:
