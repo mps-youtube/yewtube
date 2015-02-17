@@ -2020,6 +2020,8 @@ def get_input_file():
 def launch_player(song, songdata, cmd):
     """ Launch player application. """
     # fix for github issue 59
+
+    arturl = "http://i.ytimg.com/vi/%s/default.jpg" % song.ytid
     if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
         cmd = [x.encode("utf8", errors="replace") for x in cmd]
 
@@ -2043,11 +2045,12 @@ def launch_player(song, songdata, cmd):
                 os.mkfifo(fifopath)
                 cmd.extend(['-input', 'file=' + fifopath])
                 g.mprisctl.send(('mplayer-fifo', fifopath))
-                g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
+                g.mprisctl.send(('metadata', (song.ytid, song.title,
+                                              song.length, arturl)))
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
-            player_status(p, songdata + "; ", song.length)
+            player_status(p, songdata + "; ", song)
             returncode = p.wait()
 
         elif "mpv" in Config.PLAYER.get:
@@ -2062,7 +2065,8 @@ def launch_player(song, songdata, cmd):
 
                 if g.mprisctl:
                     g.mprisctl.send(('socket', sockpath))
-                    g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
+                    g.mprisctl.send(('metadata', (song.ytid, song.title,
+                                                  song.length, arturl)))
 
             else:
                 if g.mprisctl:
@@ -2070,13 +2074,13 @@ def launch_player(song, songdata, cmd):
                     os.mkfifo(fifopath)
                     cmd.append('--input-file=' + fifopath)
                     g.mprisctl.send(('mpv-fifo', fifopath))
-                    g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
+                    g.mprisctl.send(('metadata', (song.ytid, song.title,
+                                                  song.length, arturl)))
 
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                      bufsize=1)
 
-            player_status(p, songdata + "; ", song.length, mpv=True,
-                          sockpath=sockpath)
+            player_status(p, songdata + "; ", song, mpv=True, sockpath=sockpath)
             returncode = p.wait()
 
         else:
@@ -2106,7 +2110,7 @@ def launch_player(song, songdata, cmd):
             p.terminate()  # make sure to kill mplayer if mpsyt crashes
 
 
-def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
+def player_status(po_obj, prefix, song, mpv=False, sockpath=None):
     """ Capture time progress from player output. Write status line. """
     # pylint: disable=R0914, R0912
     re_mplayer = re.compile(r"A:\s*(?P<elapsed_s>\d+)\.\d\s*")
@@ -2155,7 +2159,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                     volume_level = int(resp['data'])
 
                 if elapsed_s:
-                    line = make_status_line(elapsed_s, prefix, songlength,
+                    line = make_status_line(elapsed_s, prefix, song.length,
                                             volume=volume_level)
 
                     if line != last_displayed_line:
@@ -2196,7 +2200,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                         except ValueError:
                             continue
 
-                    line = make_status_line(elapsed_s, prefix, songlength,
+                    line = make_status_line(elapsed_s, prefix, song.length,
                                             volume=volume_level)
 
                     if line != last_displayed_line:
