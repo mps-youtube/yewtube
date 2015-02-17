@@ -2020,11 +2020,10 @@ def get_input_file():
 def launch_player(song, songdata, cmd):
     """ Launch player application. """
     # fix for github issue 59
-
-    arturl = "http://i.ytimg.com/vi/%s/default.jpg" % song.ytid
     if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
         cmd = [x.encode("utf8", errors="replace") for x in cmd]
 
+    arturl = "http://i.ytimg.com/vi/%s/default.jpg" % song.ytid
     input_file = get_input_file()
     sockpath = None
     fifopath = None
