@@ -2023,6 +2023,7 @@ def launch_player(song, songdata, cmd):
     if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
         cmd = [x.encode("utf8", errors="replace") for x in cmd]
 
+    arturl = "http://i.ytimg.com/vi/%s/default.jpg" % song.ytid
     input_file = get_input_file()
     sockpath = None
     fifopath = None
@@ -2043,7 +2044,8 @@ def launch_player(song, songdata, cmd):
                 os.mkfifo(fifopath)
                 cmd.extend(['-input', 'file=' + fifopath])
                 g.mprisctl.send(('mplayer-fifo', fifopath))
-                g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
+                g.mprisctl.send(('metadata', (song.ytid, song.title,
+                                              song.length, arturl)))
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
@@ -2062,7 +2064,8 @@ def launch_player(song, songdata, cmd):
 
                 if g.mprisctl:
                     g.mprisctl.send(('socket', sockpath))
-                    g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
+                    g.mprisctl.send(('metadata', (song.ytid, song.title,
+                                                  song.length, arturl)))
 
             else:
                 if g.mprisctl:
@@ -2070,7 +2073,8 @@ def launch_player(song, songdata, cmd):
                     os.mkfifo(fifopath)
                     cmd.append('--input-file=' + fifopath)
                     g.mprisctl.send(('mpv-fifo', fifopath))
-                    g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
+                    g.mprisctl.send(('metadata', (song.ytid, song.title,
+                                                  song.length, arturl)))
 
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                      bufsize=1)

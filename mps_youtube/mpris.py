@@ -109,7 +109,7 @@ class Mpris2Controller(object):
         if self.bus is not None:
             self.bus.get_bus().request_name(BUS_NAME)
         else:
-            self.bus = dbus.service.BusName(BUS_NAME, 
+            self.bus = dbus.service.BusName(BUS_NAME,
                 bus=dbus.SessionBus(mainloop=DBusGMainLoop()))
 
     def _add_interfaces(self):
@@ -154,6 +154,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                     'CanRaise' : False,
                     'HasTrackList' : False,
                     'Identity' : IDENTITY,
+                    'DesktopEntry' : 'mps-youtube',
                     'SupportedUriSchemes' : dbus.Array([], 's', 1),
                     'SupportedMimeTypes' : dbus.Array([], 's', 1),
                 },
@@ -286,7 +287,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                 self.Seeked(newval)
 
         elif name == 'metadata' and val:
-            trackid, title, length = val
+            trackid, title, length, arturl = val
             # sanitize ytid - it uses '-_' which are not valid in dbus paths
             trackid = re.sub('[^a-zA-Z0-9]', '', trackid)
 
@@ -295,6 +296,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                 'mpris:trackid' : dbus.ObjectPath(
                     '/CurrentPlaylist/ytid/' + trackid, variant_level=1),
                 'mpris:length' : dbus.Int64(length * 10**6, variant_level=1),
+                'mpris:artUrl' : dbus.String(arturl, variant_level=1),
                 'xesam:title' : dbus.String(title, variant_level=1) }
 
             if newval != oldval:
@@ -370,7 +372,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
         if self.mpv:
             self._sendcommand(["set_property", "pause", True])
         else:
-            if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Paused': 
+            if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Paused':
                 self._sendcommand(['pause'])
 
     @dbus.service.method(PLAYER_INTERFACE)
@@ -399,7 +401,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
         if self.mpv:
             self._sendcommand(["set_property", "pause", False])
         else:
-            if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Playing': 
+            if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Playing':
                 self._sendcommand(['pause'])
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='x')
