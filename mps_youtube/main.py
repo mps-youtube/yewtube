@@ -31,6 +31,7 @@ __license__ = "GPLv3"
 
 from xml.etree import ElementTree as ET
 from . import terminalsize
+import multiprocessing
 import unicodedata
 import collections
 import subprocess
@@ -747,6 +748,7 @@ class g(object):
     ytpls = []
     mpv_version = 0, 0, 0
     mpv_usesock = False
+    mprisctl = None
     browse_mode = "normal"
     preloading = []
     # expiry = 5 * 60 * 60  # 5 hours
@@ -893,6 +895,16 @@ def init():
 
     else:
         g.muxapp = has_exefile("ffmpeg") or has_exefile("avconv")
+
+    # initialize remote interface
+    try:
+        from . import mpris
+        g.mprisctl, conn = multiprocessing.Pipe()
+        t = multiprocessing.Process(target=mpris.main, args=(conn,))
+        t.daemon = True
+        t.start()
+    except ImportError:
+        pass
 
     process_cl_args(sys.argv)
 
@@ -2013,6 +2025,7 @@ def launch_player(song, songdata, cmd):
 
     input_file = get_input_file()
     sockpath = None
+    fifopath = None
 
     try:
         if "mplayer" in Config.PLAYER.get:
@@ -2024,6 +2037,14 @@ def launch_player(song, songdata, cmd):
                 input_file = input_file[2:].replace('\\', '/')
 
             cmd.append('conf=' + input_file)
+
+            if g.mprisctl:
+                fifopath = tempfile.mktemp('.fifo', 'mpsyt-mplayer')
+                os.mkfifo(fifopath)
+                cmd.extend(['-input', 'file=' + fifopath])
+                g.mprisctl.send(('mplayer-fifo', fifopath))
+                g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
+
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
             player_status(p, songdata + "; ", song.length)
@@ -2039,7 +2060,18 @@ def launch_player(song, songdata, cmd):
                 with open(os.devnull, "w") as devnull:
                     p = subprocess.Popen(cmd, shell=False, stderr=devnull)
 
+                if g.mprisctl:
+                    g.mprisctl.send(('socket', sockpath))
+                    g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
+
             else:
+                if g.mprisctl:
+                    fifopath = tempfile.mktemp('.fifo', 'mpsyt-mpv')
+                    os.mkfifo(fifopath)
+                    cmd.append('--input-file=' + fifopath)
+                    g.mprisctl.send(('mpv-fifo', fifopath))
+                    g.mprisctl.send(('metadata', (song.ytid, song.title, song.length)))
+
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                      bufsize=1)
 
@@ -2064,6 +2096,12 @@ def launch_player(song, songdata, cmd):
         if sockpath:
             os.unlink(sockpath)
 
+        if fifopath:
+            os.unlink(fifopath)
+
+        if g.mprisctl:
+            g.mprisctl.send(('stop', True))
+
         if p and p.poll() is None:
             p.terminate()  # make sure to kill mplayer if mpsyt crashes
 
@@ -2078,6 +2116,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
     last_displayed_line = None
     buff = ''
     volume_level = None
+    last_pos = None
 
     if sockpath:
         s = socket.socket(socket.AF_UNIX)
@@ -2095,14 +2134,19 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
             return
 
         try:
+            observe_full = False
             cmd = {"command": ["observe_property", 1, "time-pos"]}
-            s.send(json.dumps(cmd).encode() + b'\n')
-            cmd = {"command": ["observe_property", 2, "volume"]}
             s.send(json.dumps(cmd).encode() + b'\n')
             volume_level = elapsed_s = None
 
             for line in s.makefile():
                 resp = json.loads(line)
+
+                # deals with bug in mpv 0.7 - 0.7.3
+                if resp.get('event') == 'property-change' and not observe_full:
+                    cmd = {"command": ["observe_property", 2, "volume"]}
+                    s.send(json.dumps(cmd).encode() + b'\n')
+                    observe_full = True
 
                 if resp.get('event') == 'property-change' and resp['id'] == 1:
                     elapsed_s = int(resp['data'])
@@ -2122,6 +2166,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
             pass
 
     else:
+        elapsed_s = 0
 
         while po_obj.poll() is None:
             stdstream = po_obj.stderr if mpv else po_obj.stdout
@@ -2157,6 +2202,16 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                     if line != last_displayed_line:
                         writestatus(line)
                         last_displayed_line = line
+
+                if buff.startswith('ANS_volume='):
+                    volume_level = round(float(buff.split('=')[1]))
+
+                paused = ("PAUSE" in buff) or ("Paused" in buff)
+                if (elapsed_s != last_pos or paused) and g.mprisctl:
+                    last_pos = elapsed_s
+                    g.mprisctl.send(('pause', paused))
+                    g.mprisctl.send(('volume', volume_level))
+                    g.mprisctl.send(('time-pos', elapsed_s))
 
                 buff = ''
 
