@@ -1787,7 +1787,9 @@ def writestatus(text, mute=False):
 
 def writeline(text):
     """ Print text on same line. """
-    spaces = getxy().width - len(text) - 1
+    width = getxy().width
+    spaces = width - len(text) - 1
+    text = text[:width - 3]
     sys.stdout.write(" " + text + (" " * spaces) + "\r")
     sys.stdout.flush()
 
