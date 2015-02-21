@@ -3043,7 +3043,7 @@ def songlist_rm_add(action, songrange):
         g.message = F('added to pl') % (len(selection), g.active.size, d)
 
     elif action == "rm":
-        selection = list(reversed(sorted(list(set(selection)))))
+        selection = list(sorted(set(selection), reverse=True))
         removed = uni(tuple(reversed(selection))).replace(",", "")
 
         for x in selection:
