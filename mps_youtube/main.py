@@ -4322,14 +4322,10 @@ def search_album(term, page=1, splash=True):
     Config.ORDER.value = "relevance"
 
     try:
-        while True:
-            songs.append(next(itt))
+        songs.extend(itt)
 
     except KeyboardInterrupt:
         xprint("%sHalted!%s" % (c.r, c.w))
-
-    except StopIteration:
-        pass
 
     finally:
         Config.SEARCH_MUSIC.value, Config.ORDER.value = stash
