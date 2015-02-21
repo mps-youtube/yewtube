@@ -13,7 +13,7 @@ Version 0.2.3
  - Fix issue with "set" command
  - Metadata tagging of downloaded audio files
      requires ffmpeg or avconv
-     early impelementation, uses YouTube video title, needs more work
+     early implementation, uses YouTube video title, needs more work
 
 -------------------------------------------------------------------------------
 
