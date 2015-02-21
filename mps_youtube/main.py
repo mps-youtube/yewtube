@@ -4074,7 +4074,8 @@ def _do_query(url, query, err='query failed', cache=True, report=False):
     """
     # create url opener
     ua = "mps-youtube/%s ( %s )" % (__version__, __url__)
-    mpsyt_opener = build_opener().addheaders = [('User-agent', ua)]
+    mpsyt_opener = build_opener()
+    mpsyt_opener.addheaders = [('User-agent', ua)]
 
     # convert query to sorted list of tuples (needed for consistent url_memo)
     query = [(k, query[k]) for k in sorted(query.keys())]
