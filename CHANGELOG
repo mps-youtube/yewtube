@@ -1,3 +1,11 @@
+Unreleased changes, available on develop branch:
+
+ - Fix issue with rate-limiting in "album" command (#217)
+ - Implement support for MPRIS (hrnr and ids1024) (#191, #210)
+ - Fix display issue with small terminal width (#215)
+
+-------------------------------------------------------------------------------
+
 Version 0.2.3
 17 February 2015
 
