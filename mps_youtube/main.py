@@ -28,6 +28,7 @@ __version__ = "0.2.3"
 __notes__ = "released 17 Feb 2015"
 __author__ = "np1"
 __license__ = "GPLv3"
+__url__ = "http://github.com/np1/mps-youtube"
 
 from xml.etree import ElementTree as ET
 from . import terminalsize
@@ -82,13 +83,13 @@ except ImportError:
 if sys.version_info[:2] >= (3, 0):
     # pylint: disable=E0611,F0401
     import pickle
-    from urllib.request import urlopen
+    from urllib.request import urlopen, build_opener
     from urllib.error import HTTPError, URLError
     from urllib.parse import urlencode
     uni, byt, xinput = str, bytes, input
 
 else:
-    from urllib2 import urlopen, HTTPError, URLError
+    from urllib2 import urlopen, HTTPError, URLError, build_opener
     import cPickle as pickle
     from urllib import urlencode
     uni, byt, xinput = unicode, str, raw_input
@@ -4065,18 +4066,22 @@ def show_message(message, col=c.r, update=False):
 
 
 def _do_query(url, query, err='query failed', cache=True, report=False):
-    """ Perform http request.
+    """ Perform http request using mpsyt user agent header.
 
     if cache is True, memo is utilised
     if report is True, return whether response is from memo
 
     """
+    # create url opener
+    ua = "mps-youtube/%s ( %s )" % (__version__, __url__)
+    mpsyt_opener = build_opener().addheaders = [('User-agent', ua)]
+
     # convert query to sorted list of tuples (needed for consistent url_memo)
     query = [(k, query[k]) for k in sorted(query.keys())]
     url = "%s?%s" % (url, urlencode(query))
 
     try:
-        wdata = utf8_decode(urlopen(url).read())
+        wdata = utf8_decode(mpsyt_opener.open(url).read())
 
     except (URLError, HTTPError) as e:
         g.message = "%s: %s (%s)" % (err, e, url)
