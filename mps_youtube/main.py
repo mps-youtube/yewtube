@@ -1781,7 +1781,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
 
 
 def writestatus(text, mute=False):
-    """ Update status linei. """
+    """ Update status line. """
     if not mute and Config.SHOW_STATUS.get:
         writeline(text)
 
