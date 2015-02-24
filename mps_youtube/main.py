@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.2.3"
-__notes__ = "released 17 Feb 2015"
+__version__ = "0.2.4-dev"
+__notes__ = "development version"
 __author__ = "np1"
 __license__ = "GPLv3"
 __url__ = "http://github.com/np1/mps-youtube"
