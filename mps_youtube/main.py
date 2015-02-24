@@ -1781,7 +1781,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
 
 
 def writestatus(text, mute=False):
-    """ Update status linei. """
+    """ Update status line. """
     if not mute and Config.SHOW_STATUS.get:
         writeline(text)
 
@@ -3043,7 +3043,7 @@ def songlist_rm_add(action, songrange):
         g.message = F('added to pl') % (len(selection), g.active.size, d)
 
     elif action == "rm":
-        selection = list(reversed(sorted(list(set(selection)))))
+        selection = list(sorted(set(selection), reverse=True))
         removed = uni(tuple(reversed(selection))).replace(",", "")
 
         for x in selection:
@@ -4322,14 +4322,10 @@ def search_album(term, page=1, splash=True):
     Config.ORDER.value = "relevance"
 
     try:
-        while True:
-            songs.append(next(itt))
+        songs.extend(itt)
 
     except KeyboardInterrupt:
         xprint("%sHalted!%s" % (c.r, c.w))
-
-    except StopIteration:
-        pass
 
     finally:
         Config.SEARCH_MUSIC.value, Config.ORDER.value = stash
