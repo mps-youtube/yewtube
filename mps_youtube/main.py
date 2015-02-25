@@ -852,6 +852,7 @@ def init():
     init_readline()
     init_cache()
     init_transcode()
+    init_ubuntu_desktop_file()
 
     # set player to mpv or mplayer if found, otherwise unset
     suffix = ".exe" if mswin else ""
@@ -1026,6 +1027,23 @@ def init_cache():
             dbg(c.r + "Cache file failed to open" + c.w)
 
         prune_streams()
+
+
+def init_ubuntu_desktop_file():
+    """ Install desktop file if Ubuntu to get MPRIS working. """
+    if "Ubuntu" in platform.platform():
+        homedir = os.path.expanduser("~")
+        appdir = ".local/share/applications"
+        appdir = os.path.join(homedir, appdir)
+        filename = "mps-youtube.desktop"
+
+        if not os.path.exists(os.path.join(appdir, filename)):
+            dbg("no desktop file in local appdir")
+
+            if has_exefile("desktop-file-install"):
+                dbg("has desktop-file-install executable")
+                from mps_youtube import ubuntu
+                ubuntu.install_desktop_file(get_config_dir(), appdir)
 
 
 def init_readline():
