@@ -21,7 +21,7 @@ StartupNotify=true"""
 
 
 def install_desktop_file(configdir, local_app_dir):
-    """ Install desktop file if it hasn't already been done. """
+    """ Install desktop file. """
     if not os.path.exists(local_app_dir):
         os.makedirs(local_app_dir)
 
