@@ -876,12 +876,12 @@ def init():
 
     # check mpv version
 
-    if "mpv" in Config.PLAYER.get:
+    if "mpv" in Config.PLAYER.get and not mswin:
         options = utf8_decode(subprocess.check_output(
             [Config.PLAYER.get, "--list-options"]))
         # g.mpv_usesock = "--input-unix-socket" in options and not mswin
 
-        if "--input-unix-socket" in options and not mswin:
+        if "--input-unix-socket" in options:
             g.mpv_usesock = True
             dbg(c.g + "mpv supports --input-unix-socket" + c.w)
 
