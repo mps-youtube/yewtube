@@ -123,7 +123,7 @@ Alternatively to mplayer, use ``mpv.exe`` which can be downloaded from: http://m
 Run via Docker container
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Using `Docker <http://www.docker.com>`_ run with::
+Using `Docker <http://www.docker.com>`_, run with::
 
     sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt rothgar/mysyt
 
