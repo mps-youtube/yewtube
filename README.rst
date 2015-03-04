@@ -121,6 +121,34 @@ Extract the ``mplayer.exe`` file, saving it to the folder that ``mpsyt.exe`` res
 
 Alternatively to mplayer, use ``mpv.exe`` which can be downloaded from: http://mpv.io/installation/
 
+Run via Docker container
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using `Docker <http://www.docker.com>`_::
+
+Run the container with
+
+    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt rothgar/mysyt
+
+Additional Docker notes
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If you would like to locally build the container you can run the following steps
+
+Check out this repo
+
+    git clone https://github.com/np1/mps-youtube.git
+
+Enter the directory and run docker build
+
+    cd mps-youtube
+    sudo docker build -t mpsyt .
+
+Now run the container interactively with
+
+    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt mysyt
+
+In order to have access to the local sound device (/dev/snd) the container needs to be privileged.
 
 Upgrading
 ---------
