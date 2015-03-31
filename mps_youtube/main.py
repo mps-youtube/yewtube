@@ -162,6 +162,14 @@ def mswinfn(filename):
     return filename
 
 
+def set_window_title(title):
+    """ Set terminal window title. """
+    if mswin:
+        os.system("title " + title)
+    else:
+        sys.stdout.write('\x1b]2;' + title + '\x07')
+
+
 def get_default_ddir():
     """ Get system default Download directory, append mps dir. """
     user_home = os.path.expanduser("~")
@@ -3270,6 +3278,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             t = threading.Thread(target=preload, kwargs=kwa)
             t.start()
 
+        set_window_title(song.title + " - mpsyt")
         try:
             returncode = playsong(song, override=override)
 
@@ -3279,6 +3288,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             reset_terminal()
             g.message = c.y + "Playback halted" + c.w
             break
+        set_window_title("mpsyt")
 
         if returncode == 42:
             n -= 1
@@ -4398,6 +4408,8 @@ def matchfunction(func, regex, userinput):
 
 def main():
     """ Main control loop. """
+    set_window_title("mpsyt")
+
     if not g.command_line:
         g.content = logo(col=c.g, version=__version__) + "\n\n"
         g.message = "Enter /search-term to search or [h]elp"
