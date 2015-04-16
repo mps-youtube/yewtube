@@ -201,7 +201,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                 pass
             tries += 1
         else:
-            self.socket = None
+            return
 
         try:
             observe_full = False

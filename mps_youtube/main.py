@@ -2107,7 +2107,8 @@ def launch_player(song, songdata, cmd):
     finally:
         os.unlink(input_file)
 
-        if sockpath:
+        # May not exist if mpv has not yet created the file
+        if sockpath and os.path.exists(sockpath):
             os.unlink(sockpath)
 
         if fifopath:
