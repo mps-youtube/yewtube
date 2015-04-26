@@ -885,6 +885,7 @@ def init():
     # check mpv version
 
     if "mpv" in Config.PLAYER.get and not mswin:
+        g.mpv_version = get_mpv_version(Config.PLAYER.get)
         options = utf8_decode(subprocess.check_output(
             [Config.PLAYER.get, "--list-options"]))
         # g.mpv_usesock = "--input-unix-socket" in options and not mswin
