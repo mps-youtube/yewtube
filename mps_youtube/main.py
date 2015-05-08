@@ -116,6 +116,9 @@ def member_var(x):
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
+api_key = '' # XXX insert API key here
+iso8601timedurationex = re.compile('PT((\d{1,3})H)?((\d{1,3})M)?(\d{1,2})S')
+
 
 def getxy():
     """ Get terminal size, terminal width and max-results. """
@@ -768,7 +771,9 @@ class g(object):
     url_memo = collections.OrderedDict()
     model = Playlist(name="model")
     last_search_query = {}
-    current_page = 1
+    current_page = None
+    next_page = None
+    prev_page = None
     active = Playlist(name="active")
     text = {}
     userpl = {}
@@ -1487,44 +1492,84 @@ def fmt_time(seconds):
 
 def get_tracks_from_json(jsons):
     """ Get search results from web page. """
-    try:
-        items = jsons['data']['items']
-
-    except KeyError:
-        items = []
-
-    songs = []
-
-    for item in items:
-        ytid = item['id']
-        cursong = Video(ytid=ytid, title=item['title'].strip(),
-                        length=int(item['duration']))
-
-        likes = item.get('likeCount', "0")
-        likes = int(re.sub(r"\D", "", likes))
-        total = item.get('ratingCount', 0)
-        dislikes = total - likes
-        g.meta[ytid] = dict(
-            rating=uni(item.get('rating', "0."))
-            [:4].ljust(4, "0"),
-            uploader=item['uploader'],
-            category=item['category'],
-            aspect=item.get('aspectRatio', "custom"),
-            uploaded=yt_datetime(item['uploaded'])[1],
-            likes=uni(num_repr(likes)),
-            dislikes=uni(num_repr(dislikes)),
-            commentCount=uni(num_repr(item.get('commentCount', 0))),
-            viewCount=uni(num_repr(item.get("viewCount", 0))),
-            title=item['title'],
-            length=uni(fmt_time(cursong.length)))
-
-        songs.append(cursong)
-
-    if not items:
+    next_page_token = jsons.get('nextPageToken')
+    if next_page_token:
+        g.next_page = next_page_token
+    prev_page_token = jsons.get('prevPageToken')
+    if prev_page_token:
+        g.prev_page = prev_page_token
+    searchresults = jsons.get("items",[])
+    if not searchresults:
         dbg("got unexpected data or no search results")
         return False
+    # fetch detailed information about searchresults from videos API
+    vurl = "https://www.googleapis.com/youtube/v3/videos"
+    vurl += "?" + urlencode({'part':'contentDetails,statistics,snippet',
+                            'key': api_key,
+                            'id': ','.join([i.get('id',{}).get('videoId')
+                              for i in searchresults]) })
+    try:
+        wdata = utf8_decode(urlopen(vurl).read())
+        wdata = json.loads(wdata)
+    except (URLError, HTTPError) as e:
+        g.message = F('no data') % e
+        g.content = logo(c.r)
+        return
+    searchresults_vidinfo = wdata.get('items',[])
+    # enhance search results by adding information from videos API response
+    for searchresult, vidinfoitem in zip(searchresults, searchresults_vidinfo):
+        searchresult.update(vidinfoitem)
 
+    # declare list of video objects
+    songs = []
+    for item in searchresults:
+        try:
+          ytid = item.get('id')
+          duration = item.get('contentDetails',{}).get('duration')
+          if duration:
+            duration = iso8601timedurationex.findall(duration)
+            if len(duration) > 0:
+              _, hours, _, minutes, seconds = duration[0]
+              duration = [seconds, minutes, hours]
+              duration = [int(v) if len(v)>0 else 0 for v in duration]
+              duration = sum([60**p*v for p,v in enumerate(duration)])
+            else:
+              duration = 30
+          else:
+            duration = 30
+            print(json.dumps(item, indent=2))
+          stats = item.get('statistics',{})
+          snippet = item.get('snippet', {})
+          title = snippet.get('title','').strip()
+          # instantiate video representation in local model
+          cursong = Video(ytid=ytid, title=title, length=duration)
+          likes = int(stats.get('likeCount', 0))
+          dislikes = int(stats.get('dislikeCount', 0))
+          rating = 5.*likes/(likes+dislikes) if (likes+dislikes)>0 else 0
+          # cache video information in custom global variable store
+          g.meta[ytid] = dict(
+              # tries to get localized title first, fallback to normal title field
+              title = snippet.get('localized', {'title':snippet.get('title', '[!!!]')}).get('title', '[!]'),
+              length = uni(fmt_time(cursong.length)),
+              #XXX
+              rating = uni('{}'.format(rating))[:4].ljust(4, "0"),
+              uploader = snippet.get('channelTitle'),
+              category = snippet.get('categoryId'),
+              aspect = "custom", #XXX
+              uploaded = yt_datetime(snippet.get('publishedAt','')),
+              likes = uni(num_repr(likes)),
+              dislikes = uni(num_repr(dislikes)),
+              commentCount = uni(num_repr(int(stats.get('commentCount', 0)))),
+              viewCount = uni(num_repr(int(stats.get('viewCount', 0))))
+              )
+        except Exception as e:
+          print(json.dumps(item, indent=2))
+          print(F('fuck!') % e)
+
+        songs.append(cursong)
+    # return video objects
     return songs
+
 
 
 def screen_update(fill_blank=True):
@@ -2312,29 +2357,32 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
     return False
 
 
-def generate_search_qs(term, page, result_count=None):
+
+def generate_search_qs(term, page=None, result_count=None):
     """ Return query string. """
-    if not result_count:
+		if not result_count:
         result_count = getxy().max_results
 
-    aliases = dict(relevance="relevance", date="published", rating="rating",
-                   views="viewCount")
+    aliases = dict(views = 'viewCount')
     term = utf8_encode(term)
     qs = {
         'q': term,
-        'v': 2,
-        'alt': 'jsonc',
-        'start-index': ((page - 1) * result_count + 1) or 1,
-        'safeSearch': "none",
-        'max-results': result_count,
-        'paid-content': "false",
-        'orderby': aliases[Config.ORDER.get]
+        'maxResults': result_count,
+        'order': aliases.get(Config.ORDER.get, Config.ORDER.get),
+        'part': 'id,snippet',
+        'type': 'video',
+        'key': api_key
     }
 
+    if page:
+        qs['pageToken'] = page
+
     if Config.SEARCH_MUSIC.get:
-        qs['category'] = "Music"
+        qs['videoCategoryId'] = 10
 
     return qs
+
+
 
 
 def usersearch(q_user, page=1, splash=True):
@@ -2409,7 +2457,8 @@ def related_search(vitem, page=1, splash=True):
         g.last_search_query = {}
 
 
-def search(term, page=1, splash=True):
+
+def search(term, page=None, splash=True):
     """ Perform search. """
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
@@ -2418,7 +2467,7 @@ def search(term, page=1, splash=True):
 
     original_term = term
     logging.info("search for %s", original_term)
-    url = "https://gdata.youtube.com/feeds/api/videos"
+    url = "https://www.googleapis.com/youtube/v3/search"
     query = generate_search_qs(term, page)
     have_results = _search(url, original_term, query)
 
@@ -2433,7 +2482,7 @@ def search(term, page=1, splash=True):
     else:
         g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
         g.content = logo(c.r)
-        g.current_page = 1
+        g.current_page = None
         g.last_search_query = {}
 
 
@@ -2459,8 +2508,8 @@ def pl_search(term, page=1, splash=True, is_user=False):
         term = term["term"]
 
     # generate url base on whether this is a user playlist search
-    x = "/users/%s/playlists?" % term if is_user else "/playlists/snippets?"
-    url = "https://gdata.youtube.com/feeds/api%s" % x
+    x = "/users/%s/playlists?" % term if is_user else "/playlists/snippets?" #XXX
+    url = "https://gdata.youtube.com/feeds/api%s" % x #XXX
     prog = "user: " + term if is_user else term
     logging.info("playlist search for %s", prog)
     max_results = getxy().max_results
@@ -2512,7 +2561,7 @@ def get_pl_from_json(pldata):
 
     results = []
 
-    for item in items:
+    for item in items: #XXX
         results.append(dict(
             link=item.get("id"),
             size=item.get("size"),
@@ -2597,7 +2646,7 @@ def fetch_comments(item):
     dbg("%sFetching coments for %s%s", c.c("y", ytid))
     # writestatus("Fetching comments for %s" % y(title[:55]))
     writestatus("Fetching comments for %s" % c.c("y", title[:55]))
-    url = ("https://gdata.youtube.com/feeds/api/videos/%s/comments?alt="
+    url = ("https://gdata.youtube.com/feeds/api/videos/%s/comments?alt=" #XXX
            "json&v=2&orderby=published&max-results=50" % ytid)
 
     if url not in g.url_memo:
@@ -3786,12 +3835,12 @@ def nextprev(np):
     if np == "n":
         max_results = getxy().max_results
         if len(content) == max_results and glsq:
-            g.current_page += 1
+            g.current_page += 1 #XXX
             good = True
 
     elif np == "p":
         if g.current_page > 1 and g.last_search_query:
-            g.current_page -= 1
+            g.current_page -= 1 #XXX
             good = True
 
     if good:
@@ -4173,7 +4222,7 @@ def _match_tracks(artist, title, mb_tracks):
                                                dtime(length)))
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
-        url = "https://gdata.youtube.com/feeds/api/videos"
+        url = "https://gdata.youtube.com/feeds/api/videos" #XXX
         query = generate_search_qs(w, 1, result_count=50)
         dbg(query)
         have_results = _search(url, q, query, splash=False, pre_load=False)
