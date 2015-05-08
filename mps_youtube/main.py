@@ -116,7 +116,7 @@ def member_var(x):
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
-api_key = '' # XXX insert API key here
+api_key = 'AIzaSyA_4aCrX4LH41DlW5Wmh9XkciX-vjhtEMM'
 iso8601timedurationex = re.compile('PT((\d{1,3})H)?((\d{1,3})M)?(\d{1,2})S')
 
 
@@ -1490,6 +1490,22 @@ def fmt_time(seconds):
     return hms
 
 
+def get_track_id_from_json(item):
+    """ Try to extract video Id from various response types """
+    fields = ['contentDetails/videoId',
+             'snippet/resourceId/videoId',
+             'id/videoId',
+             'id']
+    for field in fields:
+        node = item
+        for p in field.split('/'):
+            if node and type(node) is dict:
+                node = node.get(p)
+        if node:
+          return node
+    return ''
+
+
 def get_tracks_from_json(jsons):
     """ Get search results from web page. """
     next_page_token = jsons.get('nextPageToken')
@@ -1506,8 +1522,7 @@ def get_tracks_from_json(jsons):
     vurl = "https://www.googleapis.com/youtube/v3/videos"
     vurl += "?" + urlencode({'part':'contentDetails,statistics,snippet',
                             'key': api_key,
-                            'id': ','.join([i.get('id',{}).get('videoId')
-                              for i in searchresults]) })
+                            'id': ','.join([get_track_id_from_json(i) for i in searchresults]) })
     try:
         wdata = utf8_decode(urlopen(vurl).read())
         wdata = json.loads(wdata)
@@ -1553,7 +1568,8 @@ def get_tracks_from_json(jsons):
               length = uni(fmt_time(cursong.length)),
               #XXX
               rating = uni('{}'.format(rating))[:4].ljust(4, "0"),
-              uploader = snippet.get('channelTitle'),
+              uploader = snippet.get('channelId'),
+              uploaderName = snippet.get('channelTitle'),
               category = snippet.get('categoryId'),
               aspect = "custom", #XXX
               uploaded = yt_datetime(snippet.get('publishedAt','')),
@@ -1704,7 +1720,7 @@ def uea_pad(num, t, direction="<", notrunc=False):
 
 def yt_datetime(yt_date_time):
     """ Return a time object and locale formated date string. """
-    time_obj = time.strptime(yt_date_time, "%Y-%m-%dT%H:%M:%S.000Z")
+    time_obj = time.strptime(yt_date_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     locale_date = time.strftime("%x", time_obj)
     # strip first two digits of four digit year
     short_date = re.sub(r"(\d\d\D\d\d\D)20(\d\d)$", r"\1\2", locale_date)
@@ -2358,9 +2374,9 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
 
 
 
-def generate_search_qs(term, page=None, result_count=None):
+def generate_search_qs(term, page=None, result_count=None, match='term'):
     """ Return query string. """
-		if not result_count:
+    if not result_count:
         result_count = getxy().max_results
 
     aliases = dict(views = 'viewCount')
@@ -2374,6 +2390,9 @@ def generate_search_qs(term, page=None, result_count=None):
         'key': api_key
     }
 
+    if match == 'related':
+        qs['relatedToVideoId'] = term
+
     if page:
         qs['pageToken'] = page
 
@@ -2385,18 +2404,13 @@ def generate_search_qs(term, page=None, result_count=None):
 
 
 
-def usersearch(q_user, page=1, splash=True):
+def usersearch(q_user, page=None, splash=True):
     """ Fetch uploads by a YouTube user. """
-    query = generate_search_qs(q_user, page)
-    # query['orderby'] = 'published'
-
-    if query.get('category'):
-        del query['category']
 
     # check whether this is a search within user uploads
     if "/" in q_user:
         user, _, term = (x.strip() for x in q_user.partition("/"))
-        url = "https://gdata.youtube.com/feeds/api/videos"
+        url = "https://gdata.youtube.com/feeds/api/videos" #XXX
         query['author'], query['q'] = user, term
         msg = "Results for {1}{3}{0} (by {2}{4}{0})"
         msg = msg.format(c.w, c.y, c.y, term, user)
@@ -2406,9 +2420,25 @@ def usersearch(q_user, page=1, splash=True):
 
     else:
         user = q_user
-        del query['q']
-        url = "https://gdata.youtube.com/feeds/api/users/%s/uploads" % user
-        msg = "Video uploads by %s%s%s" % (c.y, user, c.w)
+        query = {'part': 'snippet,contentDetails',
+                 'id': user,
+                 'key': api_key}
+        url = "https://www.googleapis.com/youtube/v3/channels"
+        try:
+          userinfo = json.loads(utf8_decode(urlopen(url+"?"+urlencode(query)).read()))['items'][0]
+          username = userinfo.get('snippet',{}).get('title')
+          uploadpl = userinfo.get('contentDetails', {}).get('relatedPlaylists',{}).get('uploads')
+          url = "https://www.googleapis.com/youtube/v3/playlistItems"
+          query = {'part': 'snippet,contentDetails',
+                   'playlistId': uploadpl,
+                   'maxResults': 50,
+                   'pageToken': page if page else '',
+                   'key': api_key}
+        except Exception as e:
+          print('error getting user uploads for {}:\n{}'.format(user, e)) #XXX
+          return
+
+        msg = "Video uploads by %s%s%s" % (c.y, username, c.w)
         failmsg = "User %s%s%s not found" % (c.y, user, c.w)
         progtext = user
 
@@ -2429,16 +2459,17 @@ def usersearch(q_user, page=1, splash=True):
         g.content = logo(c.r)
 
 
-def related_search(vitem, page=1, splash=True):
+def related_search(vitem, page=None, splash=True):
     """ Fetch uploads by a YouTube user. """
-    query = generate_search_qs(vitem.ytid, page)
+    query = generate_search_qs(vitem.ytid, page, match='related')
     del query['q']
 
     if query.get('category'):
         del query['category']
 
-    url = "https://gdata.youtube.com/feeds/api/videos/%s/related"
-    url, t = url % vitem.ytid, vitem.title
+    #url = "https://gdata.youtube.com/feeds/api/videos/%s/related"
+    url = "https://www.googleapis.com/youtube/v3/search"
+    t = vitem.title
     ttitle = t[:48].strip() + ".." if len(t) > 49 else t
 
     have_results = _search(url, ttitle, query)
@@ -2640,14 +2671,15 @@ def fetch_comments(item):
     cw, ch, _ = getxy()
     ch = max(ch, 10)
     ytid, title = item.ytid, item.title
-    # G = lambda x: c.g + x + c.w
-    # y = lambda x: c.y + x + c.w
-    # dbg("%sFetching coments for %s%s", c.y, y(ytid), c.w)
-    dbg("%sFetching coments for %s%s", c.c("y", ytid))
-    # writestatus("Fetching comments for %s" % y(title[:55]))
+    dbg("Fetching comments for %s", c.c("y", ytid))
     writestatus("Fetching comments for %s" % c.c("y", title[:55]))
-    url = ("https://gdata.youtube.com/feeds/api/videos/%s/comments?alt=" #XXX
-           "json&v=2&orderby=published&max-results=50" % ytid)
+    qs = {'textFormat': 'plainText',
+          'videoId': ytid,
+          'maxResults': 50,
+          'part': 'snippet',
+          'key': api_key }
+    url = "https://www.googleapis.com/youtube/v3/commentThreads?" + urlencode(qs)
+    print(url)
 
     if url not in g.url_memo:
 
@@ -2664,9 +2696,11 @@ def fetch_comments(item):
         raw = g.url_memo[url]
 
     jsdata = json.loads(raw)
-    coms = jsdata['feed'].get('entry', [])
-    coms = [x for x in coms if x['content']['$t'].strip()]  # skip blanks
-
+    coms = jsdata.get('items', [])
+    print(json.dumps(coms, indent=4))
+    coms = [x.get('snippet',{}) for x in coms]
+    coms = [x.get('topLevelComment',{}) for x in coms]
+    coms = [x for x in coms if len(x.get('snippet',{}).get('textDisplay','').strip())] # skip blanks
     if not len(coms):
         g.message = "No comments for %s" % item.title[:50]
         g.content = generate_songlist_display()
@@ -2675,11 +2709,12 @@ def fetch_comments(item):
     items = []
 
     for n, com in enumerate(coms, 1):
-        poster = com['author'][0]['name']['$t']
-        date = time.strftime("%c", yt_datetime(com['published']['$t'])[0])
-        text = com['content']['$t']
+        snippet = com.get('snippet',{})
+        poster = snippet.get('authorDisplayName')
+        date, shortdate = yt_datetime(snippet.get('publishedAt',''))
+        text = snippet.get('textDisplay','')
         cid = ("%s/%s" % (n, len(coms)))
-        out = ("%s %-35s %s\n" % (cid, c.c("g", poster), date))
+        out = ("%s %-35s %s\n" % (cid, c.c("g", poster), shortdate))
         out += c.c("y", text.strip())
         items.append(out)
 
@@ -3835,12 +3870,12 @@ def nextprev(np):
     if np == "n":
         max_results = getxy().max_results
         if len(content) == max_results and glsq:
-            g.current_page += 1 #XXX
+            g.current_page = g.next_page
             good = True
 
     elif np == "p":
-        if g.current_page > 1 and g.last_search_query:
-            g.current_page -= 1 #XXX
+        if g.prev_page and g.last_search_query:
+            g.current_page = g.prev_page
             good = True
 
     if good:
@@ -3863,9 +3898,9 @@ def user_more(num):
         return
 
     item = g.model.songs[int(num) - 1]
-    p = get_pafy(item)
-    user = p.username
-    usersearch(user)
+    p = g.meta.get(item.ytid,{})
+    user = p.get('uploader')
+    usersearch(user, page=g.current_page)
 
 
 def related(num):
