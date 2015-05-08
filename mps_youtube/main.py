@@ -1535,11 +1535,11 @@ def get_tracks_from_json(jsons):
     for searchresult, vidinfoitem in zip(searchresults, searchresults_vidinfo):
         searchresult.update(vidinfoitem)
 
-    # declare list of video objects
+    # populate list of video objects
     songs = []
     for item in searchresults:
         try:
-          ytid = item.get('id')
+          ytid = get_track_id_from_json(item)
           duration = item.get('contentDetails',{}).get('duration')
           if duration:
             duration = iso8601timedurationex.findall(duration)
@@ -1580,7 +1580,7 @@ def get_tracks_from_json(jsons):
               )
         except Exception as e:
           print(json.dumps(item, indent=2))
-          print(F('fuck!') % e)
+          print('Error during metadata extraction/instantiation of search result {}\n{}'.format(ytid, e))
 
         songs.append(cursong)
     # return video objects
