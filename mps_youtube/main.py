@@ -2384,6 +2384,7 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
     qs = {
         'q': term,
         'maxResults': result_count,
+        'safeSearch': "none",
         'order': aliases.get(Config.ORDER.get, Config.ORDER.get),
         'part': 'id,snippet',
         'type': 'video',
