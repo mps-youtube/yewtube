@@ -2525,16 +2525,15 @@ def search(term, page=None, splash=True):
         g.content = generate_songlist_display()
         return
 
-    original_term = term
-    logging.info("search for %s", original_term)
+    logging.info("search for %s", term)
     url = "https://www.googleapis.com/youtube/v3/search"
     query = generate_search_qs(term, page)
-    have_results = _search(url, original_term, query)
+    have_results = _search(url, term, query)
 
     if have_results:
-        g.message = "Search results for %s%s%s" % (c.y, original_term, c.w)
+        g.message = "Search results for %s%s%s" % (c.y, term, c.w)
         g.last_opened = ""
-        g.last_search_query = {"term": original_term}
+        g.last_search_query = {"term": term}
         g.browse_mode = "normal"
         g.current_page = page
         g.content = generate_songlist_display(frmat="search")
