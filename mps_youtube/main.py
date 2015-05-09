@@ -1581,7 +1581,7 @@ def get_tracks_from_json(jsons):
               uploaderName = snippet.get('channelTitle'),
               category = snippet.get('categoryId'),
               aspect = "custom", #XXX
-              uploaded = yt_datetime(snippet.get('publishedAt','')),
+              uploaded = yt_datetime(snippet.get('publishedAt',''))[1],
               likes = uni(num_repr(likes)),
               dislikes = uni(num_repr(dislikes)),
               commentCount = uni(num_repr(int(stats.get('commentCount', 0)))),
@@ -1774,7 +1774,7 @@ def get_user_columns():
                 "rating": dict(name="rating", size=4, heading="Rtng"),
                 "comments": dict(name="commentCount", size=4, heading="Comm"),
                 "date": dict(name="uploaded", size=8, heading="Date"),
-                "user": dict(name="uploader", size=10, heading="User"),
+                "user": dict(name="uploaderName", size=10, heading="User"),
                 "likes": dict(name="likes", size=4, heading="Like"),
                 "dislikes": dict(name="dislikes", size=4, heading="Dslk"),
                 "category": dict(name="category", size=8, heading="Category")}
