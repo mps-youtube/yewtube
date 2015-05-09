@@ -2399,6 +2399,7 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
     qs = {
         'q': term,
         'maxResults': result_count,
+        'safeSearch': "none",
         'order': aliases.get(Config.ORDER.get, Config.ORDER.get),
         'part': 'id,snippet',
         'type': 'video',
@@ -4311,8 +4312,8 @@ def _match_tracks(artist, title, mb_tracks):
                                                dtime(length)))
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
-        url = "https://gdata.youtube.com/feeds/api/videos" #XXX
-        query = generate_search_qs(w, 1, result_count=50)
+        url = "https://www.googleapis.com/youtube/v3/search" #XXX
+        query = generate_search_qs(w, None, result_count=50)
         dbg(query)
         have_results = _search(url, q, query, splash=False, pre_load=False) #XXX crashes
         time.sleep(0.5)
