@@ -2467,7 +2467,10 @@ def usersearch(q_user, identify='forUsername', page=None, splash=True):
     msg = "Results for {1}{3}{0} (by {2}{4}{0})"
     msg = msg.format(c.w, c.y, c.y, term, user)
     termuser = tuple([c.y + x + c.w for x in (term, user)])
-    progtext = "%s by %s" % termuser
+    if term:
+        progtext = "%s by %s" % termuser
+    else:
+        progtext = termuser[1]
     failmsg = "No matching results for %s (by %s)" % termuser
 
     have_results = _search(url, progtext, query)
