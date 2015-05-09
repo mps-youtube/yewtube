@@ -1502,45 +1502,52 @@ def get_track_id_from_json(item):
             if node and type(node) is dict:
                 node = node.get(p)
         if node:
-          return node
+            return node
     return ''
 
 
 def get_tracks_from_json(jsons):
     """ Get search results from web page. """
-    next_page_token = jsons.get('nextPageToken')
-    if next_page_token:
-        g.next_page = next_page_token
-    prev_page_token = jsons.get('prevPageToken')
-    if prev_page_token:
-        g.prev_page = prev_page_token
-    searchresults = jsons.get("items",[])
-    if not searchresults:
+
+    page_tokens = {'next_page': 'nextPageToken',
+                   'prev_page': 'prevPageToken'}
+    for var, field in page_tokens.items():
+        setattr(g, var, jsons.get(field))
+
+    items = jsons.get("items")
+    if not items:
         dbg("got unexpected data or no search results")
         return False
-    # fetch detailed information about searchresults from videos API
+
+    # fetch detailed information about items from videos API
     vurl = "https://www.googleapis.com/youtube/v3/videos"
     vurl += "?" + urlencode({'part':'contentDetails,statistics,snippet',
                             'key': api_key,
-                            'id': ','.join([get_track_id_from_json(i) for i in searchresults]) })
+                            'id': ','.join([get_track_id_from_json(i)
+                                  for i in items]) })
+
     try:
         wdata = utf8_decode(urlopen(vurl).read())
         wdata = json.loads(wdata)
+        items_vidinfo = wdata.get('items',[])
+        # enhance search results by adding information from videos API response
+        for searchresult, vidinfoitem in zip(items, items_vidinfo):
+            searchresult.update(vidinfoitem)
+
     except (URLError, HTTPError) as e:
         g.message = F('no data') % e
         g.content = logo(c.r)
         return
-    searchresults_vidinfo = wdata.get('items',[])
-    # enhance search results by adding information from videos API response
-    for searchresult, vidinfoitem in zip(searchresults, searchresults_vidinfo):
-        searchresult.update(vidinfoitem)
 
     # populate list of video objects
     songs = []
-    for item in searchresults:
+    for item in items:
+
         try:
+
           ytid = get_track_id_from_json(item)
           duration = item.get('contentDetails',{}).get('duration')
+
           if duration:
             duration = iso8601timedurationex.findall(duration)
             if len(duration) > 0:
@@ -1552,7 +1559,7 @@ def get_tracks_from_json(jsons):
               duration = 30
           else:
             duration = 30
-            print(json.dumps(item, indent=2))
+
           stats = item.get('statistics',{})
           snippet = item.get('snippet', {})
           title = snippet.get('title','').strip()
@@ -1561,10 +1568,12 @@ def get_tracks_from_json(jsons):
           likes = int(stats.get('likeCount', 0))
           dislikes = int(stats.get('dislikeCount', 0))
           rating = 5.*likes/(likes+dislikes) if (likes+dislikes)>0 else 0
+
           # cache video information in custom global variable store
           g.meta[ytid] = dict(
-              # tries to get localized title first, fallback to normal title field
-              title = snippet.get('localized', {'title':snippet.get('title', '[!!!]')}).get('title', '[!]'),
+              # tries to get localized title first, fallback to normal title
+              title = snippet.get('localized',
+                {'title':snippet.get('title', '[!!!]')}).get('title', '[!]'),
               length = uni(fmt_time(cursong.length)),
               #XXX
               rating = uni('{}'.format(rating))[:4].ljust(4, "0"),
@@ -1578,11 +1587,15 @@ def get_tracks_from_json(jsons):
               commentCount = uni(num_repr(int(stats.get('commentCount', 0)))),
               viewCount = uni(num_repr(int(stats.get('viewCount', 0))))
               )
+
         except Exception as e:
-          print(json.dumps(item, indent=2))
-          print('Error during metadata extraction/instantiation of search result {}\n{}'.format(ytid, e))
+
+          dbg(json.dumps(item, indent=2))
+          dbg('Error during metadata extraction/instantiation of search '
+              +'result {}\n{}'.format(ytid, e))
 
         songs.append(cursong)
+
     # return video objects
     return songs
 
@@ -2340,6 +2353,7 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
     # use cached value if exists
     if url in g.url_memo:
         songs = g.url_memo[url]
+        dbg('load {} songs from cache for key {}'.format(len(songs), url))
 
     # show splash screen during fetch
     else:
@@ -2349,6 +2363,7 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
 
         # perform fetch
         try:
+
             wdata = utf8_decode(urlopen(url).read())
             wdata = json.loads(wdata)
             songs = get_tracks_from_json(wdata)
@@ -2365,7 +2380,7 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
         t.start()
 
     if songs:
-        # cache resuls
+        # cache results
         add_to_url_memo(url, songs[::])
         g.model.songs = songs
         return True
@@ -2392,6 +2407,7 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
 
     if match == 'related':
         qs['relatedToVideoId'] = term
+        del qs['q']
 
     if page:
         qs['pageToken'] = page
@@ -2498,12 +2514,10 @@ def usersearch(q_user, identify='forUsername', page=None, splash=True):
 def related_search(vitem, page=None, splash=True):
     """ Fetch uploads by a YouTube user. """
     query = generate_search_qs(vitem.ytid, page, match='related')
-    del query['q']
 
     if query.get('category'):
         del query['category']
 
-    #url = "https://gdata.youtube.com/feeds/api/videos/%s/related"
     url = "https://www.googleapis.com/youtube/v3/search"
     t = vitem.title
     ttitle = t[:48].strip() + ".." if len(t) > 49 else t
@@ -2694,6 +2708,7 @@ def paginate(items, pagesize, spacing=2, delim_fn=None):
 
 def add_to_url_memo(key, value):
     """ Add to url memo, ensure url memo doesn't get too big. """
+    dbg('Cache data for key {}:'.format(key))
     g.url_memo[key] = value
 
     while len(g.url_memo) > 300:
@@ -2714,8 +2729,11 @@ def fetch_comments(item):
           'maxResults': 50,
           'part': 'snippet',
           'key': api_key }
-    url = "https://www.googleapis.com/youtube/v3/commentThreads?" + urlencode(qs)
-    print(url)
+    url = ("https://www.googleapis.com/youtube/v3/commentThreads?" +
+            urlencode(qs))
+
+    # XXX should comment threads be expanded? this would require
+    # additional requests for comments responding on top level comments
 
     if url not in g.url_memo:
 
@@ -2733,10 +2751,10 @@ def fetch_comments(item):
 
     jsdata = json.loads(raw)
     coms = jsdata.get('items', [])
-    print(json.dumps(coms, indent=4))
     coms = [x.get('snippet',{}) for x in coms]
     coms = [x.get('topLevelComment',{}) for x in coms]
-    coms = [x for x in coms if len(x.get('snippet',{}).get('textDisplay','').strip())] # skip blanks
+    coms = [x for x in coms if len(x.get('snippet',{}).get(
+            'textDisplay','').strip())] # skip blanks
     if not len(coms):
         g.message = "No comments for %s" % item.title[:50]
         g.content = generate_songlist_display()
@@ -4296,7 +4314,7 @@ def _match_tracks(artist, title, mb_tracks):
         url = "https://gdata.youtube.com/feeds/api/videos" #XXX
         query = generate_search_qs(w, 1, result_count=50)
         dbg(query)
-        have_results = _search(url, q, query, splash=False, pre_load=False)
+        have_results = _search(url, q, query, splash=False, pre_load=False) #XXX crashes
         time.sleep(0.5)
 
         if not have_results:
