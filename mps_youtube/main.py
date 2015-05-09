@@ -2446,7 +2446,7 @@ def usersearch(q_user, identify='forUsername', page=None, splash=True):
             url = "https://www.googleapis.com/youtube/v3/channels"
             query = {'part':'contentDetails',
                      identify: user,
-                     'key': api_key}
+                     'key': Config.API_KEY.get}
 
             try:
               userinfo = json.loads(utf8_decode(urlopen(
