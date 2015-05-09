@@ -2436,76 +2436,39 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
 def usersearch(q_user, identify='forUsername', page=None, splash=True):
     """ Fetch uploads by a YouTube user. """
 
-    # check whether this is a search within user uploads
-    if "/" in q_user:
-        user, _, term = (x.strip() for x in q_user.partition("/"))
-        if identify == 'forUsername':
-            # if the user is looked for by their display name,
-            # we have to sent an additional request to find their
-            # channel id
-            url = "https://www.googleapis.com/youtube/v3/channels"
-            query = {'part':'contentDetails',
-                     identify: user,
-                     'key': Config.API_KEY.get}
-
-            try:
-              userinfo = json.loads(utf8_decode(urlopen(
-                          url+"?"+urlencode(query)).read()))['items'][0]
-              channel_id = userinfo.get('id')
-              uploadpl = userinfo.get('contentDetails', {}).get(
-                          'relatedPlaylists',{}).get('uploads')
-
-            except Exception as e:
-
-              dbg('Error during channel request for user {}:\n{}'.format(
-                user, e))
-              return
-
-        # at this point, we know the channel id associated to a user name
-        url = "https://www.googleapis.com/youtube/v3/search"
-        query = generate_search_qs(term, page=page)
-        query['channelId'] = channel_id
-
-        msg = "Results for {1}{3}{0} (by {2}{4}{0})"
-        msg = msg.format(c.w, c.y, c.y, term, user)
-        termuser = tuple([c.y + x + c.w for x in (term, user)])
-        progtext = "%s by %s" % termuser
-        failmsg = "No matching results for %s (by %s)" % termuser
-
-    else:
-        # in order to request a user's uploads, we first need to
-        # find out what playlist id their uploads have
-        user = q_user
-        query = {'part': 'snippet,contentDetails',
+    user, _, term = (x.strip() for x in q_user.partition("/"))
+    if identify == 'forUsername':
+        # if the user is looked for by their display name,
+        # we have to sent an additional request to find their
+        # channel id
+        url = "https://www.googleapis.com/youtube/v3/channels"
+        query = {'part':'contentDetails',
                  identify: user,
                  'key': Config.API_KEY.get}
-        url = "https://www.googleapis.com/youtube/v3/channels"
 
         try:
-
           userinfo = json.loads(utf8_decode(urlopen(
                       url+"?"+urlencode(query)).read()))['items'][0]
-          username = userinfo.get('snippet',{}).get('title')
+          channel_id = userinfo.get('id')
           uploadpl = userinfo.get('contentDetails', {}).get(
                       'relatedPlaylists',{}).get('uploads')
 
-          # now that we know the playlist id the user's uploads go by,
-          # we can request a list of uploaded videos
-          url = "https://www.googleapis.com/youtube/v3/playlistItems"
-          query = {'part': 'snippet,contentDetails',
-                   'playlistId': uploadpl,
-                   'maxResults': 50,
-                   'pageToken': page if page else '',
-                   'key': Config.API_KEY.get}
-
         except Exception as e:
 
-          dbg('Error getting video uploads for user {}:\n{}'.format(user, e))
+          dbg('Error during channel request for user {}:\n{}'.format(
+            user, e))
           return
 
-        msg = "Video uploads by %s%s%s" % (c.y, username, c.w)
-        failmsg = "User %s%s%s not found" % (c.y, user, c.w)
-        progtext = user
+    # at this point, we know the channel id associated to a user name
+    url = "https://www.googleapis.com/youtube/v3/search"
+    query = generate_search_qs(term, page=page)
+    query['channelId'] = channel_id
+
+    msg = "Results for {1}{3}{0} (by {2}{4}{0})"
+    msg = msg.format(c.w, c.y, c.y, term, user)
+    termuser = tuple([c.y + x + c.w for x in (term, user)])
+    progtext = "%s by %s" % termuser
+    failmsg = "No matching results for %s (by %s)" % termuser
 
     have_results = _search(url, progtext, query)
 
