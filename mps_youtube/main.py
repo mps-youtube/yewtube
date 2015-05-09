@@ -116,7 +116,6 @@ def member_var(x):
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
-api_key = 'AIzaSyA_4aCrX4LH41DlW5Wmh9XkciX-vjhtEMM'
 iso8601timedurationex = re.compile('PT((\d{1,3})H)?((\d{1,3})M)?(\d{1,2})S')
 
 
@@ -583,6 +582,19 @@ def check_console_width(val):
     return dict(valid=valid, message=message)
 
 
+def check_api_key(key):
+    url = "https://www.googleapis.com/youtube/v3/i18nLanguages"
+    query = {"part": "snippet", "fields": "items/id", "key": key}
+    try:
+        urlopen(url + "?" + urlencode(query)).read()
+        message = "The key, '" + key + "' will now be used for API requests."
+        return dict(valid=True, message=message)
+    except HTTPError as e:
+        message = "Invalid key or quota exceeded, '" + key + "'"
+        return dict(valid=False, message=message)
+
+
+
 def check_ddir(d):
     """ Check whether dir is a valid directory. """
     expanded = os.path.expanduser(d)
@@ -713,6 +725,7 @@ class Config(object):
                          False if mswin and not has_colorama else True,
                          check_fn=check_colours)
     DOWNLOAD_COMMAND = ConfigItem("download_command", '')
+    API_KEY = ConfigItem("api_key", "AIzaSyA_4aCrX4LH41DlW5Wmh9XkciX-vjhtEMM", check_fn=check_api_key)
 
 
 class Playlist(object):
@@ -1521,7 +1534,7 @@ def get_tracks_from_json(jsons):
     # fetch detailed information about searchresults from videos API
     vurl = "https://www.googleapis.com/youtube/v3/videos"
     vurl += "?" + urlencode({'part':'contentDetails,statistics,snippet',
-                            'key': api_key,
+                            'key': Config.API_KEY.get,
                             'id': ','.join([get_track_id_from_json(i) for i in searchresults]) })
     try:
         wdata = utf8_decode(urlopen(vurl).read())
@@ -2388,7 +2401,7 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
         'order': aliases.get(Config.ORDER.get, Config.ORDER.get),
         'part': 'id,snippet',
         'type': 'video',
-        'key': api_key
+        'key': Config.API_KEY.get
     }
 
     if match == 'related':
@@ -2423,7 +2436,7 @@ def usersearch(q_user, page=None, splash=True):
         user = q_user
         query = {'part': 'snippet,contentDetails',
                  'id': user,
-                 'key': api_key}
+                 'key': Config.API_KEY.get}
         url = "https://www.googleapis.com/youtube/v3/channels"
         try:
           userinfo = json.loads(utf8_decode(urlopen(url+"?"+urlencode(query)).read()))['items'][0]
@@ -2434,7 +2447,7 @@ def usersearch(q_user, page=None, splash=True):
                    'playlistId': uploadpl,
                    'maxResults': 50,
                    'pageToken': page if page else '',
-                   'key': api_key}
+                   'key': Config.API_KEY.get}
         except Exception as e:
           print('error getting user uploads for {}:\n{}'.format(user, e)) #XXX
           return
@@ -2678,7 +2691,7 @@ def fetch_comments(item):
           'videoId': ytid,
           'maxResults': 50,
           'part': 'snippet',
-          'key': api_key }
+          'key': Config.API_KEY.get }
     url = "https://www.googleapis.com/youtube/v3/commentThreads?" + urlencode(qs)
     print(url)
 
@@ -4798,6 +4811,7 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set show_video true|false{1} - show video output (audio only if false)
 {2}set window_pos <top|bottom>-<left|right>{1} - set player window position
 {2}set window_size <number>x<number>{1} - set player window width & height
+{2}set api_key <key>{1} - use a different API key for accessing the YouTube Data API
 """.format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'
            'sults when searching (max 50)'.format(c.y, c.w) if not
            g.detectable_size else '')),
