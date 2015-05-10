@@ -2468,11 +2468,12 @@ def usersearch(q_user, identify='forUsername', page=None, splash=True):
     if term:
         msg = "Results for {1}{3}{0} (by {2}{4}{0})"
         progtext = "%s by %s" % termuser
+        failmsg = "No matching results for %s (by %s)" % termuser
     else:
         msg = "Video uploads by {2}{4}{0}"
         progtext = termuser[1]
+        failmsg = "User %s not found" % termuser[1]
     msg = msg.format(c.w, c.y, c.y, term, user)
-    failmsg = "No matching results for %s (by %s)" % termuser
 
     have_results = _search(url, progtext, query)
 
