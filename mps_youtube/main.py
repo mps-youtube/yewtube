@@ -2476,9 +2476,9 @@ def usersearch(q_user, page=None, identify='forUsername', splash=True):
             userinfo = json.loads(utf8_decode(urlopen(url+
                 "?"+urlencode(query)).read()))['items']
             if len(userinfo) > 0:
-                snippet = userinfo[0].get('snippet')
-                channel_id = snippet.get('channelId')
-                user = snippet.get('title')
+                snippet = userinfo[0].get('snippet',{})
+                channel_id = snippet.get('channelId', user)
+                user = snippet.get('title', user)
             else:
                 g.message = "User {} not found.".format(c.y + user + c.w)
                 return
@@ -2517,7 +2517,7 @@ def usersearch_id(q_user, page=None, splash=True):
         msg = "Video uploads by {2}{4}{0}"
         progtext = termuser[1]
         failmsg = "User %s not found" % termuser[1]
-    msg = msg.format(c.w, c.y, c.y, term, user)
+    msg = uni(msg).format(c.w, c.y, c.y, term, user)
 
     have_results = _search(url, progtext, query)
 
