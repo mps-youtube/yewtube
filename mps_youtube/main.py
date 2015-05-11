@@ -2471,13 +2471,19 @@ def usersearch(q_user, page=None, identify='forUsername', splash=True):
 
         try:
             userinfo = json.loads(utf8_decode(urlopen(url+
-                "?"+urlencode(query)).read()))['items'][0]
-            channel_id = userinfo.get('id')
+                "?"+urlencode(query)).read()))['items']
+            if len(userinfo) > 0:
+                channel_id = userinfo[0].get('id')
+            else:
+                g.message = "User {} not found.".format(c.y + user + c.w)
+                return
 
         except (HTTPError, URLError) as e:
 
+            g.message = "Could not retrieve information for user {}".format(
+                c.y + user + c.w)
             dbg('Error during channel request for user {}:\n{}'.format(user,
-              e))
+                e))
             return
 
     else:
