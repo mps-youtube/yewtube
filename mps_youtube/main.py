@@ -2464,16 +2464,21 @@ def usersearch(q_user, page=None, identify='forUsername', splash=True):
         # if the user is looked for by their display name,
         # we have to sent an additional request to find their
         # channel id
-        url = "https://www.googleapis.com/youtube/v3/channels"
-        query = {'part':'contentDetails',
-                 identify: user,
-                 'key': Config.API_KEY.get}
+        url = "https://www.googleapis.com/youtube/v3/search"
+        query = {'part': 'id,snippet',
+                 'maxResults': 1,
+                 'q': user,
+                 'key': Config.API_KEY.get,
+                 'maxResults': 2,
+                 'type': 'channel'}
 
         try:
             userinfo = json.loads(utf8_decode(urlopen(url+
                 "?"+urlencode(query)).read()))['items']
             if len(userinfo) > 0:
-                channel_id = userinfo[0].get('id')
+                snippet = userinfo[0].get('snippet')
+                channel_id = snippet.get('channelId')
+                user = snippet.get('title')
             else:
                 g.message = "User {} not found.".format(c.y + user + c.w)
                 return
