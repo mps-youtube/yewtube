@@ -782,6 +782,7 @@ class g(object):
     max_retries = 3
     max_cached_streams = 1500
     url_memo = collections.OrderedDict()
+    user_cache = collections.OrderedDict()
     model = Playlist(name="model")
     last_search_query = {}
     current_pagetoken = None
@@ -2427,7 +2428,7 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
     if not result_count:
         result_count = getxy().max_results
 
-    aliases = dict(views = 'viewCount')
+    aliases = dict(views='viewCount')
     term = utf8_encode(term)
     qs = {
         'q': term,
@@ -2455,41 +2456,57 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
 
 
 
+def userdata_cached(userterm):
+    """ Check if user name search term found in cache """
+    userterm = ' '.join([t.strip().lower() for t in userterm.split(' ')])
+    return g.user_cache.get(userterm)
+
+
+def cache_userdata(userterm, username, channel_id):
+    """ Cache user name and channel id tuple """
+    userterm = ' '.join([t.strip().lower() for t in userterm.split(' ')])
+    g.user_cache[userterm] = (username, channel_id)
+
+
 
 def usersearch(q_user, page=None, identify='forUsername', splash=True):
     """ Fetch uploads by a YouTube user. """
 
     user, _, term = (x.strip() for x in q_user.partition("/"))
     if identify == 'forUsername':
-        # if the user is looked for by their display name,
-        # we have to sent an additional request to find their
-        # channel id
-        url = "https://www.googleapis.com/youtube/v3/search"
-        query = {'part': 'id,snippet',
-                 'maxResults': 1,
-                 'q': user,
-                 'key': Config.API_KEY.get,
-                 'maxResults': 2,
-                 'type': 'channel'}
+        cached = userdata_cached(user)
+        if cached:
+            user, channel_id = cached
+        else:
+            # if the user is looked for by their display name,
+            # we have to sent an additional request to find their
+            # channel id
+            url = "https://www.googleapis.com/youtube/v3/search"
+            query = {'part': 'id,snippet',
+                     'maxResults': 1,
+                     'q': user,
+                     'key': Config.API_KEY.get,
+                     'type': 'channel'}
 
-        try:
-            userinfo = json.loads(utf8_decode(urlopen(url+
-                "?"+urlencode(query)).read()))['items']
-            if len(userinfo) > 0:
-                snippet = userinfo[0].get('snippet',{})
-                channel_id = snippet.get('channelId', user)
-                user = snippet.get('title', user)
-            else:
-                g.message = "User {} not found.".format(c.y + user + c.w)
+            try:
+                userinfo = json.loads(utf8_decode(urlopen(
+                    url+"?"+urlencode(query)).read()))['items']
+                if len(userinfo) > 0:
+                    snippet = userinfo[0].get('snippet', {})
+                    channel_id = snippet.get('channelId', user)
+                    username = snippet.get('title', user)
+                    cache_userdata(user, username, channel_id)
+                else:
+                    g.message = "User {} not found.".format(c.y + user + c.w)
+                    return
+
+            except (HTTPError, URLError) as e:
+
+                g.message = "Could not retrieve information for user {}".format(
+                    c.y + user + c.w)
+                dbg('Error during channel request for user {}:\n{}'.format(
+                    user, e))
                 return
-
-        except (HTTPError, URLError) as e:
-
-            g.message = "Could not retrieve information for user {}".format(
-                c.y + user + c.w)
-            dbg('Error during channel request for user {}:\n{}'.format(user,
-                e))
-            return
 
     else:
         channel_id = user
@@ -2534,9 +2551,6 @@ def usersearch_id(q_user, page=None, splash=True):
         g.current_pagetoken = None
         g.last_search_query = {}
         g.content = logo(c.r)
-
-
-
 
 
 def related_search(vitem, page=None, splash=True):
