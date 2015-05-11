@@ -3281,7 +3281,7 @@ def down_many(dltype, choice, subdir=None):
 
 def down_plist(dltype, parturl):
     """ Download YouTube playlist. """
-    plist(parturl, pagenum=1, splash=True, dumps=True)
+    plist(parturl, page=1, splash=True, dumps=True)
     title = g.pafy_pls[parturl]['title']
     subdir = mswinfn(title.replace("/", "-"))
     down_many(dltype, "1-", subdir=subdir)
@@ -3702,7 +3702,7 @@ def download(dltype, num):
     # pylint: disable=R0914
     if g.browse_mode == "ytpl" and dltype in ("da", "dv"):
         plid = g.ytpls[int(num) - 1]["link"]
-        plist(plid, pagenum=1, splash=True, dumps=True)
+        plist(plid, page=1, splash=True, dumps=True)
         title = g.pafy_pls[plid]['title']
         subdir = mswinfn(title.replace("/", "-"))
         down_many(dltype, "1-", subdir=subdir)
@@ -3953,6 +3953,7 @@ def nextprev(np):
     if np == "n":
         max_results = getxy().max_results
         if len(content) == max_results and glsq:
+            # XXX workaround for v2/v3 pagination inconsistency
             if content is g.ytpls:
                 g.current_page += 1
             else:
@@ -3961,6 +3962,7 @@ def nextprev(np):
 
     elif np == "p":
         if glsq:
+            # XXX workaround for v2/v3 pagination inconsistency
             if content is g.ytpls:
                 if g.current_page > 0:
                     g.current_page -= 1
@@ -3969,8 +3971,13 @@ def nextprev(np):
                 good = True
 
     if good:
-        function(query, g.current_pagetoken, splash=True)
-        g.message += " : page {}".format(g.page_tokens.index(g.current_pagetoken)+1)
+        # XXX workaround for v2/v3 pagination inconsistency
+        if content is g.ytpls:
+            function(query, page=g.current_page, splash=True)
+            g.message += " : page %s" % g.current_page
+        else:
+            function(query, g.current_pagetoken, splash=True)
+            g.message += " : page {}".format(g.page_tokens.index(g.current_pagetoken)+1)
 
     else:
         norp = "next" if np == "n" else "previous"
@@ -4158,7 +4165,7 @@ def dump(un):
         plist(g.last_search_query['playlist'], dumps=True)
 
     elif g.last_search_query.get("playlist") and un:
-        plist(g.last_search_query['playlist'], pagenum=1, dumps=False)
+        plist(g.last_search_query['playlist'], page=1, dumps=False)
 
     else:
         un = "" if not un else un
@@ -4167,7 +4174,7 @@ def dump(un):
         g.content = generate_songlist_display()
 
 
-def plist(parturl, pagenum=1, splash=True, dumps=False):
+def plist(parturl, page=1, splash=True, dumps=False):
     """ Retrieve YouTube playlist. """
     max_results = getxy().max_results
 
@@ -4175,8 +4182,8 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
             parturl == g.last_search_query['playlist']:
 
         # go to pagenum
-        s = (pagenum - 1) * max_results
-        e = pagenum * max_results
+        s = (page - 1) * max_results
+        e = page * max_results
 
         if dumps:
             s, e = 0, 99999
@@ -4184,7 +4191,7 @@ def plist(parturl, pagenum=1, splash=True, dumps=False):
         g.model.songs = g.ytpl['items'][s:e]
         g.content = generate_songlist_display()
         g.message = "Showing YouTube playlist: %s" % c.y + g.ytpl['name'] + c.w
-        g.current_page = pagenum
+        g.current_page = page
         return
 
     if splash:
