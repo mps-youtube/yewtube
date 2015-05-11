@@ -784,9 +784,8 @@ class g(object):
     url_memo = collections.OrderedDict()
     model = Playlist(name="model")
     last_search_query = {}
-    current_page = None
-    next_page = None
-    prev_page = None
+    current_pagetoken = None
+    page_tokens = [None]
     active = Playlist(name="active")
     text = {}
     userpl = {}
@@ -1519,13 +1518,34 @@ def get_track_id_from_json(item):
     return ''
 
 
-def get_tracks_from_json(jsons):
-    """ Get search results from web page. """
 
-    page_tokens = {'next_page': 'nextPageToken',
-                   'prev_page': 'prevPageToken'}
-    for var, field in page_tokens.items():
-        setattr(g, var, jsons.get(field))
+
+
+def get_tracks_from_json(jsons):
+    """ Get search results from API response """
+
+    # delete global page token list if apparently new search
+    if not g.current_pagetoken:
+      g.page_tokens = [None]
+
+    # make page token list from api response
+    page_tokens = [jsons.get(field) for field in
+        ['prevPageToken', 'nextPageToken']]
+    page_tokens.insert(1, g.current_pagetoken)
+
+    curidx = lambda: g.page_tokens.index(g.current_pagetoken)
+
+    # update global page token list
+    if page_tokens[2]:
+        if page_tokens[0]:
+            g.page_tokens[curidx()-1:curidx()+2] = page_tokens
+        else:
+            g.page_tokens[curidx():curidx()+2] = page_tokens[1:]
+    else:
+        if page_tokens[0]:
+            g.page_tokens[curidx()-1:curidx()+1] = page_tokens[:2]
+        else:
+            g.page_tokens[curidx()] = page_tokens[1]
 
     items = jsons.get("items")
     if not items:
@@ -2369,6 +2389,7 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
 
     # show splash screen during fetch
     else:
+        dbg('url not in cache yet: {}'.format(url))
         if splash:
             g.content = logo(c.b) + "\n\n"
             screen_update()
@@ -2424,6 +2445,8 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
 
     if page:
         qs['pageToken'] = page
+    else:
+        g.current_pagetoken = None
 
     if Config.SEARCH_MUSIC.get:
         qs['videoCategoryId'] = 10
@@ -2433,7 +2456,7 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
 
 
 
-def usersearch(q_user, identify='forUsername', page=None, splash=True):
+def usersearch(q_user, page=None, identify='forUsername', splash=True):
     """ Fetch uploads by a YouTube user. """
 
     user, _, term = (x.strip() for x in q_user.partition("/"))
@@ -2447,19 +2470,29 @@ def usersearch(q_user, identify='forUsername', page=None, splash=True):
                  'key': Config.API_KEY.get}
 
         try:
-          userinfo = json.loads(utf8_decode(urlopen(
-                      url+"?"+urlencode(query)).read()))['items'][0]
-          channel_id = userinfo.get('id')
-          uploadpl = userinfo.get('contentDetails', {}).get(
-                      'relatedPlaylists',{}).get('uploads')
+            userinfo = json.loads(utf8_decode(urlopen(url+
+                "?"+urlencode(query)).read()))['items'][0]
+            channel_id = userinfo.get('id')
 
-        except Exception as e:
+        except (HTTPError, URLError) as e:
 
-          dbg('Error during channel request for user {}:\n{}'.format(
-            user, e))
-          return
+            dbg('Error during channel request for user {}:\n{}'.format(user,
+              e))
+            return
+
+    else:
+        channel_id = user
 
     # at this point, we know the channel id associated to a user name
+    usersearch_id('/'.join([user, channel_id, term]), page, splash)
+
+
+def usersearch_id(q_user, page=None, splash=True):
+    """ Performs a search within a user's (i.e. a channel's) uploads
+    for an optional search term with the user (i.e. the channel)
+    identified by its ID """
+
+    user, channel_id, term = (x.strip() for x in q_user.split("/"))
     url = "https://www.googleapis.com/youtube/v3/search"
     query = generate_search_qs(term, page=page)
     query['channelId'] = channel_id
@@ -2482,14 +2515,17 @@ def usersearch(q_user, identify='forUsername', page=None, splash=True):
         g.message = msg
         g.last_opened = ""
         g.last_search_query = {"user": q_user}
-        g.current_page = page
+        g.current_pagetoken = page
         g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = failmsg
-        g.current_page = 1
+        g.current_pagetoken = None
         g.last_search_query = {}
         g.content = logo(c.r)
+
+
+
 
 
 def related_search(vitem, page=None, splash=True):
@@ -2509,13 +2545,13 @@ def related_search(vitem, page=None, splash=True):
         g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
         g.last_opened = ""
         g.last_search_query = {"related": vitem}
-        g.current_page = page
+        g.current_pagetoken = page
         g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = "Related to %s%s%s not found" % (c.y, vitem.ytid, c.w)
         g.content = logo(c.r)
-        g.current_page = 1
+        g.current_pagetoken = None
         g.last_search_query = {}
 
 
@@ -2537,13 +2573,13 @@ def search(term, page=None, splash=True):
         g.last_opened = ""
         g.last_search_query = {"term": term}
         g.browse_mode = "normal"
-        g.current_page = page
+        g.current_pagetoken = page
         g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
         g.content = logo(c.r)
-        g.current_page = None
+        g.current_pagetoken = None
         g.last_search_query = {}
 
 
@@ -2571,6 +2607,8 @@ def pl_search(term, page=1, splash=True, is_user=False):
     # generate url base on whether this is a user playlist search
     x = "/users/%s/playlists?" % term if is_user else "/playlists/snippets?" #XXX
     url = "https://gdata.youtube.com/feeds/api%s" % x #XXX
+    # url = "https://www.googleapis.com/youtube/v3/search"
+    # playlist search is done with the above url and param type=playlist
     prog = "user: " + term if is_user else term
     logging.info("playlist search for %s", prog)
     max_results = getxy().max_results
@@ -2688,7 +2726,7 @@ def paginate(items, pagesize, spacing=2, delim_fn=None):
 
 def add_to_url_memo(key, value):
     """ Add to url memo, ensure url memo doesn't get too big. """
-    dbg('Cache data for key {}:'.format(key))
+    dbg('Cache data for query url {}:'.format(key))
     g.url_memo[key] = value
 
     while len(g.url_memo) > 300:
@@ -3878,13 +3916,21 @@ def add_rm_all(action):
         songlist_rm_add("add", "-" + uni(size))
 
 
+def get_adj_pagetoken(np):
+    """ Get page token either previous (p) or next (n) to currently displayed one """
+    delta = ['p', None, 'n'].index(np) - 1
+    pt_index = g.page_tokens.index(g.current_pagetoken) + delta
+    return g.page_tokens[pt_index]
+
+
+
 def nextprev(np):
     """ Get next / previous search results. """
     glsq = g.last_search_query
     content = g.model.songs
 
     if "user" in g.last_search_query:
-        function, query = usersearch, glsq['user']
+        function, query = usersearch_id, glsq['user']
 
     elif "related" in g.last_search_query:
         function, query = related_search, glsq['related']
@@ -3901,20 +3947,30 @@ def nextprev(np):
 
     good = False
 
+    #dbg('switching from current page {} to {}'.format(
+      #g.current_pagetoken, {'n':'next','p':'prev'}[np]))
+
     if np == "n":
         max_results = getxy().max_results
         if len(content) == max_results and glsq:
-            g.current_page = g.next_page
-            good = True
+            if content is g.ytpls:
+                g.current_page += 1
+            else:
+                g.current_pagetoken = get_adj_pagetoken(np)
+                good = True
 
     elif np == "p":
-        if g.prev_page and g.last_search_query:
-            g.current_page = g.prev_page
-            good = True
+        if glsq:
+            if content is g.ytpls:
+                if g.current_page > 0:
+                    g.current_page -= 1
+            elif g.page_tokens.index(g.current_pagetoken) > 0:
+                g.current_pagetoken = get_adj_pagetoken(np)
+                good = True
 
     if good:
-        function(query, g.current_page, splash=True)
-        g.message += " : page %s" % g.current_page
+        function(query, g.current_pagetoken, splash=True)
+        g.message += " : page {}".format(g.page_tokens.index(g.current_pagetoken)+1)
 
     else:
         norp = "next" if np == "n" else "previous"
@@ -3931,10 +3987,10 @@ def user_more(num):
         g.content = generate_songlist_display()
         return
 
+    g.current_pagetoken = None
     item = g.model.songs[int(num) - 1]
-    p = g.meta.get(item.ytid,{})
-    user = p.get('uploader')
-    usersearch(user, identify='id', page=g.current_page)
+    user = g.meta.get(item.ytid, {}).get('uploader')
+    usersearch(user, identify='id')
 
 
 def related(num):
@@ -3945,6 +4001,7 @@ def related(num):
         g.content = generate_songlist_display()
         return
 
+    g.current_pagetoken = None
     item = g.model.songs[int(num) - 1]
     related_search(item)
 
