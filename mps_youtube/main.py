@@ -785,8 +785,8 @@ class g(object):
     user_cache = collections.OrderedDict()
     model = Playlist(name="model")
     last_search_query = {}
-    current_pagetoken = None
-    page_tokens = [None]
+    current_pagetoken = ''
+    page_tokens = ['']
     active = Playlist(name="active")
     text = {}
     userpl = {}
@@ -1527,23 +1527,23 @@ def get_tracks_from_json(jsons):
 
     # delete global page token list if apparently new search
     if not g.current_pagetoken:
-        g.page_tokens = [None]
+        g.page_tokens = ['']
 
     # make page token list from api response
     page_tokens = [jsons.get(field) for field in
-        ['prevPageToken', 'nextPageToken']]
+                   ['prevPageToken', 'nextPageToken']]
     page_tokens.insert(1, g.current_pagetoken)
 
     curidx = lambda: g.page_tokens.index(g.current_pagetoken)
 
     # update global page token list
     if page_tokens[2]:
-        if page_tokens[0]:
+        if page_tokens[0] and g.page_tokens[curidx()-1] is None:
             g.page_tokens[curidx()-1:curidx()+2] = page_tokens
         else:
             g.page_tokens[curidx():curidx()+2] = page_tokens[1:]
     else:
-        if page_tokens[0]:
+        if page_tokens[0] and g.page_tokens[curidx()-1] is None:
             g.page_tokens[curidx()-1:curidx()+1] = page_tokens[:2]
         else:
             g.page_tokens[curidx()] = page_tokens[1]
@@ -1558,7 +1558,7 @@ def get_tracks_from_json(jsons):
     vurl += "?" + urlencode({'part':'contentDetails,statistics,snippet',
                              'key': Config.API_KEY.get,
                              'id': ','.join([get_track_id_from_json(i)
-                                             for i in items]) })
+                                             for i in items])})
     try:
         wdata = utf8_decode(urlopen(vurl).read())
         wdata = json.loads(wdata)
@@ -2448,7 +2448,7 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
     if page:
         qs['pageToken'] = page
     else:
-        g.current_pagetoken = None
+        g.current_pagetoken = ''
 
     if Config.SEARCH_MUSIC.get:
         qs['videoCategoryId'] = 10
@@ -2544,12 +2544,12 @@ def usersearch_id(q_user, page=None, splash=True):
         g.message = msg
         g.last_opened = ""
         g.last_search_query = {"user": q_user}
-        g.current_pagetoken = page
+        g.current_pagetoken = page or ''
         g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = failmsg
-        g.current_pagetoken = None
+        g.current_pagetoken = ''
         g.last_search_query = {}
         g.content = logo(c.r)
 
@@ -2571,13 +2571,13 @@ def related_search(vitem, page=None, splash=True):
         g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
         g.last_opened = ""
         g.last_search_query = {"related": vitem}
-        g.current_pagetoken = page
+        g.current_pagetoken = page or ''
         g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = "Related to %s%s%s not found" % (c.y, vitem.ytid, c.w)
         g.content = logo(c.r)
-        g.current_pagetoken = None
+        g.current_pagetoken = ''
         g.last_search_query = {}
 
 
@@ -2598,13 +2598,13 @@ def search(term, page=None, splash=True):
         g.last_opened = ""
         g.last_search_query = {"term": term}
         g.browse_mode = "normal"
-        g.current_pagetoken = page
+        g.current_pagetoken = page or ''
         g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
         g.content = logo(c.r)
-        g.current_pagetoken = None
+        g.current_pagetoken = ''
         g.last_search_query = {}
 
 
@@ -4020,7 +4020,7 @@ def user_more(num):
         g.content = generate_songlist_display()
         return
 
-    g.current_pagetoken = None
+    g.current_pagetoken = ''
     item = g.model.songs[int(num) - 1]
     user = g.meta.get(item.ytid, {}).get('uploader')
     usersearch(user, identify='id')
@@ -4034,7 +4034,7 @@ def related(num):
         g.content = generate_songlist_display()
         return
 
-    g.current_pagetoken = None
+    g.current_pagetoken = ''
     item = g.model.songs[int(num) - 1]
     related_search(item)
 
