@@ -782,7 +782,7 @@ class g(object):
     max_retries = 3
     max_cached_streams = 1500
     url_memo = collections.OrderedDict()
-    user_cache = collections.OrderedDict()
+    username_query_cache = collections.OrderedDict()
     model = Playlist(name="model")
     last_search_query = {}
     current_pagetoken = ''
@@ -1043,7 +1043,13 @@ def init_cache():
         try:
 
             with open(g.CACHEFILE, "rb") as cf:
-                g.streams = pickle.load(cf)
+                cached = pickle.load(cf)
+
+            if 'streams' in cached:
+                g.streams = cached['streams']
+                g.username_query_cache = cached['userdata']
+            else:
+                g.streams = cached
 
             dbg(c.g + "%s cached streams imported%s", uni(len(g.streams)), c.w)
 
@@ -1121,8 +1127,12 @@ def saveconfig():
 
 def savecache():
     """ Save stream cache. """
+    caches = dict(
+        streams=g.streams,
+        userdata=g.username_query_cache)
+
     with open(g.CACHEFILE, "wb") as cf:
-        pickle.dump(g.streams, cf, protocol=2)
+        pickle.dump(caches, cf, protocol=2)
 
     dbg(c.p + "saved cache file: " + g.CACHEFILE + c.w)
 
@@ -2459,15 +2469,15 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
 
 def userdata_cached(userterm):
     """ Check if user name search term found in cache """
-    userterm = ' '.join([t.strip().lower() for t in userterm.split(' ')])
-    return g.user_cache.get(userterm)
+    userterm = ''.join([t.strip().lower() for t in userterm.split(' ')])
+    return g.username_query_cache.get(userterm)
 
 
 def cache_userdata(userterm, username, channel_id):
     """ Cache user name and channel id tuple """
-    userterm = ' '.join([t.strip().lower() for t in userterm.split(' ')])
-    g.user_cache[userterm] = (username, channel_id)
-
+    userterm = ''.join([t.strip().lower() for t in userterm.split(' ')])
+    g.username_query_cache[userterm] = (username, channel_id)
+    return (username, channel_id)
 
 
 def usersearch(q_user, page=None, identify='forUsername', splash=True):
@@ -2496,7 +2506,7 @@ def usersearch(q_user, page=None, identify='forUsername', splash=True):
                     snippet = userinfo[0].get('snippet', {})
                     channel_id = snippet.get('channelId', user)
                     username = snippet.get('title', user)
-                    cache_userdata(user, username, channel_id)
+                    user = cache_userdata(user, username, channel_id)[0]
                 else:
                     g.message = "User {} not found.".format(c.y + user + c.w)
                     return
