@@ -2466,7 +2466,6 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
     return qs
 
 
-
 def userdata_cached(userterm):
     """ Check if user name search term found in cache """
     userterm = ''.join([t.strip().lower() for t in userterm.split(' ')])
@@ -2477,6 +2476,11 @@ def cache_userdata(userterm, username, channel_id):
     """ Cache user name and channel id tuple """
     userterm = ''.join([t.strip().lower() for t in userterm.split(' ')])
     g.username_query_cache[userterm] = (username, channel_id)
+    dbg('Cache data for username search query "{}": {} ({})'.format(
+        userterm, username, channel_id))
+
+    while len(g.username_query_cache) > 300:
+        g.username_query_cache.popitem(last=False)
     return (username, channel_id)
 
 
