@@ -116,7 +116,7 @@ def member_var(x):
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
-iso8601timedurationex = re.compile('PT((\d{1,3})H)?((\d{1,3})M)?(\d{1,2})S')
+iso8601timedurationex = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?(\d{1,2})S')
 
 
 def getxy():
@@ -1527,7 +1527,7 @@ def get_tracks_from_json(jsons):
 
     # delete global page token list if apparently new search
     if not g.current_pagetoken:
-      g.page_tokens = [None]
+        g.page_tokens = [None]
 
     # make page token list from api response
     page_tokens = [jsons.get(field) for field in
@@ -1556,13 +1556,13 @@ def get_tracks_from_json(jsons):
     # fetch detailed information about items from videos API
     vurl = "https://www.googleapis.com/youtube/v3/videos"
     vurl += "?" + urlencode({'part':'contentDetails,statistics,snippet',
-                            'key': Config.API_KEY.get,
-                            'id': ','.join([get_track_id_from_json(i)
-                                  for i in items]) })
+                             'key': Config.API_KEY.get,
+                             'id': ','.join([get_track_id_from_json(i)
+                                             for i in items]) })
     try:
         wdata = utf8_decode(urlopen(vurl).read())
         wdata = json.loads(wdata)
-        items_vidinfo = wdata.get('items',[])
+        items_vidinfo = wdata.get('items', [])
         # enhance search results by adding information from videos API response
         for searchresult, vidinfoitem in zip(items, items_vidinfo):
             searchresult.update(vidinfoitem)
@@ -1578,54 +1578,55 @@ def get_tracks_from_json(jsons):
 
         try:
 
-          ytid = get_track_id_from_json(item)
-          duration = item.get('contentDetails',{}).get('duration')
+            ytid = get_track_id_from_json(item)
+            duration = item.get('contentDetails', {}).get('duration')
 
-          if duration:
-            duration = iso8601timedurationex.findall(duration)
-            if len(duration) > 0:
-              _, hours, _, minutes, seconds = duration[0]
-              duration = [seconds, minutes, hours]
-              duration = [int(v) if len(v)>0 else 0 for v in duration]
-              duration = sum([60**p*v for p,v in enumerate(duration)])
+            if duration:
+                duration = iso8601timedurationex.findall(duration)
+                if len(duration) > 0:
+                    _, hours, _, minutes, seconds = duration[0]
+                    duration = [seconds, minutes, hours]
+                    duration = [int(v) if len(v) > 0 else 0 for v in duration]
+                    duration = sum([60**p*v for p, v in enumerate(duration)])
+                else:
+                    duration = 30
             else:
-              duration = 30
-          else:
-            duration = 30
+                duration = 30
 
-          stats = item.get('statistics',{})
-          snippet = item.get('snippet', {})
-          title = snippet.get('title','').strip()
-          # instantiate video representation in local model
-          cursong = Video(ytid=ytid, title=title, length=duration)
-          likes = int(stats.get('likeCount', 0))
-          dislikes = int(stats.get('dislikeCount', 0))
-          rating = 5.*likes/(likes+dislikes) if (likes+dislikes)>0 else 0
+            stats = item.get('statistics', {})
+            snippet = item.get('snippet', {})
+            title = snippet.get('title', '').strip()
+            # instantiate video representation in local model
+            cursong = Video(ytid=ytid, title=title, length=duration)
+            likes = int(stats.get('likeCount', 0))
+            dislikes = int(stats.get('dislikeCount', 0))
+            rating = 5.*likes/(likes+dislikes) if (likes+dislikes) > 0 else 0
 
-          # cache video information in custom global variable store
-          g.meta[ytid] = dict(
-              # tries to get localized title first, fallback to normal title
-              title = snippet.get('localized',
-                {'title':snippet.get('title', '[!!!]')}).get('title', '[!]'),
-              length = uni(fmt_time(cursong.length)),
-              #XXX
-              rating = uni('{}'.format(rating))[:4].ljust(4, "0"),
-              uploader = snippet.get('channelId'),
-              uploaderName = snippet.get('channelTitle'),
-              category = snippet.get('categoryId'),
-              aspect = "custom", #XXX
-              uploaded = yt_datetime(snippet.get('publishedAt',''))[1],
-              likes = uni(num_repr(likes)),
-              dislikes = uni(num_repr(dislikes)),
-              commentCount = uni(num_repr(int(stats.get('commentCount', 0)))),
-              viewCount = uni(num_repr(int(stats.get('viewCount', 0))))
-              )
+            # cache video information in custom global variable store
+            g.meta[ytid] = dict(
+                # tries to get localized title first, fallback to normal title
+                title=snippet.get('localized',
+                                  {'title':snippet.get('title',
+                                                       '[!!!]')}).get('title',
+                                                                      '[!]'),
+                length=uni(fmt_time(cursong.length)),
+                #XXX this is a very poor attempt to calculate a rating value
+                rating=uni('{}'.format(rating))[:4].ljust(4, "0"),
+                uploader=snippet.get('channelId'),
+                uploaderName=snippet.get('channelTitle'),
+                category=snippet.get('categoryId'),
+                aspect="custom", #XXX
+                uploaded=yt_datetime(snippet.get('publishedAt', ''))[1],
+                likes=uni(num_repr(likes)),
+                dislikes=uni(num_repr(dislikes)),
+                commentCount=uni(num_repr(int(stats.get('commentCount', 0)))),
+                viewCount=uni(num_repr(int(stats.get('viewCount', 0)))))
 
         except Exception as e:
 
-          dbg(json.dumps(item, indent=2))
-          dbg('Error during metadata extraction/instantiation of search '
-              +'result {}\n{}'.format(ytid, e))
+            dbg(json.dumps(item, indent=2))
+            dbg('Error during metadata extraction/instantiation of search '
+                +'result {}\n{}'.format(ytid, e))
 
         songs.append(cursong)
 
@@ -2580,7 +2581,6 @@ def related_search(vitem, page=None, splash=True):
         g.last_search_query = {}
 
 
-
 def search(term, page=None, splash=True):
     """ Perform search. """
     if not term or len(term) < 2:
@@ -2629,9 +2629,10 @@ def pl_search(term, page=1, splash=True, is_user=False):
         is_user = term["is_user"]
         term = term["term"]
 
+    # XXX port to gdata3 [see below]
     # generate url base on whether this is a user playlist search
-    x = "/users/%s/playlists?" % term if is_user else "/playlists/snippets?" #XXX
-    url = "https://gdata.youtube.com/feeds/api%s" % x #XXX
+    x = "/users/%s/playlists?" % term if is_user else "/playlists/snippets?"
+    url = "https://gdata.youtube.com/feeds/api%s" % x
     # url = "https://www.googleapis.com/youtube/v3/search"
     # playlist search is done with the above url and param type=playlist
     prog = "user: " + term if is_user else term
@@ -2685,7 +2686,7 @@ def get_pl_from_json(pldata):
 
     results = []
 
-    for item in items: #XXX
+    for item in items:
         results.append(dict(
             link=item.get("id"),
             size=item.get("size"),
@@ -2771,9 +2772,9 @@ def fetch_comments(item):
           'videoId': ytid,
           'maxResults': 50,
           'part': 'snippet',
-          'key': Config.API_KEY.get }
+          'key': Config.API_KEY.get}
     url = ("https://www.googleapis.com/youtube/v3/commentThreads?" +
-            urlencode(qs))
+           urlencode(qs))
 
     # XXX should comment threads be expanded? this would require
     # additional requests for comments responding on top level comments
@@ -2794,10 +2795,10 @@ def fetch_comments(item):
 
     jsdata = json.loads(raw)
     coms = jsdata.get('items', [])
-    coms = [x.get('snippet',{}) for x in coms]
-    coms = [x.get('topLevelComment',{}) for x in coms]
-    coms = [x for x in coms if len(x.get('snippet',{}).get(
-            'textDisplay','').strip())] # skip blanks
+    coms = [x.get('snippet', {}) for x in coms]
+    coms = [x.get('topLevelComment', {}) for x in coms]
+    # skip blanks
+    coms = [x for x in coms if len(x.get('snippet', {}).get('textDisplay', '').strip())]
     if not len(coms):
         g.message = "No comments for %s" % item.title[:50]
         g.content = generate_songlist_display()
@@ -2806,10 +2807,10 @@ def fetch_comments(item):
     items = []
 
     for n, com in enumerate(coms, 1):
-        snippet = com.get('snippet',{})
+        snippet = com.get('snippet', {})
         poster = snippet.get('authorDisplayName')
-        date, shortdate = yt_datetime(snippet.get('publishedAt',''))
-        text = snippet.get('textDisplay','')
+        _, shortdate = yt_datetime(snippet.get('publishedAt', ''))
+        text = snippet.get('textDisplay', '')
         cid = ("%s/%s" % (n, len(coms)))
         out = ("%s %-35s %s\n" % (cid, c.c("g", poster), shortdate))
         out += c.c("y", text.strip())
@@ -4383,7 +4384,7 @@ def _match_tracks(artist, title, mb_tracks):
         url = "https://www.googleapis.com/youtube/v3/search" #XXX
         query = generate_search_qs(w, None, result_count=50)
         dbg(query)
-        have_results = _search(url, q, query, splash=False, pre_load=False) #XXX crashes
+        have_results = _search(url, q, query, splash=False, pre_load=False)
         time.sleep(0.5)
 
         if not have_results:
