@@ -2517,7 +2517,7 @@ def cache_userdata(userterm, username, channel_id):
     return (username, channel_id)
 
 
-def usersearch(q_user, page=None, identify='forUsername', splash=True):
+def usersearch(q_user, page=None, splash=True, identify='forUsername'):
     """ Fetch uploads by a YouTube user. """
 
     user, _, term = (x.strip() for x in q_user.partition("/"))
@@ -4069,8 +4069,9 @@ def user_more(num):
 
     g.current_pagetoken = ''
     item = g.model.songs[int(num) - 1]
-    user = g.meta.get(item.ytid, {}).get('uploader')
-    usersearch(user, identify='id')
+    channel_id = g.meta.get(item.ytid, {}).get('uploader')
+    user = g.meta.get(item.ytid, {}).get('uploaderName')
+    usersearch_id('/'.join([user, channel_id, '']), None, True)
 
 
 def related(num):
