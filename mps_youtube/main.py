@@ -116,7 +116,7 @@ def member_var(x):
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
-iso8601timedurationex = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?(\d{1,2})S')
+ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?(\d{1,2})S')
 
 
 def getxy():
@@ -583,16 +583,16 @@ def check_console_width(val):
 
 
 def check_api_key(key):
+    """ Validate an API key by calling an API endpoint with no quota cost """
     url = "https://www.googleapis.com/youtube/v3/i18nLanguages"
     query = {"part": "snippet", "fields": "items/id", "key": key}
     try:
         urlopen(url + "?" + urlencode(query)).read()
         message = "The key, '" + key + "' will now be used for API requests."
         return dict(valid=True, message=message)
-    except HTTPError as e:
+    except HTTPError:
         message = "Invalid key or quota exceeded, '" + key + "'"
         return dict(valid=False, message=message)
-
 
 
 def check_ddir(d):
@@ -1547,9 +1547,9 @@ def fmt_time(seconds):
 def get_track_id_from_json(item):
     """ Try to extract video Id from various response types """
     fields = ['contentDetails/videoId',
-             'snippet/resourceId/videoId',
-             'id/videoId',
-             'id']
+              'snippet/resourceId/videoId',
+              'id/videoId',
+              'id']
     for field in fields:
         node = item
         for p in field.split('/'):
@@ -1623,7 +1623,7 @@ def get_tracks_from_json(jsons):
             duration = item.get('contentDetails', {}).get('duration')
 
             if duration:
-                duration = iso8601timedurationex.findall(duration)
+                duration = ISO8601_TIMEDUR_EX.findall(duration)
                 if len(duration) > 0:
                     _, hours, _, minutes, seconds = duration[0]
                     duration = [seconds, minutes, hours]
@@ -1641,6 +1641,7 @@ def get_tracks_from_json(jsons):
             cursong = Video(ytid=ytid, title=title, length=duration)
             likes = int(stats.get('likeCount', 0))
             dislikes = int(stats.get('dislikeCount', 0))
+            #XXX this is a very poor attempt to calculate a rating value
             rating = 5.*likes/(likes+dislikes) if (likes+dislikes) > 0 else 0
 
             # cache video information in custom global variable store
@@ -1651,7 +1652,6 @@ def get_tracks_from_json(jsons):
                                                        '[!!!]')}).get('title',
                                                                       '[!]'),
                 length=uni(fmt_time(cursong.length)),
-                #XXX this is a very poor attempt to calculate a rating value
                 rating=uni('{}'.format(rating))[:4].ljust(4, "0"),
                 uploader=snippet.get('channelId'),
                 uploaderName=snippet.get('channelTitle'),
@@ -1666,8 +1666,8 @@ def get_tracks_from_json(jsons):
         except Exception as e:
 
             dbg(json.dumps(item, indent=2))
-            dbg('Error during metadata extraction/instantiation of search '
-                +'result {}\n{}'.format(ytid, e))
+            dbg('Error during metadata extraction/instantiation of search ' +
+                'result {}\n{}'.format(ytid, e))
 
         songs.append(cursong)
 
@@ -2356,8 +2356,8 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                     except ValueError:
 
                         try:
-                            elapsed_s = int(match_object.group('elapsed_s')
-                                            or '0')
+                            elapsed_s = int(match_object.group('elapsed_s') or
+                                            '0')
 
                         except ValueError:
                             continue
@@ -2584,7 +2584,7 @@ def usersearch_id(q_user, page=None, splash=True):
         failmsg = "User %s not found" % termuser[1]
     msg = uni(msg).format(c.w, c.y, c.y, term, user)
 
-    have_results = _search(url, progtext, query)
+    have_results = _search(url, progtext, query, splash)
 
     if have_results:
         g.browse_mode = "normal"
@@ -2612,7 +2612,7 @@ def related_search(vitem, page=None, splash=True):
     t = vitem.title
     ttitle = t[:48].strip() + ".." if len(t) > 49 else t
 
-    have_results = _search(url, ttitle, query)
+    have_results = _search(url, ttitle, query, splash)
 
     if have_results:
         g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
@@ -2638,7 +2638,7 @@ def search(term, page=None, splash=True):
     logging.info("search for %s", term)
     url = "https://www.googleapis.com/youtube/v3/search"
     query = generate_search_qs(term, page)
-    have_results = _search(url, term, query)
+    have_results = _search(url, term, query, splash)
 
     if have_results:
         g.message = "Search results for %s%s%s" % (c.y, term, c.w)
@@ -4020,13 +4020,11 @@ def nextprev(np):
 
     good = False
 
-    #dbg('switching from current page {} to {}'.format(
-      #g.current_pagetoken, {'n':'next','p':'prev'}[np]))
-
     if np == "n":
         max_results = getxy().max_results
         if len(content) == max_results and glsq:
             # XXX workaround for v2/v3 pagination inconsistency
+            # can be removed as soon as playlist search is ported to v3
             if content is g.ytpls:
                 g.current_page += 1
             else:
@@ -5014,7 +5012,7 @@ command
 
  - Enable custom keymap using mplayer/mpv input.conf file (ids1024)
 
- - Enable custom downloader application (ids1024 & np1)
+ - Enable custom downloader application (ids1024 & np1){2}
 
 """.format(c.ul, c.w, c.y))]
 
