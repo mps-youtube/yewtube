@@ -52,6 +52,10 @@ import json
 import sys
 import re
 import os
+import pickle
+from urllib.request import urlopen, build_opener
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
 
 
 try:
@@ -78,31 +82,15 @@ try:
 except ImportError:
     has_xerox = False
 
-# Python 3 compatibility hack
-
-if sys.version_info[:2] >= (3, 0):
-    # pylint: disable=E0611,F0401
-    import pickle
-    from urllib.request import urlopen, build_opener
-    from urllib.error import HTTPError, URLError
-    from urllib.parse import urlencode
-    uni, byt, xinput = str, bytes, input
-
-else:
-    from urllib2 import urlopen, HTTPError, URLError, build_opener
-    import cPickle as pickle
-    from urllib import urlencode
-    uni, byt, xinput = unicode, str, raw_input
-
 
 def utf8_encode(x):
     """ Encode Unicode. """
-    return x.encode("utf8") if isinstance(x, uni) else x
+    return x.encode("utf8") if isinstance(x, str) else x
 
 
 def utf8_decode(x):
     """ Decode Unicode. """
-    return x.decode("utf8") if isinstance(x, byt) else x
+    return x.decode("utf8") if isinstance(x, bytes) else x
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in os.environ.get("LANG", "")
@@ -335,7 +323,7 @@ def get_pafy(item, force=False, callback=None):
 
         except IOError as e:
 
-            if "pafy" in uni(e):
+            if "pafy" in str(e):
                 dbg(c.p + "retrying failed pafy get: " + item.ytid + c.w)
                 p = pafy.new(item.ytid, callback=callback)
 
@@ -358,7 +346,7 @@ def get_streams(vid, force=False, callback=None, threeD=False):
     prfx = "preload: " if not callback else ""
 
     if not force and have_stream:
-        ss = uni(int(g.streams[ytid]['expiry'] - now) // 60)
+        ss = str(int(g.streams[ytid]['expiry'] - now) // 60)
         dbg("%s%sGot streams from cache (%s mins left)%s", c.g, prfx, ss, c.w)
         return g.streams.get(ytid)['meta']
 
@@ -470,10 +458,10 @@ class ConfigItem(object):
         retval = self.value
 
         if self.name == "max_res":
-            retval = uni(retval) + "p"
+            retval = str(retval) + "p"
 
         if self.name == "encoder":
-            retval = str(retval) + " [%s]" % (uni(g.encoders[retval]['name']))
+            retval = str(retval) + " [%s]" % (str(g.encoders[retval]['name']))
 
         return retval
 
@@ -797,7 +785,7 @@ class g(object):
     last_opened = message = content = ""
     config = [x for x in sorted(dir(Config)) if member_var(x)]
     defaults = {setting: getattr(Config, setting) for setting in config}
-    suffix = "3" if sys.version_info[:2] >= (3, 0) else ""
+    suffix = "3" # Python 3
     CFFILE = os.path.join(get_config_dir(), "config")
     TCFILE = os.path.join(get_config_dir(), "transcode")
     OLD_PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
@@ -1051,7 +1039,7 @@ def init_cache():
             else:
                 g.streams = cached
 
-            dbg(c.g + "%s cached streams imported%s", uni(len(g.streams)), c.w)
+            dbg(c.g + "%s cached streams imported%s", str(len(g.streams)), c.w)
 
         except (EOFError, IOError):
             dbg(c.r + "Cache file failed to open" + c.w)
@@ -1461,13 +1449,13 @@ def playlists_display():
     maxname = max(len(a) for a in g.userpl)
     out = "      {0}Local Playlists{1}\n".format(c.ul, c.w)
     start = "      "
-    fmt = "%s%s%-3s %-" + uni(maxname + 3) + "s%s %s%-7s%s %-5s%s"
+    fmt = "%s%s%-3s %-" + str(maxname + 3) + "s%s %s%-7s%s %-5s%s"
     head = (start, c.b, "ID", "Name", c.b, c.b, "Count", c.b, "Duration", c.w)
     out += "\n" + fmt % head + "\n\n"
 
     for v, z in enumerate(sorted(g.userpl)):
         n, p = z, g.userpl[z]
-        l = fmt % (start, c.g, v + 1, n, c.w, c.y, uni(p.size), c.y,
+        l = fmt % (start, c.g, v + 1, n, c.w, c.y, str(p.size), c.y,
                    p.duration, c.w) + "\n"
         out += l
 
@@ -1505,7 +1493,7 @@ def fmt_time(seconds):
         hms = M + ":" + S
 
     elif H == "01" and int(M) < 40:
-        hms = uni(int(M) + 60) + ":" + S
+        hms = str(int(M) + 60) + ":" + S
 
     elif H.startswith("0"):
         hms = ":".join([H[1], M, S])
@@ -1621,18 +1609,18 @@ def get_tracks_from_json(jsons):
                                   {'title':snippet.get('title',
                                                        '[!!!]')}).get('title',
                                                                       '[!]'),
-                length=uni(fmt_time(cursong.length)),
+                length=str(fmt_time(cursong.length)),
                 #XXX this is a very poor attempt to calculate a rating value
-                rating=uni('{}'.format(rating))[:4].ljust(4, "0"),
+                rating=str('{}'.format(rating))[:4].ljust(4, "0"),
                 uploader=snippet.get('channelId'),
                 uploaderName=snippet.get('channelTitle'),
                 category=snippet.get('categoryId'),
                 aspect="custom", #XXX
                 uploaded=yt_datetime(snippet.get('publishedAt', ''))[1],
-                likes=uni(num_repr(likes)),
-                dislikes=uni(num_repr(dislikes)),
-                commentCount=uni(num_repr(int(stats.get('commentCount', 0)))),
-                viewCount=uni(num_repr(int(stats.get('viewCount', 0)))))
+                likes=str(num_repr(likes)),
+                dislikes=str(num_repr(dislikes)),
+                commentCount=str(num_repr(int(stats.get('commentCount', 0)))),
+                viewCount=str(num_repr(int(stats.get('viewCount', 0)))))
 
         except Exception as e:
 
@@ -1668,7 +1656,7 @@ def playback_progress(idx, allsongs, repeat=False):
     # pylint: disable=R0914
     # too many local variables
     cw = getxy().width
-    out = "  %s%-XXs%s%s\n".replace("XX", uni(cw - 9))
+    out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
     show_key_help = (known_player_set and Config.SHOW_MPLAYER_KEYS.get)
     multi = len(allsongs) > 1
@@ -1707,7 +1695,7 @@ def playback_progress(idx, allsongs, repeat=False):
 def num_repr(num):
     """ Return up to four digit string representation of a number, eg 2.6m. """
     if num <= 9999:
-        return uni(num)
+        return str(num)
 
     def digit_count(x):
         """ Return number of digits. """
@@ -1721,14 +1709,14 @@ def num_repr(num):
     front = 3 if digits % 3 == 0 else digits % 3
 
     if not front == 1:
-        return uni(rounded)[0:front] + suffix
+        return str(rounded)[0:front] + suffix
 
-    return uni(rounded)[0] + "." + uni(rounded)[1] + suffix
+    return str(rounded)[0] + "." + str(rounded)[1] + suffix
 
 
 def real_len(u, alt=False):
     """ Try to determine width of strings displayed with monospace font. """
-    if not isinstance(u, uni):
+    if not isinstance(u, str):
         u = u.decode("utf8")
 
     ueaw = unicodedata.east_asian_width
@@ -1805,7 +1793,7 @@ def generate_playlist_display():
         title = x.get('title') or "unknown"
         updated = yt_datetime(x.get('updated'))[1]
         title = uea_pad(cw - 23, title)
-        out += (fmtrow % (col, uni(n + 1), title, updated, uni(length), c.w))
+        out += (fmtrow % (col, str(n + 1), title, updated, str(length), c.w))
 
     return out + "\n" * (5 - len(g.ytpls))
 
@@ -2050,10 +2038,10 @@ def playsong(song, failcount=0, override=False):
         get_streams(song, force=failcount, callback=writestatus)
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
-        dbg("--ioerror in playsong call to get_streams %s", uni(e))
+        dbg("--ioerror in playsong call to get_streams %s", str(e))
 
-        if "Youtube says" in uni(e):
-            g.message = F('cant get track') % (song.title + " " + uni(e))
+        if "Youtube says" in str(e):
+            g.message = F('cant get track') % (song.title + " " + str(e))
             return
 
         elif failcount < g.max_retries:
@@ -2061,8 +2049,8 @@ def playsong(song, failcount=0, override=False):
             failcount += 1
             return playsong(song, failcount=failcount, override=override)
 
-        elif "pafy" in uni(e):
-            g.message = uni(e) + " - " + song.ytid
+        elif "pafy" in str(e):
+            g.message = str(e) + " - " + song.ytid
             return
 
     except ValueError:
@@ -2076,7 +2064,7 @@ def playsong(song, failcount=0, override=False):
     except (HTTPError) as e:
 
         # Fix for invalid streams (gh-65)
-        dbg("----htterror in playsong call to gen_real_args %s", uni(e))
+        dbg("----htterror in playsong call to gen_real_args %s", str(e))
         if failcount < g.max_retries:
             failcount += 1
             return playsong(song, failcount=failcount, override=override)
@@ -2085,8 +2073,8 @@ def playsong(song, failcount=0, override=False):
         # this may be cause by attempting to play a https stream with
         # mplayer
         # ====
-        errmsg = e.message if hasattr(e, "message") else uni(e)
-        g.message = c.r + uni(errmsg) + c.w
+        errmsg = e.message if hasattr(e, "message") else str(e)
+        g.message = c.r + str(errmsg) + c.w
         return
 
     songdata = "%s; %s; %s Mb" % songdata
@@ -2149,9 +2137,6 @@ def get_input_file():
 
 def launch_player(song, songdata, cmd):
     """ Launch player application. """
-    # fix for github issue 59
-    if known_player_set() and mswin and sys.version_info[:2] < (3, 0):
-        cmd = [x.encode("utf8", errors="replace") for x in cmd]
 
     arturl = "http://i.ytimg.com/vi/%s/default.jpg" % song.ytid
     input_file = get_input_file()
@@ -2563,7 +2548,7 @@ def usersearch_id(q_user, page=None, splash=True):
         msg = "Video uploads by {2}{4}{0}"
         progtext = termuser[1]
         failmsg = "User %s not found" % termuser[1]
-    msg = uni(msg).format(c.w, c.y, c.y, term, user)
+    msg = str(msg).format(c.w, c.y, c.y, term, user)
 
     have_results = _search(url, progtext, query)
 
@@ -2909,7 +2894,7 @@ def fetch_comments(item):
         screen_update(fill_blank=False)
         xprint("%s : Use [Enter] for next, [p] for previous, [q] to return:"
                % pagecounter, end="")
-        v = xinput()
+        v = input()
 
         if v == "p":
             pagenum -= 1
@@ -2977,7 +2962,7 @@ def extract_metadata(name):
 def remux_audio(filename, title):
     """ Remux audio file. Insert limited metadata tags. """
     dbg("starting remux")
-    temp_file = filename + "." + uni(random.randint(10000, 99999))
+    temp_file = filename + "." + str(random.randint(10000, 99999))
     os.rename(filename, temp_file)
     meta = extract_metadata(title)
     metadata = ["title=%s" % meta["title"]]
@@ -3143,7 +3128,7 @@ def _bi_range(start, end):
 
 def _parse_multi(choice, end=None):
     """ Handle ranges like 5-9, 9-5, 5- and -5. Return list of ints. """
-    end = end or uni(g.model.size)
+    end = end or str(g.model.size)
     pattern = r'(?<![-\d])(\d+-\d+|-\d+|\d+-|\d+)(?![-\d])'
     items = re.findall(pattern, choice)
     alltracks = []
@@ -3154,7 +3139,7 @@ def _parse_multi(choice, end=None):
             x = "1" + x
 
         elif x.endswith("-"):
-            x = x + uni(end)
+            x = x + str(end)
 
         if "-" in x:
             nrange = x.split("-")
@@ -3218,7 +3203,7 @@ def save_last():
 
         while g.userpl.get(saveas):
             post += 1
-            saveas = g.model.songs[0].title[:18].strip() + "-" + uni(post)
+            saveas = g.model.songs[0].title[:18].strip() + "-" + str(post)
 
         open_save_view("save", saveas)
 
@@ -3296,7 +3281,7 @@ def songlist_rm_add(action, songrange):
 
     elif action == "rm":
         selection = sorted(set(selection), reverse=True)
-        removed = uni(tuple(reversed(selection))).replace(",", "")
+        removed = str(tuple(reversed(selection))).replace(",", "")
 
         for x in selection:
             g.model.songs.pop(x - 1)
@@ -3337,7 +3322,7 @@ def down_many(dltype, choice, subdir=None):
                 filename = _make_fname(song, None, av=av, subdir=subdir)
 
             except IOError as e:
-                handle_error("Error for %s: %s" % (song.title, uni(e)))
+                handle_error("Error for %s: %s" % (song.title, str(e)))
                 count -= 1
                 continue
 
@@ -3438,7 +3423,7 @@ def play(pre, choice, post=""):
 def play_all(pre, choice, post=""):
     """ Play all tracks in model (last displayed). shuffle/repeat if req'd."""
     options = pre + choice + post
-    play(options, "1-" + uni(len(g.model.songs)))
+    play(options, "1-" + str(len(g.model.songs)))
 
 
 def ls():
@@ -3655,7 +3640,7 @@ def get_dl_data(song, mediatype="any"):
     """ Get filesize and metadata for all streams, return dict. """
     def mbsize(x):
         """ Return size in MB. """
-        return uni(int(x / (1024 ** 2)))
+        return str(int(x / (1024 ** 2)))
 
     p = get_pafy(song)
     dldata = []
@@ -3708,7 +3693,7 @@ def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
     g.content = content
     screen_update()
 
-    choice = xinput(prompt)
+    choice = input(prompt)
 
     if choice in model:
         return model[choice]
@@ -3732,7 +3717,7 @@ def prompt_dl(song):
 
     model = [x['url'] for x in dl_data]
     ed = enumerate(dl_data)
-    model = {uni(n + 1): (x['url'], x['ext']) for n, x in ed}
+    model = {str(n + 1): (x['url'], x['ext']) for n, x in ed}
     url, ext = menu_prompt(model, "Download number: ", *dl_text)
     url2 = ext2 = None
 
@@ -3746,7 +3731,7 @@ def prompt_dl(song):
         aext = ("ogg", "m4a")
         model = [x['url'] for x in dl_data if x['ext'] in aext]
         ed = enumerate(dl_data)
-        model = {uni(n + 1): (x['url'], x['ext']) for n, x in ed}
+        model = {str(n + 1): (x['url'], x['ext']) for n, x in ed}
         prompt = "Audio stream: "
         url2, ext2 = menu_prompt(model, prompt, *dl_text)
 
@@ -3901,7 +3886,7 @@ def prompt_for_exit():
     screen_update()
 
     try:
-        userinput = xinput(c.r + " > " + c.w)
+        userinput = input(c.r + " > " + c.w)
 
     except (KeyboardInterrupt, EOFError):
         quits(showlogo=False)
@@ -4001,7 +3986,7 @@ def add_rm_all(action):
 
     elif action == "add":
         size = g.model.size
-        songlist_rm_add("add", "-" + uni(size))
+        songlist_rm_add("add", "-" + str(size))
 
 
 def get_adj_pagetoken(np):
@@ -4116,7 +4101,7 @@ def clip_copy(num):
             xprint("Error - couldn't copy to clipboard.")
             xprint(e.__doc__)
             xprint("")
-            xinput("Press Enter to continue.")
+            input("Press Enter to continue.")
             g.content = generate_songlist_display()
 
     else:
@@ -4152,12 +4137,12 @@ def info(num):
         out += p['title']
         out += "\n" + ytpl_desc
         out += ("\n\nAuthor     : " + p['author'])
-        out += "\nSize       : " + uni(p['size']) + " videos"
-        out += "\nLikes      : " + uni(ytpl_likes)
-        out += "\nDislikes   : " + uni(ytpl_dislikes)
+        out += "\nSize       : " + str(p['size']) + " videos"
+        out += "\nLikes      : " + str(ytpl_likes)
+        out += "\nDislikes   : " + str(ytpl_dislikes)
         out += "\nCreated    : " + time.strftime("%x %X", created)
         out += "\nUpdated    : " + time.strftime("%x %X", updated)
-        out += "\nID         : " + uni(p['link'])
+        out += "\nID         : " + str(p['link'])
         out += ("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
         g.content = out
 
@@ -4169,18 +4154,18 @@ def info(num):
         get_streams(item)
         p = get_pafy(item)
         i = utf8_decode
-        pub = time.strptime(uni(p.published), "%Y-%m-%d %H:%M:%S")
+        pub = time.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
         writestatus("Fetched")
         up = "Update Pafy to 0.3.42 to view likes/dislikes"
         out = c.ul + "Video Info" + c.w + "\n\n"
         out += i(p.title or "")
         out += "\n" + (p.description or "")
-        out += i("\n\nAuthor     : " + uni(p.author))
+        out += i("\n\nAuthor     : " + str(p.author))
         out += i("\nPublished  : " + time.strftime("%c", pub))
-        out += i("\nView count : " + uni(p.viewcount))
-        out += i("\nRating     : " + uni(p.rating)[:4])
-        out += i("\nLikes      : " + uni(getattr(p, "likes", up)))
-        out += i("\nDislikes   : " + uni(getattr(p, "dislikes", up)))
+        out += i("\nView count : " + str(p.viewcount))
+        out += i("\nRating     : " + str(p.rating)[:4])
+        out += i("\nLikes      : " + str(getattr(p, "likes", up)))
+        out += i("\nDislikes   : " + str(getattr(p, "dislikes", up)))
         out += i("\nCategory   : " + p.category)
         out += i("\nLink       : " + "https://youtube.com/watch?v=%s" %
                  p.videoid)
@@ -4219,7 +4204,7 @@ def yt_url(url, print_title=0):
         p = pafy.new(url)
 
     except (IOError, ValueError) as e:
-        g.message = c.r + uni(e) + c.w
+        g.message = c.r + str(e) + c.w
         g.content = g.content or generate_songlist_display(zeromsg=g.message)
         return
 
@@ -4519,7 +4504,7 @@ def search_album(term, page=1, splash=True):
     # pylint: disable=R0914,R0912
     if not term:
         show_message("Enter album name:", c.g, update=True)
-        term = xinput("> ")
+        term = input("> ")
 
         if not term or len(term) < 2:
             g.message = c.r + "Not enough input!" + c.w
@@ -4541,7 +4526,7 @@ def search_album(term, page=1, splash=True):
     screen_update()
     prompt = "Artist? [%s] > " % album['artist']
     xprint(prompt, end="")
-    artistentry = xinput().strip()
+    artistentry = input().strip()
 
     if artistentry:
 
@@ -4571,7 +4556,7 @@ def search_album(term, page=1, splash=True):
         g.content += "\n"
 
     screen_update()
-    entry = xinput("Continue? [Enter] > ")
+    entry = input("Continue? [Enter] > ")
 
     if entry == "":
         pass
@@ -4603,7 +4588,7 @@ def search_album(term, page=1, splash=True):
         t = threading.Thread(target=preload, kwargs=kwa)
         t.start()
         xprint("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
-        xinput("Press Enter to continue")
+        input("Press Enter to continue")
         g.message = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
             c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
         g.last_opened = ""
@@ -4657,7 +4642,7 @@ def matchfunction(func, regex, userinput):
                 g.content = g.content or generate_songlist_display()
 
             except (ValueError, IOError) as e:
-                g.message = F('cant get track') % uni(e)
+                g.message = F('cant get track') % str(e)
                 g.content = g.content or\
                     generate_songlist_display(zeromsg=g.message)
 
@@ -4743,7 +4728,7 @@ def main():
             next_inp = next_inp.replace("[mpsyt-comma]", ",")
 
         try:
-            userinput = next_inp or xinput(prompt).strip()
+            userinput = next_inp or input(prompt).strip()
 
         except (KeyboardInterrupt, EOFError):
             userinput = prompt_for_exit()
