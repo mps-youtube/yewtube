@@ -1560,12 +1560,8 @@ def get_track_id_from_json(item):
     return ''
 
 
-
-
-
-def get_tracks_from_json(jsons):
-    """ Get search results from API response """
-
+def store_pagetokens_from_json(jsons):
+    """Extract the page tokens from json result and store them."""
     # delete global page token list if apparently new search
     if not g.current_pagetoken:
         g.page_tokens = ['']
@@ -1588,6 +1584,12 @@ def get_tracks_from_json(jsons):
             g.page_tokens[curidx()-1:curidx()+1] = page_tokens[:2]
         else:
             g.page_tokens[curidx()] = page_tokens[1]
+
+
+def get_tracks_from_json(jsons):
+    """ Get search results from API response """
+
+    store_pagetokens_from_json(jsons)
 
     items = jsons.get("items")
     if not items:
@@ -2517,44 +2519,56 @@ def cache_userdata(userterm, username, channel_id):
     return (username, channel_id)
 
 
+def channelfromname(user):
+    """ Query channel id from username. """
+
+    cached = userdata_cached(user)
+    if cached:
+        user, channel_id = cached
+    else:
+        # if the user is looked for by their display name,
+        # we have to sent an additional request to find their
+        # channel id
+        url = "https://www.googleapis.com/youtube/v3/search"
+        query = {'part': 'id,snippet',
+                 'maxResults': 1,
+                 'q': user,
+                 'key': Config.API_KEY.get,
+                 'type': 'channel'}
+
+        try:
+            userinfo = json.loads(utf8_decode(urlopen(
+                url+"?"+urlencode(query)).read()))['items']
+            if len(userinfo) > 0:
+                snippet = userinfo[0].get('snippet', {})
+                channel_id = snippet.get('channelId', user)
+                username = snippet.get('title', user)
+                user = cache_userdata(user, username, channel_id)[0]
+            else:
+                g.message = "User {} not found.".format(c.y + user + c.w)
+                return
+
+        except (HTTPError, URLError) as e:
+
+            g.message = "Could not retrieve information for user {}".format(
+                c.y + user + c.w)
+            dbg('Error during channel request for user {}:\n{}'.format(
+                user, e))
+            return
+
+    # at this point, we know the channel id associated to a user name
+    return (user, channel_id)
+
+
 def usersearch(q_user, page=None, splash=True, identify='forUsername'):
     """ Fetch uploads by a YouTube user. """
 
     user, _, term = (x.strip() for x in q_user.partition("/"))
     if identify == 'forUsername':
-        cached = userdata_cached(user)
-        if cached:
-            user, channel_id = cached
-        else:
-            # if the user is looked for by their display name,
-            # we have to sent an additional request to find their
-            # channel id
-            url = "https://www.googleapis.com/youtube/v3/search"
-            query = {'part': 'id,snippet',
-                     'maxResults': 1,
-                     'q': user,
-                     'key': Config.API_KEY.get,
-                     'type': 'channel'}
-
-            try:
-                userinfo = json.loads(utf8_decode(urlopen(
-                    url+"?"+urlencode(query)).read()))['items']
-                if len(userinfo) > 0:
-                    snippet = userinfo[0].get('snippet', {})
-                    channel_id = snippet.get('channelId', user)
-                    username = snippet.get('title', user)
-                    user = cache_userdata(user, username, channel_id)[0]
-                else:
-                    g.message = "User {} not found.".format(c.y + user + c.w)
-                    return
-
-            except (HTTPError, URLError) as e:
-
-                g.message = "Could not retrieve information for user {}".format(
-                    c.y + user + c.w)
-                dbg('Error during channel request for user {}:\n{}'.format(
-                    user, e))
-                return
+        ret = channelfromname(user)
+        if not ret: # Error
+            return
+        user, channel_id = ret
 
     else:
         channel_id = user
@@ -2655,13 +2669,13 @@ def search(term, page=None, splash=True):
         g.last_search_query = {}
 
 
-def user_pls(user, page=1, splash=True):
+def user_pls(user, page=None, splash=True):
     """ Retrieve user playlists. """
     user = {"is_user": True, "term": user}
     return pl_search(user, page=page, splash=splash)
 
 
-def pl_search(term, page=1, splash=True, is_user=False):
+def pl_search(term, page=None, splash=True, is_user=False):
     """ Search for YouTube playlists.
 
     term can be query str or dict indicating user playlist search.
@@ -2676,57 +2690,90 @@ def pl_search(term, page=1, splash=True, is_user=False):
         is_user = term["is_user"]
         term = term["term"]
 
-    # XXX port to gdata3 [see below]
-    # generate url base on whether this is a user playlist search
-    x = "/users/%s/playlists?" % term if is_user else "/playlists/snippets?"
-    url = "https://gdata.youtube.com/feeds/api%s" % x
-    # url = "https://www.googleapis.com/youtube/v3/search"
-    # playlist search is done with the above url and param type=playlist
+    g.content = logo(c.g)
     prog = "user: " + term if is_user else term
-    logging.info("playlist search for %s", prog)
-    max_results = getxy().max_results
-    start = (page - 1) * max_results or 1
-    qs = {"start-index": start,
-          "max-results": max_results, "v": 2, 'alt': 'jsonc'}
+    g.message = "Searching playlists for %s" % c.y + prog + c.w
+    screen_update()
 
-    # modify query string based on whether this is a user playlst search.
-    if not is_user:
-        qs["q"] = term
-
-    url += urlencode(qs)
-
-    if url in g.url_memo:
-        playlists = g.url_memo[url]
+    success = True
+    if is_user:
+        ret = channelfromname(term)
+        if ret:
+            user, channel_id = ret
+        else:
+            success = False
 
     else:
-        g.content = logo(c.g)
-        g.message = "Searching playlists for %s" % c.y + prog + c.w
-        screen_update()
+        url = "https://www.googleapis.com/youtube/v3/search?"
+        # playlist search is done with the above url and param type=playlist
+        logging.info("playlist search for %s", prog)
+        max_results = getxy().max_results
+        if max_results > 50: # Limit for playlists command
+            max_results = 50
+        qs = generate_search_qs(term, page, result_count=max_results)
+        qs['type'] = 'playlist'
+
+        url += urlencode(qs)
+
+        if url in g.url_memo:
+            playlists = g.url_memo[url]
+
+        else:
+            try:
+                wpage = utf8_decode(urlopen(url).read())
+                pldata = json.loads(wpage)
+                id_list = [i.get('id', {}).get('playlistId')
+                        for i in pldata.get('items', ())]
+                store_pagetokens_from_json(pldata)
+            except HTTPError:
+                success = False
+
+    if success:
+        url = "https://www.googleapis.com/youtube/v3/playlists?"
+        qs = {'part': 'contentDetails,snippet',
+              'max-results': 50,
+              'key': Config.API_KEY.get}
+
+        if is_user:
+            if page:
+                qs['pageToken'] = page
+            qs['channelId'] = channel_id
+        else:
+            qs['id'] = ','.join(id_list)
+
+        url += urlencode(qs)
+
         try:
             wpage = utf8_decode(urlopen(url).read())
             pldata = json.loads(wpage)
             playlists = get_pl_from_json(pldata)
+            if is_user:
+                store_pagetokens_from_json(pldata)
         except HTTPError:
             playlists = None
+    else:
+        playlists = None
 
     if playlists:
         add_to_url_memo(url, playlists[::])
         g.last_search_query = {"playlists": {"term": term, "is_user": is_user}}
         g.browse_mode = "ytpl"
-        g.current_page = page
+        g.current_pagetoken = page or ''
         g.ytpls = playlists
         g.message = "Playlist results for %s" % c.y + prog + c.w
         g.content = generate_playlist_display()
 
     else:
         g.message = "No playlists found for: %s" % c.y + prog + c.w
+        g.current_pagetoken = ''
         g.content = generate_songlist_display(zeromsg=g.message)
 
 
 def get_pl_from_json(pldata):
     """ Process json playlist data. """
+
     try:
-        items = pldata['data']['items']
+        items = pldata['items']
 
     except KeyError:
         items = []
@@ -2734,14 +2781,15 @@ def get_pl_from_json(pldata):
     results = []
 
     for item in items:
+        snippet = item.get('snippet', {})
         results.append(dict(
             link=item.get("id"),
-            size=item.get("size"),
-            title=item.get("title"),
-            author=item.get("author"),
-            created=item.get("created"),
-            updated=item.get("updated"),
-            description=item.get("description")))
+            size=item.get("contentDetails", {}).get("itemCount"),
+            title=snippet.get("title"),
+            author=item.get("channelTitle"),
+            created=snippet.get("publishedAt"),
+            updated=snippet.get('publishedAt'), #XXX Not available in API?
+            description=snippet.get("description")))
 
     return results
 
@@ -4023,32 +4071,18 @@ def nextprev(np):
     if np == "n":
         max_results = getxy().max_results
         if len(content) == max_results and glsq:
-            # XXX workaround for v2/v3 pagination inconsistency
-            # can be removed as soon as playlist search is ported to v3
-            if content is g.ytpls:
-                g.current_page += 1
-            else:
-                g.current_pagetoken = get_adj_pagetoken(np)
-                good = True
+            g.current_pagetoken = get_adj_pagetoken(np)
+            good = True
 
     elif np == "p":
         if glsq:
-            # XXX workaround for v2/v3 pagination inconsistency
-            if content is g.ytpls:
-                if g.current_page > 0:
-                    g.current_page -= 1
-            elif g.page_tokens.index(g.current_pagetoken) > 0:
+            if g.page_tokens.index(g.current_pagetoken) > 0:
                 g.current_pagetoken = get_adj_pagetoken(np)
                 good = True
 
     if good:
-        # XXX workaround for v2/v3 pagination inconsistency
-        if content is g.ytpls:
-            function(query, page=g.current_page, splash=True)
-            g.message += " : page %s" % g.current_page
-        else:
-            function(query, g.current_pagetoken, splash=True)
-            g.message += " : page {}".format(g.page_tokens.index(g.current_pagetoken)+1)
+        function(query, g.current_pagetoken, splash=True)
+        g.message += " : page {}".format(g.page_tokens.index(g.current_pagetoken)+1)
 
     else:
         norp = "next" if np == "n" else "previous"
