@@ -2940,6 +2940,7 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     # filename = song.title[:59] + "." + extension
     filename = song.title + "." + extension
     filename = os.path.join(ddir, mswinfn(filename.replace("/", "-")))
+    filename = filename.replace('"', '')
     return filename
 
 
