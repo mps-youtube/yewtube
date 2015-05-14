@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 
-__version__ = "0.2.4-dev"
-__notes__ = "development version"
+__version__ = "0.2.4"
+__notes__ = "released 13 May 2015"
 __author__ = "np1"
 __license__ = "GPLv3"
 __url__ = "http://github.com/np1/mps-youtube"
@@ -725,7 +725,7 @@ class Config(object):
                          False if mswin and not has_colorama else True,
                          check_fn=check_colours)
     DOWNLOAD_COMMAND = ConfigItem("download_command", '')
-    API_KEY = ConfigItem("api_key", "AIzaSyA_4aCrX4LH41DlW5Wmh9XkciX-vjhtEMM", check_fn=check_api_key)
+    API_KEY = ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo", check_fn=check_api_key)
 
 
 class Playlist(object):
@@ -1920,8 +1920,8 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         otitle = details['title']
         details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)
-        details['category'] = g.category_names.get(details['category'],
-                                                   details['category'])
+        cat = details.get('category')
+        details['category'] = g.category_names.get(cat, cat)
         data = []
 
         for z in columns:
