@@ -91,7 +91,7 @@ def _get_terminal_size_linux():
 
     cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
 
-    if not cr:
+    if not cr or cr == (0, 0):
 
         try:
             fd = os.open(os.ctermid(), os.O_RDONLY)
@@ -101,7 +101,7 @@ def _get_terminal_size_linux():
         except:
             pass
 
-    if not cr:
+    if not cr or cr == (0, 0):
 
         try:
             cr = (os.environ['LINES'], os.environ['COLUMNS'])

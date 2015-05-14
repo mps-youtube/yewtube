@@ -1,8 +1,10 @@
-Unreleased changes, available on develop branch:
+Version 0.2.4
+13 May 2015
 
  - Fix issue with rate-limiting in "album" command (#217)
  - Implement support for MPRIS (hrnr and ids1024) (#191, #210)
  - Fix display issue with small terminal width (#215)
+ - Use version 3 of the youtube api, since version 2 was disabled
 
 -------------------------------------------------------------------------------
 
