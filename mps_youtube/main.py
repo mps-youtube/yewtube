@@ -725,7 +725,7 @@ class Config(object):
                          False if mswin and not has_colorama else True,
                          check_fn=check_colours)
     DOWNLOAD_COMMAND = ConfigItem("download_command", '')
-    API_KEY = ConfigItem("api_key", "AIzaSyA_4aCrX4LH41DlW5Wmh9XkciX-vjhtEMM", check_fn=check_api_key)
+    API_KEY = ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo", check_fn=check_api_key)
 
 
 class Playlist(object):
