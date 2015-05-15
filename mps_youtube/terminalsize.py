@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # https://gist.github.com/jtriley/1108174
 
 """ Terminal Size. """
