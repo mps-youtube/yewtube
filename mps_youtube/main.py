@@ -2730,15 +2730,15 @@ def get_pl_from_json(pldata):
     results = []
 
     for item in items:
-        snippet = item.get('snippet', {})
+        snippet = item['snippet']
         results.append(dict(
-            link=item.get("id"),
-            size=item.get("contentDetails", {}).get("itemCount"),
-            title=snippet.get("title"),
-            author=item.get("channelTitle"),
-            created=snippet.get("publishedAt"),
-            updated=snippet.get('publishedAt'), #XXX Not available in API?
-            description=snippet.get("description")))
+            link=item["id"],
+            size=item["contentDetails"]["itemCount"],
+            title=snippet["title"],
+            author=snippet["channelTitle"],
+            created=snippet["publishedAt"],
+            updated=snippet['publishedAt'], #XXX Not available in API?
+            description=snippet["description"]))
 
     return results
 
