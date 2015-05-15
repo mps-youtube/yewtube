@@ -685,6 +685,7 @@ class Config(object):
     CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=70, maxval=880,
                                check_fn=check_console_width)
     MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
+    MPV_USE_DASH = ConfigItem("mpv_use_dash", False)
     PLAYER = ConfigItem("player", "mplayer" + (".exe" if mswin else ""),
                         check_fn=check_player)
     PLAYERARGS = ConfigItem("playerargs", "")
@@ -2011,6 +2012,11 @@ def generate_real_playerargs(song, override, failcount):
             else:
                 list_update("--really-quiet", args, remove=True)
                 list_update(msglevel, args)
+
+            if Config.MPV_USE_DASH.get and Config.SHOW_VIDEO.get:
+                list_update("--ytdl-format=bestvideo+bestaudio", args)
+                url = "https://www.youtube.com/watch?v=" + song.ytid
+                return [Config.PLAYER.get] + args + [url], songdata
 
     return [Config.PLAYER.get] + args + [stream['url']], songdata
 
