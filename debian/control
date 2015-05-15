@@ -1,0 +1,21 @@
+Source: mps-youtube
+Section: utils
+Priority: extra
+Maintainer: Zlatan Todoric <zlatan@riseup.net>
+Build-Depends: debhelper (>= 9), dh-python, python, python-setuptools
+Standards-Version: 3.9.6
+Homepage: https://github.com/np1/mps-youtube
+XS-Python-Version: current
+
+Package: mps-youtube
+Architecture: any
+Depends: ${misc:Depends}, python-pafy, mplayer2 | mpv, python, ffmpeg |  avconv
+Recommends: python-notify, xclip
+XB-Python-Version: ${python:Versions}
+Provides: ${python:Provides}
+Description: Terminal based YouTube jukebox with playlist management
+ This project is a terminal based YouTube client with an interactive text 
+ interface and in-built help. It can be used to search YouTube, create local 
+ playlists to queue your favourite content, play audio or video (launched in 
+ external player) and can download YouTube content in various formats (mp4, 
+ flv, webm, ogg, m4a, m4v and 3gp).

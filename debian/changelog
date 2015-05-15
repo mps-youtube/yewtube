@@ -1,0 +1,68 @@
+mps-youtube (0.2.4-1) unstable; urgency=low
+
+  * New upstream release
+  * Read upstream CHANGELOG for upstream changes
+
+ -- Zlatan Todoric <zlatan@riseup.net>  Thu, 14 May 2015 12:26:39 +0200
+
+mps-youtube (0.2.3-1) experimental; urgency=low
+
+  * New upstream release
+  * ffmpeg | libav-tools moved to Depends
+  * added python-notify to Recommends 
+
+ -- Zlatan Todoric <zlatan@riseup.net>  Thu, 26 Feb 2015 01:13:41 +0100
+
+mps-youtube (0.2.0-1) unstable; urgency=low
+
+  * New upstream release
+  * Added Recommends: ffmpeg|libav-tools for transcoding downloaded content
+    and added xclip for copying content to clipboard
+  * Standards-Version: updated to 3.9.6
+  * Small tweak in manpage
+
+ -- Zlatan Todoric <zlatan@riseup.net>  Tue, 25 Nov 2014 15:38:26 +0100
+
+mps-youtube (0.01.46-3) unstable; urgency=low
+
+  * debian/control: added python-setuptools to Build-Depends (Closes:#761607)
+    Thanks to Santiago Torres Batan on suggestion
+  * Change in maintainers email address
+
+ -- Zlatan Todoric <zlatan@riseup.net>  Sun, 28 Sep 2014 13:25:12 +0200
+
+mps-youtube (0.01.46-2) unstable; urgency=low
+
+  * debian/control: removing virtual package as dependency, added mplayer2
+
+ -- Zlatan Todoric <zlatan.todoric@gmail.com>  Sun, 06 Jul 2014 13:12:23 +0200
+
+mps-youtube (0.01.46-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Zlatan Todoric <zlatan.todoric@gmail.com>  Tue, 27 May 2014 19:36:49 +0200
+
+mps-youtube (0.01.44-4) unstable; urgency=low
+
+  * debian/control: Updated to include mpv as other choice (Closes: #749516)
+
+ -- Zlatan Todoric <zlatan.todoric@gmail.com>  Tue, 27 May 2014 19:18:29 +0200
+
+mps-youtube (0.01.44-3) unstable; urgency=low
+
+  * debian/control: Updated package description so its more clear to user
+
+ -- Zlatan Todoric <zlatan.todoric@gmail.com>  Sat, 10 May 2014 17:42:02 +0200
+
+mps-youtube (0.01.44-2) unstable; urgency=low
+
+  * Updated manpages 
+
+ -- Zlatan Todoric <zlatan.todoric@gmail.com>  Fri, 02 May 2014 00:07:41 +0200
+
+mps-youtube (0.01.44-1) unstable; urgency=low
+
+  * Initial release (Closes: #738838) 
+
+ -- Zlatan Todoric <zlatan.todoric@gmail.com>  Wed, 12 Feb 2014 23:17:36 +0100
