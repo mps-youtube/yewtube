@@ -22,7 +22,7 @@ Features
 - Download audio/video
 - Convert to mp3 & other formats (requires ffmpeg or avconv)
 - View video comments
-- Works with Python 2.7+ and 3.x
+- Works with Python 3.x
 - Works with Windows, Linux and Mac OS X 
 - Requires mplayer or mpv
 
@@ -94,7 +94,7 @@ Installation
 
 Using `pip <http://www.pip-installer.org>`_::
     
-    [sudo] pip install mps-youtube
+    [sudo] pip3 install mps-youtube
 
 Additional Mac OS X installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -113,7 +113,7 @@ Additional Windows installation notes
 
 Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to get colors (optional)::
 
-    pip install colorama
+    pip3 install colorama
 
 Download mplayer for your CPU type from the "Build Selection table" `here <http://oss.netfarm.it/mplayer-win32.php>`_.
 
@@ -127,7 +127,7 @@ Upgrading
 
 Upgrade pip installation::
 
-    [sudo] pip install mps-youtube --upgrade
+    [sudo] pip3 install mps-youtube --upgrade
 
 Usage
 -----
