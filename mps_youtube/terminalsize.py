@@ -3,7 +3,9 @@
 """ Terminal Size. """
 
 import os
+import sys
 import shlex
+import shutil
 import struct
 import platform
 import subprocess
@@ -17,6 +19,10 @@ def get_terminal_size():
     originally retrieved from:
     http://stackoverflow.com/questions/566746/how-to-get-console-window-width-in-python
     """
+
+    if sys.version_info >= (3,3):
+        return shutil.get_terminal_size()
+
     current_os = platform.system()
     tuple_xy = None
 
