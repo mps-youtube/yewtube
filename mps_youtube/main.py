@@ -1496,8 +1496,8 @@ def mplayer_help(short=True):
 
     volume = "[{0}9{1}] volume [{0}0{1}]"
     volume = volume if short else volume + "      [{0}q{1}] return"
-    seek = u"[{0}\u2190{1}] seek [{0}\u2192{1}]"
-    pause = u"[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
+    seek = "[{0}\u2190{1}] seek [{0}\u2192{1}]"
+    pause = "[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
 
     if not_utf8_environment:
         seek = "[{0}<-{1}] seek [{0}->{1}]"
