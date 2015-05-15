@@ -138,3 +138,7 @@ mps-youtube is run on the command line using the command::
     
 Enter ``h`` from within the program for help.
 
+IRC
+---
+
+An IRC channel `#mps-youtube` for the project is available on Freenode (chat.freenode.net:6697).
