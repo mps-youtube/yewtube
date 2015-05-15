@@ -151,9 +151,9 @@ def mswinfn(filename):
 def set_window_title(title):
     """ Set terminal window title. """
     if mswin:
-        os.system("title " + title)
+        os.system(xenc("title " + title))
     else:
-        sys.stdout.write('\x1b]2;' + title + '\x07')
+        sys.stdout.write(xenc('\x1b]2;' + title + '\x07'))
 
 
 def get_default_ddir():
