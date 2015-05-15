@@ -1841,9 +1841,9 @@ def generate_playlist_display():
         return logo(c.g) + "\n\n"
 
     cw = getxy().width
-    fmtrow = "%s%-5s %s %-8s  %-2s%s\n"
-    fmthd = "%s%-5s %-{}s %-9s %-5s%s\n".format(cw - 23)
-    head = (c.ul, "Item", "Playlist", "Updated", "Count", c.w)
+    fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
+    fmthd = "%s%-5s %-{}s %-12s %-9s %-5s%s\n".format(cw - 36)
+    head = (c.ul, "Item", "Playlist", "Author", "Updated", "Count", c.w)
     out = "\n" + fmthd % head
 
     for n, x in enumerate(g.ytpls):
@@ -1851,9 +1851,10 @@ def generate_playlist_display():
         length = x.get('size') or "?"
         length = "%4s" % length
         title = x.get('title') or "unknown"
+        author = x.get('author') or "unknown"
         updated = yt_datetime(x.get('updated'))[1]
-        title = uea_pad(cw - 23, title)
-        out += (fmtrow % (col, str(n + 1), title, updated, str(length), c.w))
+        title = uea_pad(cw - 36, title)
+        out += (fmtrow % (col, str(n + 1), title, author[:12], updated, str(length), c.w))
 
     return out + "\n" * (5 - len(g.ytpls))
 
