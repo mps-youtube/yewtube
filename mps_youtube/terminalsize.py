@@ -59,8 +59,8 @@ def _get_terminal_size_windows():
             (bufx, bufy, curx, cury, wattr,
              left, top, right, bottom,
              maxx, maxy) = struct.unpack("hhhhHhhhhhh", csbi.raw)
-            sizex = right - left
-            sizey = bottom - top
+            sizex = right - left + 1
+            sizey = bottom - top + 1
             return sizex, sizey
 
     except:
