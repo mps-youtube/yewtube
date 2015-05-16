@@ -1064,6 +1064,8 @@ def init_cache():
             if 'streams' in cached:
                 g.streams = cached['streams']
                 g.username_query_cache = cached['userdata']
+                g.category_names = cached.get('categories',
+                                              g.category_names)
             else:
                 g.streams = cached
 
@@ -1073,6 +1075,42 @@ def init_cache():
             dbg(c.r + "Cache file failed to open" + c.w)
 
         prune_streams()
+        init_categories()
+
+
+def init_categories():
+    """ Update category names if outdated. """
+    timestamp = time.time()
+    idlist = []
+    for cid, item in g.category_names.items():
+        if isinstance(item, dict):
+            if item.get('updated', 0) < timestamp - 120:
+                idlist.append(cid)
+        else:
+            idlist.append(cid)
+
+    if len(idlist) > 0:
+        fetch_categories(idlist)
+
+
+def fetch_categories(idlist):
+    """ Calls API and asks for category names """
+    url = "https://www.googleapis.com/youtube/v3/videoCategories"
+    query = {'id': ','.join(idlist),
+             'part': 'snippet',
+             'key': Config.API_KEY.get}
+    url += "?" + urlencode(query)
+
+    timestamp = time.time()
+    try:
+        wdata = utf8_decode(urlopen(url).read())
+        wdata = json.loads(wdata)
+        for item in wdata['items']:
+            cid = item.get('id')
+            name = item.get('snippet', {}).get('title')
+            g.category_names[cid] = {'title':name, 'updated':timestamp}
+    except Exception:
+        dbg('Category information could not be updated.')
 
 
 def init_readline():
@@ -1145,7 +1183,8 @@ def savecache():
     """ Save stream cache. """
     caches = dict(
         streams=g.streams,
-        userdata=g.username_query_cache)
+        userdata=g.username_query_cache,
+        categories=g.category_names)
 
     with open(g.CACHEFILE, "wb") as cf:
         pickle.dump(caches, cf, protocol=2)
@@ -1602,6 +1641,7 @@ def get_tracks_from_json(jsons):
 
     # populate list of video objects
     songs = []
+    catids = []
     for item in items:
 
         try:
@@ -1630,6 +1670,7 @@ def get_tracks_from_json(jsons):
             dislikes = int(stats.get('dislikeCount', 0))
             #XXX this is a very poor attempt to calculate a rating value
             rating = 5.*likes/(likes+dislikes) if (likes+dislikes) > 0 else 0
+            category = snippet.get('categoryId')
 
             # cache video information in custom global variable store
             g.meta[ytid] = dict(
@@ -1642,13 +1683,16 @@ def get_tracks_from_json(jsons):
                 rating=str('{}'.format(rating))[:4].ljust(4, "0"),
                 uploader=snippet.get('channelId'),
                 uploaderName=snippet.get('channelTitle'),
-                category=snippet.get('categoryId'),
+                category=category,
                 aspect="custom", #XXX
                 uploaded=yt_datetime(snippet.get('publishedAt', ''))[1],
                 likes=str(num_repr(likes)),
                 dislikes=str(num_repr(dislikes)),
                 commentCount=str(num_repr(int(stats.get('commentCount', 0)))),
                 viewCount=str(num_repr(int(stats.get('viewCount', 0)))))
+
+            if not category in g.category_names:
+                catids.append(category)
 
         except Exception as e:
 
@@ -1657,6 +1701,9 @@ def get_tracks_from_json(jsons):
                 'result {}\n{}'.format(ytid, e))
 
         songs.append(cursong)
+
+    if len(catids) > 0:
+        fetch_categories(catids)
 
     # return video objects
     return songs
@@ -1906,7 +1953,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)
         cat = details.get('category') or '-'
-        details['category'] = g.category_names.get(cat, cat)
+        details['category'] = g.category_names.get(cat, {}).get('title', cat)
         data = []
 
         for z in columns:
