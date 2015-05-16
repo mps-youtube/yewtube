@@ -1905,7 +1905,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         otitle = details['title']
         details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)
-        cat = details.get('category')
+        cat = details.get('category') or '-'
         details['category'] = g.category_names.get(cat, cat)
         data = []
 
