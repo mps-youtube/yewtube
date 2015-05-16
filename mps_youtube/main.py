@@ -100,7 +100,7 @@ def member_var(x):
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
-iso8601timedurationex = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?(\d{1,2})S')
+ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?((\d{1,2})S)?')
 
 
 def getxy():
@@ -567,6 +567,7 @@ def check_console_width(val):
 
 
 def check_api_key(key):
+    """ Validate an API key by calling an API endpoint with no quota cost """
     url = "https://www.googleapis.com/youtube/v3/i18nLanguages"
     query = {"part": "snippet", "fields": "items/id", "key": key}
     try:
@@ -577,10 +578,9 @@ def check_api_key(key):
         pafy.set_api_key(Config.API_KEY.get)
 
         return dict(valid=True, message=message)
-    except HTTPError as e:
+    except HTTPError:
         message = "Invalid key or quota exceeded, '" + key + "'"
         return dict(valid=False, message=message)
-
 
 
 def check_ddir(d):
@@ -811,7 +811,38 @@ class g(object):
             "ignidx": "",
             "geo": "-geometry"}
         }
-
+    category_names = {"1": "Film & Animation",
+                      "2": "Autos & Vehicles",
+                      "10": "Music",
+                      "15": "Pets & Animals",
+                      "17": "Sports",
+                      "18": "Short Movies",
+                      "19": "Travel & Events",
+                      "20": "Gaming",
+                      "21": "Videoblogging",
+                      "22": "People & Blogs",
+                      "23": "Comedy",
+                      "24": "Entertainment",
+                      "25": "News & Politics",
+                      "26": "Howto & Style",
+                      "27": "Education",
+                      "28": "Science & Technology",
+                      "29": "Nonprofits & Activism",
+                      "30": "Movies",
+                      "31": "Anime/Animation",
+                      "32": "Action/Adventure",
+                      "33": "Classics",
+                      "34": "Comedy",
+                      "35": "Documentary",
+                      "36": "Drama",
+                      "37": "Family",
+                      "38": "Foreign",
+                      "39": "Horror",
+                      "40": "Sci-Fi/Fantasy",
+                      "41": "Thriller",
+                      "42": "Shorts",
+                      "43": "Shows",
+                      "44": "Trailers"}
 
 def get_version_info():
     """ Return version and platform info. """
@@ -1043,6 +1074,8 @@ def init_cache():
             if 'streams' in cached:
                 g.streams = cached['streams']
                 g.username_query_cache = cached['userdata']
+                g.category_names = cached.get('categories',
+                                              g.category_names)
             else:
                 g.streams = cached
 
@@ -1052,6 +1085,42 @@ def init_cache():
             dbg(c.r + "Cache file failed to open" + c.w)
 
         prune_streams()
+        init_categories()
+
+
+def init_categories():
+    """ Update category names if outdated. """
+    timestamp = time.time()
+    idlist = []
+    for cid, item in g.category_names.items():
+        if isinstance(item, dict):
+            if item.get('updated', 0) < timestamp - 120:
+                idlist.append(cid)
+        else:
+            idlist.append(cid)
+
+    if len(idlist) > 0:
+        fetch_categories(idlist)
+
+
+def fetch_categories(idlist):
+    """ Calls API and asks for category names """
+    url = "https://www.googleapis.com/youtube/v3/videoCategories"
+    query = {'id': ','.join(idlist),
+             'part': 'snippet',
+             'key': Config.API_KEY.get}
+    url += "?" + urlencode(query)
+
+    timestamp = time.time()
+    try:
+        wdata = utf8_decode(urlopen(url).read())
+        wdata = json.loads(wdata)
+        for item in wdata['items']:
+            cid = item.get('id')
+            name = item.get('snippet', {}).get('title')
+            g.category_names[cid] = {'title':name, 'updated':timestamp}
+    except Exception:
+        dbg('Category information could not be updated.')
 
 
 def init_readline():
@@ -1124,7 +1193,8 @@ def savecache():
     """ Save stream cache. """
     caches = dict(
         streams=g.streams,
-        userdata=g.username_query_cache)
+        userdata=g.username_query_cache,
+        categories=g.category_names)
 
     with open(g.CACHEFILE, "wb") as cf:
         pickle.dump(caches, cf, protocol=2)
@@ -1511,9 +1581,9 @@ def fmt_time(seconds):
 def get_track_id_from_json(item):
     """ Try to extract video Id from various response types """
     fields = ['contentDetails/videoId',
-             'snippet/resourceId/videoId',
-             'id/videoId',
-             'id']
+              'snippet/resourceId/videoId',
+              'id/videoId',
+              'id']
     for field in fields:
         node = item
         for p in field.split('/'):
@@ -1581,6 +1651,7 @@ def get_tracks_from_json(jsons):
 
     # populate list of video objects
     songs = []
+    catids = []
     for item in items:
 
         try:
@@ -1589,9 +1660,9 @@ def get_tracks_from_json(jsons):
             duration = item.get('contentDetails', {}).get('duration')
 
             if duration:
-                duration = iso8601timedurationex.findall(duration)
+                duration = ISO8601_TIMEDUR_EX.findall(duration)
                 if len(duration) > 0:
-                    _, hours, _, minutes, seconds = duration[0]
+                    _, hours, _, minutes, _, seconds = duration[0]
                     duration = [seconds, minutes, hours]
                     duration = [int(v) if len(v) > 0 else 0 for v in duration]
                     duration = sum([60**p*v for p, v in enumerate(duration)])
@@ -1607,7 +1678,9 @@ def get_tracks_from_json(jsons):
             cursong = Video(ytid=ytid, title=title, length=duration)
             likes = int(stats.get('likeCount', 0))
             dislikes = int(stats.get('dislikeCount', 0))
+            #XXX this is a very poor attempt to calculate a rating value
             rating = 5.*likes/(likes+dislikes) if (likes+dislikes) > 0 else 0
+            category = snippet.get('categoryId')
 
             # cache video information in custom global variable store
             g.meta[ytid] = dict(
@@ -1617,11 +1690,10 @@ def get_tracks_from_json(jsons):
                                                        '[!!!]')}).get('title',
                                                                       '[!]'),
                 length=str(fmt_time(cursong.length)),
-                #XXX this is a very poor attempt to calculate a rating value
                 rating=str('{}'.format(rating))[:4].ljust(4, "0"),
                 uploader=snippet.get('channelId'),
                 uploaderName=snippet.get('channelTitle'),
-                category=snippet.get('categoryId'),
+                category=category,
                 aspect="custom", #XXX
                 uploaded=yt_datetime(snippet.get('publishedAt', ''))[1],
                 likes=str(num_repr(likes)),
@@ -1629,13 +1701,19 @@ def get_tracks_from_json(jsons):
                 commentCount=str(num_repr(int(stats.get('commentCount', 0)))),
                 viewCount=str(num_repr(int(stats.get('viewCount', 0)))))
 
+            if not category in g.category_names:
+                catids.append(category)
+
         except Exception as e:
 
             dbg(json.dumps(item, indent=2))
-            dbg('Error during metadata extraction/instantiation of search '
-                +'result {}\n{}'.format(ytid, e))
+            dbg('Error during metadata extraction/instantiation of search ' +
+                'result {}\n{}'.format(ytid, e))
 
         songs.append(cursong)
+
+    if len(catids) > 0:
+        fetch_categories(catids)
 
     # return video objects
     return songs
@@ -1884,6 +1962,8 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         otitle = details['title']
         details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)
+        cat = details.get('category') or '-'
+        details['category'] = g.category_names.get(cat, {}).get('title', cat)
         data = []
 
         for z in columns:
@@ -2317,8 +2397,8 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                     except ValueError:
 
                         try:
-                            elapsed_s = int(match_object.group('elapsed_s')
-                                            or '0')
+                            elapsed_s = int(match_object.group('elapsed_s') or
+                                            '0')
 
                         except ValueError:
                             continue
@@ -2519,7 +2599,7 @@ def channelfromname(user):
     return (user, channel_id)
 
 
-def usersearch(q_user, page=None, identify='forUsername', splash=True):
+def usersearch(q_user, page=None, splash=True, identify='forUsername'):
     """ Fetch uploads by a YouTube user. """
 
     user, _, term = (x.strip() for x in q_user.partition("/"))
@@ -2559,7 +2639,7 @@ def usersearch_id(q_user, page=None, splash=True):
         failmsg = "User %s not found" % termuser[1]
     msg = str(msg).format(c.w, c.y, c.y, term, user)
 
-    have_results = _search(url, progtext, query)
+    have_results = _search(url, progtext, query, splash)
 
     if have_results:
         g.browse_mode = "normal"
@@ -2587,7 +2667,7 @@ def related_search(vitem, page=None, splash=True):
     t = vitem.title
     ttitle = t[:48].strip() + ".." if len(t) > 49 else t
 
-    have_results = _search(url, ttitle, query)
+    have_results = _search(url, ttitle, query, splash)
 
     if have_results:
         g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
@@ -2613,7 +2693,7 @@ def search(term, page=None, splash=True):
     logging.info("search for %s", term)
     url = "https://www.googleapis.com/youtube/v3/search"
     query = generate_search_qs(term, page)
-    have_results = _search(url, term, query)
+    have_results = _search(url, term, query, splash)
 
     if have_results:
         g.message = "Search results for %s%s%s" % (c.y, term, c.w)
@@ -4030,9 +4110,6 @@ def nextprev(np):
 
     good = False
 
-    #dbg('switching from current page {} to {}'.format(
-      #g.current_pagetoken, {'n':'next','p':'prev'}[np]))
-
     if np == "n":
         max_results = getxy().max_results
         if len(content) == max_results and glsq:
@@ -4066,8 +4143,9 @@ def user_more(num):
 
     g.current_pagetoken = ''
     item = g.model.songs[int(num) - 1]
-    user = g.meta.get(item.ytid, {}).get('uploader')
-    usersearch(user, identify='id')
+    channel_id = g.meta.get(item.ytid, {}).get('uploader')
+    user = g.meta.get(item.ytid, {}).get('uploaderName')
+    usersearch_id('/'.join([user, channel_id, '']), None, True)
 
 
 def related(num):
@@ -4425,7 +4503,7 @@ def _match_tracks(artist, title, mb_tracks):
                                                dtime(length)))
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
-        url = "https://www.googleapis.com/youtube/v3/search" #XXX
+        url = "https://www.googleapis.com/youtube/v3/search"
         query = generate_search_qs(w, None, result_count=50)
         dbg(query)
         have_results = _search(url, q, query, splash=False, pre_load=False)
@@ -5014,7 +5092,7 @@ command
 
  - Enable custom keymap using mplayer/mpv input.conf file (ids1024)
 
- - Enable custom downloader application (ids1024 & np1)
+ - Enable custom downloader application (ids1024 & np1){2}
 
 """.format(c.ul, c.w, c.y))]
 
