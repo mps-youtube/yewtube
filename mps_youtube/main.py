@@ -685,6 +685,8 @@ class Config(object):
 
     ORDER = ConfigItem("order", "relevance")
     ORDER.allowed_values = "relevance date views rating".split()
+    USER_ORDER = ConfigItem("user_order", "relevance")
+    USER_ORDER.allowed_values = ORDER.allowed_values
     MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
     CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=70, maxval=880,
                                check_fn=check_console_width)
@@ -2541,6 +2543,8 @@ def usersearch_id(q_user, page=None, splash=True):
     user, channel_id, term = (x.strip() for x in q_user.split("/"))
     url = "https://www.googleapis.com/youtube/v3/search"
     query = generate_search_qs(term, page=page)
+    aliases = dict(views='viewCount')  # The value of the config item is 'views' not 'viewCount'
+    query['order'] = aliases.get(Config.USER_ORDER.get, Config.USER_ORDER.get)
     query['channelId'] = channel_id
 
     termuser = tuple([c.y + x + c.w for x in (term, user)])
@@ -4954,6 +4958,7 @@ If you need to enter an actual comma on the command line, use {2},,{1} instead.
 {2}set max_res <number>{1} - play / download maximum video resolution height{3}
 {2}set notifier <notifier app>{1} - call <notifier app> with each new song title
 {2}set order <relevance|date|views|rating>{1} search result ordering
+{2}set user_order <relevance|date|views|rating>{1} user upload list result ordering
 {2}set overwrite true|false{1} - overwrite existing files (skip if false)
 {2}set player <player app>{1} - use <player app> for playback
 {2}set playerargs <args>{1} - use specified arguments with player
