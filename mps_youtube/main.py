@@ -4254,7 +4254,8 @@ def info(num):
         out += i("\nRating     : " + str(p.rating)[:4])
         out += i("\nLikes      : " + str(getattr(p, "likes", up)))
         out += i("\nDislikes   : " + str(getattr(p, "dislikes", up)))
-        out += i("\nCategory   : " + p.category)
+        out += i("\nCategory   : " + g.category_names.get(p.category,
+                 {}).get('title', p.category))
         out += i("\nLink       : " + "https://youtube.com/watch?v=%s" %
                  p.videoid)
         out += i("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
