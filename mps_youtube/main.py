@@ -1992,6 +1992,10 @@ def writeline(text):
     """ Print text on same line. """
     width = getxy().width
     spaces = width - len(text) - 1
+    if mswin:
+        # Avoids creating new line every time it is run
+        # TODO: Figure out why this is needed
+        spaces =- 1
     text = text[:width - 3]
     sys.stdout.write(" " + text + (" " * spaces) + "\r")
     sys.stdout.flush()
