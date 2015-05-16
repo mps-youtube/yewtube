@@ -100,7 +100,7 @@ def member_var(x):
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
-ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?(\d{1,2})S')
+ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?((\d{1,2})S)?')
 
 
 def getxy():
@@ -1612,7 +1612,7 @@ def get_tracks_from_json(jsons):
             if duration:
                 duration = ISO8601_TIMEDUR_EX.findall(duration)
                 if len(duration) > 0:
-                    _, hours, _, minutes, seconds = duration[0]
+                    _, hours, _, minutes, _, seconds = duration[0]
                     duration = [seconds, minutes, hours]
                     duration = [int(v) if len(v) > 0 else 0 for v in duration]
                     duration = sum([60**p*v for p, v in enumerate(duration)])
