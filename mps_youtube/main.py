@@ -572,6 +572,10 @@ def check_api_key(key):
     try:
         urlopen(url + "?" + urlencode(query)).read()
         message = "The key, '" + key + "' will now be used for API requests."
+
+        # Make pafy use the same api key
+        pafy.set_api_key(Config.API_KEY.get)
+
         return dict(valid=True, message=message)
     except HTTPError as e:
         message = "Invalid key or quota exceeded, '" + key + "'"
@@ -916,6 +920,9 @@ def init():
         t.start()
     except ImportError:
         pass
+
+    # Make pafy use the same api key
+    pafy.set_api_key(Config.API_KEY.get)
 
     process_cl_args(sys.argv)
 
