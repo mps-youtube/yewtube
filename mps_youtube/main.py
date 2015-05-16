@@ -4768,7 +4768,10 @@ if "--no-autosize" in sys.argv:
     list_update("--no-autosize", sys.argv, remove=True)
     g.detectable_size = False
 
-dbg = logging.debug
+def dbg(*args):
+    """Emit a debug message."""
+    # Uses xenc to deal with UnicodeEncodeError when writing to terminal
+    logging.debug(xenc(i) for i in args)
 
 g.helptext = [
     ("basic", "Basics", """
