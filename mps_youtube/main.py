@@ -1801,6 +1801,8 @@ def uea_pad(num, t, direction="<", notrunc=False):
     """ Right pad with spaces taking into account East Asian width chars. """
     direction = direction.strip() or "<"
 
+    t = ' '.join(t.split('\n'))
+
     if not notrunc:
         t = uea_trunc(num, t)
 
