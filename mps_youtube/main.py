@@ -1075,16 +1075,12 @@ def init_categories():
 
 def fetch_categories(idlist):
     """ Calls API and asks for category names """
-    url = "https://www.googleapis.com/youtube/v3/videoCategories"
-    query = {'id': ','.join(idlist),
-             'part': 'snippet',
-             'key': Config.API_KEY.get}
-    url += "?" + urlencode(query)
+    qs = {'id': ','.join(idlist),
+             'part': 'snippet'}
 
     timestamp = time.time()
     try:
-        wdata = utf8_decode(urlopen(url).read())
-        wdata = json.loads(wdata)
+        wdata = call_gdata('videoCategories', qs)
         for item in wdata['items']:
             cid = item.get('id')
             name = item.get('snippet', {}).get('title')
@@ -1593,6 +1589,35 @@ def store_pagetokens_from_json(jsons):
             g.page_tokens[curidx()] = page_tokens[1]
 
 
+class GdataError(Exception):
+    pass
+
+
+def call_gdata(api, qs):
+    qs = qs.copy()
+    qs['key'] = Config.API_KEY.get
+    url = "https://www.googleapis.com/youtube/v3/" + api + '?' + urlencode(qs)
+    
+    if url in g.url_memo:
+        return json.loads(g.url_memo[url])
+
+    try:
+        data = urlopen(url).read().decode()
+
+    except HTTPError as e:
+        try:
+            errdata = e.file.read().decode()
+            error = json.loads(errdata)['error']['message']
+            errmsg = 'Youtube Error %d: %s' % (e.getcode(), error)
+        except:
+            errmsg = str(e)
+        raise GdataError(errmsg)
+
+    add_to_url_memo(url, data)
+
+    return json.loads(data)
+
+
 def get_tracks_from_json(jsons):
     """ Get search results from API response """
 
@@ -1604,23 +1629,20 @@ def get_tracks_from_json(jsons):
         return False
 
     # fetch detailed information about items from videos API
-    vurl = "https://www.googleapis.com/youtube/v3/videos"
-    vurl += "?" + urlencode({'part':'contentDetails,statistics,snippet',
-                             'key': Config.API_KEY.get,
-                             'id': ','.join([get_track_id_from_json(i)
-                                             for i in items])})
+    qs = {'part':'contentDetails,statistics,snippet',
+          'id': ','.join([get_track_id_from_json(i) for i in items])}
     try:
-        wdata = utf8_decode(urlopen(vurl).read())
-        wdata = json.loads(wdata)
-        items_vidinfo = wdata.get('items', [])
-        # enhance search results by adding information from videos API response
-        for searchresult, vidinfoitem in zip(items, items_vidinfo):
-            searchresult.update(vidinfoitem)
+        wdata = call_gdata('videos', qs)
 
-    except (URLError, HTTPError) as e:
+    except GdataError as e:
         g.message = F('no data') % e
         g.content = logo(c.r)
         return
+
+    items_vidinfo = wdata.get('items', [])
+    # enhance search results by adding information from videos API response
+    for searchresult, vidinfoitem in zip(items, items_vidinfo):
+        searchresult.update(vidinfoitem)
 
     # populate list of video objects
     songs = []
@@ -2442,35 +2464,24 @@ def make_status_line(elapsed_s, prefix, songlength=0, volume=None):
     return prefix + status_line + vol_suffix
 
 
-def _search(url, progtext, qs=None, splash=True, pre_load=True):
+def _search(progtext, qs=None, splash=True, pre_load=True):
     """ Perform memoized url fetch, display progtext. """
     g.message = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
 
-    # attach query string if supplied
-    url = url + "?" + urlencode(qs) if qs else url
-    # use cached value if exists
-    if url in g.url_memo:
-        songs = g.url_memo[url]
-        dbg('load {} songs from cache for key {}'.format(len(songs), url))
-
     # show splash screen during fetch
-    else:
-        dbg('url not in cache yet: {}'.format(url))
-        if splash:
-            g.content = logo(c.b) + "\n\n"
-            screen_update()
+    if splash:
+        g.content = logo(c.b) + "\n\n"
+        screen_update()
 
-        # perform fetch
-        try:
+    # perform fetch
+    try:
+        wdata = call_gdata('search', qs)
+        songs = get_tracks_from_json(wdata)
 
-            wdata = utf8_decode(urlopen(url).read())
-            wdata = json.loads(wdata)
-            songs = get_tracks_from_json(wdata)
-
-        except (URLError, HTTPError) as e:
-            g.message = F('no data') % e
-            g.content = logo(c.r)
-            return
+    except GdataError as e:
+        g.message = F('no data') % e
+        g.content = logo(c.r)
+        return
 
     if songs and pre_load:
         # preload first result url
@@ -2479,13 +2490,10 @@ def _search(url, progtext, qs=None, splash=True, pre_load=True):
         t.start()
 
     if songs:
-        # cache results
-        add_to_url_memo(url, songs[::])
         g.model.songs = songs
         return True
 
     return False
-
 
 
 def generate_search_qs(term, page=None, result_count=None, match='term'):
@@ -2546,16 +2554,13 @@ def channelfromname(user):
         # if the user is looked for by their display name,
         # we have to sent an additional request to find their
         # channel id
-        url = "https://www.googleapis.com/youtube/v3/search"
-        query = {'part': 'id,snippet',
-                 'maxResults': 1,
-                 'q': user,
-                 'key': Config.API_KEY.get,
-                 'type': 'channel'}
+        qs = {'part': 'id,snippet',
+              'maxResults': 1,
+              'q': user,
+              'type': 'channel'}
 
         try:
-            userinfo = json.loads(utf8_decode(urlopen(
-                url+"?"+urlencode(query)).read()))['items']
+            userinfo = call_gdata('search', qs)['items']
             if len(userinfo) > 0:
                 snippet = userinfo[0].get('snippet', {})
                 channel_id = snippet.get('channelId', user)
@@ -2565,8 +2570,7 @@ def channelfromname(user):
                 g.message = "User {} not found.".format(c.y + user + c.w)
                 return
 
-        except (HTTPError, URLError) as e:
-
+        except GdataError as e:
             g.message = "Could not retrieve information for user {}".format(
                 c.y + user + c.w)
             dbg('Error during channel request for user {}:\n{}'.format(
@@ -2600,7 +2604,6 @@ def usersearch_id(q_user, page=None, splash=True):
     identified by its ID """
 
     user, channel_id, term = (x.strip() for x in q_user.split("/"))
-    url = "https://www.googleapis.com/youtube/v3/search"
     query = generate_search_qs(term, page=page)
     aliases = dict(views='viewCount')  # The value of the config item is 'views' not 'viewCount'
     query['order'] = aliases.get(Config.USER_ORDER.get, Config.USER_ORDER.get)
@@ -2617,7 +2620,7 @@ def usersearch_id(q_user, page=None, splash=True):
         failmsg = "User %s not found" % termuser[1]
     msg = str(msg).format(c.w, c.y, c.y, term, user)
 
-    have_results = _search(url, progtext, query, splash)
+    have_results = _search(progtext, query, splash)
 
     if have_results:
         g.browse_mode = "normal"
@@ -2641,11 +2644,10 @@ def related_search(vitem, page=None, splash=True):
     if query.get('category'):
         del query['category']
 
-    url = "https://www.googleapis.com/youtube/v3/search"
     t = vitem.title
     ttitle = t[:48].strip() + ".." if len(t) > 49 else t
 
-    have_results = _search(url, ttitle, query, splash)
+    have_results = _search(ttitle, query, splash)
 
     if have_results:
         g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
@@ -2669,9 +2671,8 @@ def search(term, page=None, splash=True):
         return
 
     logging.info("search for %s", term)
-    url = "https://www.googleapis.com/youtube/v3/search"
     query = generate_search_qs(term, page)
-    have_results = _search(url, term, query, splash)
+    have_results = _search(term, query, splash)
 
     if have_results:
         g.message = "Search results for %s%s%s" % (c.y, term, c.w)
@@ -2714,16 +2715,14 @@ def pl_search(term, page=None, splash=True, is_user=False):
     g.message = "Searching playlists for %s" % c.y + prog + c.w
     screen_update()
 
-    success = True
     if is_user:
         ret = channelfromname(term)
         if ret:
             user, channel_id = ret
         else:
-            success = False
+            return
 
     else:
-        url = "https://www.googleapis.com/youtube/v3/search?"
         # playlist search is done with the above url and param type=playlist
         logging.info("playlist search for %s", prog)
         max_results = getxy().max_results
@@ -2734,55 +2733,37 @@ def pl_search(term, page=None, splash=True, is_user=False):
         if 'videoCategoryId' in qs:
             del qs['videoCategoryId'] # Incompatable with type=playlist
 
-        url += urlencode(qs)
+        try:
+            pldata = call_gdata('search', qs)
+            id_list = [i.get('id', {}).get('playlistId')
+                        for i in pldata.get('items', ())]
+            store_pagetokens_from_json(pldata)
+        except GdataError as e:
+            g.message = F('no data') % e
+            g.content = logo(c.r)
+            return
 
-        if url in g.url_memo:
-            id_list = g.url_memo[url]
+    qs = {'part': 'contentDetails,snippet',
+          'maxResults': 50}
 
-        else:
-            try:
-                wpage = utf8_decode(urlopen(url).read())
-                pldata = json.loads(wpage)
-                id_list = [i.get('id', {}).get('playlistId')
-                           for i in pldata.get('items', ())]
-                store_pagetokens_from_json(pldata)
-                add_to_url_memo(url, id_list[::])
-            except HTTPError:
-                success = False
-
-    if success:
-        url = "https://www.googleapis.com/youtube/v3/playlists?"
-        qs = {'part': 'contentDetails,snippet',
-              'maxResults': 50,
-              'key': Config.API_KEY.get}
-
-        if is_user:
-            if page:
-                qs['pageToken'] = page
-            qs['channelId'] = channel_id
-        else:
-            qs['id'] = ','.join(id_list)
-
-        url += urlencode(qs)
-
-        if url in g.url_memo:
-            playlists = g.url_memo[url]
-
-        else:
-
-            try:
-                wpage = utf8_decode(urlopen(url).read())
-                pldata = json.loads(wpage)
-                playlists = get_pl_from_json(pldata)
-                if is_user:
-                    store_pagetokens_from_json(pldata)
-            except HTTPError:
-                playlists = None
+    if is_user:
+        if page:
+            qs['pageToken'] = page
+        qs['channelId'] = channel_id
     else:
-        playlists = None
+        qs['id'] = ','.join(id_list)
+
+    try:
+        pldata = call_gdata('playlists', qs)
+        playlists = get_pl_from_json(pldata)
+        if is_user:
+            store_pagetokens_from_json(pldata)
+    except GdataError as e:
+        g.message = F('no data') % e
+        g.content = logo(c.r)
+        return
 
     if playlists:
-        add_to_url_memo(url, playlists[::])
         g.last_search_query = {"playlists": {"term": term, "is_user": is_user}}
         g.browse_mode = "ytpl"
         g.current_pagetoken = page or ''
@@ -2893,29 +2874,19 @@ def fetch_comments(item):
     qs = {'textFormat': 'plainText',
           'videoId': ytid,
           'maxResults': 50,
-          'part': 'snippet',
-          'key': Config.API_KEY.get}
-    url = ("https://www.googleapis.com/youtube/v3/commentThreads?" +
-           urlencode(qs))
+          'part': 'snippet'}
 
     # XXX should comment threads be expanded? this would require
     # additional requests for comments responding on top level comments
 
-    if url not in g.url_memo:
+    try:
+        jsdata = call_gdata('commentThreads', qs)
 
-        try:
-            raw = utf8_decode(urlopen(url).read())
-            add_to_url_memo(url, raw)
+    except GdataError as e:
+        g.message = "No comments for %s\n%s" % (item.title[:50], e)
+        g.content = generate_songlist_display()
+        return
 
-        except HTTPError:
-            g.message = "No comments for %s" % item.title[:50]
-            g.content = generate_songlist_display()
-            return
-
-    else:
-        raw = g.url_memo[url]
-
-    jsdata = json.loads(raw)
     coms = jsdata.get('items', [])
     coms = [x.get('snippet', {}) for x in coms]
     coms = [x.get('topLevelComment', {}) for x in coms]
@@ -4510,10 +4481,9 @@ def _match_tracks(artist, title, mb_tracks):
                                                dtime(length)))
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
-        url = "https://www.googleapis.com/youtube/v3/search"
         query = generate_search_qs(w, None, result_count=50)
         dbg(query)
-        have_results = _search(url, q, query, splash=False, pre_load=False)
+        have_results = _search(q, query, splash=False, pre_load=False)
         time.sleep(0.5)
 
         if not have_results:
