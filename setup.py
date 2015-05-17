@@ -13,7 +13,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-setup(
+options = dict(
     name="mps-youtube",
     version="0.2.4",
     description="Terminal based YouTube player and downloader",
@@ -52,5 +52,18 @@ setup(
         "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
     ],
+    options={"py2exe": {"excludes": "readline, win32api, win32con, xerox",
+                       "bundle_files": 1}},
     long_description=open("README.rst").read()
 )
+
+try:
+    import py2exe
+    # Only setting these when py2exe imports successfully prevents warnings
+    # in easy_install
+    options['console'] = ['mpsyt']
+    options['zipfile'] = None
+except ImportError:
+    pass
+
+setup(**options)
