@@ -1062,10 +1062,7 @@ def init_categories():
     timestamp = time.time()
     idlist = []
     for cid, item in g.category_names.items():
-        if isinstance(item, dict):
-            if item.get('updated', 0) < timestamp - 120:
-                idlist.append(cid)
-        else:
+        if item.get('updated', 0) < timestamp - 120:
             idlist.append(cid)
 
     if len(idlist) > 0:
