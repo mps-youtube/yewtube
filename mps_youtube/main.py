@@ -1801,6 +1801,8 @@ def uea_pad(num, t, direction="<", notrunc=False):
     """ Right pad with spaces taking into account East Asian width chars. """
     direction = direction.strip() or "<"
 
+    t = ' '.join(t.split('\n'))
+
     if not notrunc:
         t = uea_trunc(num, t)
 
@@ -1839,9 +1841,9 @@ def generate_playlist_display():
         return logo(c.g) + "\n\n"
 
     cw = getxy().width
-    fmtrow = "%s%-5s %s %-8s  %-2s%s\n"
-    fmthd = "%s%-5s %-{}s %-9s %-5s%s\n".format(cw - 23)
-    head = (c.ul, "Item", "Playlist", "Updated", "Count", c.w)
+    fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
+    fmthd = "%s%-5s %-{}s %-12s %-9s %-5s%s\n".format(cw - 36)
+    head = (c.ul, "Item", "Playlist", "Author", "Updated", "Count", c.w)
     out = "\n" + fmthd % head
 
     for n, x in enumerate(g.ytpls):
@@ -1849,9 +1851,10 @@ def generate_playlist_display():
         length = x.get('size') or "?"
         length = "%4s" % length
         title = x.get('title') or "unknown"
+        author = x.get('author') or "unknown"
         updated = yt_datetime(x.get('updated'))[1]
-        title = uea_pad(cw - 23, title)
-        out += (fmtrow % (col, str(n + 1), title, updated, str(length), c.w))
+        title = uea_pad(cw - 36, title)
+        out += (fmtrow % (col, str(n + 1), title, author[:12], updated, str(length), c.w))
 
     return out + "\n" * (5 - len(g.ytpls))
 
@@ -2508,8 +2511,6 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
 
     if page:
         qs['pageToken'] = page
-    else:
-        g.current_pagetoken = ''
 
     if Config.SEARCH_MUSIC.get:
         qs['videoCategoryId'] = 10
@@ -2736,22 +2737,23 @@ def pl_search(term, page=None, splash=True, is_user=False):
         url += urlencode(qs)
 
         if url in g.url_memo:
-            playlists = g.url_memo[url]
+            id_list = g.url_memo[url]
 
         else:
             try:
                 wpage = utf8_decode(urlopen(url).read())
                 pldata = json.loads(wpage)
                 id_list = [i.get('id', {}).get('playlistId')
-                        for i in pldata.get('items', ())]
+                           for i in pldata.get('items', ())]
                 store_pagetokens_from_json(pldata)
+                add_to_url_memo(url, id_list[::])
             except HTTPError:
                 success = False
 
     if success:
         url = "https://www.googleapis.com/youtube/v3/playlists?"
         qs = {'part': 'contentDetails,snippet',
-              'max-results': 50,
+              'maxResults': 50,
               'key': Config.API_KEY.get}
 
         if is_user:
@@ -2763,14 +2765,19 @@ def pl_search(term, page=None, splash=True, is_user=False):
 
         url += urlencode(qs)
 
-        try:
-            wpage = utf8_decode(urlopen(url).read())
-            pldata = json.loads(wpage)
-            playlists = get_pl_from_json(pldata)
-            if is_user:
-                store_pagetokens_from_json(pldata)
-        except HTTPError:
-            playlists = None
+        if url in g.url_memo:
+            playlists = g.url_memo[url]
+
+        else:
+
+            try:
+                wpage = utf8_decode(urlopen(url).read())
+                pldata = json.loads(wpage)
+                playlists = get_pl_from_json(pldata)
+                if is_user:
+                    store_pagetokens_from_json(pldata)
+            except HTTPError:
+                playlists = None
     else:
         playlists = None
 
@@ -4061,7 +4068,9 @@ def get_adj_pagetoken(np):
     """ Get page token either previous (p) or next (n) to currently displayed one """
     delta = ['p', None, 'n'].index(np) - 1
     pt_index = g.page_tokens.index(g.current_pagetoken) + delta
-    return g.page_tokens[pt_index]
+    if pt_index in range(len(g.page_tokens)):
+        return g.page_tokens[pt_index]
+    return None
 
 
 
@@ -4091,8 +4100,10 @@ def nextprev(np):
     if np == "n":
         max_results = getxy().max_results
         if len(content) == max_results and glsq:
-            g.current_pagetoken = get_adj_pagetoken(np)
-            good = True
+            pagetoken = get_adj_pagetoken(np)
+            if pagetoken:
+                g.current_pagetoken = pagetoken
+                good = True
 
     elif np == "p":
         if glsq:
