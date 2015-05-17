@@ -62,7 +62,7 @@ except ImportError:
 
 try:
     from setuptools import setup
-    options['entry_points'] = {'console_scripts':
+    options['entry_points'] = {console_scripts:
             ['mpsyt = mps_youtube:main.main']}
     options['install_requires'] = ['pafy >= 0.3.72']
 
