@@ -7,6 +7,12 @@ https://np1.github.com/mps-youtube
 python setup.py sdist bdist_wheel
 """
 
+try:
+    from setuptools import setup
+
+except ImportError:
+    from distutils.core import setup
+
 options = dict(
     name="mps-youtube",
     version="0.2.4",
@@ -17,6 +23,8 @@ options = dict(
     url="http://github.com/np1/mps-youtube",
     download_url="https://github.com/np1/mps-youtube/tarball/master",
     packages=['mps_youtube'],
+    entry_points=dict(console_scripts=['mpsyt = mps_youtube:main.main']),
+    install_requires=['pafy >= 0.3.72'],
     package_data={"": ["LICENSE", "README.rst", "CHANGELOG"]},
     classifiers=[
         "Topic :: Utilities",
@@ -59,15 +67,5 @@ try:
     options['zipfile'] = None
 except ImportError:
     pass
-
-try:
-    from setuptools import setup
-    options['entry_points'] = {console_scripts:
-            ['mpsyt = mps_youtube:main.main']}
-    options['install_requires'] = ['pafy >= 0.3.72']
-
-except ImportError:
-    from distutils.core import setup
-    options['scripts'] = ['mpsyt']
 
 setup(**options)
