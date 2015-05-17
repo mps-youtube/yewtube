@@ -2736,15 +2736,16 @@ def pl_search(term, page=None, splash=True, is_user=False):
         url += urlencode(qs)
 
         if url in g.url_memo:
-            playlists = g.url_memo[url]
+            id_list = g.url_memo[url]
 
         else:
             try:
                 wpage = utf8_decode(urlopen(url).read())
                 pldata = json.loads(wpage)
                 id_list = [i.get('id', {}).get('playlistId')
-                        for i in pldata.get('items', ())]
+                           for i in pldata.get('items', ())]
                 store_pagetokens_from_json(pldata)
+                add_to_url_memo(url, id_list[::])
             except HTTPError:
                 success = False
 
@@ -2763,14 +2764,19 @@ def pl_search(term, page=None, splash=True, is_user=False):
 
         url += urlencode(qs)
 
-        try:
-            wpage = utf8_decode(urlopen(url).read())
-            pldata = json.loads(wpage)
-            playlists = get_pl_from_json(pldata)
-            if is_user:
-                store_pagetokens_from_json(pldata)
-        except HTTPError:
-            playlists = None
+        if url in g.url_memo:
+            playlists = g.url_memo[url]
+
+        else:
+
+            try:
+                wpage = utf8_decode(urlopen(url).read())
+                pldata = json.loads(wpage)
+                playlists = get_pl_from_json(pldata)
+                if is_user:
+                    store_pagetokens_from_json(pldata)
+            except HTTPError:
+                playlists = None
     else:
         playlists = None
 
