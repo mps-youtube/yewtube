@@ -1,9 +1,6 @@
 mps-youtube
 ===========
 
-.. image:: https://landscape.io/github/np1/mps-youtube/develop/landscape.svg
-    :target: https://landscape.io/github/np1/mps-youtube/develop
-    :alt: Code Health
 .. image:: http://badge.fury.io/py/mps-youtube.png
     :target: https://pypi.python.org/pypi/mps-youtube
 .. image:: https://pypip.in/d/mps-youtube/badge.png
