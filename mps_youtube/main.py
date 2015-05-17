@@ -1333,6 +1333,9 @@ def init_text():
         'invalid range_': (c.r, c.w),
         '-audio': "*Warning* - the filetype you selected (m4v) has no audio!",
         '-audio_': (c.y, c.w),
+        'no mix': 'No mix is available for the selected video',
+        'mix only videos': 'Mixes are only available for videos',
+        'invalid item': '*Invalid item entered!*',
 
         # Info messages..
 
@@ -4171,16 +4174,21 @@ def clip_copy(num):
         g.content = generate_songlist_display()
 
 def mix(num):
+    """ Retrieves the YouTube mix for the selected video. """
+    g.content = g.content or generate_songlist_display()
     if g.browse_mode != "normal":
-        g.content = "Mix is only appropriate for video items"
+       g.message = F('mix only videos')
     else:
         item = (g.model.songs[int(num) - 1])
         if item is None:
-            g.content = "Invalid choice"
+            g.message = F('invalid item')
             return
         item = get_pafy(item)
         # Mix playlists are made up of 'RD' + video_id
-        plist("RD" + item.videoid)
+        try:
+            plist("RD" + item.videoid)
+        except OSError:
+            g.message = F('no mix')
 
 
 def info(num):
