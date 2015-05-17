@@ -20,6 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+# python2 compatibility (for landscape)
+from __future__ import print_function
+
 __version__ = "0.2.5-dev"
 __notes__ = "development version"
 __author__ = "np1"
@@ -1060,9 +1063,10 @@ def init_cache():
 def init_categories():
     """ Update category names if outdated. """
     timestamp = time.time()
+    expire = 2*24*60*60
     idlist = []
     for cid, item in g.category_names.items():
-        if item.get('updated', 0) < timestamp - 120:
+        if item.get('updated', 0) < timestamp - expire:
             idlist.append(cid)
 
     if len(idlist) > 0:
