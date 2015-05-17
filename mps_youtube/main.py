@@ -2724,10 +2724,9 @@ def pl_search(term, page=None, splash=True, is_user=False):
 
     if is_user:
         ret = channelfromname(term)
-        if ret:
-            user, channel_id = ret
-        else:
+        if not ret: # Error
             return
+        user, channel_id = ret
 
     else:
         # playlist search is done with the above url and param type=playlist
