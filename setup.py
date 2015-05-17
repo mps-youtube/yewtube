@@ -7,11 +7,7 @@ https://np1.github.com/mps-youtube
 python setup.py sdist bdist_wheel
 """
 
-try:
-    from setuptools import setup
-
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup
 
 options = dict(
     name="mps-youtube",
