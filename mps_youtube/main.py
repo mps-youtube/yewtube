@@ -2578,8 +2578,8 @@ def channelfromname(user):
                 return
 
         except GdataError as e:
-            g.message = "Could not retrieve information for user {}".format(
-                c.y + user + c.w)
+            g.message = "Could not retrieve information for user {}\n{}".format(
+                c.y + user + c.w, e)
             dbg('Error during channel request for user {}:\n{}'.format(
                 user, e))
             return
