@@ -3437,8 +3437,9 @@ def play(pre, choice, post=""):
     if g.browse_mode == "ytpl":
 
         if choice.isdigit():
-            return plist(g.ytpls[int(choice) - 1]['link'])
-
+            g.message = (g.ytpls[int(choice) - 1]['link'])
+            #return plist(g.ytpls[int(choice) - 1]['link'])
+            return
         else:
             g.message = "Invalid playlist selection: %s" % c.y + choice + c.w
             g.content = generate_songlist_display()
@@ -4167,6 +4168,18 @@ def clip_copy(num):
         g.message += "see https://pypi.python.org/pypi/xerox/"
         g.content = generate_songlist_display()
 
+def mix(num):
+    if g.browse_mode != "normal":
+        g.content = "Mix is only appropriate for video items"
+    else:
+        item = (g.model.songs[int(num) - 1])
+        if item is None:
+            g.content = "Invalid choice"
+            return
+        item = get_pafy(item)
+        # Mix playlists are made up of 'RD' + video_id
+        plist("RD" + item.videoid)
+
 
 def info(num):
     """ Get video description. """
@@ -4315,7 +4328,7 @@ def plist(parturl, page=1, splash=True, dumps=False):
 
     if splash:
         g.content = logo(col=c.b)
-        g.message = "Retreiving YouTube playlist"
+        g.message = "Retrieving YouTube playlist"
         screen_update()
 
     dbg("%sFetching playlist using pafy%s", c.y, c.w)
@@ -4731,6 +4744,7 @@ def main():
     regx = {
         ls: r'ls$',
         vp: r'vp$',
+        mix: r'mix\s*(\d{1,4})$',
         dump: r'(un)?dump',
         play: r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' % (rs, rs),
         info: r'i\s*(\d{1,4})$',
@@ -4885,6 +4899,7 @@ Then, when results are shown:
 {2}sw <number>,<number>{1} - swap two items.
 {2}mv <number>,<number>{1} - move item <number> to position <number>.
 {2}save <name>{1} - save displayed items as a local playlist.
+{2}mix <number>{1} - show YouTube mix playlist from item in results.
 
 {2}shuffle{1} - Shuffle the displayed results.
 """.format(c.ul, c.w, c.y)),
