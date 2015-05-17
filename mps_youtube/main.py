@@ -4482,7 +4482,6 @@ def _match_tracks(artist, title, mb_tracks):
         query = generate_search_qs(w, None, result_count=50)
         dbg(query)
         have_results = _search(q, query, splash=False, pre_load=False)
-        time.sleep(0.5)
 
         if not have_results:
             xprint(c.r + "Nothing matched :(\n" + c.w)
