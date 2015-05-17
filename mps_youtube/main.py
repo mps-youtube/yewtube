@@ -4177,7 +4177,7 @@ def mix(num):
     """ Retrieves the YouTube mix for the selected video. """
     g.content = g.content or generate_songlist_display()
     if g.browse_mode != "normal":
-       g.message = F('mix only videos')
+        g.message = F('mix only videos')
     else:
         item = (g.model.songs[int(num) - 1])
         if item is None:
