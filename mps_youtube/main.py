@@ -2510,8 +2510,6 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
 
     if page:
         qs['pageToken'] = page
-    else:
-        g.current_pagetoken = ''
 
     if Config.SEARCH_MUSIC.get:
         qs['videoCategoryId'] = 10
@@ -4067,7 +4065,9 @@ def get_adj_pagetoken(np):
     """ Get page token either previous (p) or next (n) to currently displayed one """
     delta = ['p', None, 'n'].index(np) - 1
     pt_index = g.page_tokens.index(g.current_pagetoken) + delta
-    return g.page_tokens[pt_index]
+    if pt_index in range(len(g.page_tokens)):
+        return g.page_tokens[pt_index]
+    return None
 
 
 
@@ -4097,8 +4097,10 @@ def nextprev(np):
     if np == "n":
         max_results = getxy().max_results
         if len(content) == max_results and glsq:
-            g.current_pagetoken = get_adj_pagetoken(np)
-            good = True
+            pagetoken = get_adj_pagetoken(np)
+            if pagetoken:
+                g.current_pagetoken = pagetoken
+                good = True
 
     elif np == "p":
         if glsq:
