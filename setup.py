@@ -52,7 +52,9 @@ options = dict(
         "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
     ],
-    options={"py2exe": {"excludes": "readline, win32api, win32con, xerox",
+    options={"py2exe": {"excludes": "readline, win32api, win32con, xerox, "
+	                            "dbus, gi, urllib.unquote_plus, "
+				    "urllib.urlencode",
                        "bundle_files": 1}},
     long_description=open("README.rst").read()
 )
