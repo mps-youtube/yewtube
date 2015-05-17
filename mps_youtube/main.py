@@ -1091,10 +1091,11 @@ def init_cache():
 def init_categories():
     """ Update category names if outdated. """
     timestamp = time.time()
+    expire = 2*24*60*60
     idlist = []
     for cid, item in g.category_names.items():
         if isinstance(item, dict):
-            if item.get('updated', 0) < timestamp - 120:
+            if item.get('updated', 0) < timestamp - expire:
                 idlist.append(cid)
         else:
             idlist.append(cid)
