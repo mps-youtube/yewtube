@@ -2730,6 +2730,8 @@ def pl_search(term, page=None, splash=True, is_user=False):
             max_results = 50
         qs = generate_search_qs(term, page, result_count=max_results)
         qs['type'] = 'playlist'
+        if 'videoCategoryId' in qs:
+            del qs['videoCategoryId'] # Incompatable with type=playlist
 
         url += urlencode(qs)
 
