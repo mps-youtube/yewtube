@@ -1590,10 +1590,12 @@ def store_pagetokens_from_json(jsons):
 
 
 class GdataError(Exception):
+    """Gdata query failed."""
     pass
 
 
 def call_gdata(api, qs):
+    """Make a request to the youtube gdata api."""
     qs = qs.copy()
     qs['key'] = Config.API_KEY.get
     url = "https://www.googleapis.com/youtube/v3/" + api + '?' + urlencode(qs)
@@ -1613,7 +1615,12 @@ def call_gdata(api, qs):
             errmsg = str(e)
         raise GdataError(errmsg)
 
-    add_to_url_memo(url, data)
+    # Add to url memo, ensure url memo doesn't get too big.
+    dbg('Cache data for query url {}:'.format(url))
+    g.url_memo[url] = data
+
+    while len(g.url_memo) > 300:
+        g.url_memo.popitem(last=False)
 
     return json.loads(data)
 
@@ -2851,15 +2858,6 @@ def paginate(items, pagesize, spacing=2, delim_fn=None):
         pages.append(currentpage)
 
     return pages
-
-
-def add_to_url_memo(key, value):
-    """ Add to url memo, ensure url memo doesn't get too big. """
-    dbg('Cache data for query url {}:'.format(key))
-    g.url_memo[key] = value
-
-    while len(g.url_memo) > 300:
-        g.url_memo.popitem(last=False)
 
 
 def fetch_comments(item):
