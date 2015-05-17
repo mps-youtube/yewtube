@@ -1,7 +1,7 @@
 mps-youtube
 ===========
 
-.. image:: http://badge.fury.io/py/mps-youtube.png
+.. image:: https://img.shields.io/pypi/v/mps-youtube.svg
     :target: https://pypi.python.org/pypi/mps-youtube
 .. image:: https://pypip.in/d/mps-youtube/badge.png
     :target: https://pypi.python.org/pypi/mps-youtube
