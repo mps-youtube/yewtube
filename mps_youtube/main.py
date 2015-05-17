@@ -2751,7 +2751,7 @@ def pl_search(term, page=None, splash=True, is_user=False):
     if success:
         url = "https://www.googleapis.com/youtube/v3/playlists?"
         qs = {'part': 'contentDetails,snippet',
-              'max-results': 50,
+              'maxResults': 50,
               'key': Config.API_KEY.get}
 
         if is_user:
