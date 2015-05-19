@@ -1052,6 +1052,9 @@ def init_cache():
             else:
                 g.streams = cached
 
+            if 'pafy' in cached:
+                pafy.load_cache(cached['pafy'])
+
             dbg(c.g + "%s cached streams imported%s", str(len(g.streams)), c.w)
 
         except (EOFError, IOError):
@@ -1201,7 +1204,8 @@ def savecache():
     caches = dict(
         streams=g.streams,
         userdata=g.username_query_cache,
-        categories=g.category_names)
+        categories=g.category_names,
+        pafy=pafy.dump_cache())
 
     with open(g.CACHEFILE, "wb") as cf:
         pickle.dump(caches, cf, protocol=2)
@@ -4269,8 +4273,7 @@ def info(num):
         out += i("\nRating     : " + str(p.rating)[:4])
         out += i("\nLikes      : " + str(getattr(p, "likes", up)))
         out += i("\nDislikes   : " + str(getattr(p, "dislikes", up)))
-        out += i("\nCategory   : " + g.category_names.get(p.category,
-                 {}).get('title', p.category))
+        out += i("\nCategory   : " + str(p.category))
         out += i("\nLink       : " + "https://youtube.com/watch?v=%s" %
                  p.videoid)
         out += i("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
