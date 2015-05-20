@@ -1616,7 +1616,7 @@ def call_gdata(api, qs):
     qs = qs.copy()
     qs['key'] = Config.API_KEY.get
     url = "https://www.googleapis.com/youtube/v3/" + api + '?' + urlencode(qs)
-    
+
     if url in g.url_memo:
         return json.loads(g.url_memo[url])
 
@@ -1760,13 +1760,16 @@ def screen_update(fill_blank=True):
     if g.content:
         xprint(g.content)
 
-    if g.message:
-        xprint(g.message)
+    if g.message or g.rprompt:
+        out = g.message or ''
+        blanks = getxy().width - len(out) - len(g.rprompt or '')
+        out += ' ' * blanks + (g.rprompt or '')
+        xprint(out)
 
     elif fill_blank:
         xprint("")
 
-    g.message = g.content = False
+    g.message = g.content = g.rprompt = False
 
 
 def playback_progress(idx, allsongs, repeat=False):
@@ -1899,6 +1902,7 @@ def generate_playlist_display():
     if not g.ytpls:
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
+    g.rprompt = page_msg(g.current_page)
 
     cw = getxy().width
     fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
@@ -1980,6 +1984,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     if not songs:
         g.message = zeromsg or "Enter /search-term to search or [h]elp"
         return logo(c.g) + "\n\n"
+    g.rprompt = page_msg(g.current_page)
 
     have_meta = all(x.ytid in g.meta for x in songs)
     user_columns = get_user_columns() if have_meta else []
