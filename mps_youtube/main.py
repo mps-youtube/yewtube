@@ -780,6 +780,8 @@ class g(object):
     model = Playlist(name="model")
     last_search_query = {}
     current_page = 0
+    result_count = 0
+    rprompt = None
     active = Playlist(name="active")
     text = {}
     userpl = {}
@@ -1640,10 +1642,22 @@ def call_gdata(api, qs):
     return json.loads(data)
 
 
+def get_page_info_from_json(jsons, result_count=None):
+    """ Extract & save some information about result count and paging. """
+    g.more_pages = jsons.get('nextPageToken')
+    if result_count:
+        if result_count < getxy().max_results:
+            g.more_pages = False
+    pageinfo = jsons.get('pageInfo')
+    per_page = pageinfo.get('resultsPerPage')
+    g.result_count = pageinfo.get('totalResults')
+    if result_count: # limit number of results, e.g. if api makes it up
+        if result_count < per_page:
+          g.result_count = min(g.result_count, result_count)
+
+
 def get_tracks_from_json(jsons):
     """ Get search results from API response """
-
-    g.more_pages = jsons.get('nextPageToken')
 
     items = jsons.get("items")
     if not items:
@@ -1731,6 +1745,8 @@ def get_tracks_from_json(jsons):
 
     if len(catids) > 0:
         fetch_categories(catids)
+
+    get_page_info_from_json(jsons, len(songs))
 
     # return video objects
     return songs
@@ -1936,6 +1952,21 @@ def get_user_columns():
                 ret.append(dict(name=nm, size=sz, heading=hd))
 
     return ret
+
+
+def page_msg(page=0):
+    """ Format information about currently displayed page to a string. """
+    max_results = getxy().max_results
+    page_count = max(int(min(g.result_count, 500)/max_results) + 1, 1)
+    if page_count > 1:
+        pagemsg = "{}{}/{}{}"
+        #start_index = max_results * g.current_page
+        return pagemsg.format('<' if page > 0 else '[',
+                              "%s%s%s" % (c.y, page+1, c.w),
+                              page_count,
+                              '>' if g.more_pages
+                              or page < page_count else ']')
+    return None
 
 
 def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
@@ -2761,9 +2792,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
     else:
         # playlist search is done with the above url and param type=playlist
         logging.info("playlist search for %s", prog)
-        max_results = getxy().max_results
-        if max_results > 50: # Limit for playlists command
-            max_results = 50
+        max_results = min(getxy().max_results, 50) # Limit for playlists command
         qs = generate_search_qs(term, page, result_count=max_results)
         qs['type'] = 'playlist'
         if 'videoCategoryId' in qs:
@@ -2771,9 +2800,10 @@ def pl_search(term, page=0, splash=True, is_user=False):
 
         try:
             pldata = call_gdata('search', qs)
-            g.more_pages = pldata.get('nextPageToken')
             id_list = [i.get('id', {}).get('playlistId')
                         for i in pldata.get('items', ())]
+            # page info
+            get_page_info_from_json(pldata, len(id_list))
         except GdataError as e:
             g.message = F('no data') % e
             g.content = logo(c.r)
