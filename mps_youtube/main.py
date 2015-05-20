@@ -1653,7 +1653,7 @@ def get_page_info_from_json(jsons, result_count=None):
     g.result_count = pageinfo.get('totalResults')
     if result_count: # limit number of results, e.g. if api makes it up
         if result_count < per_page:
-          g.result_count = min(g.result_count, result_count)
+            g.result_count = min(g.result_count, result_count)
 
 
 def get_tracks_from_json(jsons):
@@ -1968,8 +1968,7 @@ def page_msg(page=0):
         return pagemsg.format('<' if page > 0 else '[',
                               "%s%s%s" % (c.y, page+1, c.w),
                               page_count,
-                              '>' if g.more_pages
-                              or page < page_count else ']')
+                              ']>'[int(g.more_pages or (page < page_count))])
     return None
 
 
@@ -2783,10 +2782,11 @@ def pl_search(term, page=0, splash=True, is_user=False):
         is_user = term["is_user"]
         term = term["term"]
 
-    g.content = logo(c.g)
-    prog = "user: " + term if is_user else term
-    g.message = "Searching playlists for %s" % c.y + prog + c.w
-    screen_update()
+    if splash:
+        g.content = logo(c.g)
+        prog = "user: " + term if is_user else term
+        g.message = "Searching playlists for %s" % c.y + prog + c.w
+        screen_update()
 
     if is_user:
         ret = channelfromname(term)
@@ -4640,8 +4640,10 @@ def search_album(term, page=0, splash=True):
     out += ("[Enter] to continue, [q] to abort, or enter artist name for:\n"
             "    %s" % (c.y + term + c.w + "\n"))
 
-    g.message, g.content = out, logo(c.b)
-    screen_update()
+    if splash:
+        g.message, g.content = out, logo(c.b)
+        screen_update()
+
     prompt = "Artist? [%s] > " % album['artist']
     xprint(prompt, end="")
     artistentry = input().strip()
