@@ -4093,10 +4093,11 @@ def add_rm_all(action):
         songlist_rm_add("add", "-" + str(size))
 
 
-def nextprev(np):
+def nextprev(np, page=None):
     """ Get next / previous search results. """
     glsq = g.last_search_query
     content = g.model.songs
+    max_results = getxy().max_results
 
     if "user" in g.last_search_query:
         function, query = usersearch_id, glsq['user']
@@ -4117,7 +4118,6 @@ def nextprev(np):
     good = False
 
     if np == "n":
-        max_results = getxy().max_results
         if len(content) == max_results and glsq:
             if (g.current_page + 1) * max_results < 500:
                 if g.more_pages:
@@ -4125,12 +4125,17 @@ def nextprev(np):
                     good = True
 
     elif np == "p":
-        if g.current_page > 0 and g.last_search_query:
+
+        if page and int(page) in range(1,20):
+            g.current_page = int(page)-1
+            good = True
+
+        elif g.current_page > 0 and g.last_search_query:
             g.current_page -= 1
             good = True
 
     if good:
-        function(query, g.current_page, splash=True)
+        function(query, page=g.current_page, splash=True)
         g.message += " : page {}".format(g.current_page + 1)
 
     else:
@@ -4799,7 +4804,7 @@ def main():
         download: r'(dv|da|d|dl|download)\s*(\d{1,4})$',
         play_url: r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
         comments: r'c\s?(\d{1,4})$',
-        nextprev: r'(n|p)$',
+        nextprev: r'(n|p)\s*(\d{1,2})?$',
         play_all: r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
         user_pls: r'u(?:ser)?pl\s(.*)$',
         save_last: r'save\s*$',
@@ -4920,6 +4925,7 @@ Then, when results are shown:
 {2}//<query>{1} or {2}..<query>{1} - search for YouTube playlists. e.g., \
 {2}//80's music{1}
 {2}n{1} and {2}p{1} - continue search to next/previous pages.
+{2}p <number>{1} - switch to page <number>.
 
 {2}album <album title>{1} - Search for matching tracks using album title
 {2}user <username>{1} - list YouTube uploads by <username>.
