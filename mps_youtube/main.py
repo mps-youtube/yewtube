@@ -1968,7 +1968,8 @@ def page_msg(page=0):
         return pagemsg.format('<' if page > 0 else '[',
                               "%s%s%s" % (c.y, page+1, c.w),
                               page_count,
-                              ']>'[int(g.more_pages or (page < page_count))])
+                              ']>'[int(g.more_pages != None or
+                                       (page < page_count))])
     return None
 
 
