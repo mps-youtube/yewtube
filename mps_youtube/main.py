@@ -1926,7 +1926,7 @@ def get_user_columns():
 def page_msg(page=0):
     """ Format information about currently displayed page to a string. """
     max_results = getxy().max_results
-    page_count = max(int(min(g.result_count, 500)/max_results) + 1, 1)
+    page_count = max(int(math.ceil(min(g.result_count, 500)/max_results)), 1)
     if page_count > 1:
         pagemsg = "{}{}/{}{}"
         #start_index = max_results * g.current_page
@@ -4091,13 +4091,14 @@ def nextprev(np, page=None):
 
     elif np == "p":
 
-        if page and int(page) in range(1,20):
-            g.current_page = int(page)-1
-            good = True
+        if g.last_search_query:
+            if page and int(page) in range(1,20):
+                g.current_page = int(page)-1
+                good = True
 
-        elif g.current_page > 0 and g.last_search_query:
-            g.current_page -= 1
-            good = True
+            elif g.current_page > 0:
+                g.current_page -= 1
+                good = True
 
     if good:
         function(query, page=g.current_page, splash=True)
@@ -4348,7 +4349,10 @@ def plist(parturl, page=0, splash=True, dumps=False):
     g.pafy_pls[parturl] = yt_playlist
     ytpl_items = yt_playlist['items']
     ytpl_title = yt_playlist['title']
+    g.result_count = len(ytpl_items)
+    g.more_pages = max_results < len(ytpl_items)
     g.content = generate_songlist_display()
+
     songs = []
 
     for item in ytpl_items:
