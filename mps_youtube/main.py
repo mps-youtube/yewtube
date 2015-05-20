@@ -814,7 +814,6 @@ class g(object):
             "ignidx": "",
             "geo": "-geometry"}
         }
-    category_names = {}
 
 def get_version_info():
     """ Return version and platform info. """
@@ -1047,8 +1046,7 @@ def init_cache():
             if 'streams' in cached:
                 g.streams = cached['streams']
                 g.username_query_cache = cached['userdata']
-                g.category_names = cached.get('categories',
-                                              g.category_names)
+                categories = cached.get('categories', {})
             else:
                 g.streams = cached
 
@@ -1058,36 +1056,7 @@ def init_cache():
             dbg(c.r + "Cache file failed to open" + c.w)
 
         prune_streams()
-        init_categories()
-
-
-def init_categories():
-    """ Update category names if outdated. """
-    timestamp = time.time()
-    expire = 2*24*60*60
-    idlist = []
-    for cid, item in g.category_names.items():
-        if item.get('updated', 0) < timestamp - expire:
-            idlist.append(cid)
-
-    if len(idlist) > 0:
-        fetch_categories(idlist)
-
-
-def fetch_categories(idlist):
-    """ Calls API and asks for category names """
-    qs = {'id': ','.join(idlist),
-             'part': 'snippet'}
-
-    timestamp = time.time()
-    try:
-        wdata = call_gdata('videoCategories', qs)
-        for item in wdata['items']:
-            cid = item.get('id')
-            name = item.get('snippet', {}).get('title')
-            g.category_names[cid] = {'title':name, 'updated':timestamp}
-    except Exception:
-        dbg('Category information could not be updated.')
+        pafy.set_categories(categories)
 
 
 def init_desktop_file():
@@ -1201,7 +1170,7 @@ def savecache():
     caches = dict(
         streams=g.streams,
         userdata=g.username_query_cache,
-        categories=g.category_names)
+        categories=pafy.cache('categories'))
 
     with open(g.CACHEFILE, "wb") as cf:
         pickle.dump(caches, cf, protocol=2)
@@ -1640,7 +1609,7 @@ def call_gdata(api, qs):
     qs = qs.copy()
     qs['key'] = Config.API_KEY.get
     url = "https://www.googleapis.com/youtube/v3/" + api + '?' + urlencode(qs)
-    
+
     if url in g.url_memo:
         return json.loads(g.url_memo[url])
 
@@ -1744,9 +1713,6 @@ def get_tracks_from_json(jsons):
                 commentCount=str(num_repr(int(stats.get('commentCount', 0)))),
                 viewCount=str(num_repr(int(stats.get('viewCount', 0)))))
 
-            if not category in g.category_names:
-                catids.append(category)
-
         except Exception as e:
 
             dbg(json.dumps(item, indent=2))
@@ -1754,9 +1720,6 @@ def get_tracks_from_json(jsons):
                 'result {}\n{}'.format(ytid, e))
 
         songs.append(cursong)
-
-    if len(catids) > 0:
-        fetch_categories(catids)
 
     # return video objects
     return songs
@@ -2009,12 +1972,11 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)
         cat = details.get('category') or '-'
-        details['category'] = g.category_names.get(cat, {}).get('title', cat)
+        details['category'] = pafy.get_categoryname(cat)
         data = []
 
         for z in columns:
             fieldsize, field = z['size'], z['name']
-
             if len(details[field]) > fieldsize:
                 details[field] = details[field][:fieldsize]
 
@@ -2689,8 +2651,8 @@ def related_search(vitem, page=None, splash=True):
     """ Fetch uploads by a YouTube user. """
     query = generate_search_qs(vitem.ytid, page, match='related')
 
-    if query.get('category'):
-        del query['category']
+    if query.get('videoCategoryId'):
+        del query['videoCategoryId']
 
     t = vitem.title
     ttitle = t[:48].strip() + ".." if len(t) > 49 else t
@@ -4269,8 +4231,7 @@ def info(num):
         out += i("\nRating     : " + str(p.rating)[:4])
         out += i("\nLikes      : " + str(getattr(p, "likes", up)))
         out += i("\nDislikes   : " + str(getattr(p, "dislikes", up)))
-        out += i("\nCategory   : " + g.category_names.get(p.category,
-                 {}).get('title', p.category))
+        out += i("\nCategory   : " + pafy.get_categoryname(p.category))
         out += i("\nLink       : " + "https://youtube.com/watch?v=%s" %
                  p.videoid)
         out += i("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
