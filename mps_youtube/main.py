@@ -1046,7 +1046,6 @@ def init_cache():
             if 'streams' in cached:
                 g.streams = cached['streams']
                 g.username_query_cache = cached['userdata']
-                categories = cached.get('categories', {})
             else:
                 g.streams = cached
 
@@ -1059,7 +1058,6 @@ def init_cache():
             dbg(c.r + "Cache file failed to open" + c.w)
 
         prune_streams()
-        pafy.set_categories(categories)
 
 
 def init_desktop_file():
