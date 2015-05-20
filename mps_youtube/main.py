@@ -2556,7 +2556,7 @@ def _search(progtext, qs=None, splash=True, pre_load=True):
 
 def token(page):
     """ Returns a page token for a given start index. """
-    index = page * getxy().max_results
+    index = (page or 0) * getxy().max_results
     k = 0
     while index > 255:
         index -= 128
@@ -4535,7 +4535,7 @@ def _match_tracks(artist, title, mb_tracks):
                                                dtime(length)))
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
-        query = generate_search_qs(w, None, result_count=50)
+        query = generate_search_qs(w, 0, result_count=50)
         dbg(query)
         have_results = _search(q, query, splash=False, pre_load=False)
 
