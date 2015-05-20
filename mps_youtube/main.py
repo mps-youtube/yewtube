@@ -4396,7 +4396,7 @@ def plist(parturl, page=0, splash=True, dumps=False):
     g.last_search_query = {"playlist": parturl}
     g.browse_mode = "normal"
     g.ytpl = dict(name=ytpl_title, items=songs)
-    g.current_page = page
+    g.current_page = 0
     g.model.songs = songs[:max_results]
     # preload first result url
     kwa = {"song": songs[0], "delay": 0}
