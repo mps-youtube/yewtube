@@ -781,6 +781,7 @@ class g(object):
     last_search_query = {}
     current_page = 0
     result_count = 0
+    more_pages = None
     rprompt = None
     active = Playlist(name="active")
     text = {}
