@@ -40,6 +40,7 @@ import platform
 import tempfile
 import difflib
 import logging
+import base64
 import random
 import locale
 import socket
@@ -778,8 +779,10 @@ class g(object):
     username_query_cache = collections.OrderedDict()
     model = Playlist(name="model")
     last_search_query = {}
-    current_pagetoken = ''
-    page_tokens = ['']
+    current_page = 0
+    result_count = 0
+    more_pages = None
+    rprompt = None
     active = Playlist(name="active")
     text = {}
     userpl = {}
@@ -1574,32 +1577,6 @@ def get_track_id_from_json(item):
     return ''
 
 
-def store_pagetokens_from_json(jsons):
-    """Extract the page tokens from json result and store them."""
-    # delete global page token list if apparently new search
-    if not g.current_pagetoken:
-        g.page_tokens = ['']
-
-    # make page token list from api response
-    page_tokens = [jsons.get(field) for field in
-                   ['prevPageToken', 'nextPageToken']]
-    page_tokens.insert(1, g.current_pagetoken)
-
-    curidx = lambda: g.page_tokens.index(g.current_pagetoken)
-
-    # update global page token list
-    if page_tokens[2]:
-        if page_tokens[0] and g.page_tokens[curidx()-1] is None:
-            g.page_tokens[curidx()-1:curidx()+2] = page_tokens
-        else:
-            g.page_tokens[curidx():curidx()+2] = page_tokens[1:]
-    else:
-        if page_tokens[0] and g.page_tokens[curidx()-1] is None:
-            g.page_tokens[curidx()-1:curidx()+1] = page_tokens[:2]
-        else:
-            g.page_tokens[curidx()] = page_tokens[1]
-
-
 class GdataError(Exception):
     """Gdata query failed."""
     pass
@@ -1636,10 +1613,22 @@ def call_gdata(api, qs):
     return json.loads(data)
 
 
+def get_page_info_from_json(jsons, result_count=None):
+    """ Extract & save some information about result count and paging. """
+    g.more_pages = jsons.get('nextPageToken')
+    if result_count:
+        if result_count < getxy().max_results:
+            g.more_pages = False
+    pageinfo = jsons.get('pageInfo')
+    per_page = pageinfo.get('resultsPerPage')
+    g.result_count = pageinfo.get('totalResults')
+    if result_count: # limit number of results, e.g. if api makes it up
+        if result_count < per_page:
+            g.result_count = min(g.result_count, result_count)
+
+
 def get_tracks_from_json(jsons):
     """ Get search results from API response """
-
-    store_pagetokens_from_json(jsons)
 
     items = jsons.get("items")
     if not items:
@@ -1722,6 +1711,8 @@ def get_tracks_from_json(jsons):
 
         songs.append(cursong)
 
+    get_page_info_from_json(jsons, len(songs))
+
     # return video objects
     return songs
 
@@ -1734,13 +1725,16 @@ def screen_update(fill_blank=True):
     if g.content:
         xprint(g.content)
 
-    if g.message:
-        xprint(g.message)
+    if g.message or g.rprompt:
+        out = g.message or ''
+        blanks = getxy().width - len(out) - len(g.rprompt or '')
+        out += ' ' * blanks + (g.rprompt or '')
+        xprint(out)
 
     elif fill_blank:
         xprint("")
 
-    g.message = g.content = False
+    g.message = g.content = g.rprompt = False
 
 
 def playback_progress(idx, allsongs, repeat=False):
@@ -1873,6 +1867,7 @@ def generate_playlist_display():
     if not g.ytpls:
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
+    g.rprompt = page_msg(g.current_page)
 
     cw = getxy().width
     fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
@@ -1928,6 +1923,21 @@ def get_user_columns():
     return ret
 
 
+def page_msg(page=0):
+    """ Format information about currently displayed page to a string. """
+    max_results = getxy().max_results
+    page_count = max(int(min(g.result_count, 500)/max_results) + 1, 1)
+    if page_count > 1:
+        pagemsg = "{}{}/{}{}"
+        #start_index = max_results * g.current_page
+        return pagemsg.format('<' if page > 0 else '[',
+                              "%s%s%s" % (c.y, page+1, c.w),
+                              page_count,
+                              ']>'[int(g.more_pages != None or
+                                       (page < page_count))])
+    return None
+
+
 def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     """ Generate list of choices from a song list."""
     # pylint: disable=R0914
@@ -1939,6 +1949,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     if not songs:
         g.message = zeromsg or "Enter /search-term to search or [h]elp"
         return logo(c.g) + "\n\n"
+    g.rprompt = page_msg(g.current_page)
 
     have_meta = all(x.ytid in g.meta for x in songs)
     user_columns = get_user_columns() if have_meta else []
@@ -2507,7 +2518,23 @@ def _search(progtext, qs=None, splash=True, pre_load=True):
     return False
 
 
-def generate_search_qs(term, page=None, result_count=None, match='term'):
+
+def token(page):
+    """ Returns a page token for a given start index. """
+    index = (page or 0) * getxy().max_results
+    k = 0
+    while index > 255:
+        index -= 128
+        k += 1
+    f = [8, index]
+    if k > 0 or index > 127:
+        f.append(k+1)
+    f += [16, 0]
+    b64 = base64.b64encode(bytes(f)).decode('utf8')
+    return b64.strip('=')
+
+
+def generate_search_qs(term, page=0, result_count=getxy().max_results, match='term'):
     """ Return query string. """
     if not result_count:
         result_count = getxy().max_results
@@ -2528,8 +2555,7 @@ def generate_search_qs(term, page=None, result_count=None, match='term'):
         qs['relatedToVideoId'] = term
         del qs['q']
 
-    if page:
-        qs['pageToken'] = page
+    qs['pageToken'] = token(page)
 
     if Config.SEARCH_MUSIC.get:
         qs['videoCategoryId'] = 10
@@ -2592,7 +2618,7 @@ def channelfromname(user):
     return (user, channel_id)
 
 
-def usersearch(q_user, page=None, splash=True, identify='forUsername'):
+def usersearch(q_user, page=0, splash=True, identify='forUsername'):
     """ Fetch uploads by a YouTube user. """
 
     user, _, term = (x.strip() for x in q_user.partition("/"))
@@ -2609,7 +2635,7 @@ def usersearch(q_user, page=None, splash=True, identify='forUsername'):
     usersearch_id('/'.join([user, channel_id, term]), page, splash)
 
 
-def usersearch_id(q_user, page=None, splash=True):
+def usersearch_id(q_user, page=0, splash=True):
     """ Performs a search within a user's (i.e. a channel's) uploads
     for an optional search term with the user (i.e. the channel)
     identified by its ID """
@@ -2638,17 +2664,17 @@ def usersearch_id(q_user, page=None, splash=True):
         g.message = msg
         g.last_opened = ""
         g.last_search_query = {"user": q_user}
-        g.current_pagetoken = page or ''
+        g.current_page = page
         g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = failmsg
-        g.current_pagetoken = ''
+        g.current_page = 0
         g.last_search_query = {}
         g.content = logo(c.r)
 
 
-def related_search(vitem, page=None, splash=True):
+def related_search(vitem, page=0, splash=True):
     """ Fetch uploads by a YouTube user. """
     query = generate_search_qs(vitem.ytid, page, match='related')
 
@@ -2664,17 +2690,17 @@ def related_search(vitem, page=None, splash=True):
         g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
         g.last_opened = ""
         g.last_search_query = {"related": vitem}
-        g.current_pagetoken = page or ''
+        g.current_page = page
         g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = "Related to %s%s%s not found" % (c.y, vitem.ytid, c.w)
         g.content = logo(c.r)
-        g.current_pagetoken = ''
+        g.current_page = 0
         g.last_search_query = {}
 
 
-def search(term, page=None, splash=True):
+def search(term, page=0, splash=True):
     """ Perform search. """
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
@@ -2690,23 +2716,23 @@ def search(term, page=None, splash=True):
         g.last_opened = ""
         g.last_search_query = {"term": term}
         g.browse_mode = "normal"
-        g.current_pagetoken = page or ''
+        g.current_page = page
         g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
         g.content = logo(c.r)
-        g.current_pagetoken = ''
+        g.current_page = 0
         g.last_search_query = {}
 
 
-def user_pls(user, page=None, splash=True):
+def user_pls(user, page=0, splash=True):
     """ Retrieve user playlists. """
     user = {"is_user": True, "term": user}
     return pl_search(user, page=page, splash=splash)
 
 
-def pl_search(term, page=None, splash=True, is_user=False):
+def pl_search(term, page=0, splash=True, is_user=False):
     """ Search for YouTube playlists.
 
     term can be query str or dict indicating user playlist search.
@@ -2721,10 +2747,11 @@ def pl_search(term, page=None, splash=True, is_user=False):
         is_user = term["is_user"]
         term = term["term"]
 
-    g.content = logo(c.g)
-    prog = "user: " + term if is_user else term
-    g.message = "Searching playlists for %s" % c.y + prog + c.w
-    screen_update()
+    if splash:
+        g.content = logo(c.g)
+        prog = "user: " + term if is_user else term
+        g.message = "Searching playlists for %s" % c.y + prog + c.w
+        screen_update()
 
     if is_user:
         ret = channelfromname(term)
@@ -2735,9 +2762,7 @@ def pl_search(term, page=None, splash=True, is_user=False):
     else:
         # playlist search is done with the above url and param type=playlist
         logging.info("playlist search for %s", prog)
-        max_results = getxy().max_results
-        if max_results > 50: # Limit for playlists command
-            max_results = 50
+        max_results = min(getxy().max_results, 50) # Limit for playlists command
         qs = generate_search_qs(term, page, result_count=max_results)
         qs['type'] = 'playlist'
         if 'videoCategoryId' in qs:
@@ -2747,7 +2772,8 @@ def pl_search(term, page=None, splash=True, is_user=False):
             pldata = call_gdata('search', qs)
             id_list = [i.get('id', {}).get('playlistId')
                         for i in pldata.get('items', ())]
-            store_pagetokens_from_json(pldata)
+            # page info
+            get_page_info_from_json(pldata, len(id_list))
         except GdataError as e:
             g.message = F('no data') % e
             g.content = logo(c.r)
@@ -2758,7 +2784,7 @@ def pl_search(term, page=None, splash=True, is_user=False):
 
     if is_user:
         if page:
-            qs['pageToken'] = page
+            qs['pageToken'] = token(page)
         qs['channelId'] = channel_id
     else:
         qs['id'] = ','.join(id_list)
@@ -2766,8 +2792,6 @@ def pl_search(term, page=None, splash=True, is_user=False):
     try:
         pldata = call_gdata('playlists', qs)
         playlists = get_pl_from_json(pldata)
-        if is_user:
-            store_pagetokens_from_json(pldata)
     except GdataError as e:
         g.message = F('no data') % e
         g.content = logo(c.r)
@@ -2776,14 +2800,14 @@ def pl_search(term, page=None, splash=True, is_user=False):
     if playlists:
         g.last_search_query = {"playlists": {"term": term, "is_user": is_user}}
         g.browse_mode = "ytpl"
-        g.current_pagetoken = page or ''
+        g.current_page = page
         g.ytpls = playlists
         g.message = "Playlist results for %s" % c.y + prog + c.w
         g.content = generate_playlist_display()
 
     else:
         g.message = "No playlists found for: %s" % c.y + prog + c.w
-        g.current_pagetoken = ''
+        g.current_page = 0
         g.content = generate_songlist_display(zeromsg=g.message)
 
 
@@ -3402,7 +3426,8 @@ def down_many(dltype, choice, subdir=None):
 
 def down_plist(dltype, parturl):
     """ Download YouTube playlist. """
-    plist(parturl, page=1, splash=True, dumps=True)
+
+    plist(parturl, page=0, splash=True, dumps=True)
     title = g.pafy_pls[parturl]['title']
     subdir = mswinfn(title.replace("/", "-"))
     down_many(dltype, "1-", subdir=subdir)
@@ -3822,10 +3847,7 @@ def download(dltype, num):
     # pylint: disable=R0914
     if g.browse_mode == "ytpl" and dltype in ("da", "dv"):
         plid = g.ytpls[int(num) - 1]["link"]
-        plist(plid, page=1, splash=True, dumps=True)
-        title = g.pafy_pls[plid]['title']
-        subdir = mswinfn(title.replace("/", "-"))
-        down_many(dltype, "1-", subdir=subdir)
+        down_plist(dltype, plid)
         return
 
     elif g.browse_mode == "ytpl":
@@ -4036,20 +4058,11 @@ def add_rm_all(action):
         songlist_rm_add("add", "-" + str(size))
 
 
-def get_adj_pagetoken(np):
-    """ Get page token either previous (p) or next (n) to currently displayed one """
-    delta = ['p', None, 'n'].index(np) - 1
-    pt_index = g.page_tokens.index(g.current_pagetoken) + delta
-    if pt_index in range(len(g.page_tokens)):
-        return g.page_tokens[pt_index]
-    return None
-
-
-
-def nextprev(np):
+def nextprev(np, page=None):
     """ Get next / previous search results. """
     glsq = g.last_search_query
     content = g.model.songs
+    max_results = getxy().max_results
 
     if "user" in g.last_search_query:
         function, query = usersearch_id, glsq['user']
@@ -4070,28 +4083,32 @@ def nextprev(np):
     good = False
 
     if np == "n":
-        max_results = getxy().max_results
         if len(content) == max_results and glsq:
-            pagetoken = get_adj_pagetoken(np)
-            if pagetoken:
-                g.current_pagetoken = pagetoken
-                good = True
+            if (g.current_page + 1) * max_results < 500:
+                if g.more_pages:
+                    g.current_page += 1
+                    good = True
 
     elif np == "p":
-        if glsq:
-            if g.page_tokens.index(g.current_pagetoken) > 0:
-                g.current_pagetoken = get_adj_pagetoken(np)
-                good = True
+
+        if page and int(page) in range(1,20):
+            g.current_page = int(page)-1
+            good = True
+
+        elif g.current_page > 0 and g.last_search_query:
+            g.current_page -= 1
+            good = True
 
     if good:
-        function(query, g.current_pagetoken, splash=True)
-        g.message += " : page {}".format(g.page_tokens.index(g.current_pagetoken)+1)
+        function(query, page=g.current_page, splash=True)
+        g.message += " : page {}".format(g.current_page + 1)
 
     else:
         norp = "next" if np == "n" else "previous"
         g.message = "No %s items to display" % norp
 
     g.content = generate_songlist_display(frmat="search")
+    return good
 
 
 def user_more(num):
@@ -4102,11 +4119,11 @@ def user_more(num):
         g.content = generate_songlist_display()
         return
 
-    g.current_pagetoken = ''
+    g.current_page = 0
     item = g.model.songs[int(num) - 1]
     channel_id = g.meta.get(item.ytid, {}).get('uploader')
     user = g.meta.get(item.ytid, {}).get('uploaderName')
-    usersearch_id('/'.join([user, channel_id, '']), None, True)
+    usersearch_id('/'.join([user, channel_id, '']), 0, True)
 
 
 def related(num):
@@ -4117,7 +4134,7 @@ def related(num):
         g.content = generate_songlist_display()
         return
 
-    g.current_pagetoken = ''
+    g.current_page = 0
     item = g.model.songs[int(num) - 1]
     related_search(item)
 
@@ -4291,7 +4308,7 @@ def dump(un):
         plist(g.last_search_query['playlist'], dumps=True)
 
     elif g.last_search_query.get("playlist") and un:
-        plist(g.last_search_query['playlist'], page=1, dumps=False)
+        plist(g.last_search_query['playlist'], page=0, dumps=False)
 
     else:
         un = "" if not un else un
@@ -4300,7 +4317,7 @@ def dump(un):
         g.content = generate_songlist_display()
 
 
-def plist(parturl, page=1, splash=True, dumps=False):
+def plist(parturl, page=0, splash=True, dumps=False):
     """ Retrieve YouTube playlist. """
     max_results = getxy().max_results
 
@@ -4308,13 +4325,14 @@ def plist(parturl, page=1, splash=True, dumps=False):
             parturl == g.last_search_query['playlist']:
 
         # go to pagenum
-        s = (page - 1) * max_results
-        e = page * max_results
+        s = page * max_results
+        e = (page + 1) * max_results
 
         if dumps:
             s, e = 0, 99999
 
         g.model.songs = g.ytpl['items'][s:e]
+        g.more_pages = e < len(g.ytpl['items']) - 1
         g.content = generate_songlist_display()
         g.message = "Showing YouTube playlist: %s" % c.y + g.ytpl['name'] + c.w
         g.current_page = page
@@ -4347,7 +4365,7 @@ def plist(parturl, page=1, splash=True, dumps=False):
     g.last_search_query = {"playlist": parturl}
     g.browse_mode = "normal"
     g.ytpl = dict(name=ytpl_title, items=songs)
-    g.current_page = 1
+    g.current_page = 0
     g.model.songs = songs[:max_results]
     # preload first result url
     kwa = {"song": songs[0], "delay": 0}
@@ -4481,7 +4499,7 @@ def _match_tracks(artist, title, mb_tracks):
                                                dtime(length)))
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
-        query = generate_search_qs(w, None, result_count=50)
+        query = generate_search_qs(w, 0, result_count=50)
         dbg(query)
         have_results = _search(q, query, splash=False, pre_load=False)
 
@@ -4563,7 +4581,7 @@ def _get_mb_album(albumname, **kwa):
     return dict(artist=artist, title=title, aid=aid)
 
 
-def search_album(term, page=1, splash=True):
+def search_album(term, page=0, splash=True):
     """Search for albums. """
     # pylint: disable=R0914,R0912
     if not term:
@@ -4586,8 +4604,10 @@ def search_album(term, page=1, splash=True):
     out += ("[Enter] to continue, [q] to abort, or enter artist name for:\n"
             "    %s" % (c.y + term + c.w + "\n"))
 
-    g.message, g.content = out, logo(c.b)
-    screen_update()
+    if splash:
+        g.message, g.content = out, logo(c.b)
+        screen_update()
+
     prompt = "Artist? [%s] > " % album['artist']
     xprint(prompt, end="")
     artistentry = input().strip()
@@ -4663,7 +4683,7 @@ def search_album(term, page=1, splash=True):
     else:
         g.message = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
         g.content = generate_songlist_display()
-        g.current_page = 1
+        g.current_page = 0
         g.last_search_query = ""
 
 
@@ -4750,7 +4770,7 @@ def main():
         download: r'(dv|da|d|dl|download)\s*(\d{1,4})$',
         play_url: r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
         comments: r'c\s?(\d{1,4})$',
-        nextprev: r'(n|p)$',
+        nextprev: r'(n|p)\s*(\d{1,2})?$',
         play_all: r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
         user_pls: r'u(?:ser)?pl\s(.*)$',
         save_last: r'save\s*$',
@@ -4871,6 +4891,7 @@ Then, when results are shown:
 {2}//<query>{1} or {2}..<query>{1} - search for YouTube playlists. e.g., \
 {2}//80's music{1}
 {2}n{1} and {2}p{1} - continue search to next/previous pages.
+{2}p <number>{1} - switch to page <number>.
 
 {2}album <album title>{1} - Search for matching tracks using album title
 {2}user <username>{1} - list YouTube uploads by <username>.
