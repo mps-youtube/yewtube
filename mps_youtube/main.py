@@ -4102,7 +4102,6 @@ def nextprev(np, page=None):
 
     if good:
         function(query, page=g.current_page, splash=True)
-        g.message += " : page {}".format(g.current_page + 1)
 
     else:
         norp = "next" if np == "n" else "previous"
