@@ -4128,13 +4128,14 @@ def nextprev(np, page=None):
 
     elif np == "p":
 
-        if page and int(page) in range(1,20):
-            g.current_page = int(page)-1
-            good = True
+        if g.last_search_query:
+            if page and int(page) in range(1,20):
+                g.current_page = int(page)-1
+                good = True
 
-        elif g.current_page > 0 and g.last_search_query:
-            g.current_page -= 1
-            good = True
+            elif g.current_page > 0:
+                g.current_page -= 1
+                good = True
 
     if good:
         function(query, page=g.current_page, splash=True)
