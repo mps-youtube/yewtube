@@ -4330,7 +4330,7 @@ def plist(parturl, page=0, splash=True, dumps=False):
             s, e = 0, 99999
 
         g.model.songs = g.ytpl['items'][s:e]
-        g.more_pages = e < len(g.ytpl['items']) - 1
+        g.more_pages = e < len(g.ytpl['items'])
         g.content = generate_songlist_display()
         g.message = "Showing YouTube playlist: %s" % c.y + g.ytpl['name'] + c.w
         g.current_page = page
@@ -4348,7 +4348,6 @@ def plist(parturl, page=0, splash=True, dumps=False):
     ytpl_title = yt_playlist['title']
     g.result_count = len(ytpl_items)
     g.more_pages = max_results < len(ytpl_items)
-    g.content = generate_songlist_display()
 
     songs = []
 
