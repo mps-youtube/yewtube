@@ -2522,10 +2522,8 @@ def _search(progtext, qs=None, splash=True, pre_load=True):
 def token(page):
     """ Returns a page token for a given start index. """
     index = (page or 0) * getxy().max_results
-    k = 0
-    while index > 255:
-        index -= 128
-        k += 1
+    k = index//128 - 1
+    index -= 128 * k
     f = [8, index]
     if k > 0 or index > 127:
         f.append(k+1)
