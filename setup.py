@@ -8,6 +8,7 @@ python setup.py sdist bdist_wheel
 """
 
 from setuptools import setup
+import sys
 
 options = dict(
     name="mps-youtube",
@@ -54,6 +55,12 @@ options = dict(
                        "bundle_files": 1}},
     long_description=open("README.rst").read()
 )
+
+if sys.platform.startswith('linux'):
+    # Install desktop file. Required for mpris on Ubuntu
+    options['data_files'] = [
+        ('share/applications/',
+            ['install/linux/usr/share/applications/mps-youtube.desktop'])]
 
 try:
     import py2exe
