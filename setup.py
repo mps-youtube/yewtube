@@ -58,9 +58,7 @@ options = dict(
 
 if sys.platform.startswith('linux'):
     # Install desktop file. Required for mpris on Ubuntu
-    options['data_files'] = [
-        ('share/applications/',
-            ['install/linux/usr/share/applications/mps-youtube.desktop'])]
+    options['data_files'] = [('share/applications/', ['mps-youtube.desktop'])]
 
 try:
     import py2exe
