@@ -873,7 +873,6 @@ def init():
     init_readline()
     init_cache()
     init_transcode()
-    init_desktop_file()
 
     # set player to mpv or mplayer if found, otherwise unset
     suffix = ".exe" if mswin else ""
@@ -1061,46 +1060,6 @@ def init_cache():
             dbg(c.r + "Cache file failed to open" + c.w)
 
         prune_streams()
-
-
-def init_desktop_file():
-    """ Install desktop file. """
-    # Required for mpris on Ubuntu
-    if mswin:
-        return
-    appdir = os.path.expanduser("~/.local/share/applications")
-    filename = "mps-youtube.desktop"
-
-    if not os.path.exists(os.path.join(appdir, filename)):
-        dbg("no desktop file in local appdir")
-
-        if has_exefile("desktop-file-install"):
-            dbg("has desktop-file-install executable")
-
-            if not os.path.exists(appdir):
-                os.makedirs(appdir)
-
-            fname = os.path.join(tempfile.gettempdir(), "mps-youtube.desktop")
-
-            desktop_file_contents = \
-                "[Desktop Entry]\n" \
-                "Name=mps-youtube\n" \
-                "GenericName=Music Player\n" \
-                "Keywords=Audio;Song;Podcast;Playlist;youtube.com;\n" \
-                "Exec=mpsyt %U\n" \
-                "Terminal=true\n" \
-                "Icon=terminal\n" \
-                "Type=Application\n" \
-                "Categories=AudioVideo;Audio;Player;\n" \
-                "StartupNotify=true\n" \
-                "NoDisplay=true"
-
-            with open(fname, "w") as dtf:
-                dtf.write(desktop_file_contents)
-
-            cmd = ["desktop-file-install", "--dir={}".format(appdir), fname]
-            subprocess.call(cmd)
-            os.unlink(fname)
 
 
 def init_readline():
