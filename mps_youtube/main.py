@@ -3248,7 +3248,7 @@ def open_save_view(action, name):
             name = _get_near_name(name, g.userpl)
             saved = g.userpl.get(name)
 
-        if saved and action == "open":
+        elif action == "open":
             g.browse_mode = "normal"
             g.model.songs = g.active.songs = list(saved.songs)
             g.message = F("pl loaded") % name
@@ -3260,7 +3260,7 @@ def open_save_view(action, name):
             t = threading.Thread(target=preload, kwargs=kwa)
             t.start()
 
-        elif saved and action == "view":
+        elif action == "view":
             g.browse_mode = "normal"
             g.last_search_query = {}
             g.model.songs = list(saved.songs)
