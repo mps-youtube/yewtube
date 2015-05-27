@@ -30,7 +30,6 @@ __license__ = "GPLv3"
 __url__ = "http://github.com/np1/mps-youtube"
 
 from xml.etree import ElementTree as ET
-from . import terminalsize
 import multiprocessing
 import unicodedata
 import collections
@@ -47,7 +46,6 @@ import socket
 import shlex
 import time
 import math
-import pafy
 import json
 import sys
 import re
@@ -57,6 +55,9 @@ from urllib.request import urlopen, build_opener
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 
+import pafy
+
+from . import terminalsize
 
 try:
     # pylint: disable=F0401
