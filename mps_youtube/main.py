@@ -1765,6 +1765,8 @@ def real_len(u, alt=False):
     if not isinstance(u, str):
         u = u.decode("utf8")
 
+    u = xenc(u) # Handle replacements of unsuported characters
+
     ueaw = unicodedata.east_asian_width
 
     if alt:
