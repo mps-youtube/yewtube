@@ -131,7 +131,7 @@ def utf8_replace(txt):
 
 def xenc(stuff):
     """ Replace unsupported characters. """
-    if g.isatty:
+    if sys.stdout.isatty():
         return utf8_replace(stuff) if not_utf8_environment else stuff
 
     else:
@@ -764,7 +764,6 @@ class g(object):
     command_line = False
     debug_mode = False
     preload_disabled = False
-    isatty = sys.stdout.isatty()
     ytpls = []
     mpv_version = 0, 0, 0
     mpv_usesock = False
