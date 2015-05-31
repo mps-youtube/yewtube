@@ -811,17 +811,17 @@ class g(object):
 
 def get_version_info():
     """ Return version and platform info. """
-    out = ("\nmpsyt version  : %s " % __version__)
-    out += ("\n   notes       : %s" % __notes__)
-    out += ("\npafy version   : %s" % pafy.__version__)
-    out += ("\nPython version : %s" % sys.version)
-    out += ("\nProcessor      : %s" % platform.processor())
-    out += ("\nMachine type   : %s" % platform.machine())
-    out += ("\nArchitecture   : %s, %s" % platform.architecture())
-    out += ("\nPlatform       : %s" % platform.platform())
-    out += ("\nsys.stdout.enc : %s" % sys.stdout.encoding)
-    out += ("\ndefault enc    : %s" % sys.getdefaultencoding())
-    out += ("\nConfig dir     : %s" % get_config_dir())
+    out = "\nmpsyt version  : %s " % __version__
+    out += "\n   notes       : %s" % __notes__
+    out += "\npafy version   : %s" % pafy.__version__
+    out += "\nPython version : %s" % sys.version
+    out += "\nProcessor      : %s" % platform.processor()
+    out += "\nMachine type   : %s" % platform.machine()
+    out += "\nArchitecture   : %s, %s" % platform.architecture()
+    out += "\nPlatform       : %s" % platform.platform()
+    out += "\nsys.stdout.enc : %s" % sys.stdout.encoding
+    out += "\ndefault enc    : %s" % sys.getdefaultencoding()
+    out += "\nConfig dir     : %s" % get_config_dir()
     envs = "TERM SHELL LANG LANGUAGE".split()
 
     for env in envs:
