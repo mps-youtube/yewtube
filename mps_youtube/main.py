@@ -116,7 +116,7 @@ def getxy():
 def utf8_replace(txt):
     """ Replace unsupported characters in unicode string, returns unicode. """
     sse = sys.stdout.encoding
-    txt = txt.encode(sse, "replace").decode("utf8", "ignore")
+    txt = txt.encode(sse, "replace").decode(sse)
     return txt
 
 
