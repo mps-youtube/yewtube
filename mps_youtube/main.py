@@ -84,15 +84,6 @@ except ImportError:
     has_xerox = False
 
 
-def utf8_encode(x):
-    """ Encode Unicode. """
-    return x.encode("utf8") if isinstance(x, str) else x
-
-
-def utf8_decode(x):
-    """ Decode Unicode. """
-    return x.decode("utf8") if isinstance(x, bytes) else x
-
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in os.environ.get("LANG", "")
 
@@ -192,7 +183,7 @@ def get_default_ddir():
     else:
         ddir = DOWNLOAD_HOME if exists(DOWNLOAD_HOME) else user_home
 
-    ddir = utf8_decode(ddir)
+    ddir = ddir
     return os.path.join(ddir, "mps")
 
 
@@ -217,7 +208,7 @@ def get_config_dir():
 
 def get_mpv_version(exename):
     """ Get version of mpv as 3-tuple. """
-    o = utf8_decode(subprocess.check_output([exename, "--version"]))
+    o = subprocess.check_output([exename, "--version"]).decode()
     re_ver = re.compile(r"%s (\d+)\.(\d+)\.(\d+)" % exename)
 
     for line in o.split("\n"):
@@ -256,7 +247,7 @@ def get_content_length(url, preloading=False):
     """ Return content length of a url. """
     prefix = "preload: " if preloading else ""
     dbg(c.y + prefix + "getting content-length header" + c.w)
-    response = utf8_decode(urlopen(url))
+    response = urlopen(url).decode()
     headers = response.headers
     cl = headers['content-length']
     return int(cl)
@@ -900,8 +891,8 @@ def init():
     if "mpv" in Config.PLAYER.get and not mswin:
         if has_exefile(Config.PLAYER.get):
             g.mpv_version = get_mpv_version(Config.PLAYER.get)
-            options = utf8_decode(subprocess.check_output(
-                [Config.PLAYER.get, "--list-options"]))
+            options = subprocess.check_output(
+                [Config.PLAYER.get, "--list-options"]).decode()
             # g.mpv_usesock = "--input-unix-socket" in options and not mswin
 
             if "--input-unix-socket" in options:
@@ -2499,7 +2490,6 @@ def generate_search_qs(term, page=0, result_count=getxy().max_results, match='te
         result_count = getxy().max_results
 
     aliases = dict(views='viewCount')
-    term = utf8_encode(term)
     qs = {
         'q': term,
         'maxResults': result_count,
@@ -3651,7 +3641,7 @@ def quits(showlogo=True):
 
         try:
             url = "https://github.com/np1/mps-youtube/raw/master/VERSION"
-            v = utf8_decode(urlopen(url, timeout=1).read())
+            v = urlopen(url, timeout=1).read().decode()
             v = re.search(r"^version\s*([\d\.]+)\s*$", v, re.MULTILINE)
 
             if v:
@@ -3773,7 +3763,7 @@ def gen_dl_text(ddata, song, p):
     """ Generate text for dl screen. """
     hdr = []
     hdr.append("  %s%s%s" % (c.r, song.title, c.w))
-    author = utf8_decode(p.author)
+    author = p.author
     hdr.append(c.r + "  Uploaded by " + author + c.w)
     hdr.append("  [" + fmt_time(song.length) + "]")
     hdr.append("")
@@ -4195,23 +4185,21 @@ def info(num):
         item = (g.model.songs[int(num) - 1])
         get_streams(item)
         p = get_pafy(item)
-        i = utf8_decode
         pub = time.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
         writestatus("Fetched")
         up = "Update Pafy to 0.3.42 to view likes/dislikes"
         out = c.ul + "Video Info" + c.w + "\n\n"
-        out += i(p.title or "")
+        out += p.title or ""
         out += "\n" + (p.description or "")
-        out += i("\n\nAuthor     : " + str(p.author))
-        out += i("\nPublished  : " + time.strftime("%c", pub))
-        out += i("\nView count : " + str(p.viewcount))
-        out += i("\nRating     : " + str(p.rating)[:4])
-        out += i("\nLikes      : " + str(getattr(p, "likes", up)))
-        out += i("\nDislikes   : " + str(getattr(p, "dislikes", up)))
-        out += i("\nCategory   : " + str(p.category))
-        out += i("\nLink       : " + "https://youtube.com/watch?v=%s" %
-                 p.videoid)
-        out += i("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
+        out += "\n\nAuthor     : " + str(p.author)
+        out += "\nPublished  : " + time.strftime("%c", pub)
+        out += "\nView count : " + str(p.viewcount)
+        out += "\nRating     : " + str(p.rating)[:4]
+        out += "\nLikes      : " + str(getattr(p, "likes", up))
+        out += "\nDislikes   : " + str(getattr(p, "dislikes", up))
+        out += "\nCategory   : " + str(p.category)
+        out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
+        out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w)
         g.content = out
 
 
@@ -4251,7 +4239,7 @@ def yt_url(url, print_title=0):
         return
 
     g.browse_mode = "normal"
-    v = Video(p.videoid, utf8_decode(p.title), p.length)
+    v = Video(p.videoid, p.title, p.length)
     g.model.songs = [v]
 
     if not g.command_line:
@@ -4379,7 +4367,7 @@ def _do_query(url, query, err='query failed', cache=True, report=False):
     url = "%s?%s" % (url, urlencode(query))
 
     try:
-        wdata = utf8_decode(mpsyt_opener.open(url).read())
+        wdata = mpsyt_opener.open(url).read().decode()
 
     except (URLError, HTTPError) as e:
         g.message = "%s: %s (%s)" % (err, e, url)
@@ -4488,7 +4476,7 @@ def _get_mb_tracks(albumid):
     if not wdata:
         return None
 
-    root = ET.fromstring(utf8_encode(wdata))
+    root = ET.fromstring(wdata)
     tlist = root.find("./mb:release/mb:medium-list/mb:medium/mb:track-list",
                       namespaces=ns)
     mb_songs = tlist.findall("mb:track", namespaces=ns)
@@ -4528,7 +4516,7 @@ def _get_mb_album(albumname, **kwa):
         return None
 
     ns = {'mb': 'http://musicbrainz.org/ns/mmd-2.0#'}
-    root = ET.fromstring(utf8_encode(wdata))
+    root = ET.fromstring(wdata)
     rlist = root.find("mb:release-list", namespaces=ns)
 
     if int(rlist.get('count')) == 0:
