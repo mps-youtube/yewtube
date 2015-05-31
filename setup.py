@@ -41,11 +41,10 @@ options = dict(
         "Operating System :: Microsoft :: Windows :: Windows Vista",
         "Intended Audience :: End Users/Desktop",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3 :: Only",
         "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
     ],
