@@ -2201,6 +2201,10 @@ def get_input_file():
 def launch_player(song, songdata, cmd):
     """ Launch player application. """
 
+    # Fix UnicodeEncodeError when title has characters
+    # not supported by encoding
+    cmd = [xenc(i) for i in cmd]
+
     arturl = "http://i.ytimg.com/vi/%s/default.jpg" % song.ytid
     input_file = get_input_file()
     sockpath = None
