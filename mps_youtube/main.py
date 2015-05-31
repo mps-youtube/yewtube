@@ -247,7 +247,7 @@ def get_content_length(url, preloading=False):
     """ Return content length of a url. """
     prefix = "preload: " if preloading else ""
     dbg(c.y + prefix + "getting content-length header" + c.w)
-    response = urlopen(url).decode()
+    response = urlopen(url)
     headers = response.headers
     cl = headers['content-length']
     return int(cl)
