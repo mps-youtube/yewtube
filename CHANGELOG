@@ -8,6 +8,8 @@ Version 0.2.5
 - Add mix command (lol768) (#241, #283)
 - Add page count with total number of pages and current page (JKatzwinkel)
 - Fix UnicodeEncodeError on non-unicode terminals
+- Install .desktop in setup.py so it does not have to be installed manually
+    required for Ubuntu sound menu support
 
 -------------------------------------------------------------------------------
 
