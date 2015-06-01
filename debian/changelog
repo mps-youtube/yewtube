@@ -1,27 +1,15 @@
-mps-youtube (0.2.4-1) unstable; urgency=low
+mps-youtube (0.2.5-1) unstable; urgency=medium
 
   * New upstream release
-  * Read upstream CHANGELOG for upstream changes
+  * debian/control: Depends on ffmpeg | libav-tools
+  * debian/control: Recommends added python-notify and xclip
+  * debian/control: Standards-Version update to 3.9.6
+  * mps-youtube is now python3 only so build changes are made
+  * Updated to latest upstream for Youtube APIv3 (Closes:#785704)
+  * Small manpage tweak
+  * debian/rules: using now pybuild
 
- -- Zlatan Todoric <zlatan@riseup.net>  Thu, 14 May 2015 12:26:39 +0200
-
-mps-youtube (0.2.3-1) experimental; urgency=low
-
-  * New upstream release
-  * ffmpeg | libav-tools moved to Depends
-  * added python-notify to Recommends 
-
- -- Zlatan Todoric <zlatan@riseup.net>  Thu, 26 Feb 2015 01:13:41 +0100
-
-mps-youtube (0.2.0-1) unstable; urgency=low
-
-  * New upstream release
-  * Added Recommends: ffmpeg|libav-tools for transcoding downloaded content
-    and added xclip for copying content to clipboard
-  * Standards-Version: updated to 3.9.6
-  * Small tweak in manpage
-
- -- Zlatan Todoric <zlatan@riseup.net>  Tue, 25 Nov 2014 15:38:26 +0100
+ -- Zlatan Todoric <zlatan@riseup.net>  Mon, 01 Jun 2015 15:12:53 +0200
 
 mps-youtube (0.01.46-3) unstable; urgency=low
 

@@ -3,6 +3,7 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
+export PYBUILD_NAME=mps-youtube
 
 %:
-	dh $@ --with python2
+	dh $@ --with python3 --buildsystem=pybuild
