@@ -7,6 +7,7 @@ mps-youtube (0.2.5-1) unstable; urgency=medium
   * mps-youtube is now python3 only so build changes are made
   * Updated to latest upstream for Youtube APIv3 (Closes:#785704)
   * Small manpage tweak
+  * debian/rules: using now pybuild
 
  -- Zlatan Todoric <zlatan@riseup.net>  Mon, 01 Jun 2015 15:12:53 +0200
 
