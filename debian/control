@@ -2,17 +2,15 @@ Source: mps-youtube
 Section: utils
 Priority: extra
 Maintainer: Zlatan Todoric <zlatan@riseup.net>
-Build-Depends: debhelper (>= 9), dh-python, python, python-setuptools
+Build-Depends: debhelper (>= 9), dh-python, python3-all, python3-setuptools
 Standards-Version: 3.9.6
 Homepage: https://github.com/np1/mps-youtube
-XS-Python-Version: current
+X-Python3-Version: >= 3.4
 
 Package: mps-youtube
 Architecture: any
-Depends: ${misc:Depends}, python-pafy, mplayer2 | mpv, python, ffmpeg |  avconv
+Depends: ${misc:Depends}, python3-pafy, mplayer2 | mpv, python3, ffmpeg |  avconv,  ${python3:Depends}
 Recommends: python-notify, xclip
-XB-Python-Version: ${python:Versions}
-Provides: ${python:Provides}
 Description: Terminal based YouTube jukebox with playlist management
  This project is a terminal based YouTube client with an interactive text 
  interface and in-built help. It can be used to search YouTube, create local 
