@@ -1,10 +1,24 @@
+Version 0.2.5
+1 June 2015
+
+- Support python 3 only (will not run with python 2)
+- Fix progress bar bug on Windows (#215, #223)
+- Fix bug in playlist search (#282)
+- Add user_order setting for separate order of user searches (lol768) (#277)
+- Add mix command (lol768) (#241, #283)
+- Add page count with total number of pages and current page (JKatzwinkel)
+- Fix UnicodeEncodeError on non-unicode terminals
+
+-------------------------------------------------------------------------------
+
 Version 0.2.4
 13 May 2015
 
  - Fix issue with rate-limiting in "album" command (#217)
  - Implement support for MPRIS (hrnr and ids1024) (#191, #210)
  - Fix display issue with small terminal width (#215)
- - Use version 3 of the youtube api, since version 2 was disabled
+ - Use version 3 of the youtube api (JKatzwinkel, ids1024, and lol768) (#256)
+     version 2 was disabled by youtube and no longer works
 
 -------------------------------------------------------------------------------
 
