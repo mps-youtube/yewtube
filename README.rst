@@ -108,7 +108,7 @@ Or with `Homebrew <http://brew.sh>`_::
 Additional Windows installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As an alternative to installing with pip, there is a standalone binary available. Go to `Releases <https://github.com/np1/mps-youtube/releases>`_:: and download mpsyt-VERSION.exe under downloads for the latest release.
+As an alternative to installing with pip, there is a standalone binary available. Go to `Releases <https://github.com/np1/mps-youtube/releases>`_ and download mpsyt-VERSION.exe under downloads for the latest release.
 
 Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to get colors (optional)::
 
