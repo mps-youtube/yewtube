@@ -3,11 +3,11 @@ Upstream-Name: mps-youtube
 Source: https://github.com/np1/mps-youtube
 
 Files: *
-Copyright: 2014 nagev
+Copyright: 2014-2015 nagev
 License: GPL-3.0+
 
 Files: debian/*
-Copyright: 2014 Zlatan Todoric <zlatan.todoric@gmail.com>
+Copyright: 2014-2015 Zlatan Todoric <zlatan.todoric@gmail.com>
 License: GPL-3.0+
 
 License: GPL-3.0+
