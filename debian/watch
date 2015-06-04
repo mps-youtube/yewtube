@@ -1,4 +1,4 @@
 version=3
 
-opts=filenamemangle=s/.+\/v?(\d\S*)\.tar\.gz/mps-youtube-$1\.tar\.gz/ \
+opts="filenamemangle=s/.+\/v?(\d\S*)\.tar\.gz/mps-youtube-$1\.tar\.gz/,pgpsigurlmangle=s/$/.asc/" \
   https://github.com/np1/mps-youtube/tags .*/v?(\d\S*)\.tar\.gz
