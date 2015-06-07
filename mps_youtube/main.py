@@ -3696,8 +3696,7 @@ def get_dl_data(song, mediatype="any"):
                 'size': size,
                 'ext': stream.extension,
                 'quality': stream.quality,
-                'notes': getattr(stream, "notes", ""),  # getattr for backward
-                                                        # pafy compatibility
+                'notes': stream.notes,
                 'url': stream.url}
 
         dldata.append(item)
