@@ -4195,7 +4195,6 @@ def info(num):
         p = get_pafy(item)
         pub = time.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
         writestatus("Fetched")
-        up = "Update Pafy to 0.3.42 to view likes/dislikes"
         out = c.ul + "Video Info" + c.w + "\n\n"
         out += p.title or ""
         out += "\n" + (p.description or "")
@@ -4203,8 +4202,8 @@ def info(num):
         out += "\nPublished  : " + time.strftime("%c", pub)
         out += "\nView count : " + str(p.viewcount)
         out += "\nRating     : " + str(p.rating)[:4]
-        out += "\nLikes      : " + str(getattr(p, "likes", up))
-        out += "\nDislikes   : " + str(getattr(p, "dislikes", up))
+        out += "\nLikes      : " + str(p.likes)
+        out += "\nDislikes   : " + str(p.dislikes)
         out += "\nCategory   : " + str(p.category)
         out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
         out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w)
