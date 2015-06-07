@@ -875,10 +875,10 @@ def init():
     if not os.path.exists(g.CFFILE):
 
         if has_exefile(mpv):
-            Config.PLAYER = ConfigItem("player", mpv, check_fn=check_player)
+            Config.PLAYER.set(mpv)
 
         elif has_exefile(mplayer):
-            Config.PLAYER = ConfigItem("player", mplayer, check_fn=check_player)
+            Config.PLAYER.set(mplayer)
 
         saveconfig()
 
