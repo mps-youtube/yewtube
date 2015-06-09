@@ -9,6 +9,9 @@ python setup.py sdist bdist_wheel
 
 import sys
 
+if sys.version_info < (3,0):
+    sys.exit("Mps-youtube requires python 3.")
+
 from setuptools import setup
 
 from mps_youtube import __version__
