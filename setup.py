@@ -7,12 +7,15 @@ https://np1.github.com/mps-youtube
 python setup.py sdist bdist_wheel
 """
 
-from setuptools import setup
 import sys
+
+from setuptools import setup
+
+from mps_youtube import __version__
 
 options = dict(
     name="mps-youtube",
-    version="0.2.5",
+    version=__version__,
     description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="np1",
