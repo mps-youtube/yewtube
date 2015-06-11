@@ -8,6 +8,7 @@ python setup.py sdist bdist_wheel
 """
 
 import sys
+import os
 
 if sys.version_info < (3,0):
     sys.exit("Mps-youtube requires python 3.")
@@ -68,14 +69,14 @@ if sys.platform.startswith('linux'):
     # Install desktop file. Required for mpris on Ubuntu
     options['data_files'] = [('share/applications/', ['mps-youtube.desktop'])]
 
-try:
-    import py2exe
-    # Only setting these when py2exe imports successfully prevents warnings
-    # in easy_install
-    options['console'] = ['mpsyt']
-    options['zipfile'] = None
-except (ImportError, NameError):
-    # importing py2exe can also throw a NameError in some linux environments.
-    pass
+if os.name == "nt":
+    try:
+        import py2exe
+        # Only setting these when py2exe imports successfully prevents warnings
+        # in easy_install
+        options['console'] = ['mpsyt']
+        options['zipfile'] = None
+    except ImportError:
+        pass
 
 setup(**options)
