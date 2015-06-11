@@ -77,11 +77,11 @@ except ImportError:
 
 try:
     # pylint: disable=F0401
-    import xerox
-    has_xerox = True
+    import pyperclip
+    has_pyperclip = True
 
 except ImportError:
-    has_xerox = False
+    has_pyperclip = False
 
 
 mswin = os.name == "nt"
@@ -4112,14 +4112,14 @@ def clip_copy(num):
         g.content = generate_songlist_display()
         return
 
-    if has_xerox:
+    if has_pyperclip:
 
         try:
-            xerox.copy(link)
+            pyperclip.copy(link)
             g.message = c.y + link + c.w + " copied"
             g.content = generate_songlist_display()
 
-        except xerox.base.ToolNotFound as e:
+        except Exception as e:
             xprint(link)
             xprint("Error - couldn't copy to clipboard.")
             xprint(e.__doc__)
@@ -4128,8 +4128,8 @@ def clip_copy(num):
             g.content = generate_songlist_display()
 
     else:
-        g.message = "xerox module must be installed for clipboard support\n"
-        g.message += "see https://pypi.python.org/pypi/xerox/"
+        g.message = "pyperclip module must be installed for clipboard support\n"
+        g.message += "see https://pypi.python.org/pypi/pyperclip/"
         g.content = generate_songlist_display()
 
 def mix(num):
@@ -4833,7 +4833,7 @@ Then, when results are shown:
     {2}d <number>{1} - download video <number>
     {2}r <number>{1} - show videos related to video <number>
     {2}u <number>{1} - show videos uploaded by uploader of video <number>
-    {2}x <number>{1} - copy item <number> url to clipboard (requires xerox)
+    {2}x <number>{1} - copy item <number> url to clipboard (requires pyperclip)
 
     {2}q{1}, {2}quit{1} - exit mpsyt
 """.format(c.ul, c.w, c.y)),

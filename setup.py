@@ -56,7 +56,7 @@ options = dict(
     ],
     options={
         "py2exe": {
-            "excludes": ("readline, win32api, win32con, xerox, dbus, gi,"
+            "excludes": ("readline, win32api, win32con, dbus, gi,"
                          " urllib.unquote_plus, urllib.urlencode"),
             "bundle_files": 1
         }
