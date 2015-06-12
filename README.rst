@@ -124,7 +124,7 @@ Run via Docker container
 
 Using `Docker <http://www.docker.com>`_, run with::
 
-    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt rothgar/mysyt
+    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt mysyt
 
 Additional Docker notes
 ~~~~~~~~~~~~~~~~~~~~~~~
