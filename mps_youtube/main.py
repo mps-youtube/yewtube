@@ -798,7 +798,6 @@ class g(object):
     pafy_pls = {}  #
     last_opened = message = content = ""
     config = [x for x in sorted(dir(Config)) if member_var(x)]
-    defaults = {setting: getattr(Config, setting) for setting in config}
     suffix = "3" # Python 3
     CFFILE = os.path.join(get_config_dir(), "config")
     TCFILE = os.path.join(get_config_dir(), "transcode")
