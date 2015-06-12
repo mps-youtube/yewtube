@@ -1693,7 +1693,7 @@ def screen_update(fill_blank=True):
 
     # Align prompt to bottom of screen
     xprint('\n' * (getxy().height -
-        g.content.count('\n') - 2 -
+        (g.content.count('\n') if g.content else 0) - 2 -
         bool(g.content)), end='')
 
     if g.message or g.rprompt:
