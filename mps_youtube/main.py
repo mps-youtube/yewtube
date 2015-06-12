@@ -152,6 +152,18 @@ def set_window_title(title):
         sys.stdout.write(xenc('\x1b]2;' + title + '\x07'))
 
 
+def clear_screen():
+    """Clear all text from screen."""
+    if g.no_clear_screen:
+        xprint('--\n')
+    elif mswin:
+        subprocess.call(['cls'])
+    elif has_exefile('tput'):
+        subprocess.call(['tput', 'reset'])
+    else:
+        xprint('\n' * 200)
+
+
 def get_default_ddir():
     """ Get system default Download directory, append mps dir. """
     user_home = os.path.expanduser("~")
@@ -765,7 +777,7 @@ class g(object):
     browse_mode = "normal"
     preloading = []
     # expiry = 5 * 60 * 60  # 5 hours
-    blank_text = "\n" * 200
+    no_clear_screen = False
     helptext = []
     max_retries = 3
     max_cached_streams = 1500
@@ -849,7 +861,8 @@ def process_cl_args(args):
         sys.exit()
 
     g.command_line = "playurl" in args or "dlurl" in args
-    g.blank_text = "" if g.command_line else g.blank_text
+    if g.command_line:
+        g.no_clear_screen = True
 
     if "--no-preload" in sys.argv:
         g.preload_disabled = True
@@ -1673,7 +1686,7 @@ def get_tracks_from_json(jsons):
 
 def screen_update(fill_blank=True):
     """ Display content, show message, blank screen."""
-    xprint(g.blank_text)
+    clear_screen()
 
     if g.content:
         xprint(g.content)
@@ -3643,7 +3656,8 @@ def quits(showlogo=True):
 
     savecache()
 
-    msg = g.blank_text + logo(c.r, version=__version__) if showlogo else ""
+    clear_screen()
+    msg = logo(c.r, version=__version__) if showlogo else ""
     xprint(msg + F("exitmsg", 2))
 
     if Config.CHECKUPDATE.get and showlogo:
@@ -4606,7 +4620,7 @@ def search_album(term, page=0, splash=True):
         return
 
     songs = []
-    xprint(g.blank_text)
+    clear_screen()
     itt = _match_tracks(artist, title, mb_tracks)
 
     stash = Config.SEARCH_MUSIC.get, Config.ORDER.get
@@ -4796,7 +4810,7 @@ if "--debug" in sys.argv or os.environ.get("mpsytdebug") == "1":
     xprint(get_version_info())
     list_update("--debug", sys.argv, remove=True)
     g.debug_mode = True
-    g.blank_text = "--\n"
+    g.no_clear_screen = True
     logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
     logging.basicConfig(level=logging.DEBUG, filename=logfile)
     logging.getLogger("pafy").setLevel(logging.DEBUG)
