@@ -157,7 +157,7 @@ def clear_screen():
     if g.no_clear_screen:
         xprint('--\n')
     elif mswin:
-        subprocess.call(['cls'])
+        os.system('cls')
     elif has_exefile('tput'):
         subprocess.call(['tput', 'reset'])
     else:
