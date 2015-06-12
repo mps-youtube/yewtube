@@ -58,7 +58,8 @@ options = dict(
     options={
         "py2exe": {
             "excludes": ("readline, win32api, win32con, dbus, gi,"
-                         " urllib.unquote_plus, urllib.urlencode"),
+                         " urllib.unquote_plus, urllib.urlencode,"
+                         " PyQt4, gtk"),
             "bundle_files": 1
         }
     },
