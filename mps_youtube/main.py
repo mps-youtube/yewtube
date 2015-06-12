@@ -308,11 +308,8 @@ def prune_streams():
 
 def get_pafy(item, force=False, callback=None):
     """ Get pafy object for an item. """
-    def nullfunc(x):
-        """ Function that returns None. """
-        return None
 
-    callback_fn = callback or nullfunc
+    callback_fn = callback or (lambda x: None)
     cached = g.pafs.get(item.ytid)
 
     if not force and cached and cached.expiry > time.time():
@@ -1618,7 +1615,6 @@ def get_tracks_from_json(jsons):
 
     # populate list of video objects
     songs = []
-    catids = []
     for item in items:
 
         try:
@@ -4375,10 +4371,9 @@ def show_message(message, col=c.r, update=False):
         screen_update()
 
 
-def _do_query(url, query, err='query failed', cache=True, report=False):
+def _do_query(url, query, err='query failed', report=False):
     """ Perform http request using mpsyt user agent header.
 
-    if cache is True, memo is utilised
     if report is True, return whether response is from memo
 
     """
