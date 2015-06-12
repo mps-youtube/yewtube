@@ -1691,6 +1691,11 @@ def screen_update(fill_blank=True):
     if g.content:
         xprint(g.content)
 
+    # Align prompt to bottom of screen
+    xprint('\n' * (getxy().height -
+        g.content.count('\n') - 2 -
+        bool(g.content)), end='')
+
     if g.message or g.rprompt:
         out = g.message or ''
         blanks = getxy().width - len(out) - len(g.rprompt or '')
