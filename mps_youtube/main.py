@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # python2 compatibility (for landscape)
 from __future__ import print_function
 
-__version__ = "0.2.5"
-__notes__ = "released 1 June 2015"
+__version__ = "0.2.6-dev"
+__notes__ = "development version"
 __author__ = "np1"
 __license__ = "GPLv3"
 __url__ = "http://github.com/np1/mps-youtube"
