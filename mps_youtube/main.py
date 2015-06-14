@@ -20,9 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-# python2 compatibility (for landscape)
-from __future__ import print_function
-
 __version__ = "0.2.6-dev"
 __notes__ = "development version"
 __author__ = "np1"
