@@ -365,7 +365,8 @@ class ConfigItem(object):
 
     """ A configuration item. """
 
-    def __init__(self, name, value, minval=None, maxval=None, check_fn=None):
+    def __init__(self, name, value, minval=None, maxval=None, check_fn=None,
+            require_known_player=False, allowed_values=None):
         """ If specified, the check_fn should return a dict.
 
         {valid: bool, message: success/fail mesage, value: value to set}
@@ -376,8 +377,10 @@ class ConfigItem(object):
         self.type = type(value)
         self.maxval, self.minval = maxval, minval
         self.check_fn = check_fn
-        self.require_known_player = False
+        self.require_known_player = require_known_player
         self.allowed_values = []
+        if allowed_values:
+            self.allowed_values = allowed_values
 
     @property
     def get(self):
@@ -622,10 +625,10 @@ class _Config(object):
 
     """ Holds various configuration values. """
 
-    ORDER = ConfigItem("order", "relevance")
-    ORDER.allowed_values = "relevance date views rating".split()
-    USER_ORDER = ConfigItem("user_order", "")
-    USER_ORDER.allowed_values = [""] + ORDER.allowed_values
+    ORDER = ConfigItem("order", "relevance",
+            allowed_values="relevance date views rating".split())
+    USER_ORDER = ConfigItem("user_order", "",
+            allowed_values = [""] + "relevance date views rating".split())
     MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
     CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=70, maxval=880,
                                check_fn=check_console_width)
@@ -636,20 +639,20 @@ class _Config(object):
     ENCODER = ConfigItem("encoder", 0, minval=0, check_fn=check_encoder)
     NOTIFIER = ConfigItem("notifier", "")
     CHECKUPDATE = ConfigItem("checkupdate", True)
-    SHOW_MPLAYER_KEYS = ConfigItem("show_mplayer_keys", True)
-    SHOW_MPLAYER_KEYS.require_known_player = True
-    FULLSCREEN = ConfigItem("fullscreen", False)
-    FULLSCREEN.require_known_player = True
+    SHOW_MPLAYER_KEYS = ConfigItem("show_mplayer_keys", True,
+            require_known_player=True)
+    FULLSCREEN = ConfigItem("fullscreen", False,
+            require_known_player=True)
     SHOW_STATUS = ConfigItem("show_status", True)
     COLUMNS = ConfigItem("columns", "")
     DDIR = ConfigItem("ddir", get_default_ddir(), check_fn=check_ddir)
     OVERWRITE = ConfigItem("overwrite", True)
     SHOW_VIDEO = ConfigItem("show_video", False)
     SEARCH_MUSIC = ConfigItem("search_music", True)
-    WINDOW_POS = ConfigItem("window_pos", "", check_fn=check_win_pos)
-    WINDOW_POS.require_known_player = True
-    WINDOW_SIZE = ConfigItem("window_size", "", check_fn=check_win_size)
-    WINDOW_SIZE.require_known_player = True
+    WINDOW_POS = ConfigItem("window_pos", "", check_fn=check_win_pos,
+            require_known_player=True)
+    WINDOW_SIZE = ConfigItem("window_size", "", check_fn=check_win_size,
+            require_known_player=True)
     COLOURS = ConfigItem("colours",
                          False if mswin and not has_colorama else True,
                          check_fn=check_colours)
