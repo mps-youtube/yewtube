@@ -4469,7 +4469,3 @@ command
  - Enable custom downloader application (ids1024 & np1){2}
 
 """.format(c.ul, c.w, c.y))]
-
-if __name__ == "__main__":
-    init()
-    main()
