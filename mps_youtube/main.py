@@ -57,7 +57,9 @@ from urllib.parse import urlencode
 
 import pafy
 
-from . import terminalsize
+from . import terminalsize, g
+from .playlist import Playlist
+from .paths import get_default_ddir, get_config_dir
 
 try:
     # pylint: disable=F0401
@@ -86,12 +88,6 @@ except ImportError:
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in os.environ.get("LANG", "")
-
-
-def member_var(x):
-    """ Return True if x is a member variable. """
-    return not(x.startswith("__") or callable(x))
-
 
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
@@ -162,60 +158,6 @@ def clear_screen():
         subprocess.call(['tput', 'reset'])
     else:
         xprint('\n' * 200)
-
-
-def get_default_ddir():
-    """ Get system default Download directory, append mps dir. """
-    user_home = os.path.expanduser("~")
-    join, exists = os.path.join, os.path.exists
-
-    if mswin:
-        return join(user_home, "Downloads", "mps")
-
-    USER_DIRS = join(user_home, ".config", "user-dirs.dirs")
-    DOWNLOAD_HOME = join(user_home, "Downloads")
-
-    # define ddir by (1) env var, (2) user-dirs.dirs file,
-    #                (3) existing ~/Downloads dir (4) ~
-
-    if 'XDG_DOWNLOAD_DIR' in os.environ:
-        ddir = os.environ['XDG_DOWNLOAD_DIR']
-
-    elif exists(USER_DIRS):
-        lines = open(USER_DIRS).readlines()
-        defn = [x for x in lines if x.startswith("XDG_DOWNLOAD_DIR")]
-
-        if len(defn) == 1:
-            ddir = defn[0].split("=")[1].replace('"', '')
-            ddir = ddir.replace("$HOME", user_home).strip()
-
-        else:
-            ddir = DOWNLOAD_HOME if exists(DOWNLOAD_HOME) else user_home
-
-    else:
-        ddir = DOWNLOAD_HOME if exists(DOWNLOAD_HOME) else user_home
-
-    ddir = ddir
-    return os.path.join(ddir, "mps")
-
-
-def get_config_dir():
-    """ Get user's configuration directory. Migrate to new mps name if old."""
-    if mswin:
-        confdir = os.environ["APPDATA"]
-
-    elif 'XDG_CONFIG_HOME' in os.environ:
-        confdir = os.environ['XDG_CONFIG_HOME']
-
-    else:
-        confdir = os.path.join(os.path.expanduser("~"), '.config')
-
-    mps_confdir = os.path.join(confdir, "mps-youtube")
-
-    if not os.path.exists(mps_confdir):
-        os.makedirs(mps_confdir)
-
-    return mps_confdir
 
 
 def get_mpv_version(exename):
@@ -725,100 +667,10 @@ class Config(object):
     DOWNLOAD_COMMAND = ConfigItem("download_command", '')
     API_KEY = ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo", check_fn=check_api_key)
 
+    def __iter__(cls):
+        return (x for x in sorted(dir(cls))
+                if not(x.startswith("__") or callable(x)))
 
-class Playlist(object):
-
-    """ Representation of a playist, has list of songs. """
-
-    def __init__(self, name=None, songs=None):
-        """ class members. """
-        self.name = name
-        self.creation = time.time()
-        self.songs = songs or []
-
-    @property
-    def is_empty(self):
-        """ Return True / False if songs are populated or not. """
-        return not self.songs
-
-    @property
-    def size(self):
-        """ Return number of tracks. """
-        return len(self.songs)
-
-    @property
-    def duration(self):
-        """ Sum duration of the playlist. """
-        duration = sum(s.length for s in self.songs)
-        duration = time.strftime('%H:%M:%S', time.gmtime(int(duration)))
-        return duration
-
-
-class g(object):
-
-    """ Class for holding globals that are needed throught the module. """
-
-    transcoder_path = "auto"
-    delete_orig = True
-    encoders = []
-    muxapp = False
-    meta = {}
-    detectable_size = True
-    command_line = False
-    debug_mode = False
-    preload_disabled = False
-    ytpls = []
-    mpv_version = 0, 0, 0
-    mpv_usesock = False
-    mprisctl = None
-    browse_mode = "normal"
-    preloading = []
-    # expiry = 5 * 60 * 60  # 5 hours
-    no_clear_screen = False
-    helptext = []
-    max_retries = 3
-    max_cached_streams = 1500
-    url_memo = collections.OrderedDict()
-    username_query_cache = collections.OrderedDict()
-    model = Playlist(name="model")
-    last_search_query = {}
-    current_page = 0
-    result_count = 0
-    more_pages = None
-    rprompt = None
-    active = Playlist(name="active")
-    text = {}
-    userpl = {}
-    ytpl = {}
-    pafs = collections.OrderedDict()
-    streams = collections.OrderedDict()
-    pafy_pls = {}  #
-    last_opened = message = content = ""
-    config = [x for x in sorted(dir(Config)) if member_var(x)]
-    suffix = "3" # Python 3
-    CFFILE = os.path.join(get_config_dir(), "config")
-    TCFILE = os.path.join(get_config_dir(), "transcode")
-    OLD_PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
-    PLFILE = os.path.join(get_config_dir(), "playlist_v2")
-    CACHEFILE = os.path.join(get_config_dir(), "cache_py_" + sys.version[0:5])
-    READLINE_FILE = None
-    playerargs_defaults = {
-        "mpv": {
-            "msglevel": {"<0.4": "--msglevel=all=no:statusline=status",
-                         ">=0.4": "--msg-level=all=no:statusline=status"},
-            "title": "--title",
-            "fs": "--fs",
-            "novid": "--no-video",
-            "ignidx": "--demuxer-lavf-o=fflags=+ignidx",
-            "geo": "--geometry"},
-        "mplayer": {
-            "title": "-title",
-            "fs": "-fs",
-            "novid": "-novideo",
-            # "ignidx": "-lavfdopts o=fflags=+ignidx".split()
-            "ignidx": "",
-            "geo": "-geometry"}
-        }
 
 def get_version_info():
     """ Return version and platform info. """
@@ -1100,7 +952,7 @@ def showconfig(_):
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
 
-    for setting in g.config:
+    for setting in Config:
         val = getattr(Config, setting)
 
         # don't show player specific settings if unknown player
@@ -1123,7 +975,7 @@ def showconfig(_):
 
 def saveconfig():
     """ Save current config to file. """
-    config = {setting: getattr(Config, setting).value for setting in g.config}
+    config = {setting: getattr(Config, setting).value for setting in Config}
 
     with open(g.CFFILE, "wb") as cf:
         pickle.dump(config, cf, protocol=2)
@@ -1207,13 +1059,13 @@ def setconfig(key, val):
     key = key.replace("-", "_")
     if key.upper() == "ALL" and val.upper() == "DEFAULT":
 
-        for ci in g.config:
+        for ci in Config:
             getattr(Config, ci).value = getattr(Config, ci).default
 
         saveconfig()
         message = "Default configuration reinstated"
 
-    elif not key.upper() in g.config:
+    elif not key.upper() in Config:
         message = "Unknown config item: %s%s%s" % (c.r, key, c.w)
 
     elif val.upper() == "DEFAULT":
