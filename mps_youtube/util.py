@@ -1,3 +1,6 @@
+# python2 compatibility (for landscape)
+from __future__ import print_function
+
 import os
 import re
 import sys
@@ -5,9 +8,6 @@ import subprocess
 import logging
 
 from . import g, c
-
-# python2 compatibility (for landscape)
-from __future__ import print_function
 
 
 mswin = os.name == "nt"
