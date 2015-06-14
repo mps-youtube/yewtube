@@ -618,7 +618,7 @@ def check_player(player):
             return dict(valid=False, message=msg)
 
 
-class Config(object):
+class _Config(object):
 
     """ Holds various configuration values. """
 
@@ -656,9 +656,11 @@ class Config(object):
     DOWNLOAD_COMMAND = ConfigItem("download_command", '')
     API_KEY = ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo", check_fn=check_api_key)
 
-    def __iter__(cls):
-        return (x for x in sorted(dir(cls))
+    def __iter__(self):
+        return (x for x in sorted(dir(self))
                 if not(x.startswith("__") or callable(x)))
+
+Config = _Config()
 
 
 def get_version_info():
