@@ -57,14 +57,14 @@ import pafy
 
 from . import terminalsize, g, c
 from .playlist import Playlist, Video
-from .paths import get_default_ddir, get_config_dir
+from .paths import get_config_dir
 from .config import Config, known_player_set, import_config
 from .util import has_exefile, get_mpv_version, dbg, list_update
 from .util import xenc, xprint, mswinfn, set_window_title, clear_screen
 
 try:
     # pylint: disable=F0401
-    from colorama import init as init_colorama, Fore, Style
+    import colorama
     has_colorama = True
 
 except ImportError:
@@ -392,7 +392,7 @@ def init():
 
     # setup colorama
     if has_colorama and mswin:
-        init_colorama()
+        colorama.init()
 
     # find muxer app
     if mswin:
