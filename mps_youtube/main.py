@@ -573,16 +573,6 @@ def check_win_size(size):
         return dict(valid=True, value=size)
 
 
-def check_colours(val):
-    """ Check whether colour config value can be set. """
-    if val and mswin and not has_colorama:
-        message = "The colorama module needs to be installed for colour output"
-        return dict(valid=False, message=message)
-
-    else:
-        return dict(valid=True)
-
-
 def check_encoder(option):
     """ Check encoder value is acceptable. """
     encs = g.encoders
@@ -658,9 +648,6 @@ class _Config(object):
                 require_known_player=True)),
             ("WINDOW_SIZE", ConfigItem("window_size", "",
                 check_fn=check_win_size, require_known_player=True)),
-            ("COLOURS", ConfigItem("colours",
-                False if mswin and not has_colorama else True,
-                check_fn=check_colours)),
             ("DOWNLOAD_COMMAND", ConfigItem("download_command", '')),
             ("API_KEY", ConfigItem("api_key",
                 "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo",
@@ -1043,7 +1030,7 @@ def import_config():
             try:
                 Config[k].value = v
 
-            except AttributeError:  # Ignore unrecognised data in config
+            except KeyError:  # Ignore unrecognised data in config
                 dbg("Unrecognised config item: %s", k)
 
         # Update config files from versions <= 0.01.41
@@ -1071,7 +1058,7 @@ class c(object):
         blue, pink = Fore.CYAN, Fore.MAGENTA
 
     elif mswin:
-        Config.COLOURS.value = False
+        ul = red = green = yellow = blue = pink = white = ""
 
     else:
         white = "\x1b[%sm" % 0
@@ -1079,8 +1066,6 @@ class c(object):
         cols = ["\x1b[%sm" % n for n in range(91, 96)]
         red, green, yellow, blue, pink = cols
 
-    if not Config.COLOURS.get:
-        ul = red = green = yellow = blue = pink = white = ""
     r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
     @classmethod
