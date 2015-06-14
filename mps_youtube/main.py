@@ -487,7 +487,7 @@ class ConfigItem(object):
             if checked['valid']:
                 value = checked.get("value", value)
                 self.value = value
-                saveconfig()
+                Config.save()
                 return checked.get("message", success_msg)
 
             else:
@@ -495,7 +495,7 @@ class ConfigItem(object):
 
         elif success_msg:
             self.value = value
-            saveconfig()
+            Config.save()
             return success_msg
 
 
@@ -678,6 +678,15 @@ class _Config(object):
     def __iter__(self):
         return iter(self._configitems.keys())
 
+    def save(self):
+        """ Save current config to file. """
+        config = {setting: self[setting].value for setting in self}
+
+        with open(g.CFFILE, "wb") as cf:
+            pickle.dump(config, cf, protocol=2)
+
+        dbg(c.p + "Saved config: " + g.CFFILE + c.w)
+
 Config = _Config()
 
 
@@ -750,7 +759,7 @@ def init():
         elif has_exefile(mplayer):
             Config.PLAYER.set(mplayer)
 
-        saveconfig()
+        Config.save()
 
     else:
         import_config()
@@ -982,16 +991,6 @@ def showconfig(_):
     g.message += "Enter %sset all default%s to reset all" % (c.g, c.w)
 
 
-def saveconfig():
-    """ Save current config to file. """
-    config = {setting: Config[setting].value for setting in Config}
-
-    with open(g.CFFILE, "wb") as cf:
-        pickle.dump(config, cf, protocol=2)
-
-    dbg(c.p + "Saved config: " + g.CFFILE + c.w)
-
-
 def savecache():
     """ Save stream cache. """
     caches = dict(
@@ -1031,7 +1030,7 @@ def import_config():
                 list_update(r, Config.PLAYERARGS.value, remove=True)
 
             Config.PLAYERARGS.value = " ".join(Config.PLAYERARGS.get)
-            saveconfig()
+            Config.save()
 
 
 class c(object):
@@ -1071,7 +1070,7 @@ def setconfig(key, val):
         for ci in Config:
             Config[ci].value = Config[ci].default
 
-        saveconfig()
+        Config.save()
         message = "Default configuration reinstated"
 
     elif not key.upper() in Config:
@@ -1083,10 +1082,10 @@ def setconfig(key, val):
         message = "%s%s%s set to %s%s%s (default)"
         dispval = att.display or "None"
         message = message % (c.y, key, c.w, c.y, dispval, c.w)
-        saveconfig()
+        Config.save()
 
     else:
-        # saveconfig() will be called by Config.set() method
+        # Config.save() will be called by Config.set() method
         message = Config[key.upper()].set(val)
 
     showconfig(1)
