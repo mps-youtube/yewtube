@@ -27,3 +27,14 @@ class Playlist(object):
         duration = sum(s.length for s in self.songs)
         duration = time.strftime('%H:%M:%S', time.gmtime(int(duration)))
         return duration
+
+
+class Video(object):
+
+    """ Class to represent a YouTube video. """
+
+    def __init__(self, ytid, title, length):
+        """ class members. """
+        self.ytid = ytid
+        self.title = title
+        self.length = int(length)

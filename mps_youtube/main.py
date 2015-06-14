@@ -58,7 +58,7 @@ from urllib.parse import urlencode
 import pafy
 
 from . import terminalsize, g
-from .playlist import Playlist
+from .playlist import Playlist, Video
 from .paths import get_default_ddir, get_config_dir
 
 try:
@@ -205,17 +205,6 @@ def get_content_length(url, preloading=False):
     headers = response.headers
     cl = headers['content-length']
     return int(cl)
-
-
-class Video(object):
-
-    """ Class to represent a YouTube video. """
-
-    def __init__(self, ytid, title, length):
-        """ class members. """
-        self.ytid = ytid
-        self.title = title
-        self.length = int(length)
 
 
 def prune_streams():
