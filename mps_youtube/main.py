@@ -736,7 +736,7 @@ def process_cl_args():
             xprint(x[2])
         sys.exit()
 
-    if args.version or os.environ.get("mpsytdebug") == "1":
+    if args.debug or os.environ.get("mpsytdebug") == "1":
         xprint(get_version_info())
         g.debug_mode = True
         g.no_clear_screen = True
@@ -1573,10 +1573,11 @@ def screen_update(fill_blank=True):
     if g.content:
         xprint(g.content)
 
-    # Align prompt to bottom of screen
-    xprint('\n' * (getxy().height -
-        (g.content.count('\n') if g.content else 0) - 2 -
-        bool(g.content)), end='')
+    if not g.no_clear_screen:
+        # Align prompt to bottom of screen
+        xprint('\n' * (getxy().height -
+            (g.content.count('\n') if g.content else 0) - 2 -
+            bool(g.content)), end='')
 
     if g.message or g.rprompt:
         out = g.message or ''
