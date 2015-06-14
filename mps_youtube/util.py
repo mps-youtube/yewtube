@@ -6,6 +6,9 @@ import logging
 
 from . import g, c
 
+# python2 compatibility (for landscape)
+from __future__ import print_function
+
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in os.environ.get("LANG", "")
