@@ -35,6 +35,7 @@ import unicodedata
 import collections
 import subprocess
 import threading
+import argparse
 import platform
 import tempfile
 import difflib
@@ -712,27 +713,53 @@ def get_version_info():
     return out
 
 
-def process_cl_args(args):
+def process_cl_args():
     """ Process command line arguments. """
-    if "--version" in args:
+
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('commands', nargs='*')
+    parser.add_argument('--help', '-h', action='store_true')
+    parser.add_argument('--version', '-v', action='store_true')
+    parser.add_argument('--debug', '-d', action='store_true')
+    parser.add_argument('--logging', '-l', action='store_true')
+    parser.add_argument('--no-autosize', action='store_true')
+    parser.add_argument('--no-preload', action='store_true')
+    args = parser.parse_args()
+
+    if args.version:
         xprint(get_version_info())
         xprint("")
         sys.exit()
 
-    if "--help" in args:
-
+    elif args.help:
         for x in g.helptext:
             xprint(x[2])
-
         sys.exit()
 
-    g.command_line = "playurl" in args or "dlurl" in args
+    if args.version or os.environ.get("mpsytdebug") == "1":
+        xprint(get_version_info())
+        g.debug_mode = True
+        g.no_clear_screen = True
+        logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
+        logging.basicConfig(level=logging.DEBUG, filename=logfile)
+        logging.getLogger("pafy").setLevel(logging.DEBUG)
+
+    elif args.logging or os.environ.get("mpsytlog") == "1":
+        logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
+        logging.basicConfig(level=logging.DEBUG, filename=logfile)
+        logging.getLogger("pafy").setLevel(logging.DEBUG)
+
+    if args.no_autosize:
+        g.detectable_size = False
+
+    g.command_line = "playurl" in args.commands or "dlurl" in args.commands
     if g.command_line:
         g.no_clear_screen = True
 
-    if "--no-preload" in sys.argv:
+    if args.no_preload:
         g.preload_disabled = True
-        list_update("--no-preload", sys.argv, remove=True)
+
+    g.arument_commands = args.commands
 
 
 def init():
@@ -805,7 +832,7 @@ def init():
     # Make pafy use the same api key
     pafy.set_api_key(Config.API_KEY.get)
 
-    process_cl_args(sys.argv)
+    process_cl_args()
 
 
 def init_transcode():
@@ -4575,8 +4602,7 @@ def main():
     convert_playlist_to_v2()
     open_from_file()
 
-    # get cmd line input
-    arg_inp = " ".join(sys.argv[1:])
+    arg_inp = ' '.join(g.argument_commands)
 
     # input types
     word = r'[^\W\d][-\w\s]{,100}'
@@ -4664,25 +4690,6 @@ def main():
                 sys.exit("Bad syntax")
 
         screen_update()
-
-if "--debug" in sys.argv or os.environ.get("mpsytdebug") == "1":
-    xprint(get_version_info())
-    list_update("--debug", sys.argv, remove=True)
-    g.debug_mode = True
-    g.no_clear_screen = True
-    logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
-    logging.basicConfig(level=logging.DEBUG, filename=logfile)
-    logging.getLogger("pafy").setLevel(logging.DEBUG)
-
-elif "--logging" in sys.argv or os.environ.get("mpsytlog") == "1":
-    list_update("--logging", sys.argv, remove=True)
-    logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
-    logging.basicConfig(level=logging.DEBUG, filename=logfile)
-    logging.getLogger("pafy").setLevel(logging.DEBUG)
-
-if "--no-autosize" in sys.argv:
-    list_update("--no-autosize", sys.argv, remove=True)
-    g.detectable_size = False
 
 def dbg(*args):
     """Emit a debug message."""

@@ -68,3 +68,4 @@ playerargs_defaults = {
         "ignidx": "",
         "geo": "-geometry"}
     }
+argument_commands = []
