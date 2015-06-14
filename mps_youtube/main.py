@@ -625,43 +625,58 @@ class _Config(object):
 
     """ Holds various configuration values. """
 
-    ORDER = ConfigItem("order", "relevance",
-            allowed_values="relevance date views rating".split())
-    USER_ORDER = ConfigItem("user_order", "",
-            allowed_values = [""] + "relevance date views rating".split())
-    MAX_RESULTS = ConfigItem("max_results", 19, maxval=50, minval=1)
-    CONSOLE_WIDTH = ConfigItem("console_width", 80, minval=70, maxval=880,
-                               check_fn=check_console_width)
-    MAX_RES = ConfigItem("max_res", 2160, minval=192, maxval=2160)
-    PLAYER = ConfigItem("player", "mplayer" + (".exe" if mswin else ""),
-                        check_fn=check_player)
-    PLAYERARGS = ConfigItem("playerargs", "")
-    ENCODER = ConfigItem("encoder", 0, minval=0, check_fn=check_encoder)
-    NOTIFIER = ConfigItem("notifier", "")
-    CHECKUPDATE = ConfigItem("checkupdate", True)
-    SHOW_MPLAYER_KEYS = ConfigItem("show_mplayer_keys", True,
-            require_known_player=True)
-    FULLSCREEN = ConfigItem("fullscreen", False,
-            require_known_player=True)
-    SHOW_STATUS = ConfigItem("show_status", True)
-    COLUMNS = ConfigItem("columns", "")
-    DDIR = ConfigItem("ddir", get_default_ddir(), check_fn=check_ddir)
-    OVERWRITE = ConfigItem("overwrite", True)
-    SHOW_VIDEO = ConfigItem("show_video", False)
-    SEARCH_MUSIC = ConfigItem("search_music", True)
-    WINDOW_POS = ConfigItem("window_pos", "", check_fn=check_win_pos,
-            require_known_player=True)
-    WINDOW_SIZE = ConfigItem("window_size", "", check_fn=check_win_size,
-            require_known_player=True)
-    COLOURS = ConfigItem("colours",
-                         False if mswin and not has_colorama else True,
-                         check_fn=check_colours)
-    DOWNLOAD_COMMAND = ConfigItem("download_command", '')
-    API_KEY = ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo", check_fn=check_api_key)
+    _configitems = collections.OrderedDict((
+            ("ORDER", ConfigItem("order", "relevance",
+                allowed_values="relevance date views rating".split())),
+            ("USER_ORDER", ConfigItem("user_order", "", allowed_values =
+                [""] + "relevance date views rating".split())),
+            ("MAX_RESULTS", ConfigItem("max_results", 19,
+                maxval=50, minval=1)),
+            ("CONSOLE_WIDTH", ConfigItem("console_width", 80, minval=70,
+                maxval=880, check_fn=check_console_width)),
+            ("MAX_RES", ConfigItem("max_res", 2160, minval=192, maxval=2160)),
+            ("PLAYER", ConfigItem("player", "mplayer" + ".exe" * mswin,
+                check_fn=check_player)),
+            ("PLAYERARGS", ConfigItem("playerargs", "")),
+            ("ENCODER", ConfigItem("encoder", 0, minval=0,
+                check_fn=check_encoder)),
+            ("NOTIFIER", ConfigItem("notifier", "")),
+            ("CHECKUPDATE", ConfigItem("checkupdate", True)),
+            ("SHOW_MPLAYER_KEYS", ConfigItem("show_mplayer_keys", True,
+                require_known_player=True)),
+            ("FULLSCREEN", ConfigItem("fullscreen", False,
+                require_known_player=True)),
+            ("SHOW_STATUS", ConfigItem("show_status", True)),
+            ("COLUMNS", ConfigItem("columns", "")),
+            ("DDIR", ConfigItem("ddir", get_default_ddir(),
+                check_fn=check_ddir)),
+            ("OVERWRITE", ConfigItem("overwrite", True)),
+            ("SHOW_VIDEO", ConfigItem("show_video", False)),
+            ("SEARCH_MUSIC", ConfigItem("search_music", True)),
+            ("WINDOW_POS", ConfigItem("window_pos", "", check_fn=check_win_pos,
+                require_known_player=True)),
+            ("WINDOW_SIZE", ConfigItem("window_size", "",
+                check_fn=check_win_size, require_known_player=True)),
+            ("COLOURS", ConfigItem("colours",
+                False if mswin and not has_colorama else True,
+                check_fn=check_colours)),
+            ("DOWNLOAD_COMMAND", ConfigItem("download_command", '')),
+            ("API_KEY", ConfigItem("api_key",
+                "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo",
+                check_fn=check_api_key))
+        ))
+
+    def __getitem__(self, key):
+        return self._configitems[key]
+
+    def __getattr__(self, name):
+        try:
+            return self._configitems[name]
+        except KeyError:
+            raise AttributeError
 
     def __iter__(self):
-        return (x for x in sorted(dir(self))
-                if not(x.startswith("__") or callable(x)))
+        return iter(self._configitems.keys())
 
 Config = _Config()
 
@@ -947,7 +962,7 @@ def showconfig(_):
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
 
     for setting in Config:
-        val = getattr(Config, setting)
+        val = Config[setting]
 
         # don't show player specific settings if unknown player
         if not known_player_set() and val.require_known_player:
@@ -969,7 +984,7 @@ def showconfig(_):
 
 def saveconfig():
     """ Save current config to file. """
-    config = {setting: getattr(Config, setting).value for setting in Config}
+    config = {setting: Config[setting].value for setting in Config}
 
     with open(g.CFFILE, "wb") as cf:
         pickle.dump(config, cf, protocol=2)
@@ -1000,7 +1015,7 @@ def import_config():
         for k, v in saved_config.items():
 
             try:
-                getattr(Config, k).value = v
+                Config[k].value = v
 
             except AttributeError:  # Ignore unrecognised data in config
                 dbg("Unrecognised config item: %s", k)
@@ -1054,7 +1069,7 @@ def setconfig(key, val):
     if key.upper() == "ALL" and val.upper() == "DEFAULT":
 
         for ci in Config:
-            getattr(Config, ci).value = getattr(Config, ci).default
+            Config[ci].value = Config[ci].default
 
         saveconfig()
         message = "Default configuration reinstated"
@@ -1063,7 +1078,7 @@ def setconfig(key, val):
         message = "Unknown config item: %s%s%s" % (c.r, key, c.w)
 
     elif val.upper() == "DEFAULT":
-        att = getattr(Config, key.upper())
+        att = Config[key.upper()]
         att.value = att.default
         message = "%s%s%s set to %s%s%s (default)"
         dispval = att.display or "None"
@@ -1072,7 +1087,7 @@ def setconfig(key, val):
 
     else:
         # saveconfig() will be called by Config.set() method
-        message = getattr(Config, key.upper()).set(val)
+        message = Config[key.upper()].set(val)
 
     showconfig(1)
     g.message = message
