@@ -352,7 +352,6 @@ def init():
     # __main__.Playlist = Playlist
     # __main__.Video = Video
 
-    init_text()
     init_readline()
     init_cache()
     init_transcode()
@@ -656,87 +655,6 @@ def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
     text = re.sub(r"&&", r"%s", text)
 
     return "\n" * nb + text + c.w + "\n" * na
-
-
-def init_text():
-    """ Set up text. """
-    g.text = {
-
-        "exitmsg": ("**0mps-youtube - **1http://github.com/np1/mps-youtube**0"
-                    "\nReleased under the GPLv3 license\n"
-                    "(c) 2014, 2015 np1 and contributors**2\n"""),
-        "_exitmsg": (c.r, c.b, c.w),
-
-        # Error / Warning messages
-
-        'no playlists': "*No saved playlists found!*",
-        'no playlists_': (c.r, c.w),
-        'pl bad name': '*&&* is not valid a valid name. Ensure it starts with'
-                       ' a letter or _',
-        'pl bad name_': (c.r, c.w),
-        'pl not found': 'Playlist *&&* unknown. Saved playlists are shown '
-                        'above',
-        'pl not found_': (c.r, c.w),
-        'pl not found advise ls': 'Playlist "*&&*" not found. Use *ls* to '
-                                  'list',
-        'pl not found advise ls_': (c.y, c.w, c.g, c.w),
-        'pl empty': 'Playlist is empty!',
-        'advise add': 'Use *add N* to add a track',
-        'advise add_': (c.g, c.w),
-        'advise search': 'Search for items and then use *add* to add them',
-        'advise search_': (c.g, c.w),
-        'no data': 'Error fetching data. Possible network issue.'
-                   '\n*&&*',
-        'no data_': (c.r, c.w),
-        'use dot': 'Start your query with a *.* to perform a search',
-        'use dot_': (c.g, c.w),
-        'cant get track': 'Problem playing last item: *&&*',
-        'cant get track_': (c.r, c.w),
-        'track unresolved': 'Sorry, this track is not available',
-        'no player': '*&&* was not found on this system',
-        'no player_': (c.y, c.w),
-        'no pl match for rename': '*Couldn\'t find matching playlist to '
-                                  'rename*',
-        'no pl match for rename_': (c.r, c.w),
-        'invalid range': "*Invalid item / range entered!*",
-        'invalid range_': (c.r, c.w),
-        '-audio': "*Warning* - the filetype you selected (m4v) has no audio!",
-        '-audio_': (c.y, c.w),
-        'no mix': 'No mix is available for the selected video',
-        'mix only videos': 'Mixes are only available for videos',
-        'invalid item': '*Invalid item entered!*',
-
-        # Info messages..
-
-        'select mux': ("Select [*&&*] to mux audio or [*Enter*] to download "
-                       "without audio\nThis feature is experimental!"),
-        'select mux_': (c.y, c.w, c.y, c.w),
-        'pl renamed': 'Playlist *&&* renamed to *&&*',
-        'pl renamed_': (c.y, c.w, c.y, c.w),
-        'pl saved': 'Playlist saved as *&&*.  Use *ls* to list playlists',
-        'pl saved_': (c.y, c.w, c.g, c.w),
-        'pl loaded': 'Loaded playlist *&&* as current playlist',
-        'pl loaded_': (c.y, c.w),
-        'pl viewed': 'Showing playlist *&&*',
-        'pl viewed_': (c.y, c.w),
-        'pl help': 'Enter *open <name or ID>* to load a playlist',
-        'pl help_': (c.g, c.w),
-        'added to pl': '*&&* tracks added (*&&* total [*&&*]). Use *vp* to '
-                       'view',
-        'added to pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.g, c.w),
-        'added to saved pl': '*&&* tracks added to *&&* (*&&* total [*&&*])',
-        'added to saved pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.y, c.w),
-        'song move': 'Moved *&&* to position *&&*',
-        'song move_': (c.y, c.w, c.y, c.w),
-        'song sw': ("Switched item *&&* with *&&*"),
-        'song sw_': (c.y, c.w, c.y, c.w),
-        'current pl': "This is the current playlist. Use *save <name>* to save"
-                      " it",
-        'current pl_': (c.g, c.w),
-        'help topic': ("  Enter *help <topic>* for specific help:"),
-        'help topic_': (c.y, c.w),
-        'songs rm': '*&&* tracks removed &&',
-        'songs rm_': (c.y, c.w)}
 
 
 def save_to_file():
