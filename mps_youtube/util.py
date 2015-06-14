@@ -106,3 +106,12 @@ def clear_screen():
         subprocess.call(['tput', 'reset'])
     else:
         xprint('\n' * 200)
+
+
+def list_update(item, lst, remove=False):
+    """ Add or remove item from list, checking first to avoid exceptions. """
+    if not remove and item not in lst:
+        lst.append(item)
+
+    elif remove and item in lst:
+        lst.remove(item)

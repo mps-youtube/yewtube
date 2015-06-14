@@ -58,8 +58,8 @@ import pafy
 from . import terminalsize, g, c
 from .playlist import Playlist, Video
 from .paths import get_default_ddir, get_config_dir
-from .config import Config, known_player_set
-from .util import has_exefile, get_mpv_version, dbg
+from .config import Config, known_player_set, import_config
+from .util import has_exefile, get_mpv_version, dbg, list_update
 from .util import xenc, xprint, mswinfn, set_window_title, clear_screen
 
 try:
@@ -597,35 +597,6 @@ def savecache():
         pickle.dump(caches, cf, protocol=2)
 
     dbg(c.p + "saved cache file: " + g.CACHEFILE + c.w)
-
-
-def import_config():
-    """ Override config if config file exists. """
-    if os.path.exists(g.CFFILE):
-
-        with open(g.CFFILE, "rb") as cf:
-            saved_config = pickle.load(cf)
-
-        for k, v in saved_config.items():
-
-            try:
-                Config[k].value = v
-
-            except KeyError:  # Ignore unrecognised data in config
-                dbg("Unrecognised config item: %s", k)
-
-        # Update config files from versions <= 0.01.41
-        if isinstance(Config.PLAYERARGS.get, list):
-            Config.WINDOW_POS.value = "top-right"
-            redundant = ("-really-quiet --really-quiet -prefer-ipv4 -nolirc "
-                         "-fs --fs".split())
-
-            for r in redundant:
-                dbg("removing redundant arg %s", r)
-                list_update(r, Config.PLAYERARGS.value, remove=True)
-
-            Config.PLAYERARGS.value = " ".join(Config.PLAYERARGS.get)
-            Config.save()
 
 
 def setconfig(key, val):
@@ -1414,15 +1385,6 @@ def writeline(text):
     text = text[:width - 3]
     sys.stdout.write(" " + text + (" " * spaces) + "\r")
     sys.stdout.flush()
-
-
-def list_update(item, lst, remove=False):
-    """ Add or remove item from list, checking first to avoid exceptions. """
-    if not remove and item not in lst:
-        lst.append(item)
-
-    elif remove and item in lst:
-        lst.remove(item)
 
 
 def generate_real_playerargs(song, override, failcount):

@@ -10,8 +10,7 @@ import pafy
 
 from . import g, c
 from .paths import get_default_ddir
-from .util import get_mpv_version
-from .util import has_exefile, dbg
+from .util import get_mpv_version, has_exefile, dbg, list_update
 
 
 mswin = os.name == "nt"
@@ -330,6 +329,35 @@ class _Config(object):
         dbg(c.p + "Saved config: " + g.CFFILE + c.w)
 
 Config = _Config()
+
+
+def import_config():
+    """ Override config if config file exists. """
+    if os.path.exists(g.CFFILE):
+
+        with open(g.CFFILE, "rb") as cf:
+            saved_config = pickle.load(cf)
+
+        for k, v in saved_config.items():
+
+            try:
+                Config[k].value = v
+
+            except KeyError:  # Ignore unrecognised data in config
+                dbg("Unrecognised config item: %s", k)
+
+        # Update config files from versions <= 0.01.41
+        if isinstance(Config.PLAYERARGS.get, list):
+            Config.WINDOW_POS.value = "top-right"
+            redundant = ("-really-quiet --really-quiet -prefer-ipv4 -nolirc "
+                         "-fs --fs".split())
+
+            for r in redundant:
+                dbg("removing redundant arg %s", r)
+                list_update(r, Config.PLAYERARGS.value, remove=True)
+
+            Config.PLAYERARGS.value = " ".join(Config.PLAYERARGS.get)
+            Config.save()
 
 
 def known_player_set():
