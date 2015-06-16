@@ -327,6 +327,7 @@ class _Config(object):
         dbg(c.p + "Saved config: " + g.CFFILE + c.w)
 
 Config = _Config()
+del _Config # _Config is a singleton and should not have more instances
 
 
 def import_config():
