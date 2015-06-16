@@ -59,9 +59,9 @@ from . import terminalsize, g, c
 from .playlist import Playlist, Video
 from .paths import get_config_dir
 from .config import Config, known_player_set, import_config
-from .util import has_exefile, get_mpv_version, dbg, list_update
-from .util import xenc, xprint, mswinfn, set_window_title, clear_screen
-from .helptext import helptext
+from .util import has_exefile, get_mpv_version, dbg, list_update, get_near_name
+from .util import xenc, xprint, mswinfn, set_window_title, clear_screen, F
+from .helptext import helptext, get_help
 
 try:
     # pylint: disable=F0401
@@ -627,35 +627,6 @@ def setconfig(key, val):
 
     showconfig(1)
     g.message = message
-
-
-def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
-    """Format text.
-
-    nb, na indicate newlines before and after to return
-    percent is the delimter for %s
-    nums is the delimiter for the str.format command (**1 will become {1})
-    textlib is the dictionary to use (defaults to g.text if not given)
-
-    """
-    textlib = textlib or g.text
-
-    assert key in textlib
-    text = textlib[key]
-    percent_fmt = textlib.get(key + "_")
-    number_fmt = textlib.get("_" + key)
-
-    if number_fmt:
-        text = re.sub(r"(%s(\d))" % nums, "{\\2}", text)
-        text = text.format(*number_fmt)
-
-    if percent_fmt:
-        text = re.sub(r"%s" % percent, r"%s", text)
-        text = text % percent_fmt
-
-    text = re.sub(r"&&", r"%s", text)
-
-    return "\n" * nb + text + c.w + "\n" * na
 
 
 def save_to_file():
@@ -2503,16 +2474,6 @@ def _parse_multi(choice, end=None):
     return alltracks
 
 
-def _get_near_name(begin, items):
-    """ Return the closest matching playlist name that starts with begin. """
-    for name in sorted(items):
-        if name.lower().startswith(begin.lower()):
-            break
-
-    else:
-        return begin
-
-    return name
 
 
 def play_pl(name):
@@ -2524,7 +2485,7 @@ def play_pl(name):
     saved = g.userpl.get(name)
 
     if not saved:
-        name = _get_near_name(name, g.userpl)
+        name = get_near_name(name, g.userpl)
         saved = g.userpl.get(name)
 
     if saved:
@@ -2567,7 +2528,7 @@ def open_save_view(action, name):
         saved = g.userpl.get(name)
 
         if not saved:
-            name = _get_near_name(name, g.userpl)
+            name = get_near_name(name, g.userpl)
             saved = g.userpl.get(name)
 
         elif action == "open":
@@ -2891,69 +2852,8 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
 def show_help(choice):
     """ Print help message. """
-    helps = {"download": ("playback dl listen watch show repeat playing"
-                          "show_video playurl dlurl d da dv all *"
-                          " play".split()),
 
-             "dl-command": ("dlcmd dl-cmd download-cmd dl_cmd download_cmd "
-                            "download-command download_command".split()),
-
-             "encode": ("encoding transcoding transcode wma mp3 format "
-                        "encode encoder".split()),
-
-             "invoke": "command commands mpsyt invocation".split(),
-
-             "search": ("user userpl pl pls r n p url album "
-                        "editing result results related remove swop".split()),
-
-             "edit": ("editing manupulate manipulating rm mv sw edit move "
-                      "swap shuffle".split()),
-
-             "tips": ("undump dump -f -w -a adv advanced".split(" ")),
-
-             "basic": ("basic comment basics c copy clipboard comments u "
-                       "i".split()),
-
-             "config": ("set checkupdate colours colors ddir directory player "
-                        "arguments args playerargs music search_music keys "
-                        "status show_status show_video video configuration "
-                        "fullscreen full screen folder player mpv mplayer"
-                        " settings default reset configure audio results "
-                        "max_results size lines rows height window "
-                        "position window_pos quality resolution max_res "
-                        "columns width console overwrite".split()),
-
-             "playlists": ("save rename delete move rm ls mv sw add vp open"
-                           " view".split())}
-
-    for topic, aliases in helps.items():
-
-        if choice in aliases:
-            choice = topic
-            break
-
-    choice = "menu" if not choice else choice
-    out, all_help = "", helptext()
-    help_names = [x[0] for x in all_help]
-    choice = _get_near_name(choice, help_names)
-
-    def indent(x):
-        """ Indent. """
-        return "\n  ".join(x.split("\n"))
-
-    if choice == "menu" or choice not in help_names:
-        out += "  %sHelp Topics%s" % (c.ul, c.w)
-        out += F('help topic', 2, 1)
-
-        for x in all_help:
-            out += ("\n%s     %-10s%s : %s" % (c.y, x[0], c.w, x[1]))
-
-        out += "\n"
-        g.content = out
-
-    else:
-        choice = help_names.index(choice)
-        g.content = indent(all_help[choice][2])
+    g.content = get_help(choice)
 
 
 def quits(showlogo=True):

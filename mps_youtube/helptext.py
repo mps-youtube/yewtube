@@ -1,4 +1,5 @@
 from . import c, g
+from .util import get_near_name, F
 
 
 def helptext():
@@ -239,3 +240,70 @@ def helptext():
      - Enable custom downloader application (ids1024 & np1){2}
 
     """.format(c.ul, c.w, c.y))]
+
+
+def get_help(choice):
+    """ Return help message. """
+    helps = {"download": ("playback dl listen watch show repeat playing"
+                          "show_video playurl dlurl d da dv all *"
+                          " play".split()),
+
+             "dl-command": ("dlcmd dl-cmd download-cmd dl_cmd download_cmd "
+                            "download-command download_command".split()),
+
+             "encode": ("encoding transcoding transcode wma mp3 format "
+                        "encode encoder".split()),
+
+             "invoke": "command commands mpsyt invocation".split(),
+
+             "search": ("user userpl pl pls r n p url album "
+                        "editing result results related remove swop".split()),
+
+             "edit": ("editing manupulate manipulating rm mv sw edit move "
+                      "swap shuffle".split()),
+
+             "tips": ("undump dump -f -w -a adv advanced".split(" ")),
+
+             "basic": ("basic comment basics c copy clipboard comments u "
+                       "i".split()),
+
+             "config": ("set checkupdate colours colors ddir directory player "
+                        "arguments args playerargs music search_music keys "
+                        "status show_status show_video video configuration "
+                        "fullscreen full screen folder player mpv mplayer"
+                        " settings default reset configure audio results "
+                        "max_results size lines rows height window "
+                        "position window_pos quality resolution max_res "
+                        "columns width console overwrite".split()),
+
+             "playlists": ("save rename delete move rm ls mv sw add vp open"
+                           " view".split())}
+
+    for topic, aliases in helps.items():
+
+        if choice in aliases:
+            choice = topic
+            break
+
+    choice = "menu" if not choice else choice
+    out, all_help = "", helptext()
+    help_names = [x[0] for x in all_help]
+    choice = get_near_name(choice, help_names)
+
+    def indent(x):
+        """ Indent. """
+        return "\n  ".join(x.split("\n"))
+
+    if choice == "menu" or choice not in help_names:
+        out += "  %sHelp Topics%s" % (c.ul, c.w)
+        out += F('help topic', 2, 1)
+
+        for x in all_help:
+            out += ("\n%s     %-10s%s : %s" % (c.y, x[0], c.w, x[1]))
+
+        out += "\n"
+        return out
+
+    else:
+        choice = help_names.index(choice)
+        return indent(all_help[choice][2])

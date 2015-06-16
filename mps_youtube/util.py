@@ -115,3 +115,44 @@ def list_update(item, lst, remove=False):
 
     elif remove and item in lst:
         lst.remove(item)
+
+
+def get_near_name(begin, items):
+    """ Return the closest matching playlist name that starts with begin. """
+    for name in sorted(items):
+        if name.lower().startswith(begin.lower()):
+            break
+
+    else:
+        return begin
+
+    return name
+
+
+def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
+    """Format text.
+
+    nb, na indicate newlines before and after to return
+    percent is the delimter for %s
+    nums is the delimiter for the str.format command (**1 will become {1})
+    textlib is the dictionary to use (defaults to g.text if not given)
+
+    """
+    textlib = textlib or g.text
+
+    assert key in textlib
+    text = textlib[key]
+    percent_fmt = textlib.get(key + "_")
+    number_fmt = textlib.get("_" + key)
+
+    if number_fmt:
+        text = re.sub(r"(%s(\d))" % nums, "{\\2}", text)
+        text = text.format(*number_fmt)
+
+    if percent_fmt:
+        text = re.sub(r"%s" % percent, r"%s", text)
+        text = text % percent_fmt
+
+    text = re.sub(r"&&", r"%s", text)
+
+    return "\n" * nb + text + c.w + "\n" * na
