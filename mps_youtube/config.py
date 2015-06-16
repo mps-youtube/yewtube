@@ -269,55 +269,53 @@ class _Config(object):
 
     """ Holds various configuration values. """
 
-    _configitems = collections.OrderedDict((
-            ("ORDER", ConfigItem("order", "relevance",
-                allowed_values="relevance date views rating".split())),
-            ("USER_ORDER", ConfigItem("user_order", "", allowed_values =
-                [""] + "relevance date views rating".split())),
-            ("MAX_RESULTS", ConfigItem("max_results", 19,
-                maxval=50, minval=1)),
-            ("CONSOLE_WIDTH", ConfigItem("console_width", 80, minval=70,
-                maxval=880, check_fn=check_console_width)),
-            ("MAX_RES", ConfigItem("max_res", 2160, minval=192, maxval=2160)),
-            ("PLAYER", ConfigItem("player", "mplayer" + ".exe" * mswin,
-                check_fn=check_player)),
-            ("PLAYERARGS", ConfigItem("playerargs", "")),
-            ("ENCODER", ConfigItem("encoder", 0, minval=0,
-                check_fn=check_encoder)),
-            ("NOTIFIER", ConfigItem("notifier", "")),
-            ("CHECKUPDATE", ConfigItem("checkupdate", True)),
-            ("SHOW_MPLAYER_KEYS", ConfigItem("show_mplayer_keys", True,
-                require_known_player=True)),
-            ("FULLSCREEN", ConfigItem("fullscreen", False,
-                require_known_player=True)),
-            ("SHOW_STATUS", ConfigItem("show_status", True)),
-            ("COLUMNS", ConfigItem("columns", "")),
-            ("DDIR", ConfigItem("ddir", get_default_ddir(),
-                check_fn=check_ddir)),
-            ("OVERWRITE", ConfigItem("overwrite", True)),
-            ("SHOW_VIDEO", ConfigItem("show_video", False)),
-            ("SEARCH_MUSIC", ConfigItem("search_music", True)),
-            ("WINDOW_POS", ConfigItem("window_pos", "", check_fn=check_win_pos,
-                require_known_player=True)),
-            ("WINDOW_SIZE", ConfigItem("window_size", "",
-                check_fn=check_win_size, require_known_player=True)),
-            ("DOWNLOAD_COMMAND", ConfigItem("download_command", '')),
-            ("API_KEY", ConfigItem("api_key",
-                "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo",
-                check_fn=check_api_key))
-        ))
+    _configitems = [
+            ConfigItem("order", "relevance",
+                allowed_values="relevance date views rating".split()),
+            ConfigItem("user_order", "", allowed_values =
+                [""] + "relevance date views rating".split()),
+            ConfigItem("max_results", 19, maxval=50, minval=1),
+            ConfigItem("console_width", 80, minval=70,
+                maxval=880, check_fn=check_console_width),
+            ConfigItem("max_res", 2160, minval=192, maxval=2160),
+            ConfigItem("player", "mplayer" + ".exe" * mswin,
+                check_fn=check_player),
+            ConfigItem("playerargs", ""),
+            ConfigItem("encoder", 0, minval=0, check_fn=check_encoder),
+            ConfigItem("notifier", ""),
+            ConfigItem("checkupdate", True),
+            ConfigItem("show_mplayer_keys", True, require_known_player=True),
+            ConfigItem("fullscreen", False, require_known_player=True),
+            ConfigItem("show_status", True),
+            ConfigItem("columns", ""),
+            ConfigItem("ddir", get_default_ddir(), check_fn=check_ddir),
+            ConfigItem("overwrite", True),
+            ConfigItem("show_video", False),
+            ConfigItem("search_music", True),
+            ConfigItem("window_pos", "", check_fn=check_win_pos,
+                require_known_player=True),
+            ConfigItem("window_size", "",
+                check_fn=check_win_size, require_known_player=True),
+            ConfigItem("download_command", ''),
+            ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo",
+                check_fn=check_api_key)
+            ] 
 
     def __getitem__(self, key):
-        return self._configitems[key]
+        # TODO: Possibly more efficient algorithm, w/ caching
+        for i in self._configitems:
+            if i.name.upper() == key:
+                return i
+        raise KeyError
 
     def __getattr__(self, name):
         try:
-            return self._configitems[name]
+            return self[name]
         except KeyError:
             raise AttributeError
 
     def __iter__(self):
-        return iter(self._configitems.keys())
+        return (i.name.upper() for i in self._configitems)
 
     def save(self):
         """ Save current config to file. """
