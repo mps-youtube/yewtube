@@ -348,10 +348,6 @@ def process_cl_args():
 
 def init():
     """ Initial setup. """
-    # I believe these two lines once resolved a pickle error.
-    # perhaps no longer needed, commenting out.
-    # __main__.Playlist = Playlist
-    # __main__.Video = Video
 
     init_readline()
     init_cache()
