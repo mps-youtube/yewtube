@@ -51,6 +51,24 @@ def get_mpv_version(exename):
     return -1, 0, 0
 
 
+def get_mplayer_version(exename):
+    o = subprocess.check_output([exename]).decode()
+    m = re.search('^MPlayer SVN-r([0-9]+) ', o, re.MULTILINE)
+
+    ver = 0
+    if m:
+        ver = int(m.groups()[0])
+    else:
+        m = re.search('^MPlayer ([0-9])+.([0-9]+)', o, re.MULTILINE)
+        if m: 
+            ver = tuple(int(i) for i in m.groups())
+
+        else:
+            dbg("%sFailed to detect mplayer version%s", c.r, c.w)
+
+    return ver
+
+
 def dbg(*args):
     """Emit a debug message."""
     # Uses xenc to deal with UnicodeEncodeError when writing to terminal

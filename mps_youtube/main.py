@@ -60,6 +60,7 @@ from .playlist import Playlist, Video
 from .paths import get_config_dir
 from .config import Config, known_player_set, import_config
 from .util import has_exefile, get_mpv_version, dbg, list_update, get_near_name
+from .util import get_mplayer_version
 from .util import xenc, xprint, mswinfn, set_window_title, clear_screen, F
 from .helptext import helptext, get_help
 
@@ -374,18 +375,19 @@ def init():
     if Config.ENCODER.get >= len(g.encoders):
         Config.ENCODER.set("0")
 
-    # check mpv version
-
-    if "mpv" in Config.PLAYER.get and not mswin:
-        if has_exefile(Config.PLAYER.get):
-            g.mpv_version = get_mpv_version(Config.PLAYER.get)
+    # check mpv/mplayer version
+    if "mpv" in Config.PLAYER.get and has_exefile(Config.PLAYER.get):
+        g.mpv_version = get_mpv_version(Config.PLAYER.get)
+        if not mswin:
             options = subprocess.check_output(
                 [Config.PLAYER.get, "--list-options"]).decode()
-            # g.mpv_usesock = "--input-unix-socket" in options and not mswin
 
             if "--input-unix-socket" in options:
                 g.mpv_usesock = True
                 dbg(c.g + "mpv supports --input-unix-socket" + c.w)
+
+    elif "mplayer" in Config.PLAYER.get and has_exefile(Config.PLAYER.get):
+        g.mplayer_version = get_mplayer_version(Config.PLAYER.get)
 
     # setup colorama
     if has_colorama and mswin:
@@ -1300,8 +1302,11 @@ def generate_real_playerargs(song, override, failcount):
         raise IOError("No streams available")
 
     if "uiressl=yes" in stream['url'] and "mplayer" in Config.PLAYER.get:
-        raise IOError("%s : Sorry mplayer doesn't support this stream. "
-                      "Use mpv or download it" % song.title)
+        ver = g.mplayer_version
+        # Mplayer too old to support https
+        if not (ver > (1,1) if isinstance(ver, tuple) else ver >= 37294):
+            raise IOError("%s : Sorry mplayer doesn't support this stream. "
+                          "Use mpv or download it" % song.title)
 
     size = get_size(song.ytid, stream['url'])
     songdata = (song.ytid, stream['ext'] + " " + stream['quality'],

@@ -21,6 +21,7 @@ preload_disabled = False
 ytpls = []
 mpv_version = 0, 0, 0
 mpv_usesock = False
+mplayer_version = 0
 mprisctl = None
 browse_mode = "normal"
 preloading = []
