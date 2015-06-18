@@ -3,8 +3,8 @@ import re
 import collections
 import pkgutil
 
-from . import g, plugins
-from .commands import Command
+from . import g, plugins, commands
+
 
 EventHandler = collections.namedtuple('EventHandler', 'name function')
 
@@ -16,15 +16,16 @@ class Plugin:
     _eventhandlers = []
 
     def __init__(self):
-        g.commands.extent(self._commands)
-        g.eventhandlers.extent(self._eventhandlers)
+        g.commands.extend(self._commands)
+        g.eventhandlers.extend(self._eventhandlers)
 
     @classmethod
     def command(cls, regex, category, usage):
         """ Decorator to register an mps-youtube command. """
 
         def decorator(function):
-            command = Command(re.compile(regex), category, usage, function)
+            command = commands.Command(re.compile(regex),
+                    category, usage, function)
             cls._commands.append(command)
             return function
         return decorator
@@ -53,7 +54,7 @@ class Plugin:
     
 
 def registerPlugin(plugin):
-    """ Decorator to registor a plugin with mps-youtube. """
+    """ Decorator to register a plugin with mps-youtube. """
 
     g.plugins[plugin.name] = plugin
     return plugin
@@ -66,3 +67,9 @@ def loadPlugins():
 
     for loader, name, is_pkg in  pkgutil.iter_modules(pluginpaths):
         loader.find_module(name).load_module(name)
+
+
+@commands.command(r'pluginload\s+([^./]+)\s*$')
+def loadPlugin(name):
+    #TODO: Make user friendly. This is just the testing interface.
+    g.enabled_plugins[name] = g.plugins[name]()

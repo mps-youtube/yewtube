@@ -72,6 +72,7 @@ playerargs_defaults = {
     }
 argument_commands = []
 plugins = {}
+enabled_plugins = {}
 commands = []
 eventhandlers = []
 

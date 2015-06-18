@@ -18,7 +18,7 @@ class AlbumSearchPlugin(Plugin):
 @AlbumSearchPlugin.command(r'album\s*(.{0,500})', 'search',
         '{2}album <album title>{1} - '
         'Search for matching tracks using album title')
-def search_album(self, term, page=0, splash=True):
+def search_album(term, page=0, splash=True):
     """Search for albums. """
     # pylint: disable=R0914,R0912
     if not term:
