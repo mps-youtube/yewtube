@@ -303,3 +303,12 @@ def _get_mb_album(albumname, **kwa):
     title = album.find("mb:title", namespaces=ns).text
     aid = album.get('id')
     return dict(artist=artist, title=title, aid=aid)
+
+
+def show_message(message, col=c.r, update=False):
+    """ Show message using col, update screen if required. """
+    g.content = generate_songlist_display()
+    g.message = col + message + c.w
+
+    if update:
+        update()

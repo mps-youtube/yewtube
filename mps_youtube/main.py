@@ -3547,15 +3547,6 @@ def clearcache():
     g.message = "cache cleared"
 
 
-def show_message(message, col=c.r, update=False):
-    """ Show message using col, update screen if required. """
-    g.content = generate_songlist_display()
-    g.message = col + message + c.w
-
-    if update:
-        screen.update()
-
-
 @commands.command(r'encoders?\s*$')
 def show_encs():
     """ Display available encoding presets. """
