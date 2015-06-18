@@ -51,6 +51,7 @@ TCFILE = os.path.join(get_config_dir(), "transcode")
 OLD_PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
 PLFILE = os.path.join(get_config_dir(), "playlist_v2")
 CACHEFILE = os.path.join(get_config_dir(), "cache_py_" + sys.version[0:5])
+PLUGINDIR = os.path.join(get_config_dir(), "plugins")
 READLINE_FILE = None
 playerargs_defaults = {
     "mpv": {
@@ -70,6 +71,9 @@ playerargs_defaults = {
         "geo": "-geometry"}
     }
 argument_commands = []
+plugins = {}
+commands = []
+eventhandlers = []
 
 text = {
     "exitmsg": ("**0mps-youtube - **1http://github.com/np1/mps-youtube**0"
