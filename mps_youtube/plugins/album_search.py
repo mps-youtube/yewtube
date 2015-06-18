@@ -3,8 +3,10 @@ import difflib
 import time
 from xml.etree import ElementTree as ET
 from urllib.error import HTTPError, URLError
+from urllib.request import build_opener
 
 from mps_youtube import Plugin, registerPlugin, Config, c
+from mps_youtube import __version__ as mpsyt_ver, __url__ as mpsyt_url
 
 
 @registerPlugin
@@ -131,7 +133,7 @@ def _do_query(url, query, err='query failed', report=False):
 
     """
     # create url opener
-    ua = "mps-youtube/%s ( %s )" % (__version__, __url__)
+    ua = "mps-youtube/%s ( %s )" % (mpsyt_ver, mpsyt_url)
     mpsyt_opener = build_opener()
     mpsyt_opener.addheaders = [('User-agent', ua)]
 

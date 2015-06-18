@@ -47,7 +47,7 @@ import sys
 import re
 import os
 import pickle
-from urllib.request import urlopen, build_opener
+from urllib.request import urlopen
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 
