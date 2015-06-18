@@ -41,7 +41,7 @@ class Plugin:
         return decorator
 
     def _unload(self):
-        g.commands = [i for i in g.plugin_command if i not in self._commands]
+        g.commands = [i for i in g.commands if i not in self._commands]
         g.eventhandlers = [i for i in g.eventhandlers
                 if i not in self._eventhandlers]
 
@@ -73,3 +73,10 @@ def loadPlugins():
 def loadPlugin(name):
     #TODO: Make user friendly. This is just the testing interface.
     g.enabled_plugins[name] = g.plugins[name]()
+
+
+@commands.command(r'pluginunload\s+([^./]+)\s*$')
+def unloadPlugin(name):
+    #TODO: Make user friendly. This is just the testing interface.
+    g.enabled_plugins[name]._unload()
+    del g.enabled_plugins[name]
