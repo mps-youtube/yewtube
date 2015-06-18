@@ -114,18 +114,6 @@ def set_window_title(title):
         sys.stdout.write(xenc('\x1b]2;' + title + '\x07'))
 
 
-def clear_screen():
-    """Clear all text from screen."""
-    if g.no_clear_screen:
-        xprint('--\n')
-    elif mswin:
-        os.system('cls')
-    elif has_exefile('tput'):
-        subprocess.call(['tput', 'reset'])
-    else:
-        xprint('\n' * 200)
-
-
 def list_update(item, lst, remove=False):
     """ Add or remove item from list, checking first to avoid exceptions. """
     if not remove and item not in lst:

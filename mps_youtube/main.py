@@ -53,13 +53,13 @@ from urllib.parse import urlencode
 
 import pafy
 
-from . import terminalsize, g, c, commands
+from . import g, c, commands, screen
 from .playlist import Playlist, Video
 from .paths import get_config_dir
 from .config import Config, known_player_set, import_config
 from .util import has_exefile, get_mpv_version, dbg, list_update, get_near_name
 from .util import get_mplayer_version
-from .util import xenc, xprint, mswinfn, set_window_title, clear_screen, F
+from .util import xenc, xprint, mswinfn, set_window_title, F
 from .helptext import helptext, get_help
 from .plugin import loadPlugins
 
@@ -92,23 +92,8 @@ mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in os.environ.get("LANG", "")
 
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
-XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
 ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?((\d{1,2})S)?')
-
-
-def getxy():
-    """ Get terminal size, terminal width and max-results. """
-    if g.detectable_size:
-        x, y = terminalsize.get_terminal_size()
-        max_results = y - 4 if y < 54 else 50
-        max_results = 1 if y <= 5 else max_results
-
-    else:
-        x, max_results = Config.CONSOLE_WIDTH.get, Config.MAX_RESULTS.get
-        y = max_results + 4
-
-    return XYTuple(x, y, max_results)
 
 
 def get_content_length(url, preloading=False):
@@ -268,7 +253,7 @@ def get_size(ytid, url, preloading=False):
         dbg("%s%susing cached size: %s%s", c.g, prefix, size, c.w)
 
     else:
-        writestatus("Getting content length", mute=preloading)
+        screen.writestatus("Getting content length", mute=preloading)
         stream['size'] = get_content_length(url, preloading=preloading)
         dbg("%s%s - content-length: %s%s", c.y, prefix, stream['size'], c.w)
 
@@ -558,7 +543,7 @@ def init_readline():
 @commands.command(r'(set|showconfig)\s*$')
 def showconfig(_):
     """ Dump config data. """
-    width = getxy().width
+    width = screen.getxy().width
     width -= 30
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
@@ -738,7 +723,7 @@ def logo(col=None, version=""):
     logo_txt = col + logo_txt + c.w + version
     lines = logo_txt.split("\n")
     length = max(len(x) for x in lines)
-    x, y, _ = getxy()
+    x, y, _ = screen.getxy()
     indent = (x - length - 1) // 2
     newlines = (y - 12) // 2
     indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
@@ -865,7 +850,7 @@ def get_page_info_from_json(jsons, result_count=None):
     """ Extract & save some information about result count and paging. """
     g.more_pages = jsons.get('nextPageToken')
     if result_count:
-        if result_count < getxy().max_results:
+        if result_count < screen.getxy().max_results:
             g.more_pages = False
     pageinfo = jsons.get('pageInfo')
     per_page = pageinfo.get('resultsPerPage')
@@ -964,37 +949,11 @@ def get_tracks_from_json(jsons):
     return songs
 
 
-
-def screen_update(fill_blank=True):
-    """ Display content, show message, blank screen."""
-    clear_screen()
-
-    if g.content:
-        xprint(g.content)
-
-    if not g.no_clear_screen:
-        # Align prompt to bottom of screen
-        xprint('\n' * (getxy().height -
-            (g.content.count('\n') if g.content else 0) - 2 -
-            bool(g.content)), end='')
-
-    if g.message or g.rprompt:
-        out = g.message or ''
-        blanks = getxy().width - len(out) - len(g.rprompt or '')
-        out += ' ' * blanks + (g.rprompt or '')
-        xprint(out)
-
-    elif fill_blank:
-        xprint("")
-
-    g.message = g.content = g.rprompt = False
-
-
 def playback_progress(idx, allsongs, repeat=False):
     """ Generate string to show selected tracks, indicate current track. """
     # pylint: disable=R0914
     # too many local variables
-    cw = getxy().width
+    cw = screen.getxy().width
     out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
     show_key_help = (known_player_set and Config.SHOW_MPLAYER_KEYS.get)
@@ -1124,7 +1083,7 @@ def generate_playlist_display():
         return logo(c.g) + "\n\n"
     g.rprompt = page_msg(g.current_page)
 
-    cw = getxy().width
+    cw = screen.getxy().width
     fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
     fmthd = "%s%-5s %-{}s %-12s %-9s %-5s%s\n".format(cw - 36)
     head = (c.ul, "Item", "Playlist", "Author", "Updated", "Count", c.w)
@@ -1171,7 +1130,7 @@ def get_user_columns():
                 sz = int(namesize[1])
 
             total_size += sz
-            cw = getxy().width
+            cw = screen.getxy().width
             if total_size < cw - 18:
                 ret.append(dict(name=nm, size=sz, heading=hd))
 
@@ -1180,7 +1139,7 @@ def get_user_columns():
 
 def page_msg(page=0):
     """ Format information about currently displayed page to a string. """
-    max_results = getxy().max_results
+    max_results = screen.getxy().max_results
     page_count = max(int(math.ceil(min(g.result_count, 500)/max_results)), 1)
     if page_count > 1:
         pagemsg = "{}{}/{}{}"
@@ -1212,7 +1171,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     lengthsize = 8 if maxlength > 35999 else 7
     lengthsize = 5 if maxlength < 6000 else lengthsize
     reserved = 9 + lengthsize + len(user_columns)
-    cw = getxy().width
+    cw = screen.getxy().width
     cw -= 1
     title_size = cw - sum(1 + x['size'] for x in user_columns) - reserved
     before = [{"name": "idx", "size": 3, "heading": "Num"},
@@ -1255,25 +1214,6 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
         out += line + "\n"
 
     return out + "\n" * (5 - len(songs)) if not song else out
-
-
-def writestatus(text, mute=False):
-    """ Update status line. """
-    if not mute and Config.SHOW_STATUS.get:
-        writeline(text)
-
-
-def writeline(text):
-    """ Print text on same line. """
-    width = getxy().width
-    spaces = width - len(text) - 1
-    if mswin:
-        # Avoids creating new line every time it is run
-        # TODO: Figure out why this is needed
-        spaces =- 1
-    text = text[:width - 3]
-    sys.stdout.write(" " + text + (" " * spaces) + "\r")
-    sys.stdout.flush()
 
 
 def generate_real_playerargs(song, override, failcount):
@@ -1391,11 +1331,11 @@ def playsong(song, failcount=0, override=False):
 
     # don't interrupt preloading:
     while song.ytid in g.preloading:
-        writestatus("fetching item..")
+        screen.writestatus("fetching item..")
         time.sleep(0.1)
 
     try:
-        get_streams(song, force=failcount, callback=writestatus)
+        get_streams(song, force=failcount, callback=screen.writestatus)
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
         dbg("--ioerror in playsong call to get_streams %s", str(e))
@@ -1438,7 +1378,7 @@ def playsong(song, failcount=0, override=False):
         return
 
     songdata = "%s; %s; %s Mb" % songdata
-    writestatus(songdata)
+    screen.writestatus(songdata)
     dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
     dbg("calling %s", " ".join(cmd))
     returncode = launch_player(song, songdata, cmd)
@@ -1447,7 +1387,7 @@ def playsong(song, failcount=0, override=False):
     if failed and failcount < g.max_retries:
         dbg(c.r + "stream failed to open" + c.w)
         dbg("%strying again (attempt %s)%s", c.r, (2 + failcount), c.w)
-        writestatus("error: retrying")
+        screen.writestatus("error: retrying")
         time.sleep(1.2)
         failcount += 1
         return playsong(song, failcount=failcount, override=override)
@@ -1643,7 +1583,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                                             volume=volume_level)
 
                     if line != last_displayed_line:
-                        writestatus(line)
+                        screen.writestatus(line)
                         last_displayed_line = line
 
         except socket.error:
@@ -1684,7 +1624,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                                             volume=volume_level)
 
                     if line != last_displayed_line:
-                        writestatus(line)
+                        screen.writestatus(line)
                         last_displayed_line = line
 
                 if buff.startswith('ANS_volume='):
@@ -1731,7 +1671,7 @@ def make_status_line(elapsed_s, prefix, songlength=0, volume=None):
     else:
         vol_suffix = ""
 
-    cw = getxy().width
+    cw = screen.getxy().width
     prog_bar_size = cw - len(prefix) - len(status_line) - len(vol_suffix) - 7
     progress = int(math.ceil(pct / 100 * prog_bar_size))
     status_line += " [%s]" % ("=" * (progress - 1) +
@@ -1746,7 +1686,7 @@ def _search(progtext, qs=None, splash=True, pre_load=True):
     # show splash screen during fetch
     if splash:
         g.content = logo(c.b) + "\n\n"
-        screen_update()
+        screen.update()
 
     # perform fetch
     try:
@@ -1774,7 +1714,7 @@ def _search(progtext, qs=None, splash=True, pre_load=True):
 
 def token(page):
     """ Returns a page token for a given start index. """
-    index = (page or 0) * getxy().max_results
+    index = (page or 0) * screen.getxy().max_results
     k = index//128 - 1
     index -= 128 * k
     f = [8, index]
@@ -1785,10 +1725,10 @@ def token(page):
     return b64.strip('=')
 
 
-def generate_search_qs(term, page=0, result_count=getxy().max_results, match='term'):
+def generate_search_qs(term, page=0, result_count=screen.getxy().max_results, match='term'):
     """ Return query string. """
     if not result_count:
-        result_count = getxy().max_results
+        result_count = screen.getxy().max_results
 
     aliases = dict(views='viewCount')
     qs = {
@@ -2007,7 +1947,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
         g.content = logo(c.g)
         prog = "user: " + term if is_user else term
         g.message = "Searching playlists for %s" % c.y + prog + c.w
-        screen_update()
+        screen.update()
 
     if is_user:
         ret = channelfromname(term)
@@ -2018,7 +1958,8 @@ def pl_search(term, page=0, splash=True, is_user=False):
     else:
         # playlist search is done with the above url and param type=playlist
         logging.info("playlist search for %s", prog)
-        max_results = min(getxy().max_results, 50) # Limit for playlists command
+        # Limit for playlists command
+        max_results = min(screen.getxy().max_results, 50)
         qs = generate_search_qs(term, page, result_count=max_results)
         qs['type'] = 'playlist'
         if 'videoCategoryId' in qs:
@@ -2147,11 +2088,11 @@ def fetch_comments(item):
     """ Fetch comments for item using gdata. """
     # pylint: disable=R0912
     # pylint: disable=R0914
-    cw, ch, _ = getxy()
+    cw, ch, _ = screen.getxy()
     ch = max(ch, 10)
     ytid, title = item.ytid, item.title
     dbg("Fetching comments for %s", c.c("y", ytid))
-    writestatus("Fetching comments for %s" % c.c("y", title[:55]))
+    screen.writestatus("Fetching comments for %s" % c.c("y", title[:55]))
     qs = {'textFormat': 'plainText',
           'videoId': ytid,
           'maxResults': 50,
@@ -2218,7 +2159,7 @@ def fetch_comments(item):
         content_length = linecount(pagetext) + longlines(pagetext)
         blanks = "\n" * (-2 + ch - content_length)
         g.content = pagetext + blanks
-        screen_update(fill_blank=False)
+        screen.update(fill_blank=False)
         xprint("%s : Use [Enter] for next, [p] for previous, [q] to return:"
                % pagecounter, end="")
         v = input()
@@ -2629,7 +2570,7 @@ def down_many(dltype, choice, subdir=None):
         """ Handle error in download. """
         g.message = message
         g.content = disp
-        screen_update()
+        screen.update()
         time.sleep(2)
         g.model.songs.pop(0)
 
@@ -2639,7 +2580,7 @@ def down_many(dltype, choice, subdir=None):
             title = "Download Queue (%s):%s\n\n" % (av, c.w)
             disp = re.sub(r"(Num\s*?Title.*?\n)", title, disp)
             g.content = disp
-            screen_update()
+            screen.update()
 
             try:
                 filename = _make_fname(song, None, av=av, subdir=subdir)
@@ -2812,12 +2753,6 @@ def preload(song, delay=2, override=False):
         g.preloading.remove(song.ytid)
 
 
-def reset_terminal():
-    """ Reset terminal control character and modes for non Win OS's. """
-    if not mswin:
-        subprocess.call(["tset", "-c"])
-
-
 def play_range(songlist, shuffle=False, repeat=False, override=False):
     """ Play a range of songs, exit cleanly on keyboard interrupt. """
     if shuffle:
@@ -2829,7 +2764,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         g.content = playback_progress(n, songlist, repeat=repeat)
 
         if not g.command_line:
-            screen_update(fill_blank=False)
+            screen.update(fill_blank=False)
 
         hasnext = len(songlist) > n + 1
 
@@ -2846,7 +2781,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         except KeyboardInterrupt:
             logging.info("Keyboard Interrupt")
             xprint(c.w + "Stopping...                          ")
-            reset_terminal()
+            screen.reset_terminal()
             g.message = c.y + "Playback halted" + c.w
             break
         set_window_title("mpsyt")
@@ -2885,7 +2820,7 @@ def quits(showlogo=True):
 
     savecache()
 
-    clear_screen()
+    screen.clear()
     msg = logo(c.r, version=__version__) if showlogo else ""
     xprint(msg + F("exitmsg", 2))
 
@@ -2944,7 +2879,7 @@ def get_dl_data(song, mediatype="any"):
 
         dldata.append(item)
 
-    writestatus("")
+    screen.writestatus("")
     return dldata, p
 
 
@@ -2963,7 +2898,7 @@ def menu_prompt(model, prompt=" > ", rows=None, header=None, theading=None,
             content += x + "\n"
 
     g.content = content
-    screen_update()
+    screen.update()
 
     choice = input(prompt)
 
@@ -3063,7 +2998,7 @@ def download(dltype, num):
         g.content = generate_songlist_display()
         return
 
-    writestatus("Fetching video info...")
+    screen.writestatus("Fetching video info...")
     song = (g.model.songs[int(num) - 1])
     best = dltype.startswith("dv") or dltype.startswith("da")
 
@@ -3153,7 +3088,7 @@ def prompt_for_exit():
     """ Ask for exit confirmation. """
     g.message = c.r + "Press ctrl-c again to exit" + c.w
     g.content = generate_songlist_display()
-    screen_update()
+    screen.update()
 
     try:
         userinput = input(c.r + " > " + c.w)
@@ -3270,7 +3205,7 @@ def nextprev(np, page=None):
     """ Get next / previous search results. """
     glsq = g.last_search_query
     content = g.model.songs
-    max_results = getxy().max_results
+    max_results = screen.getxy().max_results
 
     if "user" in g.last_search_query:
         function, query = usersearch_id, glsq['user']
@@ -3418,7 +3353,7 @@ def info(num):
         if not yt_playlist:
             g.content = logo(col=c.g)
             g.message = "Fetching playlist info.."
-            screen_update()
+            screen.update()
             dbg("%sFetching playlist using pafy%s", c.y, c.w)
             yt_playlist = pafy.get_playlist(p['link'])
             g.pafy_pls[p['link']] = yt_playlist
@@ -3445,13 +3380,13 @@ def info(num):
 
     elif g.browse_mode == "normal":
         g.content = logo(c.b)
-        screen_update()
-        writestatus("Fetching video metadata..")
+        screen.update()
+        screen.writestatus("Fetching video metadata..")
         item = (g.model.songs[int(num) - 1])
         get_streams(item)
         p = get_pafy(item)
         pub = time.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
-        writestatus("Fetched")
+        screen.writestatus("Fetched")
         out = c.ul + "Video Info" + c.w + "\n\n"
         out += p.title or ""
         out += "\n" + (p.description or "")
@@ -3535,7 +3470,7 @@ def dump(un):
 @commands.command(r'pl\s+%s' % commands.pl)
 def plist(parturl, page=0, splash=True, dumps=False):
     """ Retrieve YouTube playlist. """
-    max_results = getxy().max_results
+    max_results = screen.getxy().max_results
 
     if "playlist" in g.last_search_query and\
             parturl == g.last_search_query['playlist']:
@@ -3557,7 +3492,7 @@ def plist(parturl, page=0, splash=True, dumps=False):
     if splash:
         g.content = logo(col=c.b)
         g.message = "Retrieving YouTube playlist"
-        screen_update()
+        screen.update()
 
     dbg("%sFetching playlist using pafy%s", c.y, c.w)
     yt_playlist = pafy.get_playlist(parturl)
@@ -3618,7 +3553,7 @@ def show_message(message, col=c.r, update=False):
     g.message = col + message + c.w
 
     if update:
-        screen_update()
+        screen.update()
 
 
 @commands.command(r'encoders?\s*$')
@@ -3675,7 +3610,7 @@ def main():
     if not g.command_line:
         g.content = logo(col=c.g, version=__version__) + "\n\n"
         g.message = "Enter /search-term to search or [h]elp"
-        screen_update()
+        screen.update()
 
     # open playlists from file
     convert_playlist_to_v2()
@@ -3718,4 +3653,4 @@ def main():
             elif userinput and g.command_line:
                 sys.exit("Bad syntax")
 
-        screen_update()
+        screen.update()
