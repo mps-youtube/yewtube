@@ -1,10 +1,11 @@
 import os
+import re
 import collections
 import pkgutil
 
 from . import g, plugins
+from .commands import Command
 
-Command = collections.namedtuple('Command', 'regex category usage function')
 EventHandler = collections.namedtuple('EventHandler', 'name function')
 
 
@@ -23,7 +24,7 @@ class Plugin:
         """ Decorator to register an mps-youtube command. """
 
         def decorator(function):
-            command = Command(regex, category, usage, function)
+            command = Command(re.compile(regex), category, usage, function)
             cls._commands.append(command)
             return function
         return decorator
