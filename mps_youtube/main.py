@@ -1306,7 +1306,7 @@ def generate_real_playerargs(song, override, failcount):
         # Mplayer too old to support https
         if not (ver > (1,1) if isinstance(ver, tuple) else ver >= 37294):
             raise IOError("%s : Sorry mplayer doesn't support this stream. "
-                          "Use mpv or download it" % song.title)
+                          "Use mpv or update mplayer to a newer version" % song.title)
 
     size = get_size(song.ytid, stream['url'])
     songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
