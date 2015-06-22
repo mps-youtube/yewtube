@@ -88,7 +88,7 @@ def xenc(stuff):
         return utf8_replace(stuff) if not_utf8_environment else stuff
 
     else:
-        return stuff.encode("utf8", errors="replace")
+        return stuff.encode("utf8", errors="replace").decode()
 
 
 def xprint(stuff, end=None):
