@@ -257,7 +257,12 @@ def check_player(player):
             return dict(valid=True, message=msg, value=player)
 
     else:
-        if mswin and not player.endswith(".exe"):
+        if mswin and not (player.endswith(".exe") or player.endswith(".com")):
+            # Using mpv.exe has issues; use mpv.com
+            if "mpv" in player:
+                retval = check_player(player + ".com")
+                if retval["valid"]:
+                    return retval
             return check_player(player + ".exe")
 
         else:
