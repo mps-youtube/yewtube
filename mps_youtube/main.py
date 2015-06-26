@@ -328,7 +328,7 @@ def process_cl_args():
     if args.no_preload:
         g.preload_disabled = True
 
-    g.arument_commands = args.commands
+    g.argument_commands = args.commands
 
 
 def init():
