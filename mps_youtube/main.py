@@ -1198,6 +1198,8 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     if g.browse_mode == "ytpl":
         return generate_playlist_display()
 
+    max_results = screen.getxy().max_results
+
     songs = g.model.songs or []
 
     if not songs:
@@ -1230,7 +1232,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     hrow = c.ul + fmt % titles + c.w
     out = "\n" + hrow + "\n"
 
-    for n, x in enumerate(songs):
+    for n, x in enumerate(songs[:max_results]):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
         details = {'title': x.title, "length": fmt_time(x.length)}
         details = g.meta[x.ytid].copy() if have_meta else details
@@ -2625,6 +2627,7 @@ def down_many(dltype, choice, subdir=None):
 
     try:
         for song in downsongs:
+            g.result_count = len(g.model.songs)
             disp = generate_songlist_display()
             title = "Download Queue (%s):%s\n\n" % (av, c.w)
             disp = re.sub(r"(Num\s*?Title.*?\n)", title, disp)
@@ -2662,6 +2665,7 @@ def down_many(dltype, choice, subdir=None):
     finally:
         g.model.songs = temp[::]
         g.message = msg
+        g.result_count = len(g.model.songs)
         g.content = generate_songlist_display()
 
 
@@ -3525,8 +3529,6 @@ def plist(parturl, page=0, splash=True, dumps=False):
     g.pafy_pls[parturl] = yt_playlist
     ytpl_items = yt_playlist['items']
     ytpl_title = yt_playlist['title']
-    g.result_count = len(ytpl_items)
-    g.more_pages = max_results < len(ytpl_items)
 
     songs = []
 
@@ -3545,7 +3547,9 @@ def plist(parturl, page=0, splash=True, dumps=False):
     g.browse_mode = "normal"
     g.ytpl = dict(name=ytpl_title, items=songs)
     g.current_page = 0
-    g.model.songs = songs[:max_results]
+    g.result_count = len(g.ytpl['items'])
+    g.more_pages = max_results < len(g.ytpl['items'])
+    g.model.songs = songs[:max_results] if not dumps else songs[::]
     # preload first result url
     kwa = {"song": songs[0], "delay": 0}
     t = threading.Thread(target=preload, kwargs=kwa)
