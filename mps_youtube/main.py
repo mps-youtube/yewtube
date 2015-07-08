@@ -2676,6 +2676,9 @@ def down_plist(dltype, parturl):
     title = g.pafy_pls[parturl]['title']
     subdir = mswinfn(title.replace("/", "-"))
     down_many(dltype, "1-", subdir=subdir)
+    msg = g.message
+    plist(parturl, page=0, splash=True)
+    g.message = msg
 
 
 def down_user_pls(dltype, user):
