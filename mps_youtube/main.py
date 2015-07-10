@@ -1198,7 +1198,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     if g.browse_mode == "ytpl":
         return generate_playlist_display()
 
-    max_results = screen.getxy().max_results
+    max_results = getxy().max_results
 
     songs = g.model.songs or []
 
