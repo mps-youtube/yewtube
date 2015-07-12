@@ -36,7 +36,6 @@ options = dict(
     packages=['mps_youtube'],
     entry_points={'console_scripts': ['mpsyt = mps_youtube:main.main']},
     install_requires=['pafy >= 0.3.74'],
-    package_data={"": ["LICENSE", "README.rst", "CHANGELOG"]},
     classifiers=[
         "Topic :: Utilities",
         "Topic :: Internet :: WWW/HTTP",
@@ -70,7 +69,7 @@ options = dict(
             "bundle_files": 1
         }
     },
-    data_files=[],
+    data_files=[("", ["LICENSE", "README.rst", "CHANGELOG"])],
     long_description=open("README.rst").read()
 )
 
