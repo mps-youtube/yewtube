@@ -9,12 +9,9 @@ from mps_youtube import Plugin, registerPlugin, Config, c
 from mps_youtube import __version__ as mpsyt_ver, __url__ as mpsyt_url
 
 
-@registerPlugin
+@registerPlugin('album_search')
 class AlbumSearchPlugin(Plugin):
-    name = "Album Search"
-    author = "mps-youtube"
-    version = 1 #TODO: Same as mps_youtube version?
-    description = "Adds album command to search for albums using MusicBrainz"
+    pass
 
 
 @AlbumSearchPlugin.command(r'album\s*(.{0,500})', 'search',
