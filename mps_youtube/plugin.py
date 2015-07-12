@@ -1,11 +1,11 @@
 import os
 import re
 import collections
-import importlib
 import json
 import base64
 from zipfile import ZipFile
 from zipimport import zipimporter
+from importlib.machinery import PathFinder
 
 from . import g, commands, _plugins_generated
 
@@ -81,7 +81,8 @@ def loadPlugin(name):
 
     pluginpaths = [os.path.join(g.PLUGINDIR, i)
             for i in os.listdir(g.PLUGINDIR)]
-    loader = importlib.find_loader(name, path=pluginpaths)
+    finder = PathFinder()
+    loader = finder.find_module(name, path=pluginpaths)
 
     if isinstance(loader, zipimporter):
         with ZipFile(loader.archive, 'r') as pkgzip:
