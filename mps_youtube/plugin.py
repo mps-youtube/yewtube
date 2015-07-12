@@ -88,7 +88,7 @@ def loadPlugin(name):
             metadata = json.loads(pkgzip.open('metadata.json', 'r'
                 ).read().decode("utf-8"))[name]
     else:
-        with open(os.path.split(loader.path)[0] + 'metadata.json') as pkgmeta:
+        with open(os.path.split(loader.path)[0] + '/metadata.json') as pkgmeta:
             metadata = json.loads(pkgmeta.read())[name]
 
     loader.load_module(name)
