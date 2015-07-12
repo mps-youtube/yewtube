@@ -3,16 +3,16 @@ import re
 import collections
 import importlib
 import json
+import base64
 from zipfile import ZipFile
 from zipimport import zipimporter
 
-from pkg_resources import Requirement, resource_filename
+from . import g, commands, _plugins_generated
 
-from . import g, commands
-
-coreplugin_dir = resource_filename(
-        Requirement.parse("mps-youtube"),
-        "core_plugins.zip")
+coreplugin_data = base64.b85decode(_plugins_generated.data)
+os.makedirs(g.PLUGINDIR, exist_ok=True)
+with open(os.path.join(g.PLUGINDIR, 'core_plugins.zip'), 'wb') as corepfile:
+    corepfile.write(coreplugin_data)
 
 EventHandler = collections.namedtuple('EventHandler', 'name function')
 
@@ -79,7 +79,7 @@ def loadPlugins():
 def loadPlugin(name):
     #TODO: Make user friendly. This is just the testing interface.
 
-    pluginpaths = [coreplugin_dir] + [g.PLUGINDIR + i
+    pluginpaths = [os.path.join(g.PLUGINDIR, i)
             for i in os.listdir(g.PLUGINDIR)]
     loader = importlib.find_loader(name, path=pluginpaths)
 
