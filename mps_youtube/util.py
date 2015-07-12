@@ -85,11 +85,7 @@ def utf8_replace(txt):
 
 def xenc(stuff):
     """ Replace unsupported characters. """
-    if sys.stdout.isatty():
-        return utf8_replace(stuff) if not_utf8_environment else stuff
-
-    else:
-        return stuff.encode("utf8", errors="replace").decode()
+    return utf8_replace(stuff) if not_utf8_environment else stuff
 
 
 def xprint(stuff, end=None):
