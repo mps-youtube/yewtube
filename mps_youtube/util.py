@@ -4,6 +4,7 @@ from __future__ import print_function
 import os
 import re
 import sys
+import ctypes
 import subprocess
 import logging
 
@@ -109,7 +110,7 @@ def mswinfn(filename):
 def set_window_title(title):
     """ Set terminal window title. """
     if mswin:
-        os.system(xenc("title " + title))
+        ctypes.windll.kernel32.SetConsoleTitleW(xenc(title))
     else:
         sys.stdout.write(xenc('\x1b]2;' + title + '\x07'))
 
