@@ -1,10 +1,7 @@
 mps-youtube
 ===========
 
-.. image:: https://landscape.io/github/np1/mps-youtube/develop/landscape.svg
-    :target: https://landscape.io/github/np1/mps-youtube/develop
-    :alt: Code Health
-.. image:: http://badge.fury.io/py/mps-youtube.png
+.. image:: https://img.shields.io/pypi/v/mps-youtube.svg
     :target: https://pypi.python.org/pypi/mps-youtube
 .. image:: https://pypip.in/d/mps-youtube/badge.png
     :target: https://pypi.python.org/pypi/mps-youtube
@@ -107,9 +104,10 @@ Or with `Homebrew <http://brew.sh>`_::
 
     brew install mplayer
 
-
 Additional Windows installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As an alternative to installing with pip, there is a standalone binary available. Go to `Releases <https://github.com/np1/mps-youtube/releases>`_ and download mpsyt-VERSION.exe under downloads for the latest release.
 
 Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to get colors (optional)::
 
@@ -121,6 +119,32 @@ Extract the ``mplayer.exe`` file, saving it to the folder that ``mpsyt.exe`` res
 
 Alternatively to mplayer, use ``mpv.exe`` which can be downloaded from: http://mpv.io/installation/
 
+Run via Docker container
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using `Docker <http://www.docker.com>`_, run with::
+
+    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt mysyt
+
+Additional Docker notes
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If you would like to locally build the container you can run the following steps
+
+Check out this repo::
+
+    git clone https://github.com/np1/mps-youtube.git
+
+Enter the directory and run docker build::
+
+    cd mps-youtube
+    sudo docker build -t mpsyt .
+
+Now run the container interactively with::
+
+    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt mysyt
+
+In order to have access to the local sound device (/dev/snd) the container needs to be privileged.
 
 Upgrading
 ---------
@@ -138,3 +162,7 @@ mps-youtube is run on the command line using the command::
     
 Enter ``h`` from within the program for help.
 
+IRC
+---
+
+An IRC channel `#mps-youtube` for the project is available on Freenode (chat.freenode.net:6697).

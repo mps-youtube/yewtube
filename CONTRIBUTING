@@ -9,7 +9,7 @@ Please keep pull requests specific, do not make many disparate changes or
 new features in one request.  A separate pull request for each feature change
 is preferred.
 
-Please ensure your changes work in Python 2.7+, 3.3+ and Windows.
+Please ensure your changes work in Python 3.3+ and Windows.
 
 
 Code conventions:

@@ -20,3 +20,6 @@ class TestMain(unittest.TestCase):
         self.assertEqual(mps.num_repr(10000001), '10m')
         self.assertEqual(mps.num_repr(100000001), '100m')
         self.assertEqual(mps.num_repr(1000000001), '1.0B')
+
+if __name__ == '__main__':
+    unittest.main()

@@ -1,8 +1,8 @@
 *.py[cod]
 otherstuff/
 pafy.py
+pafy
 vi.py
-changelog
 MANIFEST
 .dev
 # Packages
