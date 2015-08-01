@@ -2136,13 +2136,7 @@ def fetch_comments(item):
     # XXX should comment threads be expanded? this would require
     # additional requests for comments responding on top level comments
 
-    try:
-        jsdata = call_gdata('commentThreads', qs)
-
-    except GdataError as e:
-        g.message = "No comments for %s\n%s" % (item.title[:50], e)
-        g.content = generate_songlist_display()
-        return
+    jsdata = call_gdata('commentThreads', qs)
 
     coms = jsdata.get('items', [])
     coms = [x.get('snippet', {}) for x in coms]
