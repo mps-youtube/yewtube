@@ -1383,7 +1383,7 @@ def playsong(song, failcount=0, override=False):
         return
 
     if Config.NOTIFIER.get:
-        subprocess.call(shlex.split(Config.NOTIFIER.get) + [song.title])
+        subprocess.Popen(shlex.split(Config.NOTIFIER.get) + [song.title])
 
     # don't interrupt preloading:
     while song.ytid in g.preloading:
