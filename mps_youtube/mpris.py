@@ -516,6 +516,10 @@ def main(connection):
     """
 
     mprisctl = Mpris2Controller()
-    mprisctl.acquire()
-    mprisctl.run(connection)
-    mprisctl.release()
+    try:
+        mprisctl.acquire()
+        mprisctl.run(connection)
+    except dbus.exceptions.DBusException:
+        pass
+    finally:
+        mprisctl.release()
