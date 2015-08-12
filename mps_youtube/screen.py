@@ -73,17 +73,4 @@ def reset_terminal():
 def writestatus(text, mute=False):
     """ Update status line. """
     if not mute and Config.SHOW_STATUS.get:
-        _writeline(text)
-
-
-def _writeline(text):
-    """ Print text on same line. """
-    width = getxy().width
-    spaces = width - len(text) - 1
-    if mswin:
-        # Avoids creating new line every time it is run
-        # TODO: Figure out why this is needed
-        spaces =- 1
-    text = text[:width - 3]
-    sys.stdout.write(" " + text + (" " * spaces) + "\r")
-    sys.stdout.flush()
+        xprint(text, end='\r')

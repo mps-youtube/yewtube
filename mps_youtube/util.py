@@ -54,7 +54,7 @@ def get_mpv_version(exename):
 
 def get_mplayer_version(exename):
     o = subprocess.check_output([exename]).decode()
-    m = re.search('^MPlayer SVN-r([0-9]+) ', o, re.MULTILINE)
+    m = re.search('^MPlayer SVN[\s-]r([0-9]+)', o, re.MULTILINE|re.IGNORECASE)
 
     ver = 0
     if m:

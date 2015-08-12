@@ -3,9 +3,9 @@ mps-youtube
 
 .. image:: https://img.shields.io/pypi/v/mps-youtube.svg
     :target: https://pypi.python.org/pypi/mps-youtube
-.. image:: https://pypip.in/d/mps-youtube/badge.png
+.. image:: https://img.shields.io/pypi/dm/mps-youtube.svg
     :target: https://pypi.python.org/pypi/mps-youtube
-.. image:: https://pypip.in/wheel/mps-youtube/badge.png
+.. image:: https://img.shields.io/pypi/wheel/mps-youtube.svg
     :target: http://pythonwheels.com/
     :alt: Wheel Status
 
