@@ -1066,22 +1066,19 @@ def real_len(u, alt=False):
     return int(round(sum(widths.get(ueaw(char), 1) for char in u)))
 
 
-def uea_trunc(num, t):
-    """ Truncate to num chars taking into account East Asian width chars. """
-    while real_len(t) > num:
-        t = t[:-1]
-
-    return t
-
-
 def uea_pad(num, t, direction="<", notrunc=False):
     """ Right pad with spaces taking into account East Asian width chars. """
     direction = direction.strip() or "<"
 
     t = ' '.join(t.split('\n'))
+    
+    # TODO: Find better way of dealing with this?
+    if num <= 0:
+        return ''
 
     if not notrunc:
-        t = uea_trunc(num, t)
+        # Truncate to max of num characters
+        t = t[:num]
 
     if real_len(t) < num:
         spaces = num - real_len(t)
