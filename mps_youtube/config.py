@@ -276,7 +276,7 @@ class _Config(object):
 
     _configitems = [
             ConfigItem("order", "relevance",
-                allowed_values="relevance date views rating".split()),
+                allowed_values="relevance date views rating title".split()),
             ConfigItem("user_order", "", allowed_values =
                 [""] + "relevance date views rating".split()),
             ConfigItem("max_results", 19, maxval=50, minval=1),
