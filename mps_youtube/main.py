@@ -3897,7 +3897,7 @@ def main():
     # input types
     word = r'[^\W\d][-\w\s]{,100}'
     rs = r'(?:repeat\s*|shuffle\s*|-a\s*|-v\s*|-f\s*|-w\s*)'
-    pl = r'((?:RD|PL)[-_0-9a-zA-Z]+)$'
+    pl = r'\S*((?:RD|PL)[-_0-9a-zA-Z]+)$\S*'
     regx = {
         ls: r'ls$',
         vp: r'vp$',
