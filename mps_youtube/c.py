@@ -1,7 +1,7 @@
 """ Module for holding colour code values. """
 
 import os
-from sys import stdout
+import sys
 
 try:
     # pylint: disable=F0401
@@ -23,7 +23,7 @@ if mswin and has_colorama:
 elif mswin:
     ul = red = green = yellow = blue = pink = white = ""
 
-elif stdout.isatty():
+elif sys.stdout.isatty():
     white = "\x1b[%sm" % 0
     ul = "\x1b[%sm" * 3 % (2, 4, 33)
     cols = ["\x1b[%sm" % n for n in range(91, 96)]
