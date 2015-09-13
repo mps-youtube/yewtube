@@ -90,7 +90,7 @@ except ImportError:
 
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in os.environ.get("LANG", "")
+not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')

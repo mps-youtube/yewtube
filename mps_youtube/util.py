@@ -12,7 +12,7 @@ from . import g, c
 
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in os.environ.get("LANG", "")
+not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
  
 
 def has_exefile(filename):
