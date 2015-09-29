@@ -89,7 +89,7 @@ except ImportError:
 
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in os.environ.get("LANG", "")
+not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 
@@ -1219,7 +1219,7 @@ def generate_real_playerargs(song, override, failcount):
     # pylint: disable=R0914
     # pylint: disable=R0912
     video = Config.SHOW_VIDEO.get
-    video = True if override in ("fullscreen", "window") else video
+    video = True if override in ("fullscreen", "window", "forcevid") else video
     video = False if override == "audio" else video
     m4a = "mplayer" not in Config.PLAYER.get
     q, audio, cached = failcount, not video, g.streams[song.ytid]
@@ -2638,15 +2638,20 @@ def play(pre, choice, post=""):
         repeat = "repeat" in pre + post
         novid = "-a" in pre + post
         fs = "-f" in pre + post
-        nofs = "-w" in pre + post or "-v" in pre + post
+        nofs = "-w" in pre + post
+        forcevid = "-v" in pre + post
 
-        if (novid and fs) or (novid and nofs) or (nofs and fs):
+        if ((novid and fs) or (novid and nofs) or (nofs and fs)
+           or (novid and forcevid)):
             raise IOError("Conflicting override options specified")
 
         override = False
         override = "audio" if novid else override
         override = "fullscreen" if fs else override
         override = "window" if nofs else override
+
+        if (not fs) and (not nofs):
+            override = "forcevid" if forcevid else override
 
         selection = _parse_multi(choice)
         songlist = [g.model.songs[x - 1] for x in selection]
@@ -2709,7 +2714,7 @@ def preload(song, delay=2, override=False):
     g.preloading.append(ytid)
     time.sleep(delay)
     video = Config.SHOW_VIDEO.get
-    video = True if override in ("fullscreen", "window") else video
+    video = True if override in ("fullscreen", "window", "forcevid") else video
     video = False if override == "audio" else video
 
     try:
