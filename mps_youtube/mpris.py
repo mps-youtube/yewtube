@@ -518,8 +518,8 @@ def main(connection):
     mprisctl = Mpris2Controller()
     try:
         mprisctl.acquire()
-        mprisctl.run(connection)
     except dbus.exceptions.DBusException:
-        pass
-    finally:
-        mprisctl.release()
+        print('mpris interface couldn\'t be initialized. Is dbus properly configured?')
+        return
+    mprisctl.run(connection)
+    mprisctl.release()
