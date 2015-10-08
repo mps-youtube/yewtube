@@ -97,6 +97,10 @@ XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
 ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?((\d{1,2})S)?')
 
+# Updated every time incompatible changes are made to cache format,
+# So old cache can be dropped
+CACHE_VERSION = 1
+
 
 def getxy():
     """ Get terminal size, terminal width and max-results. """
@@ -217,6 +221,7 @@ def get_streams(vid, force=False, callback=None, threeD=False):
         x = dict(url=s.url,
                  ext=s.extension,
                  quality=s.quality,
+                 rawbitrate=s.rawbitrate,
                  mtype=s.mediatype,
                  size=-1)
         streams.append(x)
@@ -240,11 +245,17 @@ def select_stream(slist, q=0, audio=False, m4a_ok=True, maxres=None):
         """ Return height aspect of resolution, eg 640x480 => 480. """
         return int(x['quality'].split("x")[1])
 
+    def getbitrate(x):
+        """Return the bitrate of a stream."""
+        return x['rawbitrate']
+
     vo_streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
     vo_streams = sorted(vo_streams, key=getq, reverse=True)
 
     if not m4a_ok:
         au_streams = [x for x in au_streams if not x['ext'] == "m4a"]
+
+    au_streams = sorted(au_streams, key=getbitrate, reverse=True)
 
     streams = au_streams if audio else vo_streams
     dbg("select stream, q: %s, audio: %s, len: %s", q, audio, len(streams))
@@ -526,9 +537,13 @@ def init_cache():
             with open(g.CACHEFILE, "rb") as cf:
                 cached = pickle.load(cf)
 
+            # Note: will be none for mpsyt 0.2.5 or earlier
+            version = cached.get('version')
+
             if 'streams' in cached:
-                g.streams = cached['streams']
-                g.username_query_cache = cached['userdata']
+                if version and version >= 1:
+                    g.streams = cached['streams']
+                    g.username_query_cache = cached['userdata']
             else:
                 g.streams = cached
 
@@ -587,6 +602,7 @@ def showconfig(_):
 def savecache():
     """ Save stream cache. """
     caches = dict(
+        version=CACHE_VERSION,
         streams=g.streams,
         userdata=g.username_query_cache,
         pafy=pafy.dump_cache())
