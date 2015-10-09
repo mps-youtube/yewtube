@@ -1111,7 +1111,7 @@ def generate_real_playerargs(song, override, failcount):
         ver = g.mplayer_version
         # Mplayer too old to support https
         if not (ver > (1,1) if isinstance(ver, tuple) else ver >= 37294):
-            raise IOError("%s : Sorry mplayer doesn't support this streams. "
+            raise IOError("%s : Sorry mplayer doesn't support this stream. "
                           "Use mpv or update mplayer to a newer version" % song.title)
 
     size = get_size(song.ytid, stream['url'])
@@ -1459,7 +1459,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
 
         while po_obj.poll() is None:
             stdstream = po_obj.stderr if mpv else po_obj.stdout
-            char = stdstreams.read(1).decode("utf-8", errors="ignore")
+            char = stdstream.read(1).decode("utf-8", errors="ignore")
 
             if char in '\r\n':
 
@@ -2703,18 +2703,18 @@ def get_dl_data(song, mediatype="any"):
         sys.stdout.flush()
 
         try:
-            size = mbsize(streams.get_filesize())
+            size = mbsize(stream.get_filesize())
 
         except TypeError:
             dbg(c.r + "---Error getting stream size" + c.w)
             size = 0
 
-        item = {'mediatype': streams.mediatype,
+        item = {'mediatype': stream.mediatype,
                 'size': size,
-                'ext': streams.extension,
-                'quality': streams.quality,
-                'notes': streams.notes,
-                'url': streams.url}
+                'ext': stream.extension,
+                'quality': stream.quality,
+                'notes': stream.notes,
+                'url': stream.url}
 
         dldata.append(item)
 
