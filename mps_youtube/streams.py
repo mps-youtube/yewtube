@@ -83,8 +83,11 @@ def get(vid, force=False, callback=None, threeD=False):
     return streams
 
 
-def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
+def select(slist=None, q=0, audio=False, m4a_ok=True, maxres=None):
     """ Select a stream from stream list. """
+    if slist is None:
+        slist = get()
+
     maxres = maxres or Config.MAX_RES.get
     slist = slist['meta'] if isinstance(slist, dict) else slist
     au_streams = [x for x in slist if x['mtype'] == "audio"]
