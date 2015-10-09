@@ -53,12 +53,12 @@ from urllib.parse import urlencode
 
 import pafy
 
-from . import g, c, commands, screen
+from . import g, c, cache, streams, commands, screen
 from .playlist import Playlist, Video
 from .paths import get_config_dir
 from .config import Config, known_player_set, import_config
 from .util import has_exefile, get_mpv_version, dbg, list_update, get_near_name
-from .util import get_mplayer_version
+from .util import get_mplayer_version, get_pafy
 from .util import xenc, xprint, mswinfn, set_window_title, F
 from .helptext import helptext, get_help
 from .plugin import loadPlugins
@@ -104,142 +104,6 @@ def get_content_length(url, preloading=False):
     headers = response.headers
     cl = headers['content-length']
     return int(cl)
-
-
-def prune_streams():
-    """ Keep cache size in check. """
-    while len(g.pafs) > g.max_cached_streams:
-        g.pafs.popitem(last=False)
-
-    while len(g.streams) > g.max_cached_streams:
-        g.streams.popitem(last=False)
-
-    # prune time expired items
-
-    now = time.time()
-    oldpafs = [k for k in g.pafs if g.pafs[k].expiry < now]
-
-    if len(oldpafs):
-        dbg(c.r + "%s old pafy items pruned%s", len(oldpafs), c.w)
-
-    for oldpaf in oldpafs:
-        g.pafs.pop(oldpaf, 0)
-
-    oldstreams = [k for k in g.streams if g.streams[k]['expiry'] < now]
-
-    if len(oldstreams):
-        dbg(c.r + "%s old stream items pruned%s", len(oldstreams), c.w)
-
-    for oldstream in oldstreams:
-        g.streams.pop(oldstream, 0)
-
-    dbg(c.b + "paf: %s, streams: %s%s", len(g.pafs), len(g.streams), c.w)
-
-
-def get_pafy(item, force=False, callback=None):
-    """ Get pafy object for an item. """
-
-    callback_fn = callback or (lambda x: None)
-    cached = g.pafs.get(item.ytid)
-
-    if not force and cached and cached.expiry > time.time():
-        dbg("get pafy cache hit for %s", cached.title)
-        cached.fresh = False
-        return cached
-
-    else:
-
-        try:
-            p = pafy.new(item.ytid, callback=callback_fn)
-
-        except IOError as e:
-
-            if "pafy" in str(e):
-                dbg(c.p + "retrying failed pafy get: " + item.ytid + c.w)
-                p = pafy.new(item.ytid, callback=callback)
-
-            else:
-                raise
-
-        g.pafs[item.ytid] = p
-        p.fresh = True
-        thread = "preload: " if not callback else ""
-        dbg("%s%sgot new pafy object: %s%s" % (c.y, thread, p.title[:26], c.w))
-        dbg("%s%sgot new pafy object: %s%s" % (c.y, thread, p.videoid, c.w))
-        return p
-
-
-def get_streams(vid, force=False, callback=None, threeD=False):
-    """ Get all streams as a dict.  callback function passed to get_pafy. """
-    now = time.time()
-    ytid = vid.ytid
-    have_stream = g.streams.get(ytid) and g.streams[ytid]['expiry'] > now
-    prfx = "preload: " if not callback else ""
-
-    if not force and have_stream:
-        ss = str(int(g.streams[ytid]['expiry'] - now) // 60)
-        dbg("%s%sGot streams from cache (%s mins left)%s", c.g, prfx, ss, c.w)
-        return g.streams.get(ytid)['meta']
-
-    p = get_pafy(vid, force=force, callback=callback)
-    ps = p.allstreams if threeD else [x for x in p.allstreams if not x.threed]
-
-    try:
-        # test urls are valid
-        [x.url for x in ps]
-
-    except TypeError:
-        # refetch if problem
-        dbg("%s****Type Error in get_streams. Retrying%s", c.r, c.w)
-        p = get_pafy(vid, force=True, callback=callback)
-        ps = p.allstreams if threeD else [x for x in p.allstreams
-                                          if not x.threed]
-
-    streams = []
-
-    for s in ps:
-        x = dict(url=s.url,
-                 ext=s.extension,
-                 quality=s.quality,
-                 mtype=s.mediatype,
-                 size=-1)
-        streams.append(x)
-
-    g.streams[ytid] = dict(expiry=p.expiry, meta=streams)
-    prune_streams()
-    return streams
-
-
-def select_stream(slist, q=0, audio=False, m4a_ok=True, maxres=None):
-    """ Select a stream from stream list. """
-    maxres = maxres or Config.MAX_RES.get
-    slist = slist['meta'] if isinstance(slist, dict) else slist
-    au_streams = [x for x in slist if x['mtype'] == "audio"]
-
-    def okres(x):
-        """ Return True if resolution is within user specified maxres. """
-        return int(x['quality'].split("x")[1]) <= maxres
-
-    def getq(x):
-        """ Return height aspect of resolution, eg 640x480 => 480. """
-        return int(x['quality'].split("x")[1])
-
-    vo_streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
-    vo_streams = sorted(vo_streams, key=getq, reverse=True)
-
-    if not m4a_ok:
-        au_streams = [x for x in au_streams if not x['ext'] == "m4a"]
-
-    streams = au_streams if audio else vo_streams
-    dbg("select stream, q: %s, audio: %s, len: %s", q, audio, len(streams))
-
-    try:
-        ret = streams[q]
-
-    except IndexError:
-        ret = streams[0] if q and len(streams) else None
-
-    return ret
 
 
 def get_size(ytid, url, preloading=False):
@@ -335,7 +199,7 @@ def init():
     """ Initial setup. """
 
     init_readline()
-    init_cache()
+    cache.init()
     init_transcode()
 
     # set player to mpv or mplayer if found, otherwise unset
@@ -501,32 +365,6 @@ command: ENCODER_PATH -i IN -codec:a wmav2 -q:a 0 OUT.EXT"""
                     e = {}
 
 
-def init_cache():
-    """ Import cache file. """
-    if os.path.isfile(g.CACHEFILE):
-
-        try:
-
-            with open(g.CACHEFILE, "rb") as cf:
-                cached = pickle.load(cf)
-
-            if 'streams' in cached:
-                g.streams = cached['streams']
-                g.username_query_cache = cached['userdata']
-            else:
-                g.streams = cached
-
-            if 'pafy' in cached:
-                pafy.load_cache(cached['pafy'])
-
-            dbg(c.g + "%s cached streams imported%s", str(len(g.streams)), c.w)
-
-        except (EOFError, IOError):
-            dbg(c.r + "Cache file failed to open" + c.w)
-
-        prune_streams()
-
-
 def init_readline():
     """ Enable readline for input history. """
     if g.command_line:
@@ -567,19 +405,6 @@ def showconfig(_):
     g.content = out
     g.message = "Enter %sset <key> <value>%s to change\n" % (c.g, c.w)
     g.message += "Enter %sset all default%s to reset all" % (c.g, c.w)
-
-
-def savecache():
-    """ Save stream cache. """
-    caches = dict(
-        streams=g.streams,
-        userdata=g.username_query_cache,
-        pafy=pafy.dump_cache())
-
-    with open(g.CACHEFILE, "wb") as cf:
-        pickle.dump(caches, cf, protocol=2)
-
-    dbg(c.p + "saved cache file: " + g.CACHEFILE + c.w)
 
 
 @commands.command(r'set\s+([-\w]+)\s*(.*?)\s*$')
@@ -1223,7 +1048,7 @@ def generate_real_playerargs(song, override, failcount):
     video = False if override == "audio" else video
     m4a = "mplayer" not in Config.PLAYER.get
     q, audio, cached = failcount, not video, g.streams[song.ytid]
-    stream = select_stream(cached, q=q, audio=audio, m4a_ok=m4a)
+    stream = streams.select(cached, q=q, audio=audio, m4a_ok=m4a)
 
     # handle no audio stream available, or m4a with mplayer
     # by switching to video stream and suppressing video output.
@@ -1231,7 +1056,7 @@ def generate_real_playerargs(song, override, failcount):
         dbg(c.r + "no audio or mplayer m4a, using video stream" + c.w)
         override = "a-v"
         video = True
-        stream = select_stream(cached, q=q, audio=False, maxres=1600)
+        stream = streams.select(cached, q=q, audio=False, maxres=1600)
 
     if not stream and video:
         raise IOError("No streams available")
@@ -1240,7 +1065,7 @@ def generate_real_playerargs(song, override, failcount):
         ver = g.mplayer_version
         # Mplayer too old to support https
         if not (ver > (1,1) if isinstance(ver, tuple) else ver >= 37294):
-            raise IOError("%s : Sorry mplayer doesn't support this stream. "
+            raise IOError("%s : Sorry mplayer doesn't support this streams. "
                           "Use mpv or update mplayer to a newer version" % song.title)
 
     size = get_size(song.ytid, stream['url'])
@@ -1329,10 +1154,10 @@ def playsong(song, failcount=0, override=False):
         time.sleep(0.1)
 
     try:
-        get_streams(song, force=failcount, callback=screen.writestatus)
+        streams.get(song, force=failcount, callback=screen.writestatus)
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
-        dbg("--ioerror in playsong call to get_streams %s", str(e))
+        dbg("--ioerror in playsong call to streams.get %s", str(e))
 
         if "Youtube says" in str(e):
             g.message = F('cant get track') % (song.title + " " + str(e))
@@ -1349,7 +1174,7 @@ def playsong(song, failcount=0, override=False):
 
     except ValueError:
         g.message = F('track unresolved')
-        dbg("----valueerror in playsong call to get_streams")
+        dbg("----valueerror in playsong call to streams.get")
         return
 
     try:
@@ -1588,7 +1413,7 @@ def player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
 
         while po_obj.poll() is None:
             stdstream = po_obj.stderr if mpv else po_obj.stdout
-            char = stdstream.read(1).decode("utf-8", errors="ignore")
+            char = stdstreams.read(1).decode("utf-8", errors="ignore")
 
             if char in '\r\n':
 
@@ -2168,13 +1993,13 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     if not os.path.exists(ddir):
         os.makedirs(ddir)
 
-    streams = get_streams(song)
+    streams = streams.get(song)
 
     if ext:
         extension = ext
 
     else:
-        stream = select_stream(streams, 0, audio=av == "audio", m4a_ok=True)
+        stream = streams.select(streams, 0, audio=av == "audio", m4a_ok=True)
         extension = stream['ext']
 
     # filename = song.title[:59] + "." + extension
@@ -2295,8 +2120,8 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     # Instance of 'bool' has no 'url' member (some types not inferable)
 
     if not url:
-        streams = get_streams(song)
-        stream = select_stream(streams, 0, audio=audio, m4a_ok=True)
+        streams = streams.get(song)
+        stream = streams.select(streams, 0, audio=audio, m4a_ok=True)
         url = stream['url']
 
     # if an external download command is set, use it
@@ -2718,13 +2543,13 @@ def preload(song, delay=2, override=False):
     video = False if override == "audio" else video
 
     try:
-        stream = get_streams(song)
+        stream = streams.get(song)
         m4a = "mplayer" not in Config.PLAYER.get
-        stream = select_stream(stream, audio=not video, m4a_ok=m4a)
+        stream = streams.select(stream, audio=not video, m4a_ok=m4a)
 
         if not stream and not video:
             # preload video stream, no audio available
-            stream = select_stream(g.streams[ytid], audio=False)
+            stream = streams.select(g.streams[ytid], audio=False)
 
         get_size(ytid, stream['url'], preloading=True)
 
@@ -2800,7 +2625,7 @@ def quits(showlogo=True):
         readline.write_history_file(g.READLINE_FILE)
         dbg("Saved history file")
 
-    savecache()
+    cache.save()
 
     screen.clear()
     msg = logo(c.r, version=__version__) if showlogo else ""
@@ -2846,18 +2671,18 @@ def get_dl_data(song, mediatype="any"):
         sys.stdout.flush()
 
         try:
-            size = mbsize(stream.get_filesize())
+            size = mbsize(streams.get_filesize())
 
         except TypeError:
             dbg(c.r + "---Error getting stream size" + c.w)
             size = 0
 
-        item = {'mediatype': stream.mediatype,
+        item = {'mediatype': streams.mediatype,
                 'size': size,
-                'ext': stream.extension,
-                'quality': stream.quality,
-                'notes': stream.notes,
-                'url': stream.url}
+                'ext': streams.extension,
+                'quality': streams.quality,
+                'notes': streams.notes,
+                'url': streams.url}
 
         dldata.append(item)
 
@@ -3365,7 +3190,7 @@ def info(num):
         screen.update()
         screen.writestatus("Fetching video metadata..")
         item = (g.model.songs[int(num) - 1])
-        get_streams(item)
+        streams.get(item)
         p = get_pafy(item)
         pub = time.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
         screen.writestatus("Fetched")
