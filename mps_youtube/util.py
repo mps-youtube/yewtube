@@ -7,6 +7,9 @@ import sys
 import ctypes
 import subprocess
 import logging
+import time
+
+import pafy
 
 from . import g, c
 
@@ -171,3 +174,36 @@ def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
     text = re.sub(r"&&", r"%s", text)
 
     return "\n" * nb + text + c.w + "\n" * na
+
+
+def get_pafy(item, force=False, callback=None):
+    """ Get pafy object for an item. """
+
+    callback_fn = callback or (lambda x: None)
+    cached = g.pafs.get(item.ytid)
+
+    if not force and cached and cached.expiry > time.time():
+        dbg("get pafy cache hit for %s", cached.title)
+        cached.fresh = False
+        return cached
+
+    else:
+
+        try:
+            p = pafy.new(item.ytid, callback=callback_fn)
+
+        except IOError as e:
+
+            if "pafy" in str(e):
+                dbg(c.p + "retrying failed pafy get: " + item.ytid + c.w)
+                p = pafy.new(item.ytid, callback=callback)
+
+            else:
+                raise
+
+        g.pafs[item.ytid] = p
+        p.fresh = True
+        thread = "preload: " if not callback else ""
+        dbg("%s%sgot new pafy object: %s%s" % (c.y, thread, p.title[:26], c.w))
+        dbg("%s%sgot new pafy object: %s%s" % (c.y, thread, p.videoid, c.w))
+        return p
