@@ -64,10 +64,16 @@ def get(vid, force=False, callback=None, threeD=False):
     streams = []
 
     for s in ps:
+        try:
+            rawbitrate = s.rawbitrate
+        except AttributeError:
+            # Deal with bug in pafy before 88fda70 or 0.7.x
+            rawbitrate = None
+
         x = dict(url=s.url,
                  ext=s.extension,
                  quality=s.quality,
-                 rawbitrate=s.rawbitrate,
+                 rawbitrate=rawbitrate,
                  mtype=s.mediatype,
                  size=-1)
         streams.append(x)
