@@ -56,10 +56,6 @@ def save_to_file():
 
 def open_from_file():
     """ Open playlists. Called once on script invocation. """
-
-    # If there is a version 1 playlist, convert that
-    _convert_playlist_to_v2()
-
     try:
 
         with open(g.PLFILE, "rb") as plf:
@@ -107,7 +103,7 @@ def open_from_file():
         save_to_file()
 
 
-def _convert_playlist_to_v2():
+def convert_playlist_to_v2():
     """ Convert previous playlist file to v2 playlist. """
     # skip if previously done
     if os.path.isfile(g.PLFILE):

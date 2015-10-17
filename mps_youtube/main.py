@@ -56,7 +56,7 @@ from urllib.parse import urlencode
 import pafy
 
 from . import terminalsize, g, c, cache, streams
-from .playlist import Playlist, Video, open_from_file, save_to_file
+from .playlist import Playlist, Video, open_from_file, save_to_file, convert_playlist_to_v2
 from .paths import get_config_dir
 from .config import Config, known_player_set, import_config
 from .util import has_exefile, get_mpv_version, dbg, list_update, get_near_name
@@ -3622,6 +3622,7 @@ def main():
         screen_update()
 
     # open playlists from file
+    convert_playlist_to_v2()
     open_from_file()
 
     arg_inp = ' '.join(g.argument_commands)
