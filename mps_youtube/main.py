@@ -2037,7 +2037,7 @@ def _make_fname(song, ext=None, av=None, subdir=None):
         extension = ext
 
     else:
-        stream = streams.select(0, audio=av == "audio", m4a_ok=True)
+        stream = streams.select(audio=av == "audio", m4a_ok=True)
         extension = stream['ext']
 
     # filename = song.title[:59] + "." + extension
@@ -2158,7 +2158,7 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     # Instance of 'bool' has no 'url' member (some types not inferable)
 
     if not url:
-        stream = streams.select(0, audio=audio, m4a_ok=True)
+        stream = streams.select(audio=audio, m4a_ok=True)
         url = stream['url']
 
     # if an external download command is set, use it
