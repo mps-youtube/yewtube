@@ -1233,6 +1233,9 @@ def playsong(song, failcount=0, override=False):
         if failcount < g.max_retries:
             failcount += 1
             return playsong(song, failcount=failcount, override=override)
+        else:
+            g.message = str(e)
+            return
 
     except IOError as e:
         # this may be cause by attempting to play a https stream with
