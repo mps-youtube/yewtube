@@ -1708,7 +1708,11 @@ def usersearch_id(q_user, page=0, splash=True):
     else:
         msg = "Video uploads by {2}{4}{0}"
         progtext = termuser[1]
-        failmsg = "User %s not found" % termuser[1]
+        if Config.SEARCH_MUSIC:
+            failmsg = """User %s not found or has no videos in the Music category.
+Use 'set search_music False' to show results not in the Music category.""" % termuser[1]
+        else:
+            failmsg = "User %s not found or has no videos."  % termuser[1]
     msg = str(msg).format(c.w, c.y, c.y, term, user)
 
     have_results = _search(progtext, query, splash)
