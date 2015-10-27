@@ -3,7 +3,6 @@ import time
 from . import g, c
 from .util import dbg, get_pafy
 from .config import Config
-from .playlist import Video
 
 
 def prune():
@@ -84,13 +83,8 @@ def get(vid, force=False, callback=None, threeD=False):
     return streams
 
 
-def select(slist_or_vid, q=0, audio=False, m4a_ok=True, maxres=None):
+def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
     """ Select a stream from stream list. """
-    if isinstance(slist_or_vid, Video):
-        slist = get(slist_or_vid)
-    else:
-        slist = slist_or_vid
-
     maxres = maxres or Config.MAX_RES.get
     slist = slist['meta'] if isinstance(slist, dict) else slist
     au_streams = [x for x in slist if x['mtype'] == "audio"]
