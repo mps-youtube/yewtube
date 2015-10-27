@@ -2044,7 +2044,7 @@ def _make_fname(song, ext=None, av=None, subdir=None):
         extension = ext
 
     else:
-        stream = streams.select(audio=av == "audio", m4a_ok=True)
+        stream = streams.select(song, audio=av == "audio", m4a_ok=True)
         extension = stream['ext']
 
     # filename = song.title[:59] + "." + extension
@@ -2165,7 +2165,7 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     # Instance of 'bool' has no 'url' member (some types not inferable)
 
     if not url:
-        stream = streams.select(audio=audio, m4a_ok=True)
+        stream = streams.select(song, audio=audio, m4a_ok=True)
         url = stream['url']
 
     # if an external download command is set, use it
@@ -2575,13 +2575,12 @@ def preload(song, delay=2, override=False):
     video = False if override == "audio" else video
 
     try:
-        stream = streams.get(song)
         m4a = "mplayer" not in Config.PLAYER.get
-        stream = streams.select(stream, audio=not video, m4a_ok=m4a)
+        stream = streams.select(song, audio=not video, m4a_ok=m4a)
 
         if not stream and not video:
             # preload video stream, no audio available
-            stream = streams.select(g.streams[ytid], audio=False)
+            stream = streams.select(song, g.streams[ytid], audio=False)
 
         get_size(ytid, stream['url'], preloading=True)
 
