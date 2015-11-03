@@ -226,6 +226,38 @@ def check_win_size(size):
     else:
         return dict(valid=True, value=size)
 
+def check_being_dict(user_dict):
+    """ check if user string is correct dict, set it to global options,
+        since pafy accepts ydl_opts dict as ctor argument. """
+    try:
+        import ast
+    except ImportError:
+        m = "Your Python is too old. Use at least 2.4 to use this option."
+        return dict(valid=False, message=m)
+    try:
+        dict_ = ast.literal_eval(str(user_dict))
+    except ValueError:
+        m = "Entered string has wrong syntax. Usage: {'option': value}"
+        return dict(valid=False, message=m)
+    if isinstance(dict_, dict):
+        # it is assumed that user setting this option knows youtube-dl options
+        # names (like:quiet, prefer_insecure, no_warnings, etc)
+        g.ydl_opts = dict_
+        return dict(valid=True, message="Youtube-dl options set successfully")
+    #elif isinstance(dict_, bool):
+    # single could be set items like this, if check_fn passed 'key' as well
+    #    g.yt_dl.update({key_from_check_fn: dict_})
+    #    m = "Youtube-dl:%s option set successfully"
+    #    return dict(valid=True, message=m % (key))
+    else:
+        return {valid: False, message: "Can't convert string to proper dict."}
+
+def update_use_https(option):
+    """ Updates single hardcoded option in dict in global config module 'g'."""
+    # Ydl calls option 'prefer_insecure', but this breaks current layout of
+    # mps-yt, so was replaced by shorter 'use_https'. Caution: inversed logic
+    g.ydl_opts.update({"prefer_insecure": not option})
+    return dict(valid=True, message="yt_dl:use_https option set successfully")
 
 def check_encoder(option):
     """ Check encoder value is acceptable. """
@@ -304,8 +336,10 @@ class _Config(object):
                 check_fn=check_win_size, require_known_player=True),
             ConfigItem("download_command", ''),
             ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo",
-                check_fn=check_api_key)
-            ] 
+                check_fn=check_api_key),
+            ConfigItem("yt_dl_use_https", False, check_fn=update_use_https),
+            ConfigItem("yt_dl_cmdline", "", check_fn=check_being_dict),
+            ]
 
     def __getitem__(self, key):
         # TODO: Possibly more efficient algorithm, w/ caching
