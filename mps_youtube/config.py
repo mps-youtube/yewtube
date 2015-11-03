@@ -246,11 +246,11 @@ def check_being_dict(user_dict):
         return dict(valid=True, message="Youtube-dl options set successfully")
     #elif isinstance(dict_, bool):
     # single could be set items like this, if check_fn passed 'key' as well
-    #    g.yt_dl.update({key_from_check_fn: dict_})
+    #    g.yt_dl.update({"key_from_check_fn": dict_})
     #    m = "Youtube-dl:%s option set successfully"
-    #    return dict(valid=True, message=m % (key))
+    #    return dict("valid"=True, "message"=m % (key))
     else:
-        return {valid: False, message: "Can't convert string to proper dict."}
+        return dict(valid=False, message="Can't convert string to proper dict.")
 
 def update_use_https(option):
     """ Updates single hardcoded option in dict in global config module 'g'."""
