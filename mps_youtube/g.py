@@ -70,7 +70,7 @@ playerargs_defaults = {
         "geo": "-geometry"}
     }
 argument_commands = []
-ydl_opts = {}
+ydl_opts = {"quiet": True, "no_warnings": True}
 
 text = {
     "exitmsg": ("**0mps-youtube - **1http://github.com/np1/mps-youtube**0"
