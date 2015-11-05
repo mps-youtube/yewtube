@@ -1,5 +1,6 @@
 import os
 import re
+import ast
 import copy
 import pickle
 import collections
@@ -230,19 +231,17 @@ def check_being_dict(user_dict):
     """ check if user string is correct dict, set it to global options,
         since pafy accepts ydl_opts dict as ctor argument. """
     try:
-        import ast
-    except ImportError:
-        m = "Your Python is too old. Use at least 2.4 to use this option."
-        return dict(valid=False, message=m)
-    try:
         dict_ = ast.literal_eval(str(user_dict))
     except ValueError:
         m = "Entered string has wrong syntax. Usage: {'option': value}"
         return dict(valid=False, message=m)
     if isinstance(dict_, dict):
-        # it is assumed that user setting this option knows youtube-dl options
-        # names (like:quiet, prefer_insecure, no_warnings, etc)
-        g.ydl_opts = dict_
+        # to prevent overriding youtube-dl "quiet" and "no_warning" options
+        # g.ydl_opts = (dict_.update(g.ydl_opts))
+        # to allow overriding with anything user throws into setting
+        g.ydl_opts.update(dict_)
+        # to 'disable' option, one would need to pass {'option':None}
+        g.ydl_opts = {key: val for key, val in g.ydl_opts.items() if val}
         return dict(valid=True, message="Youtube-dl options set successfully")
     #elif isinstance(dict_, bool):
     # single could be set items like this, if check_fn passed 'key' as well
