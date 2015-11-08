@@ -2131,7 +2131,7 @@ def transcode(filename, enc_data):
     return outfn
 
 
-def external_download(filename, url):
+def external_download(song, filename, url):
     """ Perform download using external application. """
     cmd = Config.DOWNLOAD_COMMAND.get
     ddir, basename = Config.DDIR.get, os.path.basename(filename)
@@ -2145,6 +2145,7 @@ def external_download(filename, url):
     cmd_list = list_string_sub("%d", ddir, cmd_list)
     cmd_list = list_string_sub("%f", basename, cmd_list)
     cmd_list = list_string_sub("%u", url, cmd_list)
+    cmd_list = list_string_sub("%i", song.ytid, cmd_list)
     dbg("Downloading using: %s", " ".join(cmd_list))
     subprocess.call(cmd_list)
 
@@ -2167,7 +2168,7 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     if Config.DOWNLOAD_COMMAND.get:
         title = c.y + os.path.splitext(os.path.basename(filename))[0] + c.w
         xprint("Downloading %s using custom command" % title)
-        external_download(filename, url)
+        external_download(song, filename, url)
         return None
 
     if not Config.OVERWRITE.get:

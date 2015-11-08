@@ -97,6 +97,7 @@ def helptext():
     %d - download directory as set in DDIR in mps-youtube config
     %f - filename (determined by title and filetype)
     %F - full file path (%d/%f)
+    %i - youtube video id
 
     for example, to download using aria2c (http://aria2.sourceforge.net), enter:
 
