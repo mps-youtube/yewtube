@@ -118,10 +118,6 @@ def clear_screen():
     """Clear all text from screen."""
     if g.no_clear_screen:
         xprint('--\n')
-    elif mswin:
-        os.system('cls')
-    elif has_exefile('tput'):
-        subprocess.call(['tput', 'reset'])
     else:
         xprint('\n' * 200)
 
