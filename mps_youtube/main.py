@@ -387,12 +387,37 @@ def init_readline():
     if g.command_line:
         return
 
+    global has_readline
     if has_readline:
         g.READLINE_FILE = os.path.join(get_config_dir(), "input_history")
-
         if os.path.exists(g.READLINE_FILE):
-            readline.read_history_file(g.READLINE_FILE)
-            dbg(c.g + "Read history file" + c.w)
+            # it appears that Config.ITEM.get does not get CURRENTLY
+            # set value, it gets default item value instead
+            history_setting = Config.SAVE_HISTORY.get
+            if not history_setting or (history_setting.lower() == "none"):
+                has_readline = False
+            elif history_setting == "all":
+                readline.read_history_file(g.READLINE_FILE)
+                dbg(c.g + "Read history file" + c.w)
+            elif history_setting == "searches_only":
+                readline.read_history_file(g.READLINE_FILE)
+                # readline.remove_history_item(index) is not safe during iter
+                new_history = []
+                for line_no in range(1, readline.get_history_length()):
+                    it = readline.get_history_item(line_no)
+                    if it and it.startswith("/"):
+                        new_history.append(it)
+                # and also prevents writing to it's file while it's open, so:
+                readline.clear_history()
+                [ readline.add_history(it) for it in new_history ]
+                # optionally, could parse file before read_history_file, but
+                # it would require detecting encoding, line ending type etc.
+                # speed increase could be noticable in case of huge history
+            else:
+                msg_1 = "Unreachable, should never happen - unless %s"
+                msg_2 = " had been tampered with. Assuming no history."
+                dbg("%s %s %s"(msg_1, "Config.SAVE_HISTORY", msg_2))
+                has_readline = False
 
 
 def showconfig(_):

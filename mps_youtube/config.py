@@ -68,6 +68,9 @@ class ConfigItem(object):
 
         # handle known player not set
 
+        # sadly, allowed_values is faulty - assumes copy() is always
+        # accessible, causing exception on any string not among allowed_values
+
         if self.allowed_values and value not in self.allowed_values:
             fail_msg = "%s must be one of * - not %s"
             allowed_values = copy.copy(self.allowed_values)
@@ -289,6 +292,8 @@ class _Config(object):
             ConfigItem("playerargs", ""),
             ConfigItem("encoder", 0, minval=0, check_fn=check_encoder),
             ConfigItem("notifier", ""),
+            ConfigItem("save_history", "all",
+                allowed_values=["", "None", "none", "all", "searches_only"]),
             ConfigItem("checkupdate", True),
             ConfigItem("show_mplayer_keys", True, require_known_player=True),
             ConfigItem("fullscreen", False, require_known_player=True),
