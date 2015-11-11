@@ -411,9 +411,9 @@ def init_readline():
                 # it would require detecting encoding, line ending type etc.
                 # speed increase could be noticable in case of huge history
             else:
-                msg_1 = "Unreachable, should never happen - unless %s"
-                msg_2 = " had been tampered with. Assuming no history."
-                dbg("%s %s %s" %(msg_1, "Config.SAVE_HISTORY", msg_2))
+                dbg("Unreachable, should never happen - unless"
+                    "Config.SAVE_HISTORY had been tampered with."
+                    "Assuming no history.")
                 has_readline = False
 
 
