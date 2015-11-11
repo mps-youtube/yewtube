@@ -406,14 +406,14 @@ def init_readline():
                     if it and it.startswith("/"):
                         new_history.append(it)
                 readline.clear_history()
-                [ readline.add_history(it) for it in new_history ]
+                _ = [ readline.add_history(itm) for itm in new_history ]
                 # optionally, could parse file before read_history_file, but
                 # it would require detecting encoding, line ending type etc.
                 # speed increase could be noticable in case of huge history
             else:
                 msg_1 = "Unreachable, should never happen - unless %s"
                 msg_2 = " had been tampered with. Assuming no history."
-                dbg("%s %s %s"(msg_1, "Config.SAVE_HISTORY", msg_2))
+                dbg("%s %s %s" %(msg_1, "Config.SAVE_HISTORY", msg_2))
                 has_readline = False
 
 
