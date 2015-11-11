@@ -214,14 +214,6 @@ def process_cl_args():
 def init():
     """ Initial setup. """
 
-    init_readline()
-    cache.init()
-    init_transcode()
-
-    # set player to mpv or mplayer if found, otherwise unset
-    suffix = ".exe" if mswin else ""
-    mplayer, mpv = "mplayer" + suffix, "mpv" + suffix
-
     if not os.path.exists(g.CFFILE):
 
         if has_exefile(mpv):
@@ -234,6 +226,14 @@ def init():
 
     else:
         import_config()
+
+    init_readline()
+    cache.init()
+    init_transcode()
+
+    # set player to mpv or mplayer if found, otherwise unset
+    suffix = ".exe" if mswin else ""
+    mplayer, mpv = "mplayer" + suffix, "mpv" + suffix
 
     # ensure encoder is not set beyond range of available presets
     if Config.ENCODER.get >= len(g.encoders):
