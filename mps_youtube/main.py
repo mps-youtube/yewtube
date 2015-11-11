@@ -656,7 +656,7 @@ class GdataError(Exception):
 
 def call_gdata(api, qs):
     """Make a request to the youtube gdata api."""
-    qs = qs.copy()
+    qs = qs[:]
     qs['key'] = Config.API_KEY.get
     url = "https://www.googleapis.com/youtube/v3/" + api + '?' + urlencode(qs)
 
@@ -1046,7 +1046,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     for n, x in enumerate(songs[:max_results]):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
         details = {'title': x.title, "length": fmt_time(x.length)}
-        details = g.meta[x.ytid].copy() if have_meta else details
+        details = g.meta[x.ytid][:] if have_meta else details
         otitle = details['title']
         details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)

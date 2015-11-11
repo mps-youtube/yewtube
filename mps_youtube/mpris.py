@@ -470,7 +470,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             getter for org.freedesktop.DBus.Properties on this object
         """
         if interface_name in self.properties:
-            t = self.properties[interface_name]['read_only'].copy()
+            t = self.properties[interface_name]['read_only'][:]
             t.update(self.properties[interface_name]['read_write'])
 
             return t
