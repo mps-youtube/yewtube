@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import json
 import socket
 import time
+import copy
 import re
 import os
 from threading import Thread
@@ -470,7 +471,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             getter for org.freedesktop.DBus.Properties on this object
         """
         if interface_name in self.properties:
-            t = self.properties[interface_name]['read_only'][:]
+            t = copy.copy(self.properties[interface_name]['read_only'])
             t.update(self.properties[interface_name]['read_write'])
 
             return t

@@ -1,5 +1,6 @@
 import os
 import re
+import copy
 import pickle
 import collections
 from urllib.request import urlopen
@@ -69,7 +70,7 @@ class ConfigItem(object):
 
         if self.allowed_values and value not in self.allowed_values:
             fail_msg = "%s must be one of * - not %s"
-            allowed_values = self.allowed_values[:]
+            allowed_values = copy.copy(self.allowed_values)
             if '' in allowed_values:
                 allowed_values[allowed_values.index('')] = "<nothing>"
             fail_msg = fail_msg.replace("*", ", ".join(allowed_values))
