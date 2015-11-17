@@ -68,9 +68,6 @@ class ConfigItem(object):
 
         # handle known player not set
 
-        # sadly, allowed_values is faulty - assumes copy() is always
-        # accessible, causing exception on any string not among allowed_values
-
         if self.allowed_values and value not in self.allowed_values:
             fail_msg = "%s must be one of * - not %s"
             allowed_values = copy.copy(self.allowed_values)
