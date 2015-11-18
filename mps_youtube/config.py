@@ -227,36 +227,61 @@ def check_win_size(size):
     else:
         return dict(valid=True, value=size)
 
-def check_being_dict(user_dict):
+class fake_string(object):
+    """ this class contains string and dictionary. String is shown in config,
+        and dictionary is used behind the scenes. If pure dict was used, config
+        display would become cluttered as yt-downloader has lots of options """
+    def __init__(self, display, vals):
+        self.display = display
+        self.values = vals
+    def __getstate__(self):
+        return self.display, self.values
+    def __setstate__(self, savegame):
+        score, lives_left = savegame
+        self.display = score
+        self.values = lives_left
+    def __str__(self):
+        return self.display
+
+def check_ydl_opts_valid(user_str):
     """ check if user string is correct dict, set it to global options,
         since pafy accepts ydl_opts dict as ctor argument. """
-    try:
-        dict_ = ast.literal_eval(str(user_dict))
-    except ValueError:
-        m = "Entered string has wrong syntax. Usage: {'option': value}"
-        return dict(valid=False, message=m)
-    if isinstance(dict_, dict):
-        # to prevent overriding youtube-dl "quiet" and "no_warning" options
-        # g.ydl_opts = (dict_.update(g.ydl_opts))
-        # to allow overriding with anything user throws into setting
-        g.ydl_opts.update(dict_)
-        # to 'disable' option, one would need to pass {'option':None}
-        g.ydl_opts = {key: val for key, val in g.ydl_opts.items() if val}
-        return dict(valid=True, message="Youtube-dl options set successfully")
-    #elif isinstance(dict_, bool):
-    # single could be set items like this, if check_fn passed 'key' as well
-    #    g.yt_dl.update({"key_from_check_fn": dict_})
-    #    m = "Youtube-dl:%s option set successfully"
-    #    return dict("valid"=True, "message"=m % (key))
-    else:
-        return dict(valid=False, message="Can't convert string to proper dict.")
+    from youtube_dl.options import parseOpts
+    from optparse import BadOptionError
+    # update default options, as we intend to use them as dict later on,
+    # and pafy is supposed to pass that dict to yt-downloader constructor.
+    # parseOpts is optparse instance,
+    # returning (optparse.OptionParser, optparse.Values) tuple.
+    # optparse is funny and raises two exceptions, so both need to be caught
 
-def update_use_https(option):
-    """ Updates single hardcoded option in dict in global config module 'g'."""
-    # Ydl calls option 'prefer_insecure', but this breaks current layout of
-    # mps-yt, so was replaced by shorter 'use_https'. Caution: inversed logic
-    g.ydl_opts.update({"prefer_insecure": not option})
-    return dict(valid=True, message="yt_dl:use_https option set successfully")
+    ok_msg = c.g + "Youtube-dl options parsed, and set successfully" + c.w
+    fail = c.r + "Entered string has wrong syntax. Pass options: " + c.w
+    optp_msg = "\n- as You would to Youtube-dl from command line or"
+    dict_msg = "\n-{'option': value}"
+
+    if not user_str:
+        empty = fake_string("", {})
+        return dict(valid=True, message=ok_msg, value=empty)
+    try:
+        _, parsed_opts = parseOpts(user_str.split())
+        new = fake_string(user_str, vars(parsed_opts))
+        g.ydl_opts.update(new.values)
+        return dict(valid=True, message=ok_msg, value=new)
+    except (SystemExit, BadOptionError):
+        pass
+
+    # since there are some options that store_true only, yet some might want
+    # to change => i.e prefer_insecure; we need to check if user_str is dict
+    try:
+        dict_ = ast.literal_eval(str(user_str))
+        if isinstance(dict_, dict):
+            g.ydl_opts.update(dict_)
+        old = fake_string(str(g.ydl_opts), g.ydl_opts)
+        return dict(valid=True, message=ok_msg, value=old)
+    except ValueError:
+        # not proper ydl_opts cmdline and not a proper dict - fail
+        fail_msg = fail + optp_msg + dict_msg
+        return dict(valid=False, message=fail_msg)
 
 def check_encoder(option):
     """ Check encoder value is acceptable. """
@@ -337,7 +362,8 @@ class _Config(object):
             ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo",
                 check_fn=check_api_key),
             ConfigItem("yt_dl_use_https", False, check_fn=update_use_https),
-            ConfigItem("yt_dl_cmdline", "", check_fn=check_being_dict),
+            ConfigItem("yt_dl_cmdline", fake_string("<empty>",{}),
+                check_fn=check_ydl_opts_valid),
             ]
 
     def __getitem__(self, key):

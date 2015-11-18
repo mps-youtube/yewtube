@@ -188,8 +188,9 @@ def helptext():
     {2}set player <player app>{1} - use <player app> for playback
     {2}set playerargs <args>{1} - use specified arguments with player
     {2}set search_music true|false{1} - search only music (all categories if false)
-    {2}set yt_dl_use_https true|false{1} - prefer only secure connections (https)
     {2}set yt_dl_cmdline <Python dict format>{1} - initial arguments pased to youtube-dl
+    {2}set yt_dl_cmdline <youtube-dl cmdline or Python dict format>{1} - initial arguments
+        pased to youtube-dl
     {2}set show_mplayer_keys true|false{1} - show keyboard help for mplayer and mpv
     {2}set show_status true|false{1} - show status messages and progress
     {2}set show_video true|false{1} - show video output (audio only if false)

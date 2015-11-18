@@ -71,6 +71,7 @@ playerargs_defaults = {
     }
 argument_commands = []
 ydl_opts = {"quiet": True, "no_warnings": True}
+global_opts_were_already_updated_from_cfg = False
 
 text = {
     "exitmsg": ("**0mps-youtube - **1http://github.com/np1/mps-youtube**0"
