@@ -361,7 +361,6 @@ class _Config(object):
             ConfigItem("download_command", ''),
             ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo",
                 check_fn=check_api_key),
-            ConfigItem("yt_dl_use_https", False, check_fn=update_use_https),
             ConfigItem("yt_dl_cmdline", fake_string("<empty>",{}),
                 check_fn=check_ydl_opts_valid),
             ]
