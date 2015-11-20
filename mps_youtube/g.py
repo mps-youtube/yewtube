@@ -115,6 +115,9 @@ text = {
     'no mix': 'No mix is available for the selected video',
     'mix only videos': 'Mixes are only available for videos',
     'invalid item': '*Invalid item entered!*',
+    'duplicate tracks': '*Warning* - duplicate track(s) && added to '
+                        'playlist!',
+    'duplicate tracks_': (c.y, c.w),
 
     # Info messages..
 

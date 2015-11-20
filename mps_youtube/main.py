@@ -891,7 +891,7 @@ def uea_pad(num, t, direction="<", notrunc=False):
     direction = direction.strip() or "<"
 
     t = ' '.join(t.split('\n'))
-    
+
     # TODO: Find better way of dealing with this?
     if num <= 0:
         return ''
@@ -2370,12 +2370,18 @@ def songlist_rm_add(action, songrange):
     selection = _parse_multi(songrange)
 
     if action == "add":
-
+        duplicate_songs = []
         for songnum in selection:
+            if g.model.songs[songnum - 1] in g.active.songs:
+                duplicate_songs.append(str(songnum))
             g.active.songs.append(g.model.songs[songnum - 1])
 
         d = g.active.duration
         g.message = F('added to pl') % (len(selection), g.active.size, d)
+        if duplicate_songs:
+            duplicate_songs = ', '.join(sorted(duplicate_songs))
+            g.message += '\n'
+            g.message += F('duplicate tracks') % duplicate_songs
 
     elif action == "rm":
         selection = sorted(set(selection), reverse=True)
