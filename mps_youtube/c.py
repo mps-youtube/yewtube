@@ -1,6 +1,7 @@
 """ Module for holding colour code values. """
 
 import os
+import re
 import sys
 
 try:
@@ -33,7 +34,13 @@ else:
 
 r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
+rmcex = re.compile(r'\x1b\[\d*m', re.UNICODE)
+
 def c(colour, text):
     """ Return coloured text. """
     colours = {'r': r, 'g': g, 'y': y, 'b':b, 'p':p}
     return colours[colour] + text + w
+
+def mlen(s):
+    """ Return length of string with color tags removed. """
+    return len(rmcex.sub('', s))

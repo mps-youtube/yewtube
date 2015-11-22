@@ -794,7 +794,7 @@ def screen_update(fill_blank=True):
 
     if g.message or g.rprompt:
         out = g.message or ''
-        blanks = getxy().width - len(out) - len(g.rprompt or '')
+        blanks = getxy().width - c.mlen(out) - c.mlen(g.rprompt or '') - 3
         out += ' ' * blanks + (g.rprompt or '')
         xprint(out)
 
