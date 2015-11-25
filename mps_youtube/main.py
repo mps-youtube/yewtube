@@ -231,6 +231,7 @@ def init():
 
     else:
         import_config()
+        init_globals_from_cfg()
 
     init_readline()
     cache.init()
@@ -393,6 +394,14 @@ def init_readline():
         if os.path.exists(g.READLINE_FILE):
             readline.read_history_file(g.READLINE_FILE)
             dbg(c.g + "Read history file" + c.w)
+
+
+def init_globals_from_cfg():
+    """ globals stored in g module are updated with values stored in Config """
+    # currently just ydl_opts require such update.
+    if not g.global_opts_were_already_updated_from_cfg:
+        g.ydl_opts.update(Config.YT_DL_CMDLINE.get.values)
+        g.global_opts_were_already_updated_from_cfg = True
 
 
 def showconfig(_):
@@ -3263,7 +3272,7 @@ def dl_url(url):
 def yt_url(url, print_title=0):
     """ Acess a video by url. """
     try:
-        p = pafy.new(url)
+        p = pafy.new(url, ydl_opts=g.ydl_opts)
 
     except (IOError, ValueError) as e:
         g.message = c.r + str(e) + c.w
