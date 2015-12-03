@@ -3260,8 +3260,40 @@ def browser_play(url):
 
     except (IOError, ValueError, HTTPError, URLError) as e:
         g.message = c.r + str(e) + c.w
-        g.content = g.content or generate_songlist_display(zeromsg=g.message)
+        g.content = logo(c.r)
         return
+
+
+def browser_search(term, page=0, splash=True):
+    """Search for a YouTube video in the default browser."""
+    if not term or len(term) < 2:
+        g.message = c.r + "Not enough input" + c.w
+        g.content = generate_songlist_display()
+        return
+
+    logging.info("Search for %s", term)
+    query = generate_search_qs(term, page)
+    have_results = _search(term, query, splash)
+
+    if have_results:
+        base_url = "https://www.youtube.com/results?search_query="
+        url = base_url + term.replace(" ", "+")
+        g.content = logo(c.w)
+
+        try:
+            webbrowser.open(url)
+
+        except (HTTPError, URLError) as e:
+            g.message = c.r + str(e) + c.w
+            g.content = logo(c.r)
+            return
+
+    else:
+        g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
+        g.content = logo(c.r)
+        g.current_page = 0
+        g.last_search_query = {}
+
 
 def dl_url(url):
     """ Open and prompt for download of youtube video url. """
@@ -3768,6 +3800,7 @@ def main():
         download: r'(dv|da|d|dl|download)\s*(\d{1,4})$',
         play_url: r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
         browser_play: r'browserplay\s(.*[-_a-zA-Z0-9]{11}.*$)',
+        browser_search: r'(?:browsersearch|\.|/)\s*([^./].{1,500})',
         comments: r'c\s?(\d{1,4})$',
         nextprev: r'(n|p)\s*(\d{1,2})?$',
         play_all: r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
