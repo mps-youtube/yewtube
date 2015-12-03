@@ -50,6 +50,7 @@ import sys
 import re
 import os
 import pickle
+import webbrowser
 from urllib.request import urlopen, build_opener
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -3248,6 +3249,20 @@ def play_url(url, override):
         sys.exit()
 
 
+def browser_play(url):
+    """Open and play a YouTube video URL in the default browser."""
+    try:
+        p = pafy.new(url)
+        base_url = "https://www.youtube.com/watch?v="
+        url = base_url + p.videoid
+
+        webbrowser.open(url)
+
+    except (IOError, ValueError, HTTPError, URLError) as e:
+        g.message = c.r + str(e) + c.w
+        g.content = g.content or generate_songlist_display(zeromsg=g.message)
+        return
+
 def dl_url(url):
     """ Open and prompt for download of youtube video url. """
     g.browse_mode = "normal"
@@ -3752,6 +3767,7 @@ def main():
         related: r'r\s?(\d{1,4})$',
         download: r'(dv|da|d|dl|download)\s*(\d{1,4})$',
         play_url: r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
+        browser_play: r'browserplay\s(.*[-_a-zA-Z0-9]{11}.*$)',
         comments: r'c\s?(\d{1,4})$',
         nextprev: r'(n|p)\s*(\d{1,2})?$',
         play_all: r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
