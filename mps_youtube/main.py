@@ -3261,24 +3261,56 @@ def dl_url(url):
 
 
 def yt_url(url, print_title=0):
-    """ Acess a video by url. """
-    try:
-        p = pafy.new(url)
+    """ Acess videos by urls. """
+    url_list = url.split(',')
 
-    except (IOError, ValueError) as e:
-        g.message = c.r + str(e) + c.w
-        g.content = g.content or generate_songlist_display(zeromsg=g.message)
-        return
+    g.model.songs = []
 
-    g.browse_mode = "normal"
-    v = Video(p.videoid, p.title, p.length)
-    g.model.songs = [v]
+    for u in url_list:
+        try:
+            p = pafy.new(u)
+
+        except (IOError, ValueError) as e:
+            g.message = c.r + str(e) + c.w
+            g.content = g.content or generate_songlist_display(zeromsg=g.message)
+            return
+
+        g.browse_mode = "normal"
+        v = Video(p.videoid, p.title, p.length)
+        g.model.songs += [v]
+
+    
 
     if not g.command_line:
         g.content = generate_songlist_display()
 
     if print_title:
         xprint(v.title)
+
+def yt_url_file(file_name):
+    """ Access a list of urls in a text file """
+
+    #Open and read the file
+    try:
+        fo = open(file_name, "r")
+        lines = fo.readlines()
+    except (IOError):
+        g.message = c.r + 'Error while reading the file' + c.w
+        g.content = g.content or generate_songlist_display(zeromsg=g.message)
+        return
+
+    output = ""
+    for line in lines:
+        #Don't forget to remove the \n character
+        if line[-2:] == '\\n':
+            line = line[:-2]
+        output += (line + ',')
+
+    #Remove the final coma
+    output = output[:-1]
+
+    #Finally pass the input to yt_url
+    yt_url(output)
 
 
 def dump(un):
@@ -3746,6 +3778,7 @@ def main():
         quits: r'(?:q|quit|exit)$',
         plist: r'pl\s+%s' % pl,
         yt_url: r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
+        yt_url_file: r'url_file\s([^.]+\.txt$)',
         search: r'(?:search|\.|/)\s*([^./].{1,500})',
         dl_url: r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
         play_pl: r'play\s+(%s|\d+)$' % word,
