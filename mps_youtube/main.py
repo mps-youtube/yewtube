@@ -3255,15 +3255,16 @@ def browser_play(number):
             video = g.model.songs[index]
             url = base_url + video.ytid
             webbrowser.open(url)
+            g.content = g.content or generate_songlist_display()
 
         else:
             g.message = c.r + "Out of range." + c.w
-            g.content = logo(c.r)
+            g.content = g.content or generate_songlist_display()
             return
 
     except (HTTPError, URLError, Exception) as e:
         g.message = c.r + str(e) + c.w
-        g.content = logo(c.r)
+        g.content = g.content or generate_songlist_display()
         return
 
 
