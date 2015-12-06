@@ -3793,7 +3793,7 @@ def main():
         next_inp = ""
 
         if len(arg_inp):
-            arg_inp, next_inp = arg_inp[1:], arg_inp[0].strip()
+            next_inp = arg_inp.pop(0).strip()
             next_inp = next_inp.replace("[mpsyt-comma]", ",")
 
         try:
