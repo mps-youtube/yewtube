@@ -1626,7 +1626,7 @@ def channelfromname(user):
     return (user, channel_id)
 
 
-@commands.command(r'user\s+([^\s].{1,})$')
+@commands.command(r'user\s+(.+)$')
 def usersearch(q_user, page=0, splash=True, identify='forUsername'):
     """ Fetch uploads by a YouTube user. """
 
@@ -1715,6 +1715,7 @@ def related_search(vitem, page=0, splash=True):
         g.last_search_query = {}
 
 
+# Note: [^./] is to prevent overlap with playlist search command
 @commands.command(r'(?:search|\.|/)\s*([^./].{1,500})')
 def search(term, page=0, splash=True):
     """ Perform search. """
