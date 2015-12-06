@@ -381,8 +381,8 @@ def init_readline():
             dbg(c.g + "Read history file" + c.w)
 
 
-@commands.command(r'(set|showconfig)$')
-def showconfig(_):
+@commands.command(r'set|showconfig$')
+def showconfig():
     """ Dump config data. """
     width = screen.getxy().width
     width -= 30
