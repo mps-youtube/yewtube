@@ -3262,7 +3262,7 @@ def dl_url(url):
 
 def yt_url(url, print_title=0):
     """ Acess videos by urls. """
-    url_list = url.split(',')
+    url_list = url.split()
 
     g.model.songs = []
 
@@ -3293,7 +3293,7 @@ def yt_url_file(file_name):
     #Open and read the file
     try:
         with open(file_name, "r") as fo:
-            output = ','.join([line.strip('\n') for line in fo])
+            output = ' '.join([line.strip() for line in fo])
 
     except (IOError):
         g.message = c.r + 'Error while opening the file, check the validity of the path' + c.w
@@ -3769,7 +3769,7 @@ def main():
         quits: r'(?:q|quit|exit)$',
         plist: r'pl\s+%s' % pl,
         yt_url: r'url\s(.*[-_a-zA-Z0-9]{11}.*$)',
-        yt_url_file: r'url_file\s([^.]+\.txt$)',
+        yt_url_file: r'url_file\s(\S+$)',
         search: r'(?:search|\.|/)\s*([^./].{1,500})',
         dl_url: r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)',
         play_pl: r'play\s+(%s|\d+)$' % word,

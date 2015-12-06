@@ -44,7 +44,7 @@ def helptext():
     {2}userpl <username>{1} - list YouTube playlists created by <username>.
     {2}pl <url or id>{1} - Open YouTube playlist by url or id.
     {2}url <url or id>{1} - Retrieve specific YouTube video by url or id.
-    {2}url <url>,<url>, ..., <url>{1} - Retrieve specific YouTube videos by url or id.
+    {2}url <url> <url> ... <url>{1} - Retrieve specific YouTube videos by url or id.
     {2}url_file <file_absolute_path>{1} - Retrieve YouTube videos by url or id from a .txt file. 
     File format : .txt, with one url or id by line.
 
