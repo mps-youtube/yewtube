@@ -80,7 +80,6 @@ def helptext():
     {2}dlurl <url or id>{1} download a YouTube video by url or video id.
     {2}playurl <url or id>{1} play a YouTube video by url or id.
     {2}browserplay <number>{1} open a specified previous search in browser.
-    {2}browsersearch <term(s)>{1} open search results for term(s) in browser.
 
     {2}all{1} or {2}*{1} - play all displayed items.
     {2}repeat <number(s)>{1} - play and repeat the specified items.
