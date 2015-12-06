@@ -3607,7 +3607,7 @@ def search_album(term, page=0, splash=True):
 
     if splash:
         g.message, g.content = out, logo(c.b)
-        screen_update()
+        screen.update()
 
     prompt = "Artist? [%s] > " % album['artist']
     xprint(prompt, end="")
@@ -3640,7 +3640,7 @@ def search_album(term, page=0, splash=True):
         g.content += "%02s  %s" % (n, track['title'])
         g.content += "\n"
 
-    screen_update()
+    screen.update()
     entry = input("Continue? [Enter] > ")
 
     if entry == "":
@@ -3651,7 +3651,7 @@ def search_album(term, page=0, splash=True):
         return
 
     songs = []
-    clear_screen()
+    screen.clear()
     itt = _match_tracks(artist, title, mb_tracks)
 
     stash = Config.SEARCH_MUSIC.get, Config.ORDER.get
