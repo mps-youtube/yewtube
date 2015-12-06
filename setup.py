@@ -66,7 +66,7 @@ options = dict(
 
 if sys.platform.startswith('linux'):
     # Install desktop file. Required for mpris on Ubuntu
-    options['data_files'] = [('share/applications/', ['mps-youtube.desktop'])]
+    options['data_files'].append(('share/applications/', ['mps-youtube.desktop']))
 
 if os.name == "nt":
     try:
