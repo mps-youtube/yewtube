@@ -64,10 +64,16 @@ def get(vid, force=False, callback=None, threeD=False):
     streams = []
 
     for s in ps:
+        try:
+            rawbitrate = s.rawbitrate
+        except AttributeError:
+            # Deal with bug in pafy before 88fda70 or 0.7.x
+            rawbitrate = None
+
         x = dict(url=s.url,
                  ext=s.extension,
                  quality=s.quality,
-                 rawbitrate=s.rawbitrate,
+                 rawbitrate=rawbitrate,
                  mtype=s.mediatype,
                  size=-1)
         streams.append(x)
@@ -81,7 +87,6 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
     """ Select a stream from stream list. """
     maxres = maxres or Config.MAX_RES.get
     slist = slist['meta'] if isinstance(slist, dict) else slist
-    au_streams = [x for x in slist if x['mtype'] == "audio"]
 
     def okres(x):
         """ Return True if resolution is within user specified maxres. """
@@ -95,15 +100,15 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
         """Return the bitrate of a stream."""
         return x['rawbitrate']
 
-    vo_streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
-    vo_streams = sorted(vo_streams, key=getq, reverse=True)
+    if audio:
+        streams = [x for x in slist if x['mtype'] == "audio"]
+        if not m4a_ok:
+            streams = [x for x in streams if not x['ext'] == "m4a"]
+        streams = sorted(streams, key=getbitrate, reverse=True)
+    else:
+        streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
+        streams = sorted(streams, key=getq, reverse=True)
 
-    if not m4a_ok:
-        au_streams = [x for x in au_streams if not x['ext'] == "m4a"]
-
-    au_streams = sorted(au_streams, key=getbitrate, reverse=True)
-
-    streams = au_streams if audio else vo_streams
     dbg("select stream, q: %s, audio: %s, len: %s", q, audio, len(streams))
 
     try:

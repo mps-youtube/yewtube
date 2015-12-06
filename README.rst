@@ -124,7 +124,7 @@ Run via Docker container
 
 Using `Docker <http://www.docker.com>`_, run with::
 
-    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt mysyt
+    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt mpsyt
 
 Additional Docker notes
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,7 +142,7 @@ Enter the directory and run docker build::
 
 Now run the container interactively with::
 
-    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt mysyt
+    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt mpsyt
 
 In order to have access to the local sound device (/dev/snd) the container needs to be privileged.
 

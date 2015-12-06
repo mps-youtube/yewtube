@@ -43,6 +43,7 @@ import shlex
 import time
 import math
 import json
+import copy
 import sys
 import re
 import os
@@ -53,7 +54,7 @@ from urllib.parse import urlencode
 
 import pafy
 
-from . import g, c, cache, streams, commands, screen
+from . import terminalsize, g, c, commands, cache, streams, screen
 from .playlist import Playlist, Video
 from .paths import get_config_dir
 from .config import Config, known_player_set, import_config
@@ -198,10 +199,6 @@ def process_cl_args():
 def init():
     """ Initial setup. """
 
-    init_readline()
-    cache.init()
-    init_transcode()
-
     # set player to mpv or mplayer if found, otherwise unset
     suffix = ".exe" if mswin else ""
     mplayer, mpv = "mplayer" + suffix, "mpv" + suffix
@@ -218,6 +215,10 @@ def init():
 
     else:
         import_config()
+
+    init_readline()
+    cache.init()
+    init_transcode()
 
     # ensure encoder is not set beyond range of available presets
     if Config.ENCODER.get >= len(g.encoders):
@@ -642,7 +643,7 @@ class GdataError(Exception):
 
 def call_gdata(api, qs):
     """Make a request to the youtube gdata api."""
-    qs = qs.copy()
+    qs = copy.copy(qs)
     qs['key'] = Config.API_KEY.get
     url = "https://www.googleapis.com/youtube/v3/" + api + '?' + urlencode(qs)
 
@@ -856,7 +857,7 @@ def uea_pad(num, t, direction="<", notrunc=False):
     direction = direction.strip() or "<"
 
     t = ' '.join(t.split('\n'))
-    
+
     # TODO: Find better way of dealing with this?
     if num <= 0:
         return ''
@@ -1012,7 +1013,7 @@ def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
     for n, x in enumerate(songs[:max_results]):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
         details = {'title': x.title, "length": fmt_time(x.length)}
-        details = g.meta[x.ytid].copy() if have_meta else details
+        details = copy.copy(g.meta[x.ytid]) if have_meta else details
         otitle = details['title']
         details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)
@@ -1187,6 +1188,9 @@ def playsong(song, failcount=0, override=False):
         if failcount < g.max_retries:
             failcount += 1
             return playsong(song, failcount=failcount, override=override)
+        else:
+            g.message = str(e)
+            return
 
     except IOError as e:
         # this may be cause by attempting to play a https stream with
@@ -1660,7 +1664,11 @@ def usersearch_id(q_user, page=0, splash=True):
     else:
         msg = "Video uploads by {2}{4}{0}"
         progtext = termuser[1]
-        failmsg = "User %s not found" % termuser[1]
+        if Config.SEARCH_MUSIC:
+            failmsg = """User %s not found or has no videos in the Music category.
+Use 'set search_music False' to show results not in the Music category.""" % termuser[1]
+        else:
+            failmsg = "User %s not found or has no videos."  % termuser[1]
     msg = str(msg).format(c.w, c.y, c.y, term, user)
 
     have_results = _search(progtext, query, splash)
@@ -1993,13 +2001,12 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     if not os.path.exists(ddir):
         os.makedirs(ddir)
 
-    streams = streams.get(song)
-
     if ext:
         extension = ext
 
     else:
-        stream = streams.select(streams, 0, audio=av == "audio", m4a_ok=True)
+        stream = streams.select(streams.get(song),
+                audio=av == "audio", m4a_ok=True)
         extension = stream['ext']
 
     # filename = song.title[:59] + "." + extension
@@ -2091,7 +2098,7 @@ def transcode(filename, enc_data):
     return outfn
 
 
-def external_download(filename, url):
+def external_download(song, filename, url):
     """ Perform download using external application. """
     cmd = Config.DOWNLOAD_COMMAND.get
     ddir, basename = Config.DDIR.get, os.path.basename(filename)
@@ -2105,6 +2112,7 @@ def external_download(filename, url):
     cmd_list = list_string_sub("%d", ddir, cmd_list)
     cmd_list = list_string_sub("%f", basename, cmd_list)
     cmd_list = list_string_sub("%u", url, cmd_list)
+    cmd_list = list_string_sub("%i", song.ytid, cmd_list)
     dbg("Downloading using: %s", " ".join(cmd_list))
     subprocess.call(cmd_list)
 
@@ -2120,15 +2128,14 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     # Instance of 'bool' has no 'url' member (some types not inferable)
 
     if not url:
-        streams = streams.get(song)
-        stream = streams.select(streams, 0, audio=audio, m4a_ok=True)
+        stream = streams.select(streams.get(song), audio=audio, m4a_ok=True)
         url = stream['url']
 
     # if an external download command is set, use it
     if Config.DOWNLOAD_COMMAND.get:
         title = c.y + os.path.splitext(os.path.basename(filename))[0] + c.w
         xprint("Downloading %s using custom command" % title)
-        external_download(filename, url)
+        external_download(song, filename, url)
         return None
 
     if not Config.OVERWRITE.get:
@@ -2332,12 +2339,18 @@ def songlist_rm_add(action, songrange):
     selection = _parse_multi(songrange)
 
     if action == "add":
-
+        duplicate_songs = []
         for songnum in selection:
+            if g.model.songs[songnum - 1] in g.active.songs:
+                duplicate_songs.append(str(songnum))
             g.active.songs.append(g.model.songs[songnum - 1])
 
         d = g.active.duration
         g.message = F('added to pl') % (len(selection), g.active.size, d)
+        if duplicate_songs:
+            duplicate_songs = ', '.join(sorted(duplicate_songs))
+            g.message += '\n'
+            g.message += F('duplicate tracks') % duplicate_songs
 
     elif action == "rm":
         selection = sorted(set(selection), reverse=True)
@@ -2543,13 +2556,13 @@ def preload(song, delay=2, override=False):
     video = False if override == "audio" else video
 
     try:
-        stream = streams.get(song)
         m4a = "mplayer" not in Config.PLAYER.get
-        stream = streams.select(stream, audio=not video, m4a_ok=m4a)
+        stream = streams.select(streams.get(song), audio=not video, m4a_ok=m4a)
 
         if not stream and not video:
             # preload video stream, no audio available
-            stream = streams.select(g.streams[ytid], audio=False)
+            stream = streams.select(streams.get(song),
+                    g.streams[ytid], audio=False)
 
         get_size(ytid, stream['url'], preloading=True)
 
@@ -2660,13 +2673,13 @@ def get_dl_data(song, mediatype="any"):
     p = get_pafy(song)
     dldata = []
     text = " [Fetching stream info] >"
-    streams = [x for x in p.allstreams]
+    streamlist = [x for x in p.allstreams]
 
     if mediatype == "audio":
-        streams = [x for x in p.audiostreams]
+        streamlist = [x for x in p.audiostreams]
 
-    l = len(streams)
-    for n, stream in enumerate(streams):
+    l = len(streamlist)
+    for n, stream in enumerate(streamlist):
         sys.stdout.write(text + "-" * n + ">" + " " * (l - n - 1) + "<\r")
         sys.stdout.flush()
 
@@ -3238,24 +3251,49 @@ def dl_url(url):
 
 @commands.command(r'url\s(.*[-_a-zA-Z0-9]{11}.*$)')
 def yt_url(url, print_title=0):
-    """ Acess a video by url. """
-    try:
-        p = pafy.new(url)
+    """ Acess videos by urls. """
+    url_list = url.split()
 
-    except (IOError, ValueError) as e:
-        g.message = c.r + str(e) + c.w
-        g.content = g.content or generate_songlist_display(zeromsg=g.message)
-        return
+    g.model.songs = []
 
-    g.browse_mode = "normal"
-    v = Video(p.videoid, p.title, p.length)
-    g.model.songs = [v]
+    for u in url_list:
+        try:
+            p = pafy.new(u)
+
+        except (IOError, ValueError) as e:
+            g.message = c.r + str(e) + c.w
+            g.content = g.content or generate_songlist_display(zeromsg=g.message)
+            return
+
+        g.browse_mode = "normal"
+        v = Video(p.videoid, p.title, p.length)
+        g.model.songs += [v]
+
+    
 
     if not g.command_line:
         g.content = generate_songlist_display()
 
     if print_title:
         xprint(v.title)
+
+
+@commands.command(r'url_file\s(\S+$)')
+def yt_url_file(file_name):
+    """ Access a list of urls in a text file """
+
+    #Open and read the file
+    try:
+        with open(file_name, "r") as fo:
+            output = ' '.join([line.strip() for line in fo if line.strip()])
+
+    except (IOError):
+        g.message = c.r + 'Error while opening the file, check the validity of the path' + c.w
+        g.content = g.content or generate_songlist_display(zeromsg=g.message)
+        return
+
+    #Finally pass the input to yt_url
+    yt_url(output)
 
 
 @commands.command(r'(un)?dump')

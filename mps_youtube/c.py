@@ -1,6 +1,7 @@
 """ Module for holding colour code values. """
 
 import os
+import re
 import sys
 
 try:
@@ -33,7 +34,13 @@ else:
 
 r, g, y, b, p, w = red, green, yellow, blue, pink, white
 
+ansirx = re.compile(r'\x1b\[\d*m', re.UNICODE)
+
 def c(colour, text):
     """ Return coloured text. """
     colours = {'r': r, 'g': g, 'y': y, 'b':b, 'p':p}
     return colours[colour] + text + w
+
+def charcount(s):
+    """ Return number of characters in string, with ANSI color codes excluded. """
+    return len(ansirx.sub('', s))
