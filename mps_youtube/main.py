@@ -380,7 +380,7 @@ def init_readline():
             dbg(c.g + "Read history file" + c.w)
 
 
-@commands.command(r'(set|showconfig)\s*$')
+@commands.command(r'(set|showconfig)$')
 def showconfig(_):
     """ Dump config data. """
     width = screen.getxy().width
@@ -409,7 +409,7 @@ def showconfig(_):
     g.message += "Enter %sset all default%s to reset all" % (c.g, c.w)
 
 
-@commands.command(r'set\s+([-\w]+)\s*(.*?)\s*$')
+@commands.command(r'set\s+([-\w]+)\s*(.*?)$')
 def setconfig(key, val):
     """ Set configuration variable. """
     key = key.replace("-", "_")
@@ -2249,7 +2249,7 @@ def play_pl(name):
         g.content = playlists_display()
 
 
-@commands.command(r'save\s*$')
+@commands.command(r'save$')
 def save_last():
     """ Save command with no playlist name. """
     if g.last_opened:
@@ -2365,7 +2365,7 @@ def songlist_rm_add(action, songrange):
     g.content = generate_songlist_display()
 
 
-@commands.command(r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))\s*$')
+@commands.command(r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))$')
 def down_many(dltype, choice, subdir=None):
     """ Download multiple items. """
     choice = _parse_multi(choice)
@@ -2625,7 +2625,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
     g.content = generate_songlist_display()
 
 
-@commands.command(r'(?:help|h)(?:\s+([-_a-zA-Z]+)\s*)?$')
+@commands.command(r'(?:help|h)(?:\s+([-_a-zA-Z]+))?$')
 def show_help(choice):
     """ Print help message. """
 
@@ -2976,7 +2976,7 @@ def playlist_add(nums, playlist):
     g.content = generate_songlist_display()
 
 
-@commands.command(r'mv\s*(\d{1,3})\s*(%s)\s*$' % commands.word)
+@commands.command(r'mv\s*(\d{1,3})\s*(%s)$' % commands.word)
 def playlist_rename_idx(_id, name):
     """ Rename a playlist by ID. """
     _id = int(_id) - 1
@@ -3375,8 +3375,8 @@ def plist(parturl, page=0, splash=True, dumps=False):
     g.message = "Showing YouTube playlist %s" % (c.y + ytpl_title + c.w)
 
 
-@commands.command(r'\s*(shuffle)\s*$')
-def shuffle_fn(_):
+@commands.command(r'shuffle$')
+def shuffle_fn():
     """ Shuffle displayed items. """
     random.shuffle(g.model.songs)
     g.message = c.y + "Items shuffled" + c.w
@@ -3688,7 +3688,7 @@ def search_album(term, page=0, splash=True):
         g.last_search_query = ""
 
 
-@commands.command(r'encoders?\s*$')
+@commands.command(r'encoders?$')
 def show_encs():
     """ Display available encoding presets. """
     encs = g.encoders
