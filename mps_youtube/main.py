@@ -3249,16 +3249,28 @@ def play_url(url, override):
         sys.exit()
 
 
-def browser_play(url):
-    """Open and play a YouTube video URL in the default browser."""
+def browser_play(number):
+    """Open a previously searched result in the browser."""
+    if (len(g.model.songs) == 0):
+        g.message = c.r + "No previous search." + c.w
+        g.content = logo(c.r)
+        return
+
     try:
-        p = pafy.new(url)
-        base_url = "https://www.youtube.com/watch?v="
-        url = base_url + p.videoid
+        index = int(number) - 1
 
-        webbrowser.open(url)
+        if (0 <= index < len(g.model.songs)):
+            base_url = "https://www.youtube.com/watch?v="
+            video = g.model.songs[index]
+            url = base_url + video.ytid
+            webbrowser.open(url)
 
-    except (IOError, ValueError, HTTPError, URLError) as e:
+        else:
+            g.message = c.r + "Out of range." + c.w
+            g.content = logo(c.r)
+            return
+
+    except (HTTPError, URLError, Exception) as e:
         g.message = c.r + str(e) + c.w
         g.content = logo(c.r)
         return
@@ -3799,8 +3811,8 @@ def main():
         related: r'r\s?(\d{1,4})$',
         download: r'(dv|da|d|dl|download)\s*(\d{1,4})$',
         play_url: r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$',
-        browser_play: r'browserplay\s(.*[-_a-zA-Z0-9]{11}.*$)',
-        browser_search: r'(?:browsersearch|\.|/)\s*([^./].{1,500})',
+        browser_play: r'browserplay\s(\d{1,50})',
+        browser_search: r'browsersearch\s*([^./].{1,500})',
         comments: r'c\s?(\d{1,4})$',
         nextprev: r'(n|p)\s*(\d{1,2})?$',
         play_all: r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' % (rs, rs),
