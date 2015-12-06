@@ -3292,15 +3292,13 @@ def yt_url_file(file_name):
 
     #Open and read the file
     try:
-        fo = open(file_name, "r")
+        with open(file_name, "r") as fo:
+            output = ','.join([line.strip('\n') for line in fo])
+
     except (IOError):
         g.message = c.r + 'Error while opening the file, check the validity of the path' + c.w
         g.content = g.content or generate_songlist_display(zeromsg=g.message)
         return
-
-    output = ','.join([line.strip('\n') for line in fo])
-
-    fo.close()
 
     #Finally pass the input to yt_url
     yt_url(output)
