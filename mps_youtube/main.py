@@ -3293,7 +3293,7 @@ def yt_url_file(file_name):
     #Open and read the file
     try:
         with open(file_name, "r") as fo:
-            output = ' '.join([line.strip() for line in fo])
+            output = ' '.join([line.strip() for line in fo if line.strip()])
 
     except (IOError):
         g.message = c.r + 'Error while opening the file, check the validity of the path' + c.w
