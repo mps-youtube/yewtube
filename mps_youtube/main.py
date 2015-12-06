@@ -50,6 +50,7 @@ import sys
 import re
 import os
 import pickle
+import webbrowser
 from urllib.request import urlopen, build_opener
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -3236,6 +3237,34 @@ def play_url(url, override):
 
     if g.command_line:
         sys.exit()
+
+
+@commands.command(r'browserplay\s(\d{1,50})')
+def browser_play(number):
+    """Open a previously searched result in the browser."""
+    if (len(g.model.songs) == 0):
+        g.message = c.r + "No previous search." + c.w
+        g.content = logo(c.r)
+        return
+
+    try:
+        index = int(number) - 1
+
+        if (0 <= index < len(g.model.songs)):
+            base_url = "https://www.youtube.com/watch?v="
+            video = g.model.songs[index]
+            url = base_url + video.ytid
+            webbrowser.open(url)
+
+        else:
+            g.message = c.r + "Out of range." + c.w
+            g.content = logo(c.r)
+            return
+
+    except (HTTPError, URLError, Exception) as e:
+        g.message = c.r + str(e) + c.w
+        g.content = logo(c.r)
+        return
 
 
 @commands.command(r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)')
