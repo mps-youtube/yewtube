@@ -38,7 +38,6 @@ result_count = 0
 more_pages = None
 rprompt = None
 active = Playlist(name="active")
-text = {}
 userpl = {}
 ytpl = {}
 pafs = collections.OrderedDict()
