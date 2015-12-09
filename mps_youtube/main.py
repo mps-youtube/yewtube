@@ -381,7 +381,7 @@ def init_readline():
             dbg(c.g + "Read history file" + c.w)
 
 
-@commands.command(r'set|showconfig$')
+@commands.command(r'set|showconfig')
 def showconfig():
     """ Dump config data. """
     width = screen.getxy().width
@@ -410,7 +410,7 @@ def showconfig():
     g.message += "Enter %sset all default%s to reset all" % (c.g, c.w)
 
 
-@commands.command(r'set\s+([-\w]+)\s*(.*?)$')
+@commands.command(r'set\s+([-\w]+)\s*(.*?)')
 def setconfig(key, val):
     """ Set configuration variable. """
     key = key.replace("-", "_")
@@ -1627,7 +1627,7 @@ def channelfromname(user):
     return (user, channel_id)
 
 
-@commands.command(r'user\s+(.+)$')
+@commands.command(r'user\s+(.+)')
 def usersearch(q_user, page=0, splash=True, identify='forUsername'):
     """ Fetch uploads by a YouTube user. """
 
@@ -1744,14 +1744,14 @@ def search(term, page=0, splash=True):
         g.last_search_query = {}
 
 
-@commands.command(r'u(?:ser)?pl\s(.*)$')
+@commands.command(r'u(?:ser)?pl\s(.*)')
 def user_pls(user, page=0, splash=True):
     """ Retrieve user playlists. """
     user = {"is_user": True, "term": user}
     return pl_search(user, page=page, splash=splash)
 
 
-@commands.command(r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)$')
+@commands.command(r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)')
 def pl_search(term, page=0, splash=True, is_user=False):
     """ Search for YouTube playlists.
 
@@ -1984,7 +1984,7 @@ def fetch_comments(item):
     g.content = generate_songlist_display()
 
 
-@commands.command(r'c\s?(\d{1,4})$')
+@commands.command(r'c\s?(\d{1,4})')
 def comments(number):
     """ Receive use request to view comments. """
     if g.browse_mode == "normal":
@@ -2229,7 +2229,7 @@ def _parse_multi(choice, end=None):
     return alltracks
 
 
-@commands.command(r'play\s+(%s|\d+)$' % commands.word)
+@commands.command(r'play\s+(%s|\d+)' % commands.word)
 def play_pl(name):
     """ Play a playlist by name. """
     if name.isdigit():
@@ -2251,7 +2251,7 @@ def play_pl(name):
         g.content = playlists_display()
 
 
-@commands.command(r'save$')
+@commands.command(r'save')
 def save_last():
     """ Save command with no playlist name. """
     if g.last_opened:
@@ -2275,7 +2275,7 @@ def save_last():
         open_save_view("save", saveas)
 
 
-@commands.command(r'(open|save|view)\s*(%s)$' % commands.word)
+@commands.command(r'(open|save|view)\s*(%s)' % commands.word)
 def open_save_view(action, name):
     """ Open, save or view a playlist by name.  Get closest name match. """
     name = name.replace(" ", "-")
@@ -2328,7 +2328,7 @@ def open_save_view(action, name):
             g.content = generate_songlist_display(frmat=None)
 
 
-@commands.command(r'(open|view)\s*(\d{1,4})$')
+@commands.command(r'(open|view)\s*(\d{1,4})')
 def open_view_bynum(action, num):
     """ Open or view a saved playlist by number. """
     srt = sorted(g.userpl)
@@ -2336,7 +2336,7 @@ def open_view_bynum(action, num):
     open_save_view(action, name)
 
 
-@commands.command(r'(rm|add)\s*(-?\d[-,\d\s]{,250})$')
+@commands.command(r'(rm|add)\s*(-?\d[-,\d\s]{,250})')
 def songlist_rm_add(action, songrange):
     """ Remove or add tracks. works directly on user input. """
     selection = _parse_multi(songrange)
@@ -2367,7 +2367,7 @@ def songlist_rm_add(action, songrange):
     g.content = generate_songlist_display()
 
 
-@commands.command(r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))$')
+@commands.command(r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))')
 def down_many(dltype, choice, subdir=None):
     """ Download multiple items. """
     choice = _parse_multi(choice)
@@ -2444,7 +2444,7 @@ def down_plist(dltype, parturl):
     g.message = msg
 
 
-@commands.command(r'(da|dv)upl\s+(.*)$')
+@commands.command(r'(da|dv)upl\s+(.*)')
 def down_user_pls(dltype, user):
     """ Download all user playlists. """
     user_pls(user)
@@ -2454,7 +2454,7 @@ def down_user_pls(dltype, user):
     return
 
 
-@commands.command(r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' %
+@commands.command(r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})' %
         (commands.rs, commands.rs))
 def play(pre, choice, post=""):
     """ Play choice.  Use repeat/random if appears in pre/post. """
@@ -2511,7 +2511,7 @@ def play(pre, choice, post=""):
         play_range(songlist, shuffle, repeat, override)
 
 
-@commands.command(r'(%s{0,3})(?:\*|all)\s*(%s{0,3})$' %
+@commands.command(r'(%s{0,3})(?:\*|all)\s*(%s{0,3})' %
         (commands.rs, commands.rs))
 def play_all(pre, choice, post=""):
     """ Play all tracks in model (last displayed). shuffle/repeat if req'd."""
@@ -2519,7 +2519,7 @@ def play_all(pre, choice, post=""):
     play(options, "1-" + str(len(g.model.songs)))
 
 
-@commands.command(r'ls$')
+@commands.command(r'ls')
 def ls():
     """ List user saved playlists. """
     if not g.userpl:
@@ -2531,7 +2531,7 @@ def ls():
         g.message = F('pl help')
 
 
-@commands.command(r'vp$')
+@commands.command(r'vp')
 def vp():
     """ View current working playlist. """
     if g.active.is_empty:
@@ -2627,14 +2627,14 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
     g.content = generate_songlist_display()
 
 
-@commands.command(r'(?:help|h)(?:\s+([-_a-zA-Z]+))?$')
+@commands.command(r'(?:help|h)(?:\s+([-_a-zA-Z]+))?')
 def show_help(choice):
     """ Print help message. """
 
     g.content = get_help(choice)
 
 
-@commands.command(r'(?:q|quit|exit)$')
+@commands.command(r'(?:q|quit|exit)')
 def quits(showlogo=True):
     """ Exit the program. """
     if has_readline:
@@ -2798,7 +2798,7 @@ def gen_dl_text(ddata, song, p):
     return(content, hdr, heading, footer)
 
 
-@commands.command(r'(dv|da|d|dl|download)\s*(\d{1,4})$')
+@commands.command(r'(dv|da|d|dl|download)\s*(\d{1,4})')
 def download(dltype, num):
     """ Download a track or playlist by menu item number. """
     # This function needs refactoring!
@@ -2922,7 +2922,7 @@ def prompt_for_exit():
     return userinput
 
 
-@commands.command(r'rmp\s*(\d+|%s)$' % commands.word)
+@commands.command(r'rmp\s*(\d+|%s)' % commands.word)
 def playlist_remove(name):
     """ Delete a saved playlist by name - or purge working playlist if *all."""
     if name.isdigit() or g.userpl.get(name):
@@ -2941,7 +2941,7 @@ def playlist_remove(name):
         g.content = playlists_display()
 
 
-@commands.command(r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})$')
+@commands.command(r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})')
 def songlist_mv_sw(action, a, b):
     """ Move a song or swap two songs. """
     i, j = int(a) - 1, int(b) - 1
@@ -2957,7 +2957,7 @@ def songlist_mv_sw(action, a, b):
     g.content = generate_songlist_display()
 
 
-@commands.command(r'add\s*(-?\d[-,\d\s]{1,250})(%s)$' % commands.word)
+@commands.command(r'add\s*(-?\d[-,\d\s]{1,250})(%s)' % commands.word)
 def playlist_add(nums, playlist):
     """ Add selected song nums to saved playlist. """
     nums = _parse_multi(nums)
@@ -2978,14 +2978,14 @@ def playlist_add(nums, playlist):
     g.content = generate_songlist_display()
 
 
-@commands.command(r'mv\s*(\d{1,3})\s*(%s)$' % commands.word)
+@commands.command(r'mv\s*(\d{1,3})\s*(%s)' % commands.word)
 def playlist_rename_idx(_id, name):
     """ Rename a playlist by ID. """
     _id = int(_id) - 1
     playlist_rename(sorted(g.userpl)[_id] + " " + name)
 
 
-@commands.command(r'mv\s*(%s\s+%s)$' % (commands.word, commands.word))
+@commands.command(r'mv\s*(%s\s+%s)' % (commands.word, commands.word))
 def playlist_rename(playlists):
     """ Rename a playlist using mv command. """
     # Deal with old playlist names that permitted spaces
@@ -3005,7 +3005,7 @@ def playlist_rename(playlists):
     save_to_file()
 
 
-@commands.command(r'(rm|add)\s(?:\*|all)$')
+@commands.command(r'(rm|add)\s(?:\*|all)')
 def add_rm_all(action):
     """ Add all displayed songs to current playlist.
 
@@ -3023,7 +3023,7 @@ def add_rm_all(action):
         songlist_rm_add("add", "-" + str(size))
 
 
-@commands.command(r'(n|p)\s*(\d{1,2})?$')
+@commands.command(r'(n|p)\s*(\d{1,2})?')
 def nextprev(np, page=None):
     """ Get next / previous search results. """
     glsq = g.last_search_query
@@ -3077,7 +3077,7 @@ def nextprev(np, page=None):
     return good
 
 
-@commands.command(r'u\s?([\d]{1,4})$')
+@commands.command(r'u\s?([\d]{1,4})')
 def user_more(num):
     """ Show more videos from user of vid num. """
     if g.browse_mode != "normal":
@@ -3093,7 +3093,7 @@ def user_more(num):
     usersearch_id('/'.join([user, channel_id, '']), 0, True)
 
 
-@commands.command(r'r\s?(\d{1,4})$')
+@commands.command(r'r\s?(\d{1,4})')
 def related(num):
     """ Show videos related to to vid num. """
     if g.browse_mode != "normal":
@@ -3107,7 +3107,7 @@ def related(num):
     related_search(item)
 
 
-@commands.command(r'x\s*(\d+)$')
+@commands.command(r'x\s*(\d+)')
 def clip_copy(num):
     """ Copy item to clipboard. """
     if g.browse_mode == "ytpl":
@@ -3145,7 +3145,7 @@ def clip_copy(num):
         g.content = generate_songlist_display()
 
 
-@commands.command(r'mix\s*(\d{1,4})$')
+@commands.command(r'mix\s*(\d{1,4})')
 def mix(num):
     """ Retrieves the YouTube mix for the selected video. """
     g.content = g.content or generate_songlist_display()
@@ -3164,7 +3164,7 @@ def mix(num):
             g.message = F('no mix')
 
 
-@commands.command(r'i\s*(\d{1,4})$')
+@commands.command(r'i\s*(\d{1,4})')
 def info(num):
     """ Get video description. """
     if g.browse_mode == "ytpl":
@@ -3225,7 +3225,7 @@ def info(num):
         g.content = out
 
 
-@commands.command(r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?$')
+@commands.command(r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?')
 def play_url(url, override):
     """ Open and play a youtube video url. """
     override = override if override else "_"
@@ -3268,7 +3268,7 @@ def browser_play(number):
         return
 
 
-@commands.command(r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*$)')
+@commands.command(r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*)')
 def dl_url(url):
     """ Open and prompt for download of youtube video url. """
     g.browse_mode = "normal"
@@ -3281,7 +3281,7 @@ def dl_url(url):
         sys.exit()
 
 
-@commands.command(r'url\s(.*[-_a-zA-Z0-9]{11}.*$)')
+@commands.command(r'url\s(.*[-_a-zA-Z0-9]{11}.*)')
 def yt_url(url, print_title=0):
     """ Acess videos by urls. """
     url_list = url.split()
@@ -3310,7 +3310,7 @@ def yt_url(url, print_title=0):
         xprint(v.title)
 
 
-@commands.command(r'url_file\s(\S+$)')
+@commands.command(r'url_file\s(\S+)')
 def yt_url_file(file_name):
     """ Access a list of urls in a text file """
 
@@ -3406,7 +3406,7 @@ def plist(parturl, page=0, splash=True, dumps=False):
     g.message = "Showing YouTube playlist %s" % (c.y + ytpl_title + c.w)
 
 
-@commands.command(r'shuffle$')
+@commands.command(r'shuffle')
 def shuffle_fn():
     """ Shuffle displayed items. """
     random.shuffle(g.model.songs)
@@ -3414,7 +3414,7 @@ def shuffle_fn():
     g.content = generate_songlist_display()
 
 
-@commands.command(r'clearcache$')
+@commands.command(r'clearcache')
 def clearcache():
     """ Clear cached items - for debugging use. """
     g.pafs = {}
@@ -3719,7 +3719,7 @@ def search_album(term, page=0, splash=True):
         g.last_search_query = ""
 
 
-@commands.command(r'encoders?$')
+@commands.command(r'encoders?')
 def show_encs():
     """ Display available encoding presets. """
     encs = g.encoders
@@ -3740,8 +3740,9 @@ def matchfunction(func, regex, userinput):
     Call func, return True if matches.
 
     """
-    if regex.match(userinput):
-        matches = regex.match(userinput).groups()
+    match = regex.fullmatch(userinput)
+    if match:
+        matches = match.groups()
         dbg("input: %s", userinput)
         dbg("function call: %s", func.__name__)
         dbg("regx matches: %s", matches)
