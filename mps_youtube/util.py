@@ -156,10 +156,10 @@ def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
         text = text.format(*number_fmt)
 
     if percent_fmt:
-        text = re.sub(r"%s" % percent, r"%s", text)
+        text = re.sub(percent, r"%s", text)
         text = text % percent_fmt
 
-    text = re.sub(r"&&", r"%s", text)
+    text = text.replace("&&", "%s")
 
     return "\n" * nb + text + c.w + "\n" * na
 
