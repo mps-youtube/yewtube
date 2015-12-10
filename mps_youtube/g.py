@@ -72,10 +72,10 @@ argument_commands = []
 commands = []
 
 text = {
-    "exitmsg": ("**0mps-youtube - **1http://github.com/np1/mps-youtube**0"
+    "exitmsg": ("*mps-youtube - *http://github.com/np1/mps-youtube*"
                 "\nReleased under the GPLv3 license\n"
-                "(c) 2014, 2015 np1 and contributors**2\n"""),
-    "_exitmsg": (c.r, c.b, c.w),
+                "(c) 2014, 2015 np1 and contributors*\n"""),
+    "exitmsg_": (c.r, c.b, c.r, c.w),
 
     # Error / Warning messages
 
