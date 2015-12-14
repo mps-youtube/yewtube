@@ -437,7 +437,7 @@ def setconfig(key, val):
         # Config.save() will be called by Config.set() method
         message = Config[key.upper()].set(val)
 
-    showconfig(1)
+    showconfig()
     g.message = message
 
 
