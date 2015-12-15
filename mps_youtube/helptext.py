@@ -192,6 +192,8 @@ def helptext():
     {2}set player <player app>{1} - use <player app> for playback
     {2}set playerargs <args>{1} - use specified arguments with player
     {2}set search_music true|false{1} - search only music (all categories if false)
+    {2}set save_history <all|<nothing>|None|searches_only>{1} - optionally save all
+        of entered commands (default), nothing, or just items that were searched for
     {2}set show_mplayer_keys true|false{1} - show keyboard help for mplayer and mpv
     {2}set show_status true|false{1} - show status messages and progress
     {2}set show_video true|false{1} - show video output (audio only if false)
