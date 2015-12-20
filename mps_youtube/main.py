@@ -56,6 +56,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 
 import pafy
+from pafy import call_gdata, GdataError
 
 from . import terminalsize, g, c, commands, cache, streams, screen
 from .playlist import Playlist, Video
@@ -636,42 +637,6 @@ def get_track_id_from_json(item):
         if node:
             return node
     return ''
-
-
-class GdataError(Exception):
-    """Gdata query failed."""
-    pass
-
-
-def call_gdata(api, qs):
-    """Make a request to the youtube gdata api."""
-    qs = copy.copy(qs)
-    qs['key'] = Config.API_KEY.get
-    url = "https://www.googleapis.com/youtube/v3/" + api + '?' + urlencode(qs)
-
-    if url in g.url_memo:
-        return json.loads(g.url_memo[url])
-
-    try:
-        data = urlopen(url).read().decode()
-
-    except HTTPError as e:
-        try:
-            errdata = e.file.read().decode()
-            error = json.loads(errdata)['error']['message']
-            errmsg = 'Youtube Error %d: %s' % (e.getcode(), error)
-        except:
-            errmsg = str(e)
-        raise GdataError(errmsg)
-
-    # Add to url memo, ensure url memo doesn't get too big.
-    dbg('Cache data for query url {}:'.format(url))
-    g.url_memo[url] = data
-
-    while len(g.url_memo) > 300:
-        g.url_memo.popitem(last=False)
-
-    return json.loads(data)
 
 
 def get_page_info_from_json(jsons, result_count=None):
