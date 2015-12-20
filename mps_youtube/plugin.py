@@ -2,18 +2,14 @@ import os
 import re
 import collections
 import json
-import base64
 import inspect
 from zipfile import ZipFile
 from zipimport import zipimporter
+import importlib
 from importlib.machinery import PathFinder
 
-from . import g, commands, _plugins_generated
+from . import g, commands, plugins
 
-coreplugin_data = base64.b85decode(_plugins_generated.data)
-os.makedirs(g.PLUGINDIR, exist_ok=True)
-with open(os.path.join(g.PLUGINDIR, 'core_plugins.zip'), 'wb') as corepfile:
-    corepfile.write(coreplugin_data)
 
 EventHandler = collections.namedtuple('EventHandler', 'name function')
 
@@ -76,15 +72,18 @@ def loadPlugin(name):
     finder = PathFinder()
     loader = finder.find_module(name, path=pluginpaths)
 
-    if isinstance(loader, zipimporter):
-        with ZipFile(loader.archive, 'r') as pkgzip:
-            metadata = json.loads(pkgzip.open('metadata.json', 'r'
-                ).read().decode("utf-8"))[name]
-    else:
-        with open(os.path.split(loader.path)[0] + '/metadata.json') as pkgmeta:
-            metadata = json.loads(pkgmeta.read())[name]
-
-    module = loader.load_module(name)
+    if loader:
+        if isinstance(loader, zipimporter):
+            with ZipFile(loader.archive, 'r') as pkgzip:
+                metadata = json.loads(pkgzip.open('metadata.json', 'r'
+                    ).read().decode("utf-8"))[name]
+        else:
+            with open(os.path.split(loader.path)[0] + '/metadata.json') as pkgmeta:
+                metadata = json.loads(pkgmeta.read())[name]
+        module = loader.load_module(name)
+    elif name in plugins.plugins:
+        metadata = plugins.plugins[name]
+        module = importlib.import_module('.' + name, plugins.__package__)
     
     plugininstances = [i for _,i in inspect.getmembers(module)
             if inspect.isclass(i) and issubclass(i, Plugin)]

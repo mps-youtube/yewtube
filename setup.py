@@ -13,16 +13,7 @@ import os
 if sys.version_info < (3,0):
     sys.exit("Mps-youtube requires python 3.")
 
-import shutil
-import base64
 from setuptools import setup
-
-print('generating core plugins zip')
-shutil.make_archive('core_plugins', 'zip', 'plugins')
-print('generating _plugins_generated.py from zip')
-b85data = base64.b85encode(open('core_plugins.zip', 'rb').read())
-with open("mps_youtube/_plugins_generated.py", 'w') as pfile:
-    pfile.write('data = ' +  repr(b85data))
 
 options = dict(
     name="mps-youtube",

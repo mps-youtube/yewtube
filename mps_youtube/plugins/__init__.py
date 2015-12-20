@@ -1,4 +1,4 @@
-{
+plugins = {
   "album_search": {
     "name": "Album Search",
     "author": "mps-youtube",
