@@ -135,7 +135,7 @@ def get_near_name(begin, items):
     return name
 
 
-def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
+def F(key, nb=0, na=0, textlib=None):
     """Format text.
 
     nb, na indicate newlines before and after to return
@@ -149,17 +149,11 @@ def F(key, nb=0, na=0, percent=r"\*", nums=r"\*\*", textlib=None):
     assert key in textlib
     text = textlib[key]
     percent_fmt = textlib.get(key + "_")
-    number_fmt = textlib.get("_" + key)
-
-    if number_fmt:
-        text = re.sub(r"(%s(\d))" % nums, "{\\2}", text)
-        text = text.format(*number_fmt)
 
     if percent_fmt:
-        text = re.sub(r"%s" % percent, r"%s", text)
-        text = text % percent_fmt
+        text = re.sub(r"\*", r"%s", text) % percent_fmt
 
-    text = re.sub(r"&&", r"%s", text)
+    text = text.replace("&&", "%s")
 
     return "\n" * nb + text + c.w + "\n" * na
 

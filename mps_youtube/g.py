@@ -38,7 +38,6 @@ result_count = 0
 more_pages = None
 rprompt = None
 active = Playlist(name="active")
-text = {}
 userpl = {}
 ytpl = {}
 pafs = collections.OrderedDict()
@@ -77,10 +76,10 @@ commands = []
 eventhandlers = []
 
 text = {
-    "exitmsg": ("**0mps-youtube - **1http://github.com/np1/mps-youtube**0"
+    "exitmsg": ("*mps-youtube - *http://github.com/np1/mps-youtube*"
                 "\nReleased under the GPLv3 license\n"
-                "(c) 2014, 2015 np1 and contributors**2\n"""),
-    "_exitmsg": (c.r, c.b, c.w),
+                "(c) 2014, 2015 np1 and contributors*\n"""),
+    "exitmsg_": (c.r, c.b, c.r, c.w),
 
     # Error / Warning messages
 
