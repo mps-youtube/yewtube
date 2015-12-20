@@ -3178,11 +3178,9 @@ def info(num):
             g.message = "Fetching playlist info.."
             screen.update()
             dbg("%sFetching playlist using pafy%s", c.y, c.w)
-            yt_playlist = pafy.get_playlist(p['link'])
+            yt_playlist = pafy.get_playlist2(p['link'])
             g.pafy_pls[p['link']] = yt_playlist
 
-        ytpl_likes = yt_playlist.get('likes', 0)
-        ytpl_dislikes = yt_playlist.get('dislikes', 0)
         ytpl_desc = yt_playlist.get('description', "")
         g.content = generate_songlist_display()
 
@@ -3193,8 +3191,6 @@ def info(num):
         out += "\n" + ytpl_desc
         out += ("\n\nAuthor     : " + p['author'])
         out += "\nSize       : " + str(p['size']) + " videos"
-        out += "\nLikes      : " + str(ytpl_likes)
-        out += "\nDislikes   : " + str(ytpl_dislikes)
         out += "\nCreated    : " + time.strftime("%x %X", created)
         out += "\nUpdated    : " + time.strftime("%x %X", updated)
         out += "\nID         : " + str(p['link'])
@@ -3372,7 +3368,7 @@ def plist(parturl, page=0, splash=True, dumps=False):
         screen.update()
 
     dbg("%sFetching playlist using pafy%s", c.y, c.w)
-    yt_playlist = pafy.get_playlist(parturl)
+    yt_playlist = pafy.get_playlist2(parturl)
     g.pafy_pls[parturl] = yt_playlist
     ytpl_items = yt_playlist['items']
     ytpl_title = yt_playlist['title']
@@ -3381,9 +3377,9 @@ def plist(parturl, page=0, splash=True, dumps=False):
 
     for item in ytpl_items:
         # Create Video object, appends to songs
-        cur = Video(ytid=item['pafy'].videoid,
-                    title=item['pafy'].title,
-                    length=item['pafy'].length)
+        cur = Video(ytid=item.videoid,
+                    title=item.title,
+                    length=item.length)
         songs.append(cur)
 
     if not ytpl_items:
