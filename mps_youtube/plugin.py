@@ -3,6 +3,7 @@ import re
 import collections
 import json
 import base64
+import inspect
 from zipfile import ZipFile
 from zipimport import zipimporter
 from importlib.machinery import PathFinder
@@ -61,15 +62,6 @@ class Plugin:
         pass
     
 
-def registerPlugin(name):
-    """ Decorator to register a plugin with mps-youtube. """
-
-    def decorator(plugin):
-        g.plugins[name] = plugin
-        return plugin
-    return decorator
-
-
 def loadPlugins():
     """ Loads all mps-youtube plugins. """
     pass
@@ -92,9 +84,14 @@ def loadPlugin(name):
         with open(os.path.split(loader.path)[0] + '/metadata.json') as pkgmeta:
             metadata = json.loads(pkgmeta.read())[name]
 
-    loader.load_module(name)
+    module = loader.load_module(name)
+    
+    plugininstances = [i for _,i in inspect.getmembers(module)
+            if inspect.isclass(i) and issubclass(i, Plugin)]
+    if len(plugininstances) != 1:
+        exit("Error, there are %d plugin instances." % len(plugininstances))
 
-    g.enabled_plugins[name] = g.plugins[name]()
+    g.enabled_plugins[name] = plugininstances[0]
 
 
 @commands.command(r'pluginunload\s+([^./]+)\s*$')

@@ -9,7 +9,6 @@ from urllib.request import build_opener
 import mps_youtube as mpsyt
 from mps_youtube import c, dbg
 
-@mpsyt.registerPlugin('album_search')
 class AlbumSearchPlugin(mpsyt.Plugin):
     pass
 

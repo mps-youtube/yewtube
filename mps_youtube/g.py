@@ -70,7 +70,6 @@ playerargs_defaults = {
         "geo": "-geometry"}
     }
 argument_commands = []
-plugins = {}
 enabled_plugins = {}
 commands = []
 eventhandlers = []
