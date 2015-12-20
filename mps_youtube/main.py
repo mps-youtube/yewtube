@@ -2436,7 +2436,7 @@ def down_plist(dltype, parturl):
     """ Download YouTube playlist. """
 
     plist(parturl, page=0, splash=True, dumps=True)
-    title = g.pafy_pls[parturl]['title']
+    title = g.pafy_pls[parturl].title
     subdir = mswinfn(title.replace("/", "-"))
     down_many(dltype, "1-", subdir=subdir)
     msg = g.message
@@ -3181,7 +3181,7 @@ def info(num):
             yt_playlist = pafy.get_playlist2(p['link'])
             g.pafy_pls[p['link']] = yt_playlist
 
-        ytpl_desc = yt_playlist.get('description', "")
+        ytpl_desc = yt_playlist.description
         g.content = generate_songlist_display()
 
         created = yt_datetime(p['created'])[0]
@@ -3370,8 +3370,8 @@ def plist(parturl, page=0, splash=True, dumps=False):
     dbg("%sFetching playlist using pafy%s", c.y, c.w)
     yt_playlist = pafy.get_playlist2(parturl)
     g.pafy_pls[parturl] = yt_playlist
-    ytpl_items = yt_playlist['items']
-    ytpl_title = yt_playlist['title']
+    ytpl_items = yt_playlist.items
+    ytpl_title = yt_playlist.title
 
     songs = []
 
