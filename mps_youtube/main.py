@@ -3353,7 +3353,7 @@ def plist(parturl, page=0, splash=True, dumps=False):
     e = (page + 1) * max_results
 
     if dumps:
-        s, e = 0, 99999
+        s, e = 0, -1
 
     songs = [Video(ytid=i.videoid, title=i.title, length=i.length)
             for i in plitems[s:e]]
