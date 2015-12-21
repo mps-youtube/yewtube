@@ -3136,17 +3136,17 @@ def info(num):
         p = g.ytpls[int(num) - 1]
 
         # fetch the playlist item as it has more metadata
-        yt_playlist = g.pafy_pls.get(p['link'])
+        ytpl = g.pafy_pls.get(p['link'])
 
-        if not yt_playlist:
+        if not ytpl:
             g.content = logo(col=c.g)
             g.message = "Fetching playlist info.."
             screen.update()
             dbg("%sFetching playlist using pafy%s", c.y, c.w)
-            yt_playlist = pafy.get_playlist2(p['link'])
-            g.pafy_pls[p['link']] = yt_playlist
+            ytpl = pafy.get_playlist2(p['link'])
+            g.pafy_pls[p['link']] = ytpl
 
-        ytpl_desc = yt_playlist.description
+        ytpl_desc = ytpl.description
         g.content = generate_songlist_display()
 
         created = yt_datetime(p['created'])[0]
@@ -3333,27 +3333,25 @@ def plist(parturl, page=0, splash=True, dumps=False):
         screen.update()
 
     dbg("%sFetching playlist using pafy%s", c.y, c.w)
-    yt_playlist = pafy.get_playlist2(parturl)
-    g.pafy_pls[parturl] = yt_playlist
-    ytpl_items = yt_playlist.items
-    ytpl_title = yt_playlist.title
+    ytpl = pafy.get_playlist2(parturl)
+    g.pafy_pls[parturl] = ytpl
 
     songs = []
 
-    for item in ytpl_items:
+    for item in ytpl:
         # Create Video object, appends to songs
         cur = Video(ytid=item.videoid,
                     title=item.title,
                     length=item.length)
         songs.append(cur)
 
-    if not ytpl_items:
+    if not songs:
         dbg("got unexpected data or no search results")
         return False
 
     g.last_search_query = {"playlist": parturl}
     g.browse_mode = "normal"
-    g.ytpl = dict(name=ytpl_title, items=songs)
+    g.ytpl = dict(name=ytpl.title, items=songs)
     g.current_page = 0
     g.result_count = len(g.ytpl['items'])
     g.more_pages = max_results < len(g.ytpl['items'])
