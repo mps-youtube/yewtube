@@ -100,6 +100,31 @@ locale.setlocale(locale.LC_ALL, "")  # for date formatting
 ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?((\d{1,2})S)?')
 
 
+class IterSlicer():
+    """ Class that takes an iterable and allows slicing,
+        loading from the iterable as needed."""
+
+    def __init__(self, iterable):
+        self.ilist = []
+        self.iterable = iter(iterable)
+
+    def __getitem__(self, sliced):
+        if isinstance(sliced, slice):
+            stop = sliced.stop
+        else:
+            stop = sliced
+        # To get the last item in an iterable, must iterate over all items
+        if stop < 0:
+            stop = None
+        while True if (stop is None) else (stop > len(self.ilist) - 1):
+            try:
+                self.ilist.append(next(self.iterable))
+            except StopIteration:
+                break
+
+        return self.ilist[sliced]
+
+
 def get_content_length(url, preloading=False):
     """ Return content length of a url. """
     prefix = "preload: " if preloading else ""
@@ -2401,7 +2426,7 @@ def down_plist(dltype, parturl):
     """ Download YouTube playlist. """
 
     plist(parturl, page=0, splash=True, dumps=True)
-    title = g.pafy_pls[parturl].title
+    title = g.pafy_pls[parturl][0].title
     subdir = mswinfn(title.replace("/", "-"))
     down_many(dltype, "1-", subdir=subdir)
     msg = g.message
@@ -3136,7 +3161,7 @@ def info(num):
         p = g.ytpls[int(num) - 1]
 
         # fetch the playlist item as it has more metadata
-        ytpl = g.pafy_pls.get(p['link'])
+        ytpl = g.pafy_pls.get(p['link'])[0]
 
         if not ytpl:
             g.content = logo(col=c.g)
@@ -3144,7 +3169,7 @@ def info(num):
             screen.update()
             dbg("%sFetching playlist using pafy%s", c.y, c.w)
             ytpl = pafy.get_playlist2(p['link'])
-            g.pafy_pls[p['link']] = ytpl
+            g.pafy_pls[p['link']] = (ytpl, IterSlicer(ytpl))
 
         ytpl_desc = ytpl.description
         g.content = generate_songlist_display()
@@ -3310,40 +3335,28 @@ def plist(parturl, page=0, splash=True, dumps=False):
     """ Retrieve YouTube playlist. """
     max_results = screen.getxy().max_results
 
-    if "playlist" in g.last_search_query and\
-            parturl == g.last_search_query['playlist']:
-
-        # go to pagenum
-        s = page * max_results
-        e = (page + 1) * max_results
-
-        if dumps:
-            s, e = 0, 99999
-
-        g.model.songs = g.ytpl['items'][s:e]
-        g.more_pages = e < len(g.ytpl['items'])
-        g.content = generate_songlist_display()
-        g.message = "Showing YouTube playlist: %s" % c.y + g.ytpl['name'] + c.w
-        g.current_page = page
-        return
-
     if splash:
         g.content = logo(col=c.b)
         g.message = "Retrieving YouTube playlist"
         screen.update()
 
-    dbg("%sFetching playlist using pafy%s", c.y, c.w)
-    ytpl = pafy.get_playlist2(parturl)
-    g.pafy_pls[parturl] = ytpl
+    if parturl in g.pafy_pls:
+        ytpl, plitems = g.pafy_pls[parturl]
+    else:
+        dbg("%sFetching playlist using pafy%s", c.y, c.w)
+        ytpl = pafy.get_playlist2(parturl)
+        plitems = IterSlicer(ytpl)
+        g.pafy_pls[parturl] = (ytpl, plitems)
 
-    songs = []
+    # go to pagenum
+    s = page * max_results
+    e = (page + 1) * max_results
 
-    for item in ytpl:
-        # Create Video object, appends to songs
-        cur = Video(ytid=item.videoid,
-                    title=item.title,
-                    length=item.length)
-        songs.append(cur)
+    if dumps:
+        s, e = 0, 99999
+
+    songs = [Video(ytid=i.videoid, title=i.title, length=i.length)
+            for i in plitems[s:e]]
 
     if not songs:
         dbg("got unexpected data or no search results")
@@ -3351,18 +3364,18 @@ def plist(parturl, page=0, splash=True, dumps=False):
 
     g.last_search_query = {"playlist": parturl}
     g.browse_mode = "normal"
-    g.ytpl = dict(name=ytpl.title, items=songs)
-    g.current_page = 0
-    g.result_count = len(g.ytpl['items'])
-    g.more_pages = max_results < len(g.ytpl['items'])
-    g.model.songs = songs[:max_results] if not dumps else songs[::]
+    g.current_page = page
+    g.result_count = len(ytpl)
+    g.model.songs = songs
+    g.more_pages = e < len(ytpl)
+
     # preload first result url
     kwa = {"song": songs[0], "delay": 0}
     t = threading.Thread(target=preload, kwargs=kwa)
     t.start()
 
     g.content = generate_songlist_display()
-    g.message = "Showing YouTube playlist %s" % (c.y + ytpl_title + c.w)
+    g.message = "Showing YouTube playlist %s" % (c.y + ytpl.title + c.w)
 
 
 @commands.command(r'shuffle')

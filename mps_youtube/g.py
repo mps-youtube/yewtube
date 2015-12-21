@@ -39,7 +39,6 @@ more_pages = None
 rprompt = None
 active = Playlist(name="active")
 userpl = {}
-ytpl = {}
 pafs = collections.OrderedDict()
 streams = collections.OrderedDict()
 pafy_pls = {}  #
