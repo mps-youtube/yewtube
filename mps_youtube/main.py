@@ -2750,8 +2750,9 @@ def prompt_dl(song):
     model = {str(n + 1): (x['url'], x['ext']) for n, x in ed}
     url, ext = menu_prompt(model, "Download number: ", *dl_text)
     url2 = ext2 = None
+    mediatype = [i for i in dl_data if i['url'] == url][0]['mediatype']
 
-    if ext == "m4v" and g.muxapp and not Config.DOWNLOAD_COMMAND.get:
+    if mediatype == "video" and g.muxapp and not Config.DOWNLOAD_COMMAND.get:
         # offer mux if not using external downloader
         dl_data, p = get_dl_data(song, mediatype="audio")
         dl_text = gen_dl_text(dl_data, song, p)
