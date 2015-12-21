@@ -2757,7 +2757,7 @@ def prompt_dl(song):
         dl_data, p = get_dl_data(song, mediatype="audio")
         dl_text = gen_dl_text(dl_data, song, p)
         au_choices = "1" if len(dl_data) == 1 else "1-%s" % len(dl_data)
-        footer = [F('-audio'), F('select mux') % au_choices]
+        footer = [F('-audio') % ext, F('select mux') % au_choices]
         dl_text = tuple(dl_text[0:3]) + (footer,)
         aext = ("ogg", "m4a")
         model = [x['url'] for x in dl_data if x['ext'] in aext]
