@@ -3348,15 +3348,17 @@ def plist(parturl, page=0, splash=True, dumps=False):
         plitems = IterSlicer(ytpl)
         g.pafy_pls[parturl] = (ytpl, plitems)
 
-    # go to pagenum
-    s = page * max_results
-    e = (page + 1) * max_results
 
     if dumps:
-        s, e = 0, -1
+        plseg = plitems
+        e = len(ytpl)
+    else:
+        s = page * max_results
+        e = (page + 1) * max_results
+        plseg = plitems[s:e]
 
     songs = [Video(ytid=i.videoid, title=i.title, length=i.length)
-            for i in plitems[s:e]]
+            for i in plseg]
 
     if not songs:
         dbg("got unexpected data or no search results")
