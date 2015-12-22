@@ -583,8 +583,7 @@ def playlists_display():
     """ Produce a list of all playlists. """
     if not g.userpl:
         g.message = F("no playlists")
-        return logo(c.y) + "\n\n" if g.model.is_empty else \
-            generate_songlist_display()
+        return generate_songlist_display() if g.model else (logo(c.y) + "\n\n")
 
     maxname = max(len(a) for a in g.userpl)
     out = "      {0}Local Playlists{1}\n".format(c.ul, c.w)
@@ -595,7 +594,7 @@ def playlists_display():
 
     for v, z in enumerate(sorted(g.userpl)):
         n, p = z, g.userpl[z]
-        l = fmt % (start, c.g, v + 1, n, c.w, c.y, str(p.size), c.y,
+        l = fmt % (start, c.g, v + 1, n, c.w, c.y, str(len(p)), c.y,
                    p.duration, c.w) + "\n"
         out += l
 
@@ -2188,7 +2187,7 @@ def _bi_range(start, end):
 
 def _parse_multi(choice, end=None):
     """ Handle ranges like 5-9, 9-5, 5- and -5. Return list of ints. """
-    end = end or str(g.model.size)
+    end = end or str(len(g.model))
     pattern = r'(?<![-\d])(\d+-\d+|-\d+|\d+-|\d+)(?![-\d])'
     items = re.findall(pattern, choice)
     alltracks = []
@@ -2244,7 +2243,7 @@ def save_last():
         saveas = ""
 
         # save using artist name in postion 1
-        if not g.model.is_empty:
+        if g.model:
             saveas = g.model.songs[0].title[:18].strip()
             saveas = re.sub(r"[^-\w]", "-", saveas, re.UNICODE)
 
@@ -2332,7 +2331,7 @@ def songlist_rm_add(action, songrange):
             g.active.songs.append(g.model.songs[songnum - 1])
 
         d = g.active.duration
-        g.message = F('added to pl') % (len(selection), g.active.size, d)
+        g.message = F('added to pl') % (len(selection), len(g.active), d)
         if duplicate_songs:
             duplicate_songs = ', '.join(sorted(duplicate_songs))
             g.message += '\n'
@@ -2517,14 +2516,14 @@ def ls():
 @commands.command(r'vp')
 def vp():
     """ View current working playlist. """
-    if g.active.is_empty:
-        txt = F('advise search') if g.model.is_empty else F('advise add')
-        g.message = F('pl empty') + " " + txt
-
-    else:
+    if g.active:
         g.browse_mode = "normal"
         g.model.songs = g.active.songs
         g.message = F('current pl')
+
+    else:
+        txt = F('advise add') if g.model else F('advise search')
+        g.message = F('pl empty') + " " + txt
 
     g.content = generate_songlist_display(zeromsg=g.message)
 
@@ -2952,7 +2951,7 @@ def playlist_add(nums, playlist):
     for songnum in nums:
         g.userpl[playlist].songs.append(g.model.songs[songnum - 1])
         dur = g.userpl[playlist].duration
-        f = (len(nums), playlist, g.userpl[playlist].size, dur)
+        f = (len(nums), playlist, len(g.userpl[playlist]), dur)
         g.message = F('added to saved pl') % f
 
     if nums:
@@ -3002,7 +3001,7 @@ def add_rm_all(action):
         g.content = generate_songlist_display()
 
     elif action == "add":
-        size = g.model.size
+        size = len(g.model)
         songlist_rm_add("add", "-" + str(size))
 
 
