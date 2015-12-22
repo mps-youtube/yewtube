@@ -155,20 +155,19 @@ def get_size(ytid, url, preloading=False):
 
 def get_version_info():
     """ Return version and platform info. """
-    out = "\nmpsyt version  : %s " % __version__
-    out += "\n   notes       : %s" % __notes__
-    out += "\npafy version   : %s" % pafy.__version__
-    out += "\nPython version : %s" % sys.version
-    out += "\nProcessor      : %s" % platform.processor()
-    out += "\nMachine type   : %s" % platform.machine()
+    out = "mpsyt version  : " + __version__
+    out += "\n   notes       : " + __notes__
+    out += "\npafy version   : " + pafy.__version__
+    out += "\nPython version : " + sys.version
+    out += "\nProcessor      : " + platform.processor()
+    out += "\nMachine type   : " + platform.machine()
     out += "\nArchitecture   : %s, %s" % platform.architecture()
-    out += "\nPlatform       : %s" % platform.platform()
-    out += "\nsys.stdout.enc : %s" % sys.stdout.encoding
-    out += "\ndefault enc    : %s" % sys.getdefaultencoding()
-    out += "\nConfig dir     : %s" % get_config_dir()
-    envs = "TERM SHELL LANG LANGUAGE".split()
+    out += "\nPlatform       : " + platform.platform()
+    out += "\nsys.stdout.enc : " + sys.stdout.encoding
+    out += "\ndefault enc    : " + sys.getdefaultencoding()
+    out += "\nConfig dir     : " + get_config_dir()
 
-    for env in envs:
+    for env in "TERM SHELL LANG LANGUAGE".split():
         value = os.environ.get(env)
         out += "\nenv:%-11s: %s" % (env, value) if value else ""
 
@@ -190,7 +189,6 @@ def process_cl_args():
 
     if args.version:
         xprint(get_version_info())
-        xprint("")
         sys.exit()
 
     elif args.help:
