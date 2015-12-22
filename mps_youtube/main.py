@@ -3676,6 +3676,8 @@ def search_album(term, page=0, splash=True):
         g.last_opened = ""
         g.last_search_query = ""
         g.current_page = page
+        g.result_count = len(songs)
+        g.more_pages = False
         g.content = generate_songlist_display()
 
     else:
