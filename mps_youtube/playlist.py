@@ -38,3 +38,4 @@ class Video(object):
         self.ytid = ytid
         self.title = title
         self.length = int(length)
+
