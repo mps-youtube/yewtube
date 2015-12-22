@@ -58,7 +58,7 @@ from urllib.parse import urlencode
 import pafy
 from pafy import call_gdata, GdataError
 
-from . import terminalsize, g, c, commands, cache, streams, screen
+from . import g, c, commands, cache, streams, screen
 from .playlist import Playlist, Video
 from .paths import get_config_dir
 from .config import Config, known_player_set
