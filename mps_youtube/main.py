@@ -240,7 +240,7 @@ def init():
         Config.load()
 
     init_readline()
-    cache.init()
+    cache.load()
     init_transcode()
 
     # ensure encoder is not set beyond range of available presets
