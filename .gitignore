@@ -15,5 +15,3 @@ parts
 bin
 var
 tags
-core_plugins.zip
-mps_youtube/_plugins_generated.py
