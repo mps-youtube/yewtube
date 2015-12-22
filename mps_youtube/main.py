@@ -61,7 +61,7 @@ from pafy import call_gdata, GdataError
 from . import terminalsize, g, c, commands, cache, streams, screen
 from .playlist import Playlist, Video
 from .paths import get_config_dir
-from .config import Config, known_player_set, import_config
+from .config import Config, known_player_set
 from .util import has_exefile, get_mpv_version, dbg, list_update, get_near_name
 from .util import get_mplayer_version, get_pafy
 from .util import xenc, xprint, mswinfn, set_window_title, F
@@ -237,7 +237,7 @@ def init():
         Config.save()
 
     else:
-        import_config()
+        Config.load()
 
     init_readline()
     cache.init()
