@@ -26,7 +26,7 @@ options = dict(
     download_url="https://github.com/np1/mps-youtube/tarball/master",
     packages=['mps_youtube'],
     entry_points={'console_scripts': ['mpsyt = mps_youtube:main.main']},
-    install_requires=['pafy >= 0.3.74'],
+    install_requires=['pafy >= 0.3.82, != 0.4.0, != 0.4.1, != 0.4.2'],
     classifiers=[
         "Topic :: Utilities",
         "Topic :: Internet :: WWW/HTTP",
