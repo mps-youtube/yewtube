@@ -188,13 +188,10 @@ def process_cl_args():
     args = parser.parse_args()
 
     if args.version:
-        xprint(get_version_info())
-        sys.exit()
+        screen.msgexit(get_version_info())
 
     elif args.help:
-        for x in helptext():
-            xprint(x[2])
-        sys.exit()
+        screen.msgexit('\n'.join(i[2] for i in helptext()))
 
     if args.debug or os.environ.get("mpsytdebug") == "1":
         xprint(get_version_info())
@@ -497,12 +494,10 @@ def open_from_file():
             g.userpl = pickle.load(plf)
 
         save_to_file()
-        xprint("Updated playlist file. Please restart mpsyt")
-        sys.exit()
+        exitmsg("Updated playlist file. Please restart mpsyt", 1)
 
     except EOFError:
-        xprint("Error opening playlists from %s" % g.PLFILE)
-        sys.exit()
+        exitmsg("Error opening playlists from %s" % g.PLFILE, 1)
 
     # remove any cached urls from playlist file, these are now
     # stored in a separate cache file
@@ -2633,7 +2628,7 @@ def quits(showlogo=True):
 
     screen.clear()
     msg = logo(c.r, version=__version__) if showlogo else ""
-    xprint(msg + F("exitmsg", 2))
+    msg += F("exitmsg", 2)
 
     if Config.CHECKUPDATE.get and showlogo:
 
@@ -2646,13 +2641,12 @@ def quits(showlogo=True):
                 v = v.group(1)
 
                 if v > __version__:
-                    vermsg = "\nA newer version is available (%s)\n" % v
-                    xprint(vermsg)
+                    msg += "\n\nA newer version is available (%s)\n" % v
 
         except (URLError, HTTPError, socket.timeout):
             dbg("check update timed out")
 
-    sys.exit()
+    screen.msgexit(msg)
 
 
 def get_dl_data(song, mediatype="any"):

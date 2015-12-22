@@ -77,3 +77,9 @@ def _writeline(text):
     text = text[:width - 3]
     sys.stdout.write(" " + text + (" " * spaces) + "\r")
     sys.stdout.flush()
+
+
+def msgexit(msg, code=0):
+    """ Print a message and exit. """
+    xprint(msg)
+    sys.exit(code)
