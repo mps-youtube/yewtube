@@ -51,7 +51,6 @@ def get_config_dir():
 
     mps_confdir = os.path.join(confdir, "mps-youtube")
 
-    if not os.path.exists(mps_confdir):
-        os.makedirs(mps_confdir)
+    os.makedirs(mps_confdir, exist_ok=True)
 
     return mps_confdir

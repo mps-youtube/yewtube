@@ -56,10 +56,10 @@ from urllib.parse import urlencode
 import pafy
 from pafy import call_gdata, GdataError
 
-from . import terminalsize, g, c, commands, cache, streams, screen
+from . import g, c, commands, cache, streams, screen
 from .playlist import Playlist, Video
 from .paths import get_config_dir
-from .config import Config, known_player_set, import_config
+from .config import Config, known_player_set
 from .util import has_exefile, get_mpv_version, dbg, list_update, get_near_name
 from .util import get_mplayer_version, get_pafy
 from .util import xenc, xprint, mswinfn, set_window_title, F
@@ -154,20 +154,19 @@ def get_size(ytid, url, preloading=False):
 
 def get_version_info():
     """ Return version and platform info. """
-    out = "\nmpsyt version  : %s " % __version__
-    out += "\n   notes       : %s" % __notes__
-    out += "\npafy version   : %s" % pafy.__version__
-    out += "\nPython version : %s" % sys.version
-    out += "\nProcessor      : %s" % platform.processor()
-    out += "\nMachine type   : %s" % platform.machine()
+    out = "mpsyt version  : " + __version__
+    out += "\n   notes       : " + __notes__
+    out += "\npafy version   : " + pafy.__version__
+    out += "\nPython version : " + sys.version
+    out += "\nProcessor      : " + platform.processor()
+    out += "\nMachine type   : " + platform.machine()
     out += "\nArchitecture   : %s, %s" % platform.architecture()
-    out += "\nPlatform       : %s" % platform.platform()
-    out += "\nsys.stdout.enc : %s" % sys.stdout.encoding
-    out += "\ndefault enc    : %s" % sys.getdefaultencoding()
-    out += "\nConfig dir     : %s" % get_config_dir()
-    envs = "TERM SHELL LANG LANGUAGE".split()
+    out += "\nPlatform       : " + platform.platform()
+    out += "\nsys.stdout.enc : " + sys.stdout.encoding
+    out += "\ndefault enc    : " + sys.getdefaultencoding()
+    out += "\nConfig dir     : " + get_config_dir()
 
-    for env in envs:
+    for env in "TERM SHELL LANG LANGUAGE".split():
         value = os.environ.get(env)
         out += "\nenv:%-11s: %s" % (env, value) if value else ""
 
@@ -188,14 +187,10 @@ def process_cl_args():
     args = parser.parse_args()
 
     if args.version:
-        xprint(get_version_info())
-        xprint("")
-        sys.exit()
+        screen.msgexit(get_version_info())
 
     elif args.help:
-        for x in helptext():
-            xprint(x[2])
-        sys.exit()
+        screen.msgexit('\n'.join(i[2] for i in helptext()))
 
     if args.debug or os.environ.get("mpsytdebug") == "1":
         xprint(get_version_info())
@@ -241,10 +236,10 @@ def init():
         Config.save()
 
     else:
-        import_config()
+        Config.load()
 
     init_readline()
-    cache.init()
+    cache.load()
     init_transcode()
 
     # ensure encoder is not set beyond range of available presets
@@ -498,12 +493,10 @@ def open_from_file():
             g.userpl = pickle.load(plf)
 
         save_to_file()
-        xprint("Updated playlist file. Please restart mpsyt")
-        sys.exit()
+        exitmsg("Updated playlist file. Please restart mpsyt", 1)
 
     except EOFError:
-        xprint("Error opening playlists from %s" % g.PLFILE)
-        sys.exit()
+        exitmsg("Error opening playlists from %s" % g.PLFILE, 1)
 
     # remove any cached urls from playlist file, these are now
     # stored in a separate cache file
@@ -589,8 +582,7 @@ def playlists_display():
     """ Produce a list of all playlists. """
     if not g.userpl:
         g.message = F("no playlists")
-        return logo(c.y) + "\n\n" if g.model.is_empty else \
-            generate_songlist_display()
+        return generate_songlist_display() if g.model else (logo(c.y) + "\n\n")
 
     maxname = max(len(a) for a in g.userpl)
     out = "      {0}Local Playlists{1}\n".format(c.ul, c.w)
@@ -601,7 +593,7 @@ def playlists_display():
 
     for v, z in enumerate(sorted(g.userpl)):
         n, p = z, g.userpl[z]
-        l = fmt % (start, c.g, v + 1, n, c.w, c.y, str(p.size), c.y,
+        l = fmt % (start, c.g, v + 1, n, c.w, c.y, str(len(p)), c.y,
                    p.duration, c.w) + "\n"
         out += l
 
@@ -2194,7 +2186,7 @@ def _bi_range(start, end):
 
 def _parse_multi(choice, end=None):
     """ Handle ranges like 5-9, 9-5, 5- and -5. Return list of ints. """
-    end = end or str(g.model.size)
+    end = end or str(len(g.model))
     pattern = r'(?<![-\d])(\d+-\d+|-\d+|\d+-|\d+)(?![-\d])'
     items = re.findall(pattern, choice)
     alltracks = []
@@ -2250,7 +2242,7 @@ def save_last():
         saveas = ""
 
         # save using artist name in postion 1
-        if not g.model.is_empty:
+        if g.model:
             saveas = g.model.songs[0].title[:18].strip()
             saveas = re.sub(r"[^-\w]", "-", saveas, re.UNICODE)
 
@@ -2338,7 +2330,7 @@ def songlist_rm_add(action, songrange):
             g.active.songs.append(g.model.songs[songnum - 1])
 
         d = g.active.duration
-        g.message = F('added to pl') % (len(selection), g.active.size, d)
+        g.message = F('added to pl') % (len(selection), len(g.active), d)
         if duplicate_songs:
             duplicate_songs = ', '.join(sorted(duplicate_songs))
             g.message += '\n'
@@ -2523,14 +2515,14 @@ def ls():
 @commands.command(r'vp')
 def vp():
     """ View current working playlist. """
-    if g.active.is_empty:
-        txt = F('advise search') if g.model.is_empty else F('advise add')
-        g.message = F('pl empty') + " " + txt
-
-    else:
+    if g.active:
         g.browse_mode = "normal"
         g.model.songs = g.active.songs
         g.message = F('current pl')
+
+    else:
+        txt = F('advise add') if g.model else F('advise search')
+        g.message = F('pl empty') + " " + txt
 
     g.content = generate_songlist_display(zeromsg=g.message)
 
@@ -2634,7 +2626,7 @@ def quits(showlogo=True):
 
     screen.clear()
     msg = logo(c.r, version=__version__) if showlogo else ""
-    xprint(msg + F("exitmsg", 2))
+    msg += F("exitmsg", 2)
 
     if Config.CHECKUPDATE.get and showlogo:
 
@@ -2647,13 +2639,12 @@ def quits(showlogo=True):
                 v = v.group(1)
 
                 if v > __version__:
-                    vermsg = "\nA newer version is available (%s)\n" % v
-                    xprint(vermsg)
+                    msg += "\n\nA newer version is available (%s)\n" % v
 
         except (URLError, HTTPError, socket.timeout):
             dbg("check update timed out")
 
-    sys.exit()
+    screen.msgexit(msg)
 
 
 def get_dl_data(song, mediatype="any"):
@@ -2959,7 +2950,7 @@ def playlist_add(nums, playlist):
     for songnum in nums:
         g.userpl[playlist].songs.append(g.model.songs[songnum - 1])
         dur = g.userpl[playlist].duration
-        f = (len(nums), playlist, g.userpl[playlist].size, dur)
+        f = (len(nums), playlist, len(g.userpl[playlist]), dur)
         g.message = F('added to saved pl') % f
 
     if nums:
@@ -3009,7 +3000,7 @@ def add_rm_all(action):
         g.content = generate_songlist_display()
 
     elif action == "add":
-        size = g.model.size
+        size = len(g.model)
         songlist_rm_add("add", "-" + str(size))
 
 

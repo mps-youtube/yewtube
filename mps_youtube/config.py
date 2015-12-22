@@ -332,37 +332,36 @@ class _Config(object):
 
         dbg(c.p + "Saved config: " + g.CFFILE + c.w)
 
+    def load(self):
+        """ Override config if config file exists. """
+        if os.path.exists(g.CFFILE):
+
+            with open(g.CFFILE, "rb") as cf:
+                saved_config = pickle.load(cf)
+
+            for k, v in saved_config.items():
+
+                try:
+                    self[k].value = v
+
+                except KeyError:  # Ignore unrecognised data in config
+                    dbg("Unrecognised config item: %s", k)
+
+            # Update config files from versions <= 0.01.41
+            if isinstance(self.PLAYERARGS.get, list):
+                self.WINDOW_POS.value = "top-right"
+                redundant = ("-really-quiet --really-quiet -prefer-ipv4 -nolirc "
+                             "-fs --fs".split())
+
+                for r in redundant:
+                    dbg("removing redundant arg %s", r)
+                    list_update(r, self.PLAYERARGS.value, remove=True)
+
+                self.PLAYERARGS.value = " ".join(self.PLAYERARGS.get)
+                self.save()
+
 Config = _Config()
 del _Config # _Config is a singleton and should not have more instances
-
-
-def import_config():
-    """ Override config if config file exists. """
-    if os.path.exists(g.CFFILE):
-
-        with open(g.CFFILE, "rb") as cf:
-            saved_config = pickle.load(cf)
-
-        for k, v in saved_config.items():
-
-            try:
-                Config[k].value = v
-
-            except KeyError:  # Ignore unrecognised data in config
-                dbg("Unrecognised config item: %s", k)
-
-        # Update config files from versions <= 0.01.41
-        if isinstance(Config.PLAYERARGS.get, list):
-            Config.WINDOW_POS.value = "top-right"
-            redundant = ("-really-quiet --really-quiet -prefer-ipv4 -nolirc "
-                         "-fs --fs".split())
-
-            for r in redundant:
-                dbg("removing redundant arg %s", r)
-                list_update(r, Config.PLAYERARGS.value, remove=True)
-
-            Config.PLAYERARGS.value = " ".join(Config.PLAYERARGS.get)
-            Config.save()
 
 
 def known_player_set():

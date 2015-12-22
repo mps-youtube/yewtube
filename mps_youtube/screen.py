@@ -34,12 +34,6 @@ def update(fill_blank=True):
     if g.content:
         xprint(g.content)
 
-    if not g.no_clear_screen:
-        # Align prompt to bottom of screen
-        xprint('\n' * (getxy().height -
-            (g.content.count('\n') if g.content else 0) - 2 -
-            bool(g.content)), end='')
-
     if g.message or g.rprompt:
         out = g.message or ''
         blanks = getxy().width - len(out) - len(g.rprompt or '')
@@ -56,10 +50,6 @@ def clear():
     """Clear all text from screen."""
     if g.no_clear_screen:
         xprint('--\n')
-    elif mswin:
-        os.system('cls')
-    elif has_exefile('tput'):
-        subprocess.call(['tput', 'reset'])
     else:
         xprint('\n' * 200)
 
@@ -87,3 +77,9 @@ def _writeline(text):
     text = text[:width - 3]
     sys.stdout.write(" " + text + (" " * spaces) + "\r")
     sys.stdout.flush()
+
+
+def msgexit(msg, code=0):
+    """ Print a message and exit. """
+    xprint(msg)
+    sys.exit(code)
