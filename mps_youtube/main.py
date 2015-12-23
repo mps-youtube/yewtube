@@ -3017,15 +3017,15 @@ def nextprev(np, page=None):
 
     good = False
 
-    if np == "n":
-        if len(content) == max_results and function:
-            if (g.current_page + 1) * max_results < 500:
-                if g.more_pages:
-                    g.current_page += 1
-                    good = True
+    if function:
+        if np == "n":
+            if (len(content) == max_results and
+                    ((g.current_page + 1) * max_results < 500)
+                    and g.more_pages):
+                g.current_page += 1
+                good = True
 
-    elif np == "p":
-        if function:
+        elif np == "p":
             if page and int(page) in range(1,20):
                 g.current_page = int(page)-1
                 good = True
