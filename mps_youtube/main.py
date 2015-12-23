@@ -952,7 +952,7 @@ def page_msg(page=0):
     return None
 
 
-def generate_songlist_display(song=False, zeromsg=None, frmat="search"):
+def generate_songlist_display(song=False, zeromsg=None):
     """ Generate list of choices from a song list."""
     # pylint: disable=R0914
     if g.browse_mode == "ytpl":
@@ -1660,7 +1660,7 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
 
     g.message = msg
     g.last_opened = ""
-    g.content = generate_songlist_display(frmat="search")
+    g.content = generate_songlist_display()
 
 
 def related_search(vitem, page=0, splash=True):
@@ -1677,7 +1677,7 @@ def related_search(vitem, page=0, splash=True):
 
     g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
     g.last_opened = ""
-    g.content = generate_songlist_display(frmat="search")
+    g.content = generate_songlist_display()
 
 
 # Note: [^./] is to prevent overlap with playlist search command
@@ -1695,7 +1695,7 @@ def search(term, page=0, splash=True):
 
     g.message = "Search results for %s%s%s" % (c.y, term, c.w)
     g.last_opened = ""
-    g.content = generate_songlist_display(frmat="search")
+    g.content = generate_songlist_display()
 
 
 @commands.command(r'u(?:ser)?pl\s(.*)')
@@ -2245,8 +2245,7 @@ def open_save_view(action, name):
             g.message = F("pl loaded") % name
             g.last_opened = name
             g.last_search_query = (None, None)
-            # g.content = generate_songlist_display()
-            g.content = generate_songlist_display(frmat=None)
+            g.content = generate_songlist_display()
             kwa = {"song": g.model.songs[0], "delay": 0}
             t = threading.Thread(target=preload, kwargs=kwa)
             t.start()
@@ -2257,8 +2256,7 @@ def open_save_view(action, name):
             g.model.songs = list(saved.songs)
             g.message = F("pl viewed") % name
             g.last_opened = ""
-            g.content = generate_songlist_display(frmat=None)
-            # g.content = generate_songlist_display()
+            g.content = generate_songlist_display()
             kwa = {"song": g.model.songs[0], "delay": 0}
             t = threading.Thread(target=preload, kwargs=kwa)
             t.start()
@@ -2277,7 +2275,7 @@ def open_save_view(action, name):
             g.userpl[name] = Playlist(name, list(g.model.songs))
             g.message = F('pl saved') % name
             save_to_file()
-            g.content = generate_songlist_display(frmat=None)
+            g.content = generate_songlist_display()
 
 
 @commands.command(r'(open|view)\s*(\d{1,4})')
