@@ -3297,8 +3297,8 @@ def dump(un):
     """ Show entire playlist. """
     func, param = g.last_search_query
 
-    if func is plist:
-        plist(param, page=0, dumps=(not un))
+    if func is paginatesongs:
+        paginatesongs(param, page=0, dumps=(not un))
 
     else:
         un = "" if not un else un
@@ -3307,15 +3307,34 @@ def dump(un):
         g.content = generate_songlist_display()
 
 
+def paginatesongs(func, page=0, splash=True, dumps=False):
+    max_results = screen.getxy().max_results
+
+    if dumps:
+        s = 0
+        e = None
+    else:
+        s = page * max_results
+        e = (page + 1) * max_results
+
+    songs, length = func(s, e)
+
+    g.last_search_query = (paginatesongs, func)
+    g.browse_mode = "normal"
+    g.current_page = page
+    g.result_count = length
+    g.model.songs = songs
+    g.more_pages = e and e < length
+
+    # preload first result url
+    kwa = {"song": songs[0], "delay": 0}
+    t = threading.Thread(target=preload, kwargs=kwa)
+    t.start()
+
+
 @commands.command(r'pl\s+%s' % commands.pl)
 def plist(parturl, page=0, splash=True, dumps=False):
     """ Retrieve YouTube playlist. """
-    max_results = screen.getxy().max_results
-
-    if splash:
-        g.content = logo(col=c.b)
-        g.message = "Retrieving YouTube playlist"
-        screen.update()
 
     if parturl in g.pafy_pls:
         ytpl, plitems = g.pafy_pls[parturl]
@@ -3325,33 +3344,20 @@ def plist(parturl, page=0, splash=True, dumps=False):
         plitems = IterSlicer(ytpl)
         g.pafy_pls[parturl] = (ytpl, plitems)
 
+    def pl_seg(s, e):
+        if splash:
+            g.content = logo(col=c.b)
+            g.message = "Retrieving YouTube playlist"
+            screen.update()
 
-    if dumps:
-        plseg = plitems
-        e = len(ytpl)
-    else:
-        s = page * max_results
-        e = (page + 1) * max_results
-        plseg = plitems[s:e]
+        songs = [Video(i.videoid, i.title, i.length) for i in plitems[s:e]]
 
-    songs = [Video(ytid=i.videoid, title=i.title, length=i.length)
-            for i in plseg]
+        if not songs:
+            dbg("got unexpected data or no search results")
 
-    if not songs:
-        dbg("got unexpected data or no search results")
-        return False
+        return songs, len(ytpl)
 
-    g.last_search_query = (plist, parturl)
-    g.browse_mode = "normal"
-    g.current_page = page
-    g.result_count = len(ytpl)
-    g.model.songs = songs
-    g.more_pages = e < len(ytpl)
-
-    # preload first result url
-    kwa = {"song": songs[0], "delay": 0}
-    t = threading.Thread(target=preload, kwargs=kwa)
-    t.start()
+    paginatesongs(pl_seg, page, splash, dumps)
 
     g.content = generate_songlist_display()
     g.message = "Showing YouTube playlist %s" % (c.y + ytpl.title + c.w)
