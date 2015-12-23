@@ -3303,7 +3303,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
 
 
 @commands.command(r'pl\s+%s' % commands.pl)
-def plist(parturl, page=0, splash=True, dumps=False):
+def plist(parturl, page=0, splash=True):
     """ Retrieve YouTube playlist. """
 
     if parturl in g.pafy_pls:
@@ -3328,7 +3328,7 @@ def plist(parturl, page=0, splash=True, dumps=False):
         return songs, len(ytpl)
 
     msg = "Showing YouTube playlist %s" % (c.y + ytpl.title + c.w)
-    paginatesongs(pl_seg, page, splash, dumps, msg)
+    paginatesongs(pl_seg, page, splash, msg=msg)
 
 
 @commands.command(r'shuffle')
