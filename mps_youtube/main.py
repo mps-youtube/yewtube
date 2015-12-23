@@ -494,10 +494,10 @@ def open_from_file():
             g.userpl = pickle.load(plf)
 
         save_to_file()
-        exitmsg("Updated playlist file. Please restart mpsyt", 1)
+        screen.msgexit("Updated playlist file. Please restart mpsyt", 1)
 
     except EOFError:
-        exitmsg("Error opening playlists from %s" % g.PLFILE, 1)
+        screen.msgexit("Error opening playlists from %s" % g.PLFILE, 1)
 
     # remove any cached urls from playlist file, these are now
     # stored in a separate cache file
