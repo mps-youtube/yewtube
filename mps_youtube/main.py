@@ -1661,14 +1661,14 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
         g.browse_mode = "normal"
         g.message = msg
         g.last_opened = ""
-        g.last_search_query = {"user": q_user}
+        g.last_search_query = (usersearch_id, q_user)
         g.current_page = page
         g.content = generate_songlist_display(frmat="search")
 
     else:
         g.message = failmsg
         g.current_page = 0
-        g.last_search_query = {}
+        g.last_search_query = (None, None)
         g.content = logo(c.r)
 
 
@@ -1687,7 +1687,7 @@ def related_search(vitem, page=0, splash=True):
     if have_results:
         g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
         g.last_opened = ""
-        g.last_search_query = {"related": vitem}
+        g.last_search_query = (related_search, vitem)
         g.current_page = page
         g.content = generate_songlist_display(frmat="search")
 
@@ -1695,7 +1695,7 @@ def related_search(vitem, page=0, splash=True):
         g.message = "Related to %s%s%s not found" % (c.y, vitem.ytid, c.w)
         g.content = logo(c.r)
         g.current_page = 0
-        g.last_search_query = {}
+        g.last_search_query = (None, None)
 
 
 # Note: [^./] is to prevent overlap with playlist search command
@@ -1714,7 +1714,7 @@ def search(term, page=0, splash=True):
     if have_results:
         g.message = "Search results for %s%s%s" % (c.y, term, c.w)
         g.last_opened = ""
-        g.last_search_query = {"term": term}
+        g.last_search_query = (search, term)
         g.browse_mode = "normal"
         g.current_page = page
         g.content = generate_songlist_display(frmat="search")
@@ -1723,7 +1723,7 @@ def search(term, page=0, splash=True):
         g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
         g.content = logo(c.r)
         g.current_page = 0
-        g.last_search_query = {}
+        g.last_search_query = (None, None)
 
 
 @commands.command(r'u(?:ser)?pl\s(.*)')
@@ -1791,7 +1791,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
     playlists = get_pl_from_json(pldata)
 
     if playlists:
-        g.last_search_query = {"playlists": {"term": term, "is_user": is_user}}
+        g.last_search_query = (pl_search, {"term": term, "is_user": is_user})
         g.browse_mode = "ytpl"
         g.current_page = page
         g.ytpls = playlists
@@ -2274,7 +2274,7 @@ def open_save_view(action, name):
             g.model.songs = g.active.songs = list(saved.songs)
             g.message = F("pl loaded") % name
             g.last_opened = name
-            g.last_search_query = {}
+            g.last_search_query = (None, None)
             # g.content = generate_songlist_display()
             g.content = generate_songlist_display(frmat=None)
             kwa = {"song": g.model.songs[0], "delay": 0}
@@ -2283,7 +2283,7 @@ def open_save_view(action, name):
 
         elif action == "view":
             g.browse_mode = "normal"
-            g.last_search_query = {}
+            g.last_search_query = (None, None)
             g.model.songs = list(saved.songs)
             g.message = F("pl viewed") % name
             g.last_opened = ""
@@ -3008,38 +3008,24 @@ def add_rm_all(action):
 @commands.command(r'(n|p)\s*(\d{1,2})?')
 def nextprev(np, page=None):
     """ Get next / previous search results. """
-    glsq = g.last_search_query
     content = g.model.songs
     max_results = screen.getxy().max_results
 
-    if "user" in g.last_search_query:
-        function, query = usersearch_id, glsq['user']
-
-    elif "related" in g.last_search_query:
-        function, query = related_search, glsq['related']
-
-    elif "term" in g.last_search_query:
-        function, query = search, glsq['term']
-
-    elif "playlists" in g.last_search_query:
-        function, query = pl_search, glsq['playlists']
+    function, query = g.last_search_query
+    if function is pl_search:
         content = g.ytpls
-
-    elif "playlist" in g.last_search_query:
-        function, query = plist, glsq['playlist']
 
     good = False
 
     if np == "n":
-        if len(content) == max_results and glsq:
+        if len(content) == max_results and function:
             if (g.current_page + 1) * max_results < 500:
                 if g.more_pages:
                     g.current_page += 1
                     good = True
 
     elif np == "p":
-
-        if g.last_search_query:
+        if function:
             if page and int(page) in range(1,20):
                 g.current_page = int(page)-1
                 good = True
@@ -3309,11 +3295,13 @@ def yt_url_file(file_name):
 @commands.command(r'(un)?dump')
 def dump(un):
     """ Show entire playlist. """
-    if g.last_search_query.get("playlist") and not un:
-        plist(g.last_search_query['playlist'], dumps=True)
+    func, param = g.last_search_query
 
-    elif g.last_search_query.get("playlist") and un:
-        plist(g.last_search_query['playlist'], page=0, dumps=False)
+    if func is plist and not un:
+        plist(param, dumps=True)
+
+    elif func is plist and un:
+        plist(param, page=0, dumps=False)
 
     else:
         un = "" if not un else un
@@ -3356,7 +3344,7 @@ def plist(parturl, page=0, splash=True, dumps=False):
         dbg("got unexpected data or no search results")
         return False
 
-    g.last_search_query = {"playlist": parturl}
+    g.last_search_query = (plist, parturl)
     g.browse_mode = "normal"
     g.current_page = page
     g.result_count = len(ytpl)
@@ -3674,7 +3662,7 @@ def search_album(term, page=0, splash=True):
         g.message = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
             c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
         g.last_opened = ""
-        g.last_search_query = ""
+        g.last_search_query = (None, None)
         g.current_page = page
         g.result_count = len(songs)
         g.more_pages = False
@@ -3684,7 +3672,7 @@ def search_album(term, page=0, splash=True):
         g.message = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
         g.content = generate_songlist_display()
         g.current_page = 0
-        g.last_search_query = ""
+        g.last_search_query = (None, None)
 
 
 @commands.command(r'encoders?')
