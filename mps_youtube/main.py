@@ -1660,7 +1660,6 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
 
     g.message = msg
     g.last_opened = ""
-    g.content = generate_songlist_display()
 
 
 def related_search(vitem, page=0, splash=True):
@@ -1677,7 +1676,6 @@ def related_search(vitem, page=0, splash=True):
 
     g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
     g.last_opened = ""
-    g.content = generate_songlist_display()
 
 
 # Note: [^./] is to prevent overlap with playlist search command
@@ -1695,7 +1693,6 @@ def search(term, page=0, splash=True):
 
     g.message = "Search results for %s%s%s" % (c.y, term, c.w)
     g.last_opened = ""
-    g.content = generate_songlist_display()
 
 
 @commands.command(r'u(?:ser)?pl\s(.*)')
@@ -3009,7 +3006,7 @@ def nextprev(np, page=None):
         norp = "next" if np == "n" else "previous"
         g.message = "No %s items to display" % norp
 
-    g.content = generate_songlist_display(frmat="search")
+    g.content = generate_songlist_display()
     return good
 
 
@@ -3293,6 +3290,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False):
     g.result_count = length
     g.model.songs = songs
     g.more_pages = e and e < length
+    g.content = generate_songlist_display()
 
     # preload first result url
     kwa = {"song": songs[0], "delay": 0}
@@ -3327,7 +3325,6 @@ def plist(parturl, page=0, splash=True, dumps=False):
 
     paginatesongs(pl_seg, page, splash, dumps)
 
-    g.content = generate_songlist_display()
     g.message = "Showing YouTube playlist %s" % (c.y + ytpl.title + c.w)
 
 
