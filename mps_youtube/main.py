@@ -1659,7 +1659,6 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
     _search(progtext, query, splash)
 
     g.message = msg
-    g.last_opened = ""
 
 
 def related_search(vitem, page=0, splash=True):
@@ -1675,7 +1674,6 @@ def related_search(vitem, page=0, splash=True):
     _search(ttitle, query, splash)
 
     g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
-    g.last_opened = ""
 
 
 # Note: [^./] is to prevent overlap with playlist search command
@@ -1692,7 +1690,6 @@ def search(term, page=0, splash=True):
     _search(term, query, splash)
 
     g.message = "Search results for %s%s%s" % (c.y, term, c.w)
-    g.last_opened = ""
 
 
 @commands.command(r'u(?:ser)?pl\s(.*)')
@@ -3291,6 +3288,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False):
     g.model.songs = songs
     g.more_pages = e and e < length
     g.content = generate_songlist_display()
+    g.last_opened = ""
 
     # preload first result url
     kwa = {"song": songs[0], "delay": 0}
