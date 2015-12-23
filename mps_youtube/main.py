@@ -116,7 +116,7 @@ class IterSlicer():
         # To get the last item in an iterable, must iterate over all items
         if (stop is None) or (stop < 0):
             stop = None
-        while True if (stop is None) else (stop > len(self.ilist) - 1):
+        while (stop is None) or (stop > len(self.ilist) - 1):
             try:
                 self.ilist.append(next(self.iterable))
             except StopIteration:
