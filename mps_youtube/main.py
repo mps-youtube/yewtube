@@ -1507,6 +1507,7 @@ def _search(progtext, qs=None, splash=True, msg=None, failmsg=None):
             if not wdata2.get('nextPageToken'):
                 break
             qs['pageToken'] = wdata2['nextPageToken']
+            wdata2 = call_gdata('search', qs)
 
     slicer = IterSlicer(iter_songs())
 
