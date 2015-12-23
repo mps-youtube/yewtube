@@ -1506,7 +1506,7 @@ def _search(progtext, qs=None, splash=True, pre_load=True):
         t.start()
 
     if songs:
-        g.model.songs = songs
+        g.model.songs = songs[:screen.getxy().max_results]
         return True
 
     return False
@@ -1526,15 +1526,13 @@ def token(page):
     return b64.strip('=')
 
 
-def generate_search_qs(term, page=0, result_count=screen.getxy().max_results, match='term'):
+def generate_search_qs(term, page=0, match='term'):
     """ Return query string. """
-    if not result_count:
-        result_count = screen.getxy().max_results
 
     aliases = dict(views='viewCount')
     qs = {
         'q': term,
-        'maxResults': result_count,
+        'maxResults': 50,
         'safeSearch': "none",
         'order': aliases.get(Config.ORDER.get, Config.ORDER.get),
         'part': 'id,snippet',
@@ -1764,9 +1762,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
     else:
         # playlist search is done with the above url and param type=playlist
         logging.info("playlist search for %s", prog)
-        # Limit for playlists command
-        max_results = min(screen.getxy().max_results, 50)
-        qs = generate_search_qs(term, page, result_count=max_results)
+        qs = generate_search_qs(term, page)
         qs['type'] = 'playlist'
         if 'videoCategoryId' in qs:
             del qs['videoCategoryId'] # Incompatable with type=playlist
@@ -1788,7 +1784,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
         qs['id'] = ','.join(id_list)
 
     pldata = call_gdata('playlists', qs)
-    playlists = get_pl_from_json(pldata)
+    playlists = get_pl_from_json(pldata)[:screen.getxy().max_results]
 
     if playlists:
         g.last_search_query = (pl_search, {"term": term, "is_user": is_user})
@@ -3486,7 +3482,7 @@ def _match_tracks(artist, title, mb_tracks):
                                                dtime(length)))
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
-        query = generate_search_qs(w, 0, result_count=50)
+        query = generate_search_qs(w, 0)
         dbg(query)
         have_results = _search(q, query, splash=False, pre_load=False)
 
