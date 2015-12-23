@@ -114,7 +114,7 @@ class IterSlicer():
         else:
             stop = sliced
         # To get the last item in an iterable, must iterate over all items
-        if stop < 0:
+        if (stop is None) or (stop < 0):
             stop = None
         while True if (stop is None) else (stop > len(self.ilist) - 1):
             try:
@@ -747,8 +747,6 @@ def get_tracks_from_json(jsons):
                 'result {}\n{}'.format(ytid, e))
 
         songs.append(cursong)
-
-    get_page_info_from_json(jsons, len(songs))
 
     # return video objects
     return songs
@@ -1495,22 +1493,27 @@ def _search(progtext, qs=None, splash=True, pre_load=True):
         g.content = logo(c.b) + "\n\n"
         screen.update()
 
-    # perform fetch
+    if 'pageToken' in qs:
+        del qs['pageToken']
+        
     wdata = call_gdata('search', qs)
-    songs = get_tracks_from_json(wdata)
 
-    if songs and pre_load:
-        # preload first result url
-        kwa = {"song": songs[0], "delay": 0}
-        t = threading.Thread(target=preload, kwargs=kwa)
-        t.start()
+    def iter_songs():
+        wdata2 = wdata
+        while True:
+            for song in get_tracks_from_json(wdata2):
+                yield song
 
-    if songs:
-        g.model.songs = songs[:screen.getxy().max_results]
-        return True
+            if not wdata2.get('nextPageToken'):
+                break
+            qs['pageToken'] = wdata2['nextPageToken']
 
-    return False
+    slicer = IterSlicer(iter_songs())
 
+    def search_seg(s, e):
+        return slicer[s:e], wdata['pageInfo']['totalResults']
+
+    paginatesongs(search_seg, 0, splash)
 
 
 def token(page):
@@ -1653,21 +1656,11 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
             failmsg = "User %s not found or has no videos."  % termuser[1]
     msg = str(msg).format(c.w, c.y, c.y, term, user)
 
-    have_results = _search(progtext, query, splash)
+    _search(progtext, query, splash)
 
-    if have_results:
-        g.browse_mode = "normal"
-        g.message = msg
-        g.last_opened = ""
-        g.last_search_query = (usersearch_id, q_user)
-        g.current_page = page
-        g.content = generate_songlist_display(frmat="search")
-
-    else:
-        g.message = failmsg
-        g.current_page = 0
-        g.last_search_query = (None, None)
-        g.content = logo(c.r)
+    g.message = msg
+    g.last_opened = ""
+    g.content = generate_songlist_display(frmat="search")
 
 
 def related_search(vitem, page=0, splash=True):
@@ -1680,20 +1673,11 @@ def related_search(vitem, page=0, splash=True):
     t = vitem.title
     ttitle = t[:48].strip() + ".." if len(t) > 49 else t
 
-    have_results = _search(ttitle, query, splash)
+    _search(ttitle, query, splash)
 
-    if have_results:
-        g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
-        g.last_opened = ""
-        g.last_search_query = (related_search, vitem)
-        g.current_page = page
-        g.content = generate_songlist_display(frmat="search")
-
-    else:
-        g.message = "Related to %s%s%s not found" % (c.y, vitem.ytid, c.w)
-        g.content = logo(c.r)
-        g.current_page = 0
-        g.last_search_query = (None, None)
+    g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
+    g.last_opened = ""
+    g.content = generate_songlist_display(frmat="search")
 
 
 # Note: [^./] is to prevent overlap with playlist search command
@@ -1707,21 +1691,11 @@ def search(term, page=0, splash=True):
 
     logging.info("search for %s", term)
     query = generate_search_qs(term, page)
-    have_results = _search(term, query, splash)
+    _search(term, query, splash)
 
-    if have_results:
-        g.message = "Search results for %s%s%s" % (c.y, term, c.w)
-        g.last_opened = ""
-        g.last_search_query = (search, term)
-        g.browse_mode = "normal"
-        g.current_page = page
-        g.content = generate_songlist_display(frmat="search")
-
-    else:
-        g.message = "Found nothing for %s%s%s" % (c.y, term, c.w)
-        g.content = logo(c.r)
-        g.current_page = 0
-        g.last_search_query = (None, None)
+    g.message = "Search results for %s%s%s" % (c.y, term, c.w)
+    g.last_opened = ""
+    g.content = generate_songlist_display(frmat="search")
 
 
 @commands.command(r'u(?:ser)?pl\s(.*)')
