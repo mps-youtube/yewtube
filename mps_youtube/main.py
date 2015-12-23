@@ -676,7 +676,7 @@ def get_tracks_from_json(jsons):
     items = jsons.get("items")
     if not items:
         dbg("got unexpected data or no search results")
-        return False
+        return ()
 
     # fetch detailed information about items from videos API
     qs = {'part':'contentDetails,statistics,snippet',
@@ -1484,7 +1484,7 @@ def make_status_line(elapsed_s, prefix, songlength=0, volume=None):
     return prefix + status_line + vol_suffix
 
 
-def _search(progtext, qs=None, splash=True, pre_load=True):
+def _search(progtext, qs=None, splash=True, msg=None, failmsg=None):
     """ Perform memoized url fetch, display progtext. """
     g.message = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
 
@@ -1513,7 +1513,7 @@ def _search(progtext, qs=None, splash=True, pre_load=True):
     def search_seg(s, e):
         return slicer[s:e], wdata['pageInfo']['totalResults']
 
-    paginatesongs(search_seg, 0, splash)
+    paginatesongs(search_seg, 0, splash, msg=msg, failmsg=failmsg)
 
 
 def token(page):
@@ -1656,9 +1656,7 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
             failmsg = "User %s not found or has no videos."  % termuser[1]
     msg = str(msg).format(c.w, c.y, c.y, term, user)
 
-    _search(progtext, query, splash)
-
-    g.message = msg
+    _search(progtext, query, splash, msg, failmsg)
 
 
 def related_search(vitem, page=0, splash=True):
@@ -1671,9 +1669,9 @@ def related_search(vitem, page=0, splash=True):
     t = vitem.title
     ttitle = t[:48].strip() + ".." if len(t) > 49 else t
 
-    _search(ttitle, query, splash)
-
-    g.message = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
+    msg = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
+    failmsg = "Related to %s%s%s not found" % (c.y, vitem.ytid, c.w)
+    _search(ttitle, query, splash, msg, failmsg)
 
 
 # Note: [^./] is to prevent overlap with playlist search command
@@ -1687,9 +1685,9 @@ def search(term, page=0, splash=True):
 
     logging.info("search for %s", term)
     query = generate_search_qs(term, page)
-    _search(term, query, splash)
-
-    g.message = "Search results for %s%s%s" % (c.y, term, c.w)
+    msg = "Search results for %s%s%s" % (c.y, term, c.w)
+    failmsg = "Found nothing for %s%s%s" % (c.y, term, c.w)
+    _search(term, query, splash, msg, failmsg)
 
 
 @commands.command(r'u(?:ser)?pl\s(.*)')
@@ -3269,7 +3267,11 @@ def dump(un):
         g.content = generate_songlist_display()
 
 
-def paginatesongs(func, page=0, splash=True, dumps=False):
+def paginatesongs(func, page=0, splash=True, dumps=False,
+        msg=None, failmsg=None):
+    if isinstance(func, tuple):
+        func, msg, failmsg = func
+
     max_results = screen.getxy().max_results
 
     if dumps:
@@ -3281,7 +3283,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False):
 
     songs, length = func(s, e)
 
-    g.last_search_query = (paginatesongs, func)
+    g.last_search_query = (paginatesongs, (func, msg, failmsg))
     g.browse_mode = "normal"
     g.current_page = page
     g.result_count = length
@@ -3290,10 +3292,16 @@ def paginatesongs(func, page=0, splash=True, dumps=False):
     g.content = generate_songlist_display()
     g.last_opened = ""
 
-    # preload first result url
-    kwa = {"song": songs[0], "delay": 0}
-    t = threading.Thread(target=preload, kwargs=kwa)
-    t.start()
+    if songs:
+        g.message = msg or ''
+    else:
+        g.message = failmsg or msg or ''
+
+    if songs:
+        # preload first result url
+        kwa = {"song": songs[0], "delay": 0}
+        t = threading.Thread(target=preload, kwargs=kwa)
+        t.start()
 
 
 @commands.command(r'pl\s+%s' % commands.pl)
@@ -3321,9 +3329,8 @@ def plist(parturl, page=0, splash=True, dumps=False):
 
         return songs, len(ytpl)
 
-    paginatesongs(pl_seg, page, splash, dumps)
-
-    g.message = "Showing YouTube playlist %s" % (c.y + ytpl.title + c.w)
+    msg = "Showing YouTube playlist %s" % (c.y + ytpl.title + c.w)
+    paginatesongs(pl_seg, page, splash, dumps, msg)
 
 
 @commands.command(r'shuffle')
@@ -3451,7 +3458,7 @@ def _match_tracks(artist, title, mb_tracks):
         w = q = ttitle if artist == "Various Artists" else q
         query = generate_search_qs(w, 0)
         dbg(query)
-        have_results = _search(q, query, splash=False, pre_load=False)
+        have_results = _search(q, query, splash=False)
 
         if not have_results:
             xprint(c.r + "Nothing matched :(\n" + c.w)
