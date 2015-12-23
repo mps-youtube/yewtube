@@ -3297,11 +3297,8 @@ def dump(un):
     """ Show entire playlist. """
     func, param = g.last_search_query
 
-    if func is plist and not un:
-        plist(param, dumps=True)
-
-    elif func is plist and un:
-        plist(param, page=0, dumps=False)
+    if func is plist:
+        plist(param, page=0, dumps=(not un))
 
     else:
         un = "" if not un else un
