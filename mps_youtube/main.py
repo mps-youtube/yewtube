@@ -2374,7 +2374,8 @@ def down_many(dltype, choice, subdir=None):
 def down_plist(dltype, parturl):
     """ Download YouTube playlist. """
 
-    plist(parturl, page=0, splash=True, dumps=True)
+    plist(parturl, page=0, splash=True)
+    dump(False)
     title = g.pafy_pls[parturl][0].title
     subdir = mswinfn(title.replace("/", "-"))
     down_many(dltype, "1-", subdir=subdir)
