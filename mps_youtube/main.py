@@ -3674,10 +3674,9 @@ def search_album(term, page=0, splash=True):
 @commands.command(r'encoders?')
 def show_encs():
     """ Display available encoding presets. """
-    encs = g.encoders
     out = "%sEncoding profiles:%s\n\n" % (c.ul, c.w)
 
-    for x, e in enumerate(encs):
+    for x, e in enumerate(g.encoders):
         sel = " (%sselected%s)" % (c.y, c.w) if Config.ENCODER.get == x else ""
         out += "%2d. %s%s\n" % (x, e['name'], sel)
 
