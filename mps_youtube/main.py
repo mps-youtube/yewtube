@@ -3370,7 +3370,6 @@ def clearcache():
     """ Clear cached items - for debugging use. """
     g.pafs = {}
     g.streams = {}
-    g.url_memo = collections.OrderedDict()
     dbg("%scache cleared%s", c.p, c.w)
     g.message = "cache cleared"
 
