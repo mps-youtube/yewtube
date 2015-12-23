@@ -3456,13 +3456,15 @@ def _match_tracks(artist, title, mb_tracks):
         w = q = ttitle if artist == "Various Artists" else q
         query = generate_search_qs(w, 0)
         dbg(query)
-        have_results = _search(q, query, splash=False)
 
-        if not have_results:
+        # perform fetch
+        wdata = call_gdata('search', query)
+        results = get_tracks_from_json(wdata)
+
+        if not results:
             xprint(c.r + "Nothing matched :(\n" + c.w)
             continue
 
-        results = g.model.songs
         s, score = _best_song_match(results, artist + " " + ttitle, length)
         cc = c.g if score > 85 else c.y
         cc = c.r if score < 75 else cc
