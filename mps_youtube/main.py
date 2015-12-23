@@ -3291,11 +3291,9 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
     g.more_pages = e and e < length
     g.content = generate_songlist_display()
     g.last_opened = ""
-
-    if songs:
-        g.message = msg or ''
-    else:
-        g.message = failmsg or msg or ''
+    g.message = msg or ''
+    if not songs:
+        g.message = failmsg or g.message
 
     if songs:
         # preload first result url
