@@ -3625,26 +3625,17 @@ def search_album(term, page=0, splash=True):
         Config.SEARCH_MUSIC.value, Config.ORDER.value = stash
 
     if songs:
-        g.model.songs = songs
-        kwa = {"song": songs[0], "delay": 0}
-        t = threading.Thread(target=preload, kwargs=kwa)
-        t.start()
         xprint("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
         input("Press Enter to continue")
-        g.message = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
-            c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
-        g.last_opened = ""
-        g.last_search_query = (None, None)
-        g.current_page = page
-        g.result_count = len(songs)
-        g.more_pages = False
-        g.content = generate_songlist_display()
 
-    else:
-        g.message = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
-        g.content = generate_songlist_display()
-        g.current_page = 0
-        g.last_search_query = (None, None)
+    msg =  "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
+            c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
+    failmsg = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
+
+    def album_seg(s, e):
+        return songs[s:e], len(songs)
+
+    paginatesongs(album_seg, msg=msg, failmsg=failmsg)
 
 
 @commands.command(r'encoders?')
