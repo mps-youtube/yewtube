@@ -1493,9 +1493,6 @@ def _search(progtext, qs=None, splash=True, msg=None, failmsg=None):
         g.content = logo(c.b) + "\n\n"
         screen.update()
 
-    if 'pageToken' in qs:
-        del qs['pageToken']
-        
     wdata = call_gdata('search', qs)
 
     def iter_songs():
@@ -1530,7 +1527,7 @@ def token(page):
     return b64.strip('=')
 
 
-def generate_search_qs(term, page=0, match='term'):
+def generate_search_qs(term, match='term'):
     """ Return query string. """
 
     aliases = dict(views='viewCount')
@@ -1547,8 +1544,6 @@ def generate_search_qs(term, page=0, match='term'):
     if match == 'related':
         qs['relatedToVideoId'] = term
         del qs['q']
-
-    qs['pageToken'] = token(page)
 
     if Config.SEARCH_MUSIC.get:
         qs['videoCategoryId'] = 10
@@ -1635,7 +1630,7 @@ def usersearch_id(q_user, page=0, splash=True):
     identified by its ID """
 
     user, channel_id, term = (x.strip() for x in q_user.split("/"))
-    query = generate_search_qs(term, page=page)
+    query = generate_search_qs(term)
     aliases = dict(views='viewCount')  # The value of the config item is 'views' not 'viewCount'
     if Config.USER_ORDER.get:
         query['order'] = aliases.get(Config.USER_ORDER.get,
@@ -1662,7 +1657,7 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
 
 def related_search(vitem, page=0, splash=True):
     """ Fetch uploads by a YouTube user. """
-    query = generate_search_qs(vitem.ytid, page, match='related')
+    query = generate_search_qs(vitem.ytid, match='related')
 
     if query.get('videoCategoryId'):
         del query['videoCategoryId']
@@ -1685,7 +1680,7 @@ def search(term, page=0, splash=True):
         return
 
     logging.info("search for %s", term)
-    query = generate_search_qs(term, page)
+    query = generate_search_qs(term)
     msg = "Search results for %s%s%s" % (c.y, term, c.w)
     failmsg = "Found nothing for %s%s%s" % (c.y, term, c.w)
     _search(term, query, splash, msg, failmsg)
@@ -1729,7 +1724,8 @@ def pl_search(term, page=0, splash=True, is_user=False):
     else:
         # playlist search is done with the above url and param type=playlist
         logging.info("playlist search for %s", prog)
-        qs = generate_search_qs(term, page)
+        qs = generate_search_qs(term)
+        qs['pageToken'] = token(page)
         qs['type'] = 'playlist'
         if 'videoCategoryId' in qs:
             del qs['videoCategoryId'] # Incompatable with type=playlist
