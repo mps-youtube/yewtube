@@ -102,26 +102,17 @@ def search_album(term, page=0, splash=True):
         Config.SEARCH_MUSIC.value, Config.ORDER.value = stash
 
     if songs:
-        g.model.songs = songs
-        kwa = {"song": songs[0], "delay": 0}
-        t = threading.Thread(target=preload, kwargs=kwa)
-        t.start()
         xprint("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
         input("Press Enter to continue")
-        g.message = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
-            c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
-        g.last_opened = ""
-        g.last_search_query = ""
-        g.current_page = page
-        g.result_count = len(songs)
-        g.more_pages = False
-        g.content = generate_songlist_display()
 
-    else:
-        g.message = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
-        g.content = generate_songlist_display()
-        g.current_page = 0
-        g.last_search_query = ""
+    msg = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
+           c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
+    failmsg = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
+ 
+    def album_seg(s, e):
+        return songs[s:e], len(songs)
+
+    paginatesongs(album_seg, msg=msg, failmsg=failmsg)
 
 
 def _do_query(url, query, err='query failed', report=False):
@@ -221,15 +212,17 @@ def _match_tracks(artist, title, mb_tracks):
                                                dtime(length)))
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
-        query = generate_search_qs(w, 0, result_count=50)
+        query = generate_search_qs(w, 0)
         dbg(query)
-        have_results = _search(q, query, splash=False, pre_load=False)
+ 
+        # perform fetch
+        wdata = call_gdata('search', query)
+        results = get_tracks_from_json(wdata)
 
-        if not have_results:
+        if not results:
             xprint(c.r + "Nothing matched :(\n" + c.w)
             continue
 
-        results = g.model.songs
         s, score = _best_song_match(results, artist + " " + ttitle, length)
         cc = c.g if score > 85 else c.y
         cc = c.r if score < 75 else cc

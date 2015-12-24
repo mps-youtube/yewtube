@@ -29,10 +29,9 @@ preloading = []
 no_clear_screen = False
 max_retries = 3
 max_cached_streams = 1500
-url_memo = collections.OrderedDict()
 username_query_cache = collections.OrderedDict()
 model = Playlist(name="model")
-last_search_query = {}
+last_search_query = (None, None)
 current_page = 0
 result_count = 0
 more_pages = None
