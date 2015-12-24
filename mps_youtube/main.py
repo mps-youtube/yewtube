@@ -2966,20 +2966,15 @@ def add_rm_all(action):
 @commands.command(r'(n|p)\s*(\d{1,2})?')
 def nextprev(np, page=None):
     """ Get next / previous search results. """
-    content = g.model.songs
     max_results = screen.getxy().max_results
 
     function, query = g.last_search_query
-    if function is pl_search:
-        content = g.ytpls
 
     good = False
 
     if function:
         if np == "n":
-            if (len(content) == max_results and
-                    ((g.current_page + 1) * max_results < 500)
-                    and g.more_pages):
+            if ((g.current_page + 1) * max_results < 500) and g.more_pages:
                 g.current_page += 1
                 good = True
 
