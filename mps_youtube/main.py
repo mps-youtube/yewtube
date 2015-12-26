@@ -1687,8 +1687,7 @@ def search(term, page=0, splash=True):
 @commands.command(r'u(?:ser)?pl\s(.*)')
 def user_pls(user, page=0, splash=True):
     """ Retrieve user playlists. """
-    user = {"is_user": True, "term": user}
-    return pl_search(user, page=page, splash=splash)
+    return pl_search(user, page=page, splash=splash, is_user=True)
 
 
 @commands.command(r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)')
