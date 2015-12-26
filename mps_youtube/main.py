@@ -3294,6 +3294,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
         # preload first result url
         kwa = {"song": songs[0], "delay": 0}
         t = threading.Thread(target=preload, kwargs=kwa)
+        t.daemon = True
         t.start()
 
 
