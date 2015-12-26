@@ -1507,11 +1507,9 @@ def _search(progtext, qs=None, splash=True, msg=None, failmsg=None):
             wdata2 = call_gdata('search', qs)
 
     slicer = IterSlicer(iter_songs())
+    length = wdata['pageInfo']['totalResults']
 
-    def search_seg(s, e):
-        return slicer[s:e], wdata['pageInfo']['totalResults']
-
-    paginatesongs(search_seg, 0, splash, msg=msg, failmsg=failmsg)
+    paginatesongs(slicer, 0, splash, length=length, msg=msg, failmsg=failmsg)
 
 
 def token(page):
