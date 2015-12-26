@@ -2213,6 +2213,10 @@ def save_last():
             post += 1
             saveas = g.model.songs[0].title[:18].strip() + "-" + str(post)
 
+        # Playlists are not allowed to start with a digit
+        # TODO: Possibly change this, but ban purely numerical names
+        saveas = saveas.lstrip("0123456789")
+
         open_save_view("save", saveas)
 
 
