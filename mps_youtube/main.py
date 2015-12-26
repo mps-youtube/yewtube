@@ -1703,10 +1703,6 @@ def pl_search(term, page=0, splash=True, is_user=False):
         g.content = generate_songlist_display()
         return
 
-    if isinstance(term, dict):
-        is_user = term["is_user"]
-        term = term["term"]
-
     if splash:
         g.content = logo(c.g)
         prog = "user: " + term if is_user else term
@@ -2961,7 +2957,7 @@ def nextprev(np, page=None):
     """ Get next / previous search results. """
     max_results = screen.getxy().max_results
 
-    function, query = g.last_search_query
+    function, args = g.last_search_query
 
     good = False
 
@@ -2981,7 +2977,7 @@ def nextprev(np, page=None):
                 good = True
 
     if good:
-        function(query, page=g.current_page, splash=True)
+        function(page=g.current_page, splash=True, **args)
 
     else:
         norp = "next" if np == "n" else "previous"
@@ -3241,10 +3237,10 @@ def yt_url_file(file_name):
 @commands.command(r'(un)?dump')
 def dump(un):
     """ Show entire playlist. """
-    func, param = g.last_search_query
+    func, args = g.last_search_query
 
     if func is paginatesongs:
-        paginatesongs(param, page=0, dumps=(not un))
+        paginatesongs(page=0, dumps=(not un), **args)
 
     else:
         un = "" if not un else un
@@ -3274,7 +3270,8 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
         if length is None:
             length = len(func)
 
-    g.last_search_query = (paginatesongs, (func, msg, failmsg))
+    args = {'func':func, 'length':length, 'msg':msg, 'failmsg':failmsg}
+    g.last_search_query = (paginatesongs, args)
     g.browse_mode = "normal"
     g.current_page = page
     g.result_count = length
