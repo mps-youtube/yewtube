@@ -2233,15 +2233,14 @@ def open_save_view(action, name):
             saved = g.userpl.get(name)
 
         elif action == "open":
-            g.browse_mode = "normal"
-            g.model.songs = g.active.songs = list(saved.songs)
-            g.message = F("pl loaded") % name
+            g.active.songs = list(saved.songs)
             g.last_opened = name
-            g.last_search_query = (None, None)
-            g.content = generate_songlist_display()
-            kwa = {"song": g.model.songs[0], "delay": 0}
-            t = threading.Thread(target=preload, kwargs=kwa)
-            t.start()
+
+            def pl_seg(s, e):
+                return g.active.songs[s:e], len(g.active)
+
+            msg = F("pl loaded") % name
+            paginatesongs(pl_seg, 0, False, msg=msg)
 
         elif action == "view":
             g.browse_mode = "normal"
@@ -2478,16 +2477,15 @@ def ls():
 @commands.command(r'vp')
 def vp():
     """ View current working playlist. """
-    if g.active:
-        g.browse_mode = "normal"
-        g.model.songs = g.active.songs
-        g.message = F('current pl')
 
-    else:
-        txt = F('advise add') if g.model else F('advise search')
-        g.message = F('pl empty') + " " + txt
+    def pl_seg(s, e):
+        return g.active.songs[s:e], len(g.active)
 
-    g.content = generate_songlist_display(zeromsg=g.message)
+    msg = F('current pl')
+    txt = F('advise add') if g.model else F('advise search')
+    failmsg = F('pl empty') + " " + txt
+
+    paginatesongs(pl_seg, 0, False, msg=msg, failmsg=failmsg)
 
 
 def preload(song, delay=2, override=False):
