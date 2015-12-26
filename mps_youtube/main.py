@@ -2235,12 +2235,8 @@ def open_save_view(action, name):
         elif action == "open":
             g.active.songs = list(saved.songs)
             g.last_opened = name
-
-            def pl_seg(s, e):
-                return g.active.songs[s:e], len(g.active)
-
             msg = F("pl loaded") % name
-            paginatesongs(pl_seg, 0, False, msg=msg)
+            paginatesongs(g.active, 0, False, msg=msg)
 
         elif action == "view":
             g.browse_mode = "normal"
@@ -2478,14 +2474,11 @@ def ls():
 def vp():
     """ View current working playlist. """
 
-    def pl_seg(s, e):
-        return g.active.songs[s:e], len(g.active)
-
     msg = F('current pl')
     txt = F('advise add') if g.model else F('advise search')
     failmsg = F('pl empty') + " " + txt
 
-    paginatesongs(pl_seg, 0, False, msg=msg, failmsg=failmsg)
+    paginatesongs(g.active, 0, False, msg=msg, failmsg=failmsg)
 
 
 def preload(song, delay=2, override=False):
@@ -3263,7 +3256,7 @@ def dump(un):
 
 
 def paginatesongs(func, page=0, splash=True, dumps=False,
-        msg=None, failmsg=None):
+        length=None, msg=None, failmsg=None):
     if isinstance(func, tuple):
         func, msg, failmsg = func
 
@@ -3276,7 +3269,12 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
         s = page * max_results
         e = (page + 1) * max_results
 
-    songs, length = func(s, e)
+    if callable(func):
+        songs, length = func(s, e)
+    else:
+        songs = func[s:e]
+        if length is None:
+            length = len(func)
 
     g.last_search_query = (paginatesongs, (func, msg, failmsg))
     g.browse_mode = "normal"
