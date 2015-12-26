@@ -2233,15 +2233,9 @@ def open_save_view(action, name):
             paginatesongs(g.active, 0, False, msg=msg)
 
         elif action == "view":
-            g.browse_mode = "normal"
-            g.last_search_query = (None, None)
-            g.model.songs = list(saved.songs)
-            g.message = F("pl viewed") % name
             g.last_opened = ""
-            g.content = generate_songlist_display()
-            kwa = {"song": g.model.songs[0], "delay": 0}
-            t = threading.Thread(target=preload, kwargs=kwa)
-            t.start()
+            msg = F("pl viewed") % name
+            paginatesongs(list(saved.songs), 0, False, msg=msg)
 
         elif not saved and action in "view open".split():
             g.message = F("pl not found") % name
