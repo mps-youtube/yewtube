@@ -15,6 +15,9 @@ class Playlist(object):
         """ Return number of tracks. """
         return len(self.songs)
 
+    def __getitem__(self, sliced):
+        return self.songs[sliced]
+
     @property
     def duration(self):
         """ Sum duration of the playlist. """
