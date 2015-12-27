@@ -2223,12 +2223,12 @@ def open_save_view(action, name):
             g.active.songs = list(saved.songs)
             g.last_opened = name
             msg = F("pl loaded") % name
-            paginatesongs(g.active, 0, False, msg=msg)
+            paginatesongs(g.active, msg=msg)
 
         elif action == "view":
             g.last_opened = ""
             msg = F("pl viewed") % name
-            paginatesongs(list(saved.songs), 0, False, msg=msg)
+            paginatesongs(list(saved.songs), msg=msg)
 
         elif not saved and action in "view open".split():
             g.message = F("pl not found") % name
@@ -2458,7 +2458,7 @@ def vp():
     txt = F('advise add') if g.model else F('advise search')
     failmsg = F('pl empty') + " " + txt
 
-    paginatesongs(g.active, 0, False, msg=msg, failmsg=failmsg)
+    paginatesongs(g.active, msg=msg, failmsg=failmsg)
 
 
 def preload(song, delay=2, override=False):
@@ -3223,7 +3223,7 @@ def dump(un):
     func, args = g.last_search_query
 
     if func is paginatesongs:
-        paginatesongs(page=0, dumps=(not un), **args)
+        paginatesongs(dumps=(not un), **args)
 
     else:
         un = "" if not un else un
