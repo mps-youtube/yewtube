@@ -960,16 +960,14 @@ def generate_songlist_display(song=False, zeromsg=None):
 
     max_results = screen.getxy().max_results
 
-    songs = g.model.songs or []
-
-    if not songs:
+    if not g.model:
         g.message = zeromsg or "Enter /search-term to search or [h]elp"
         return logo(c.g) + "\n\n"
     g.rprompt = page_msg(g.current_page)
 
-    have_meta = all(x.ytid in g.meta for x in songs)
+    have_meta = all(x.ytid in g.meta for x in g.model)
     user_columns = get_user_columns() if have_meta else []
-    maxlength = max(x.length for x in songs)
+    maxlength = max(x.length for x in g.model)
     lengthsize = 8 if maxlength > 35999 else 7
     lengthsize = 5 if maxlength < 6000 else lengthsize
     reserved = 9 + lengthsize + len(user_columns)
@@ -992,7 +990,7 @@ def generate_songlist_display(song=False, zeromsg=None):
     hrow = c.ul + fmt % titles + c.w
     out = "\n" + hrow + "\n"
 
-    for n, x in enumerate(songs[:max_results]):
+    for n, x in enumerate(g.model[:max_results]):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
         details = {'title': x.title, "length": fmt_time(x.length)}
         details = copy.copy(g.meta[x.ytid]) if have_meta else details
@@ -1011,11 +1009,11 @@ def generate_songlist_display(song=False, zeromsg=None):
             data.append(details[field])
 
         line = fmtrow % tuple(data)
-        col = col if not song or song != songs[n] else c.p
+        col = col if not song or song != g.model[n] else c.p
         line = col + line + c.w
         out += line + "\n"
 
-    return out + "\n" * (5 - len(songs)) if not song else out
+    return out + "\n" * (5 - len(g.model)) if not song else out
 
 
 def generate_real_playerargs(song, override, failcount):
