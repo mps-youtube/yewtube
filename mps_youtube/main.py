@@ -2422,10 +2422,7 @@ def play(pre, choice, post=""):
             chosen = selection[0] - 1
 
             if len(g.model) > chosen + 1:
-                nx = g.model[chosen + 1]
-                kwa = {"song": nx, "override": override}
-                t = threading.Thread(target=preload, kwargs=kwa)
-                t.start()
+                preload(g.model[chosen + 1], override=override)
 
         play_range(songlist, shuffle, repeat, override)
 
@@ -2461,7 +2458,7 @@ def vp():
     paginatesongs(g.active, msg=msg, failmsg=failmsg)
 
 
-def preload(song, delay=2, override=False):
+def _preload(song, delay, override):
     """  Get streams (runs in separate thread). """
     if g.preload_disabled:
         return
@@ -2491,6 +2488,14 @@ def preload(song, delay=2, override=False):
         g.preloading.remove(song.ytid)
 
 
+def preload(song, delay=2, override=False):
+    """  Get streams. """
+    args = (song, delay, override)
+    t = threading.Thread(target=_preload, args=args)
+    t.daemon = True
+    t.start()
+
+
 def play_range(songlist, shuffle=False, repeat=False, override=False):
     """ Play a range of songs, exit cleanly on keyboard interrupt. """
     if shuffle:
@@ -2507,10 +2512,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         hasnext = len(songlist) > n + 1
 
         if hasnext:
-            nex = songlist[n + 1]
-            kwa = {"song": nex, "override": override}
-            t = threading.Thread(target=preload, kwargs=kwa)
-            t.start()
+            preload(songlist[n + 1], override=override)
 
         set_window_title(song.title + " - mpsyt")
         try:
@@ -3274,10 +3276,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
 
     if songs:
         # preload first result url
-        kwa = {"song": songs[0], "delay": 0}
-        t = threading.Thread(target=preload, kwargs=kwa)
-        t.daemon = True
-        t.start()
+        preload(songs[0], delay=0)
 
 
 @commands.command(r'pl\s+%s' % commands.pl)
