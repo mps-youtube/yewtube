@@ -1482,7 +1482,7 @@ def make_status_line(elapsed_s, prefix, songlength=0, volume=None):
     return prefix + status_line + vol_suffix
 
 
-def _search(progtext, qs=None, splash=True, msg=None, failmsg=None):
+def _search(progtext, qs=None, msg=None, failmsg=None):
     """ Perform memoized url fetch, display progtext. """
     
     loadmsg = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
@@ -1503,7 +1503,7 @@ def _search(progtext, qs=None, splash=True, msg=None, failmsg=None):
     slicer = IterSlicer(iter_songs())
     length = wdata['pageInfo']['totalResults']
 
-    paginatesongs(slicer, 0, splash, length=length, msg=msg, failmsg=failmsg,
+    paginatesongs(slicer, length=length, msg=msg, failmsg=failmsg,
             loadmsg=loadmsg)
 
 
@@ -1600,7 +1600,7 @@ def channelfromname(user):
 
 
 @commands.command(r'user\s+(.+)')
-def usersearch(q_user, page=0, splash=True, identify='forUsername'):
+def usersearch(q_user, identify='forUsername'):
     """ Fetch uploads by a YouTube user. """
 
     user, _, term = (x.strip() for x in q_user.partition("/"))
@@ -1614,10 +1614,10 @@ def usersearch(q_user, page=0, splash=True, identify='forUsername'):
         channel_id = user
 
     # at this point, we know the channel id associated to a user name
-    usersearch_id('/'.join([user, channel_id, term]), page, splash)
+    usersearch_id('/'.join([user, channel_id, term]))
 
 
-def usersearch_id(q_user, page=0, splash=True):
+def usersearch_id(q_user):
     """ Performs a search within a user's (i.e. a channel's) uploads
     for an optional search term with the user (i.e. the channel)
     identified by its ID """
@@ -1645,10 +1645,10 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
             failmsg = "User %s not found or has no videos."  % termuser[1]
     msg = str(msg).format(c.w, c.y, c.y, term, user)
 
-    _search(progtext, query, splash, msg, failmsg)
+    _search(progtext, query, msg, failmsg)
 
 
-def related_search(vitem, page=0, splash=True):
+def related_search(vitem):
     """ Fetch uploads by a YouTube user. """
     query = generate_search_qs(vitem.ytid, match='related')
 
@@ -1660,12 +1660,12 @@ def related_search(vitem, page=0, splash=True):
 
     msg = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
     failmsg = "Related to %s%s%s not found" % (c.y, vitem.ytid, c.w)
-    _search(ttitle, query, splash, msg, failmsg)
+    _search(ttitle, query, msg, failmsg)
 
 
 # Note: [^./] is to prevent overlap with playlist search command
 @commands.command(r'(?:search|\.|/)\s*([^./].{1,500})')
-def search(term, page=0, splash=True):
+def search(term):
     """ Perform search. """
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
@@ -1676,13 +1676,13 @@ def search(term, page=0, splash=True):
     query = generate_search_qs(term)
     msg = "Search results for %s%s%s" % (c.y, term, c.w)
     failmsg = "Found nothing for %s%s%s" % (c.y, term, c.w)
-    _search(term, query, splash, msg, failmsg)
+    _search(term, query, msg, failmsg)
 
 
 @commands.command(r'u(?:ser)?pl\s(.*)')
-def user_pls(user, page=0, splash=True):
+def user_pls(user):
     """ Retrieve user playlists. """
-    return pl_search(user, page=page, splash=splash, is_user=True)
+    return pl_search(user, is_user=True)
 
 
 @commands.command(r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)')
@@ -2353,13 +2353,13 @@ def down_many(dltype, choice, subdir=None):
 def down_plist(dltype, parturl):
     """ Download YouTube playlist. """
 
-    plist(parturl, page=0, splash=True)
+    plist(parturl)
     dump(False)
     title = g.pafy_pls[parturl][0].title
     subdir = mswinfn(title.replace("/", "-"))
     down_many(dltype, "1-", subdir=subdir)
     msg = g.message
-    plist(parturl, page=0, splash=True)
+    plist(parturl)
     g.message = msg
 
 
@@ -3280,7 +3280,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
 
 
 @commands.command(r'pl\s+%s' % commands.pl)
-def plist(parturl, page=0, splash=True):
+def plist(parturl):
     """ Retrieve YouTube playlist. """
 
     if parturl in g.pafy_pls:
@@ -3301,7 +3301,7 @@ def plist(parturl, page=0, splash=True):
 
     msg = "Showing YouTube playlist %s" % (c.y + ytpl.title + c.w)
     loadmsg = "Retrieving YouTube playlist"
-    paginatesongs(pl_seg, page, splash, msg=msg, loadmsg=loadmsg)
+    paginatesongs(pl_seg, msg=msg, loadmsg=loadmsg)
 
 
 @commands.command(r'shuffle')
@@ -3512,7 +3512,7 @@ def _get_mb_album(albumname, **kwa):
 
 
 @commands.command(r'album\s*(.{0,500})')
-def search_album(term, page=0, splash=True):
+def search_album(term):
     """Search for albums. """
     # pylint: disable=R0914,R0912
     if not term:
@@ -3534,10 +3534,6 @@ def search_album(term, page=0, splash=True):
                                   c.g, album['artist'], c.w)
     out += ("[Enter] to continue, [q] to abort, or enter artist name for:\n"
             "    %s" % (c.y + term + c.w + "\n"))
-
-    if splash:
-        g.message, g.content = out, logo(c.b)
-        screen.update()
 
     prompt = "Artist? [%s] > " % album['artist']
     xprint(prompt, end="")
