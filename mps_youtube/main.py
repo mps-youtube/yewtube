@@ -940,7 +940,7 @@ def get_user_columns():
 def page_msg(page=0):
     """ Format information about currently displayed page to a string. """
     max_results = screen.getxy().max_results
-    page_count = max(int(math.ceil(min(g.result_count, 500)/max_results)), 1)
+    page_count = max(math.ceil(min(g.result_count, 500)/max_results), 1)
     if page_count > 1:
         pagemsg = "{}{}/{}{}"
         #start_index = max_results * g.current_page
