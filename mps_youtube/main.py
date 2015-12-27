@@ -3193,9 +3193,7 @@ def yt_url(url, print_title=0):
 
         g.browse_mode = "normal"
         v = Video(p.videoid, p.title, p.length)
-        g.model.songs += [v]
-
-    
+        g.model.songs.append(v)
 
     if not g.command_line:
         g.content = generate_songlist_display()
