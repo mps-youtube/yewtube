@@ -2933,10 +2933,9 @@ def add_rm_all(action):
 
     """
     if action == "rm":
-        for n in reversed(range(0, len(g.model))):
-            g.model.songs.pop(n)
-        g.message = c.b + "Cleared all songs" + c.w
-        g.content = generate_songlist_display()
+        g.model.songs.clear()
+        msg = c.b + "Cleared all songs" + c.w
+        g.content = generate_songlist_display(zeromsg=msg)
 
     elif action == "add":
         size = len(g.model)
