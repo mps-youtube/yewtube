@@ -18,6 +18,10 @@ class Playlist(object):
     def __getitem__(self, sliced):
         return self.songs[sliced]
 
+    def __iter__(self):
+        for i in self.songs:
+            yield i
+
     @property
     def duration(self):
         """ Sum duration of the playlist. """

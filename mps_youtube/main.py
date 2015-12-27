@@ -1922,7 +1922,7 @@ def fetch_comments(item):
 def comments(number):
     """ Receive use request to view comments. """
     if g.browse_mode == "normal":
-        item = g.model.songs[int(number) - 1]
+        item = g.model[int(number) - 1]
         fetch_comments(item)
 
     else:
@@ -2196,7 +2196,7 @@ def save_last():
 
         # save using artist name in postion 1
         if g.model:
-            saveas = g.model.songs[0].title[:18].strip()
+            saveas = g.model[0].title[:18].strip()
             saveas = re.sub(r"[^-\w]", "-", saveas, re.UNICODE)
 
         # loop to find next available name
@@ -2204,7 +2204,7 @@ def save_last():
 
         while g.userpl.get(saveas):
             post += 1
-            saveas = g.model.songs[0].title[:18].strip() + "-" + str(post)
+            saveas = g.model[0].title[:18].strip() + "-" + str(post)
 
         # Playlists are not allowed to start with a digit
         # TODO: Possibly change this, but ban purely numerical names
@@ -2218,7 +2218,6 @@ def open_save_view(action, name):
     """ Open, save or view a playlist by name.  Get closest name match. """
     name = name.replace(" ", "-")
     if action == "open" or action == "view":
-
         saved = g.userpl.get(name)
 
         if not saved:
@@ -2241,8 +2240,7 @@ def open_save_view(action, name):
             g.content = playlists_display()
 
     elif action == "save":
-
-        if not g.model.songs:
+        if not g.model:
             g.message = "Nothing to save. " + F('advise search')
             g.content = generate_songlist_display()
 
@@ -2269,9 +2267,9 @@ def songlist_rm_add(action, songrange):
     if action == "add":
         duplicate_songs = []
         for songnum in selection:
-            if g.model.songs[songnum - 1] in g.active.songs:
+            if g.model[songnum - 1] in g.active:
                 duplicate_songs.append(str(songnum))
-            g.active.songs.append(g.model.songs[songnum - 1])
+            g.active.songs.append(g.model[songnum - 1])
 
         d = g.active.duration
         g.message = F('added to pl') % (len(selection), len(g.active), d)
@@ -2297,8 +2295,8 @@ def down_many(dltype, choice, subdir=None):
     """ Download multiple items. """
     choice = _parse_multi(choice)
     choice = list(set(choice))
-    downsongs = [g.model.songs[int(x) - 1] for x in choice]
-    temp = g.model.songs[::]
+    downsongs = [g.model[int(x) - 1] for x in choice]
+    temp = g.model[::]
     g.model.songs = downsongs[::]
     count = len(downsongs)
     av = "audio" if dltype.startswith("da") else "video"
@@ -2314,7 +2312,7 @@ def down_many(dltype, choice, subdir=None):
 
     try:
         for song in downsongs:
-            g.result_count = len(g.model.songs)
+            g.result_count = len(g.model)
             disp = generate_songlist_display()
             title = "Download Queue (%s):%s\n\n" % (av, c.w)
             disp = re.sub(r"(Num\s*?Title.*?\n)", title, disp)
@@ -2352,7 +2350,7 @@ def down_many(dltype, choice, subdir=None):
     finally:
         g.model.songs = temp[::]
         g.message = msg
-        g.result_count = len(g.model.songs)
+        g.result_count = len(g.model)
         g.content = generate_songlist_display()
 
 
@@ -2396,7 +2394,7 @@ def play(pre, choice, post=""):
             g.content = generate_songlist_display()
             return
 
-    if not g.model.songs:
+    if not g.model:
         g.message = c.r + "There are no tracks to select" + c.w
         g.content = g.content or generate_songlist_display()
 
@@ -2421,15 +2419,15 @@ def play(pre, choice, post=""):
             override = "forcevid" if forcevid else override
 
         selection = _parse_multi(choice)
-        songlist = [g.model.songs[x - 1] for x in selection]
+        songlist = [g.model[x - 1] for x in selection]
 
         # cache next result of displayed items
         # when selecting a single item
         if len(songlist) == 1:
             chosen = selection[0] - 1
 
-            if len(g.model.songs) > chosen + 1:
-                nx = g.model.songs[chosen + 1]
+            if len(g.model) > chosen + 1:
+                nx = g.model[chosen + 1]
                 kwa = {"song": nx, "override": override}
                 t = threading.Thread(target=preload, kwargs=kwa)
                 t.start()
@@ -2442,7 +2440,7 @@ def play(pre, choice, post=""):
 def play_all(pre, choice, post=""):
     """ Play all tracks in model (last displayed). shuffle/repeat if req'd."""
     options = pre + choice + post
-    play(options, "1-" + str(len(g.model.songs)))
+    play(options, "1-" + str(len(g.model)))
 
 
 @commands.command(r'ls')
@@ -2744,7 +2742,7 @@ def download(dltype, num):
         return
 
     screen.writestatus("Fetching video info...")
-    song = (g.model.songs[int(num) - 1])
+    song = (g.model[int(num) - 1])
     best = dltype.startswith("dv") or dltype.startswith("da")
 
     if not best:
@@ -2870,10 +2868,10 @@ def songlist_mv_sw(action, a, b):
 
     if action == "mv":
         g.model.songs.insert(j, g.model.songs.pop(i))
-        g.message = F('song move') % (g.model.songs[j].title, b)
+        g.message = F('song move') % (g.model[j].title, b)
 
     elif action == "sw":
-        g.model.songs[i], g.model.songs[j] = g.model.songs[j], g.model.songs[i]
+        g.model[i], g.model[j] = g.model[j], g.model[i]
         g.message = F('song sw') % (min(a, b), max(a, b))
 
     g.content = generate_songlist_display()
@@ -2889,7 +2887,7 @@ def playlist_add(nums, playlist):
         g.userpl[playlist] = Playlist(playlist)
 
     for songnum in nums:
-        g.userpl[playlist].songs.append(g.model.songs[songnum - 1])
+        g.userpl[playlist].songs.append(g.model[songnum - 1])
         dur = g.userpl[playlist].duration
         f = (len(nums), playlist, len(g.userpl[playlist]), dur)
         g.message = F('added to saved pl') % f
@@ -2935,7 +2933,7 @@ def add_rm_all(action):
 
     """
     if action == "rm":
-        for n in reversed(range(0, len(g.model.songs))):
+        for n in reversed(range(0, len(g.model))):
             g.model.songs.pop(n)
         g.message = c.b + "Cleared all songs" + c.w
         g.content = generate_songlist_display()
@@ -2990,7 +2988,7 @@ def user_more(num):
         return
 
     g.current_page = 0
-    item = g.model.songs[int(num) - 1]
+    item = g.model[int(num) - 1]
     channel_id = g.meta.get(item.ytid, {}).get('uploader')
     user = g.meta.get(item.ytid, {}).get('uploaderName')
     usersearch_id('/'.join([user, channel_id, '']), 0, True)
@@ -3006,7 +3004,7 @@ def related(num):
         return
 
     g.current_page = 0
-    item = g.model.songs[int(num) - 1]
+    item = g.model[int(num) - 1]
     related_search(item)
 
 
@@ -3019,7 +3017,7 @@ def clip_copy(num):
         link = "https://youtube.com/playlist?list=%s" % p['link']
 
     elif g.browse_mode == "normal":
-        item = (g.model.songs[int(num) - 1])
+        item = (g.model[int(num) - 1])
         link = "https://youtube.com/watch?v=%s" % item.ytid
 
     else:
@@ -3055,7 +3053,7 @@ def mix(num):
     if g.browse_mode != "normal":
         g.message = F('mix only videos')
     else:
-        item = (g.model.songs[int(num) - 1])
+        item = (g.model[int(num) - 1])
         if item is None:
             g.message = F('invalid item')
             return
@@ -3104,7 +3102,7 @@ def info(num):
         g.content = logo(c.b)
         screen.update()
         screen.writestatus("Fetching video metadata..")
-        item = (g.model.songs[int(num) - 1])
+        item = (g.model[int(num) - 1])
         streams.get(item)
         p = get_pafy(item)
         pub = time.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
@@ -3131,7 +3129,7 @@ def play_url(url, override):
     g.browse_mode = "normal"
     yt_url(url, print_title=1)
 
-    if len(g.model.songs) == 1:
+    if len(g.model) == 1:
         play(override, "1", "_")
 
     if g.command_line:
@@ -3141,7 +3139,7 @@ def play_url(url, override):
 @commands.command(r'browserplay\s(\d{1,50})')
 def browser_play(number):
     """Open a previously searched result in the browser."""
-    if (len(g.model.songs) == 0):
+    if (len(g.model) == 0):
         g.message = c.r + "No previous search." + c.w
         g.content = logo(c.r)
         return
@@ -3149,9 +3147,9 @@ def browser_play(number):
     try:
         index = int(number) - 1
 
-        if (0 <= index < len(g.model.songs)):
+        if (0 <= index < len(g.model)):
             base_url = "https://www.youtube.com/watch?v="
-            video = g.model.songs[index]
+            video = g.model[index]
             url = base_url + video.ytid
             webbrowser.open(url)
             g.content = g.content or generate_songlist_display()
@@ -3173,7 +3171,7 @@ def dl_url(url):
     g.browse_mode = "normal"
     yt_url(url)
 
-    if len(g.model.songs) == 1:
+    if len(g.model) == 1:
         download("download", "1")
 
     if g.command_line:
