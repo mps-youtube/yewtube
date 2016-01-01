@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-__version__ = "0.2.6-dev"
-__notes__ = "development version"
+__version__ = "0.2.6"
+__notes__ = "released 1 January 2016"
 __author__ = "np1"
 __license__ = "GPLv3"
 __url__ = "http://github.com/np1/mps-youtube"
