@@ -2807,15 +2807,16 @@ def download(dltype, num):
 
     if url_au:
         # multiplex
-        mux_cmd = "APP -i VIDEO -i AUDIO -c copy OUTPUT".split()
-        mux_cmd = "%s -i %s -i %s -c copy %s"
-        mux_cmd = [g.muxapp, "-i", args[1], "-i", args_au[1], "-c",
-                   "copy", args[1][:-3] + "mp4"]
+        name, ext = os.path.splitext(args[1])
+        tmpvideoname = name + '.' +str(random.randint(10000, 99999)) + ext
+        os.rename(args[1], tmpvideoname)
+        mux_cmd = [g.muxapp, "-i", tmpvideoname, "-i", args_au[1], "-c",
+                   "copy", name + ".mp4"]
 
         try:
             subprocess.call(mux_cmd)
             g.message = "Saved to :" + c.g + mux_cmd[7] + c.w
-            os.remove(args[1])
+            os.remove(tmpvideoname)
             os.remove(args_au[1])
 
         except KeyboardInterrupt:
