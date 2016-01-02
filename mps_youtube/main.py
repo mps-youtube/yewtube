@@ -2977,7 +2977,7 @@ def user_more(num):
     item = g.model[int(num) - 1]
     channel_id = g.meta.get(item.ytid, {}).get('uploader')
     user = g.meta.get(item.ytid, {}).get('uploaderName')
-    usersearch_id('/'.join([user, channel_id, '']), 0, True)
+    usersearch_id('/'.join([user, channel_id, '']))
 
 
 @commands.command(r'r\s?(\d{1,4})')
