@@ -662,9 +662,6 @@ def get_page_info_from_json(jsons, result_count=None):
     per_page = pageinfo.get('resultsPerPage')
     # The youtube search api returns a maximum of 500 results
     g.result_count = min(pageinfo.get('totalResults'), 500)
-    if result_count: # limit number of results, e.g. if api makes it up
-        if result_count < per_page:
-            g.result_count = min(g.result_count, result_count)
 
 
 def get_tracks_from_json(jsons):
