@@ -656,14 +656,6 @@ def get_track_id_from_json(item):
     return ''
 
 
-def get_page_info_from_json(jsons, result_count=None):
-    """ Extract & save some information about result count and paging. """
-    pageinfo = jsons.get('pageInfo')
-    per_page = pageinfo.get('resultsPerPage')
-    # The youtube search api returns a maximum of 500 results
-    g.result_count = min(pageinfo.get('totalResults'), 500)
-
-
 def get_tracks_from_json(jsons):
     """ Get search results from API response """
 
@@ -1714,8 +1706,8 @@ def pl_search(term, page=0, splash=True, is_user=False):
         pldata = call_gdata('search', qs)
         id_list = [i.get('id', {}).get('playlistId')
                     for i in pldata.get('items', ())]
-        # page info
-        get_page_info_from_json(pldata, len(id_list))
+
+        g.result_count = min(pldata['pageInfo']['totalResults'], 500)
 
     qs = {'part': 'contentDetails,snippet',
           'maxResults': 50}
