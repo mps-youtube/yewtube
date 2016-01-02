@@ -1599,15 +1599,14 @@ def usersearch(q_user, identify='forUsername'):
         channel_id = user
 
     # at this point, we know the channel id associated to a user name
-    usersearch_id('/'.join([user, channel_id, term]))
+    usersearch_id(user, channel_id, term)
 
 
-def usersearch_id(q_user):
+def usersearch_id(user, channel_id, term):
     """ Performs a search within a user's (i.e. a channel's) uploads
     for an optional search term with the user (i.e. the channel)
     identified by its ID """
 
-    user, channel_id, term = (x.strip() for x in q_user.split("/"))
     query = generate_search_qs(term)
     aliases = dict(views='viewCount')  # The value of the config item is 'views' not 'viewCount'
     if Config.USER_ORDER.get:
@@ -2977,7 +2976,7 @@ def user_more(num):
     item = g.model[int(num) - 1]
     channel_id = g.meta.get(item.ytid, {}).get('uploader')
     user = g.meta.get(item.ytid, {}).get('uploaderName')
-    usersearch_id('/'.join([user, channel_id, '']))
+    usersearch_id(user, channel_id, '')
 
 
 @commands.command(r'r\s?(\d{1,4})')
