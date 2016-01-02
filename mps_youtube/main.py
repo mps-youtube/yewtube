@@ -664,7 +664,8 @@ def get_page_info_from_json(jsons, result_count=None):
             g.more_pages = False
     pageinfo = jsons.get('pageInfo')
     per_page = pageinfo.get('resultsPerPage')
-    g.result_count = pageinfo.get('totalResults')
+    # The youtube search api returns a maximum of 500 results
+    g.result_count = min(pageinfo.get('totalResults'), 500)
     if result_count: # limit number of results, e.g. if api makes it up
         if result_count < per_page:
             g.result_count = min(g.result_count, result_count)
@@ -940,7 +941,7 @@ def get_user_columns():
 def page_msg(page=0):
     """ Format information about currently displayed page to a string. """
     max_results = screen.getxy().max_results
-    page_count = max(math.ceil(min(g.result_count, 500)/max_results), 1)
+    page_count = max(math.ceil(g.result_count/max_results), 1)
     if page_count > 1:
         pagemsg = "{}{}/{}{}"
         #start_index = max_results * g.current_page
@@ -1501,7 +1502,8 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
             wdata2 = call_gdata('search', qs)
 
     slicer = IterSlicer(iter_songs())
-    length = wdata['pageInfo']['totalResults']
+    # The youtube search api returns a maximum of 500 results
+    length = min(wdata['pageInfo']['totalResults'], 500)
 
     paginatesongs(slicer, length=length, msg=msg, failmsg=failmsg,
             loadmsg=loadmsg)
@@ -2951,7 +2953,7 @@ def nextprev(np, page=None):
 
     if function:
         if np == "n":
-            if ((g.current_page + 1) * max_results < 500) and g.more_pages:
+            if g.more_pages:
                 g.current_page += 1
                 good = True
 
