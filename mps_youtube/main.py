@@ -658,10 +658,6 @@ def get_track_id_from_json(item):
 
 def get_page_info_from_json(jsons, result_count=None):
     """ Extract & save some information about result count and paging. """
-    g.more_pages = jsons.get('nextPageToken')
-    if result_count:
-        if result_count < screen.getxy().max_results:
-            g.more_pages = False
     pageinfo = jsons.get('pageInfo')
     per_page = pageinfo.get('resultsPerPage')
     # The youtube search api returns a maximum of 500 results
@@ -947,8 +943,7 @@ def page_msg(page=0):
         return pagemsg.format('<' if page > 0 else '[',
                               "%s%s%s" % (c.y, page+1, c.w),
                               page_count,
-                              '>' if (g.more_pages or
-                                       (page + 1 < page_count)) else ']')
+                              '>' if page + 1 < page_count else ']')
     return None
 
 
@@ -2944,7 +2939,7 @@ def add_rm_all(action):
 @commands.command(r'(n|p)\s*(\d{1,2})?')
 def nextprev(np, page=None):
     """ Get next / previous search results. """
-    max_results = screen.getxy().max_results
+    page_count = math.ceil(g.result_count/screen.getxy().max_results)
 
     function, args = g.last_search_query
 
@@ -2952,7 +2947,7 @@ def nextprev(np, page=None):
 
     if function:
         if np == "n":
-            if g.more_pages:
+            if g.current_page + 1 < page_count:
                 g.current_page += 1
                 good = True
 
@@ -3269,7 +3264,6 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
     g.current_page = page
     g.result_count = length
     g.model.songs = songs
-    g.more_pages = e and e < length
     g.content = generate_songlist_display()
     g.last_opened = ""
     g.message = msg or ''
