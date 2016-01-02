@@ -1707,7 +1707,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
         id_list = [i.get('id', {}).get('playlistId')
                     for i in pldata.get('items', ())]
 
-        g.result_count = min(pldata['pageInfo']['totalResults'], 500)
+        result_count = min(pldata['pageInfo']['totalResults'], 500)
 
     qs = {'part': 'contentDetails,snippet',
           'maxResults': 50}
@@ -1722,10 +1722,14 @@ def pl_search(term, page=0, splash=True, is_user=False):
     pldata = call_gdata('playlists', qs)
     playlists = get_pl_from_json(pldata)[:screen.getxy().max_results]
 
+    if is_user:
+        result_count = pldata['pageInfo']['totalResults']
+
     if playlists:
         g.last_search_query = (pl_search, {"term": term, "is_user": is_user})
         g.browse_mode = "ytpl"
         g.current_page = page
+        g.result_count = result_count
         g.ytpls = playlists
         g.message = "Playlist results for %s" % c.y + prog + c.w
         g.content = generate_playlist_display()
