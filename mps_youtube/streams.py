@@ -61,16 +61,12 @@ def get(vid, force=False, callback=None, threeD=False):
         ps = p.allstreams if threeD else [x for x in p.allstreams
                                           if not x.threed]
 
-    streams = []
-
-    for s in ps:
-        x = dict(url=s.url,
-                 ext=s.extension,
-                 quality=s.quality,
-                 rawbitrate=s.rawbitrate,
-                 mtype=s.mediatype,
-                 size=-1)
-        streams.append(x)
+    streams = [{"url": s.url,
+                "ext": s.extension,
+                "quality": s.quality,
+                "rawbitrate": s.rawbitrate,
+                "mtype": s.mediatype,
+                "size": -1} for s in ps]
 
     g.streams[ytid] = dict(expiry=p.expiry, meta=streams)
     prune()
