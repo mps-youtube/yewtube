@@ -1075,7 +1075,7 @@ def generate_real_playerargs(song, override, failcount):
             list_update("-noquiet", args)
             list_update("-prefer-ipv4", args)
 
-        elif "mpv" in Config.PLAYER.get:
+        elif "mpv" in Config.PLAYER.get and not g.debug_mode:
             msglevel = pd["msglevel"]["<0.4"]
 
             #  undetected (negative) version number assumed up-to-date
