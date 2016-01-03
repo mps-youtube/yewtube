@@ -1921,16 +1921,13 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     if not os.path.exists(ddir):
         os.makedirs(ddir)
 
-    if ext:
-        extension = ext
-
-    else:
+    if not ext:
         stream = streams.select(streams.get(song),
                 audio=av == "audio", m4a_ok=True)
-        extension = stream['ext']
+        ext = stream['ext']
 
-    # filename = song.title[:59] + "." + extension
-    filename = song.title + "." + extension
+    # filename = song.title[:59] + "." + ext
+    filename = song.title + "." + ext
     filename = os.path.join(ddir, mswinfn(filename.replace("/", "-")))
     filename = filename.replace('"', '')
     return filename
