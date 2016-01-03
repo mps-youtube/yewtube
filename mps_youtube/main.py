@@ -1008,22 +1008,21 @@ def generate_real_playerargs(song, override, failcount):
     """
     # pylint: disable=R0914
     # pylint: disable=R0912
-    video = Config.SHOW_VIDEO.get
-    video = True if override in ("fullscreen", "window", "forcevid") else video
-    video = False if override == "audio" else video
+    video = ((Config.SHOW_VIDEO.get and override != "audio") or
+             (override in ("fullscreen", "window", "forcevid")))
     m4a = "mplayer" not in Config.PLAYER.get
-    q, audio, cached = failcount, not video, g.streams[song.ytid]
-    stream = streams.select(cached, q=q, audio=audio, m4a_ok=m4a)
+    cached = g.streams[song.ytid]
+    stream = streams.select(cached, q=failcount, audio=(not video), m4a_ok=m4a)
 
     # handle no audio stream available, or m4a with mplayer
     # by switching to video stream and suppressing video output.
-    if not stream and not video or failcount and not video:
+    if (not stream or failcount) and not video:
         dbg(c.r + "no audio or mplayer m4a, using video stream" + c.w)
         override = "a-v"
         video = True
-        stream = streams.select(cached, q=q, audio=False, maxres=1600)
+        stream = streams.select(cached, q=failcount, audio=False, maxres=1600)
 
-    if not stream and video:
+    if not stream:
         raise IOError("No streams available")
 
     if "uiressl=yes" in stream['url'] and "mplayer" in Config.PLAYER.get:
@@ -1039,42 +1038,32 @@ def generate_real_playerargs(song, override, failcount):
 
     # pylint: disable=E1103
     # pylint thinks PLAYERARGS.get might be bool
-    argsstr = Config.PLAYERARGS.get.strip()
-    args = argsstr.split() if argsstr else []
+    args = Config.PLAYERARGS.get.strip().split()
 
     known_player = known_player_set()
     if known_player:
         pd = g.playerargs_defaults[known_player]
-        args.append(pd["title"])
-        args.append(song.title)
-        novid_arg = pd["novid"]
-        fs_arg = pd["fs"]
-        list_update(fs_arg, args, remove=not Config.FULLSCREEN.get)
+        args.extend((pd["title"], song.title))
 
-        geometry = ""
+        if pd['geo'] not in args:
+            geometry = Config.WINDOW_SIZE.get or ""
 
-        if Config.WINDOW_SIZE.get and "-geometry" not in argsstr:
-            geometry = Config.WINDOW_SIZE.get
+            if Config.WINDOW_POS.get:
+                wp = Config.WINDOW_POS.get
+                xx = "+1" if "left" in wp else "-1"
+                yy = "+1" if "top" in wp else "-1"
+                geometry += xx + yy
 
-        if Config.WINDOW_POS.get and "-geometry" not in argsstr:
-            wp = Config.WINDOW_POS.get
-            xx = "+1" if "top" in wp else "-1"
-            yy = "+1" if "left" in wp else "-1"
-            geometry += "%s%s" % (yy, xx)
-
-        if geometry:
-            list_update(pd['geo'], args)
-            list_update(geometry, args)
+            if geometry:
+                args.extend((pd['geo'], geometry))
 
         # handle no audio stream available
         if override == "a-v":
-            list_update(novid_arg, args)
+            list_update(pd["novid"], args)
 
-        elif override == "fullscreen":
-            list_update(fs_arg, args)
-
-        elif override == "window":
-            list_update(fs_arg, args, remove=True)
+        elif ((Config.FULLSCREEN.get and override != "window")
+                or override == "fullscreen"):
+            list_update(pd["fs"], args)
 
         # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
         if not video and stream['ext'] == "m4a":
