@@ -3149,6 +3149,19 @@ def dl_url(url):
         sys.exit()
 
 
+@commands.command(r'daurl\s(.*[-_a-zA-Z0-9]{11}.*)')
+def da_url(url):
+    """ Open and prompt for download of youtube best audio from url. """
+    g.browse_mode = "normal"
+    yt_url(url)
+
+    if len(g.model) == 1:
+        download("da", "1")
+
+    if g.command_line:
+        sys.exit()
+
+
 @commands.command(r'url\s(.*[-_a-zA-Z0-9]{11}.*)')
 def yt_url(url, print_title=0):
     """ Acess videos by urls. """
