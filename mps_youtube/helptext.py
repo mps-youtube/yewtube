@@ -80,9 +80,10 @@ def helptext():
     {2}dvpl <url or id>{1} - download YouTube playlist (video) by url or id.
     {2}daupl <username>{1} - download user's YouTube playlists (audio).
     {2}dvupl <username>{1} - download user's YouTube playlists (video).
-    {2}dlurl <url or id>{1} download a YouTube video by url or video id.
-    {2}playurl <url or id>{1} play a YouTube video by url or id.
-    {2}browserplay <number>{1} open a specified previous search in browser.
+    {2}dlurl <url or id>{1} - download a YouTube video by url or video id.
+    {2}daurl <url or id>{1} - download best available audio of YouTube video by url or video id.
+    {2}playurl <url or id>{1} - play a YouTube video by url or id.
+    {2}browserplay <number>{1} - open a specified previous search in browser.
 
     {2}all{1} or {2}*{1} - play all displayed items.
     {2}repeat <number(s)>{1} - play and repeat the specified items.
