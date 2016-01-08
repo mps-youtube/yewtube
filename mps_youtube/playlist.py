@@ -18,6 +18,9 @@ class Playlist(object):
     def __getitem__(self, sliced):
         return self.songs[sliced]
 
+    def __setitem__(self, position, item):
+        self.songs[position] = item
+
     def __iter__(self):
         for i in self.songs:
             yield i
