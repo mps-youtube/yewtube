@@ -41,7 +41,7 @@ def has_exefile(filename):
 def get_mpv_version(exename):
     """ Get version of mpv as 3-tuple. """
     o = subprocess.check_output([exename, "--version"]).decode()
-    re_ver = re.compile(r"%s (\d+)\.(\d+)\.(\d+)" % exename)
+    re_ver = re.compile(r"%s (\d+)\.(\d+)\.(\d+)" % "mpv")
 
     for line in o.split("\n"):
         m = re_ver.match(line)
