@@ -60,7 +60,7 @@ options = dict(
             "bundle_files": 1
         }
     },
-    data_files=[("", ["LICENSE", "README.rst", "CHANGELOG"])],
+    data_files=[("share/mps-youtube", ["LICENSE", "README.rst", "CHANGELOG"])],
     long_description=open("README.rst").read()
 )
 
