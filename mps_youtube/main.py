@@ -3614,8 +3614,11 @@ def matchfunction(func, regex, userinput):
     Call func, return True if matches.
 
     """
-    match = regex.fullmatch(userinput)
-    if match:
+    # Not supported in python 3.3 or lower
+    # match = regex.fullmatch(userinput)
+    # if match:
+    match = regex.match(userinput)
+    if match and match.group(0) == userinput:
         matches = match.groups()
         dbg("input: %s", userinput)
         dbg("function call: %s", func.__name__)
