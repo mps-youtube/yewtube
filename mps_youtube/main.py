@@ -95,7 +95,7 @@ except ImportError:
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
-locale.setlocale(locale.LC_ALL, "")  # for date formatting
+locale.setlocale(locale.LC_TIME, "")  # for date formatting
 
 ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?((\d{1,2})S)?')
 
@@ -1457,7 +1457,7 @@ def make_status_line(elapsed_s, prefix, songlength=0, volume=None):
 
 def _search(progtext, qs=None, msg=None, failmsg=None):
     """ Perform memoized url fetch, display progtext. """
-    
+
     loadmsg = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
 
     wdata = call_gdata('search', qs)
