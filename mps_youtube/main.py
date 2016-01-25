@@ -432,7 +432,7 @@ def showconfig():
     g.message += "Enter %sset all default%s to reset all" % (c.g, c.w)
 
 
-@commands.command(r'set\s+([-\w]+)\s*(.*?)')
+@commands.command(r'set\s+([-\w]+)\s*(.*)')
 def setconfig(key, val):
     """ Set configuration variable. """
     key = key.replace("-", "_")
