@@ -2064,7 +2064,7 @@ def down_user_pls(dltype, user):
     return
 
 
-@commands.command(r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})' %
+@commands.command(r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' %
         (commands.rs, commands.rs))
 def play(pre, choice, post=""):
     """ Play choice.  Use repeat/random if appears in pre/post. """
