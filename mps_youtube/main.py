@@ -2163,12 +2163,12 @@ def _preload(song, delay, override):
 
     try:
         m4a = "mplayer" not in Config.PLAYER.get
-        stream = streams.select(streams.get(song), audio=not video, m4a_ok=m4a)
+        streamlist = streams.get(song)
+        stream = streams.select(streamlist, audio=not video, m4a_ok=m4a)
 
         if not stream and not video:
             # preload video stream, no audio available
-            stream = streams.select(streams.get(song),
-                    g.streams[ytid], audio=False)
+            stream = streams.select(streamlist, audio=False)
 
         get_size(ytid, stream['url'], preloading=True)
 
