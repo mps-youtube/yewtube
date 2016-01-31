@@ -2954,11 +2954,12 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
         e = (page + 1) * max_results
 
     if callable(func):
-        songs, length = func(s, e)
+        songs = func(s, e)
     else:
         songs = func[s:e]
-        if length is None:
-            length = len(func)
+
+    if length is None:
+        length = len(func)
 
     args = {'func':func, 'length':length, 'msg':msg,
             'failmsg':failmsg, 'loadmsg': loadmsg}
@@ -2991,16 +2992,11 @@ def plist(parturl):
         g.pafy_pls[parturl] = (ytpl, plitems)
 
     def pl_seg(s, e):
-        songs = [Video(i.videoid, i.title, i.length) for i in plitems[s:e]]
-
-        if not songs:
-            dbg("got unexpected data or no search results")
-
-        return songs, len(ytpl)
+        return [Video(i.videoid, i.title, i.length) for i in plitems[s:e]]
 
     msg = "Showing YouTube playlist %s" % (c.y + ytpl.title + c.w)
     loadmsg = "Retrieving YouTube playlist"
-    paginatesongs(pl_seg, msg=msg, loadmsg=loadmsg)
+    paginatesongs(pl_seg, length=len(ytpl), msg=msg, loadmsg=loadmsg)
 
 
 @commands.command(r'shuffle')
