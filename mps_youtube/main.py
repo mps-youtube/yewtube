@@ -2939,9 +2939,6 @@ def dump(un):
 
 def paginatesongs(func, page=0, splash=True, dumps=False,
         length=None, msg=None, failmsg=None, loadmsg=None):
-    if isinstance(func, tuple):
-        func, msg, failmsg = func
-
     if splash:
         g.message = loadmsg or ''
         g.content = logo(col=c.b)
