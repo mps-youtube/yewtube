@@ -3,7 +3,7 @@ import collections
 import os
 import sys
 
-from . import g, terminalsize
+from . import g, terminalsize, content
 from .util import xprint, has_exefile
 from .config import Config
 
@@ -31,8 +31,12 @@ def update(fill_blank=True):
     """ Display content, show message, blank screen."""
     clear()
 
-    if g.content:
+    if isinstance(g.content, content.PaginatedContent):
+        xprint(g.content.getPage(g.current_page))
+        g.rprompt = content.page_msg(g.current_page)
+    elif g.content:
         xprint(g.content)
+        g.content = False
 
     if g.message or g.rprompt:
         out = g.message or ''
@@ -43,7 +47,7 @@ def update(fill_blank=True):
     elif fill_blank:
         xprint("")
 
-    g.message = g.content = g.rprompt = False
+    g.message = g.rprompt = False
 
 
 def clear():

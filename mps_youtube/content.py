@@ -1,71 +1,62 @@
 import math
 
+from . import g, screen, c
+
+# In the future, this could support more advanced features
 class Content:
+    pass
+
+
+class PaginatedContent(Content):
+    def getPage(self, page):
+        raise NotImplementedError
+
+    def numPages(self):
+        raise NotImplementedError
+
+
+class LineContent(PaginatedContent):
     def getPage(self, page):
         max_results = screen.getxy().max_results
         s = page * max_results
         e = (page + 1) * max_results
-        self.get_display
+        return self.get_text(s, e)
 
     def numPages(self):
+        return math.ceil(self.get_count()/screen.getxy().max_results)
+
+    def get_text(self, s, e):
+        raise NotImplementedError
+
+    def get_count(self):
+        raise NotImplementedError
+
+
+class StringContent(LineContent):
+    def __init__(self, string):
+        self._lines = string.splitlines()
+
+    def get_text(self, s, e):
+        return '\n'.join(self._lines[s:e])
+
+    def get_count(self):
+        width = screen.getxy().width
+        count = sum(len(i) // width + 1 for i in self._lines)
+        return count
+
+
+def page_msg(page=0):
+    """ Format information about currently displayed page to a string. """
+    if isinstance(g.content, PaginatedContent):
+        page_count = g.content.numPages()
+    else:
         page_count = math.ceil(g.result_count/screen.getxy().max_results)
 
-
-class SongList(Content):
-    def __init__(songs, length=None, msg=None, failmsg=None, loadmsg=None):
-        self.length = length
-        if callable(func):
-            self.songs, self.length = func(s, e)
-        else:
-            self.songs = func[s:e]
-            if self.length is None:
-                self.length = len(func)
-
-        self.msg = msg
-        self.failmsg = failmsg
-        self.loadmsg = loadmsg
-
-    def get_display(self, item, height, width):
-
-
-
-def paginatesongs(func, page=0, splash=True, dumps=False,
-        length=None, msg=None, failmsg=None, loadmsg=None):
-    if splash:
-        g.message = loadmsg or ''
-        g.content = logo(col=c.b)
-        screen.update()
-
-    max_results = screen.getxy().max_results
-
-    if dumps:
-        s = 0
-        e = None
-    else:
-        s = page * max_results
-        e = (page + 1) * max_results
-
-    if callable(func):
-        songs, length = func(s, e)
-    else:
-        songs = func[s:e]
-        if length is None:
-            length = len(func)
-
-    args = {'func':func, 'length':length, 'msg':msg,
-            'failmsg':failmsg, 'loadmsg': loadmsg}
-    g.last_search_query = (paginatesongs, args)
-    g.browse_mode = "normal"
-    g.current_page = page
-    g.result_count = length
-    g.model.songs = songs
-    g.content = generate_songlist_display()
-    g.last_opened = ""
-    g.message = msg or ''
-    if not songs:
-        g.message = failmsg or g.message
-
-    if songs:
-        # preload first result url
-        preload(songs[0], delay=0)
-
+    if page_count > 1:
+        pagemsg = "{}{}/{}{}"
+        #start_index = max_results * g.current_page
+        return pagemsg.format('<' if page > 0 else '[',
+                              "%s%s%s" % (c.y, page+1, c.w),
+                              page_count,
+                              '>' if page + 1 < page_count else ']')
+    return None

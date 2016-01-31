@@ -59,7 +59,7 @@ from urllib.parse import urlencode
 import pafy
 from pafy import call_gdata, GdataError
 
-from . import g, c, commands, cache, streams, screen
+from . import g, c, commands, cache, streams, screen, content
 from .playlist import Playlist, Video
 from .paths import get_config_dir
 from .config import Config, known_player_set
@@ -866,7 +866,7 @@ def generate_playlist_display():
     if not g.ytpls:
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
-    g.rprompt = page_msg(g.current_page)
+    g.rprompt = content.page_msg(g.current_page)
 
     cw = screen.getxy().width
     fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
@@ -922,19 +922,6 @@ def get_user_columns():
     return ret
 
 
-def page_msg(page=0):
-    """ Format information about currently displayed page to a string. """
-    page_count = math.ceil(g.result_count/screen.getxy().max_results)
-    if page_count > 1:
-        pagemsg = "{}{}/{}{}"
-        #start_index = max_results * g.current_page
-        return pagemsg.format('<' if page > 0 else '[',
-                              "%s%s%s" % (c.y, page+1, c.w),
-                              page_count,
-                              '>' if page + 1 < page_count else ']')
-    return None
-
-
 def generate_songlist_display(song=False, zeromsg=None):
     """ Generate list of choices from a song list."""
     # pylint: disable=R0914
@@ -946,7 +933,7 @@ def generate_songlist_display(song=False, zeromsg=None):
     if not g.model:
         g.message = zeromsg or "Enter /search-term to search or [h]elp"
         return logo(c.g) + "\n\n"
-    g.rprompt = page_msg(g.current_page)
+    g.rprompt = content.page_msg(g.current_page)
 
     have_meta = all(x.ytid in g.meta for x in g.model)
     user_columns = get_user_columns() if have_meta else []
@@ -1468,63 +1455,10 @@ def get_pl_from_json(pldata):
     return results
 
 
-def paginate(items, pagesize, spacing=2, delim_fn=None):
-    """ Paginate items to fit in pagesize.
-
-    item size is defined by delim_fn.
-
-    """
-    def dfn(x):
-        """ Count lines. """
-        return sum(1 for char in x if char == "\n")
-
-    delim_fn = dfn or delim_fn
-    pages = []
-    currentpage = []
-    roomleft = pagesize
-
-    for item in items:
-        itemsize = delim_fn(item) + spacing
-
-        # check for oversized item, fit it on a page of its own
-        if itemsize > pagesize:
-
-            # but first end current page if has content
-            if len(currentpage):
-                pages.append(currentpage)
-
-            # add large item on its own page
-            pages.append([item])
-            roomleft = pagesize
-            currentpage = []
-
-        else:
-
-            # item is smaller than one page
-            if itemsize < roomleft:
-                # is there room on this page?, yes, fit it in
-                currentpage.append(item)
-                roomleft = roomleft - itemsize
-
-            else:
-                # no room on this page, start a new page
-                pages.append(currentpage)
-                currentpage = [item]
-                roomleft = pagesize - itemsize
-
-    # add final page if it has content
-    if len(currentpage):
-        pages.append(currentpage)
-
-    return pages
-
-
 def fetch_comments(item):
     """ Fetch comments for item using gdata. """
     # pylint: disable=R0912
     # pylint: disable=R0914
-    cw, ch, _ = screen.getxy()
-    ch = max(ch, 10)
     ytid, title = item.ytid, item.title
     dbg("Fetching comments for %s", c.c("y", ytid))
     screen.writestatus("Fetching comments for %s" % c.c("y", title[:55]))
@@ -1548,7 +1482,7 @@ def fetch_comments(item):
         g.content = generate_songlist_display()
         return
 
-    items = []
+    commentstext = ''
 
     for n, com in enumerate(coms, 1):
         snippet = com.get('snippet', {})
@@ -1556,53 +1490,10 @@ def fetch_comments(item):
         _, shortdate = yt_datetime(snippet.get('publishedAt', ''))
         text = snippet.get('textDisplay', '')
         cid = ("%s/%s" % (n, len(coms)))
-        out = ("%s %-35s %s\n" % (cid, c.c("g", poster), shortdate))
-        out += c.c("y", text.strip())
-        items.append(out)
+        commentstext += ("%s %-35s %s\n" % (cid, c.c("g", poster), shortdate))
+        commentstext += c.c("y", text.strip()) + '\n\n'
 
-    cw = Config.CONSOLE_WIDTH.get
-
-    def plain(x):
-        """ Remove formatting. """
-        return x.replace(c.y, "").replace(c.w, "").replace(c.g, "")
-
-    def linecount(x):
-        """ Return number of newlines. """
-        return sum(1 for char in x if char == "\n")
-
-    def longlines(x):
-        """ Return number of oversized lines. """
-        return sum(len(plain(line)) // cw for line in x.split("\n"))
-
-    def linecounter(x):
-        """ Return amount of space required. """
-        return linecount(x) + longlines(x)
-
-    pagenum = 0
-    pages = paginate(items, pagesize=ch, delim_fn=linecounter)
-
-    while 0 <= pagenum < len(pages):
-        pagecounter = "Page %s/%s" % (pagenum + 1, len(pages))
-        page = pages[pagenum]
-        pagetext = ("\n\n".join(page)).strip()
-        content_length = linecount(pagetext) + longlines(pagetext)
-        blanks = "\n" * (-2 + ch - content_length)
-        g.content = pagetext + blanks
-        screen.update(fill_blank=False)
-        xprint("%s : Use [Enter] for next, [p] for previous, [q] to return:"
-               % pagecounter, end="")
-        v = input()
-
-        if v == "p":
-            pagenum -= 1
-
-        elif not v:
-            pagenum += 1
-
-        else:
-            break
-
-    g.content = generate_songlist_display()
+    g.content = content.StringContent(commentstext)
 
 
 @commands.command(r'c\s?(\d{1,4})')
@@ -2632,9 +2523,13 @@ def add_rm_all(action):
 @commands.command(r'(n|p)\s*(\d{1,2})?')
 def nextprev(np, page=None):
     """ Get next / previous search results. """
-    page_count = math.ceil(g.result_count/screen.getxy().max_results)
-
-    function, args = g.last_search_query
+    if isinstance(g.content, content.PaginatedContent):
+        page_count = g.content.numPages()
+        function = g.content.getPage
+        args = {}
+    else:
+        page_count = math.ceil(g.result_count/screen.getxy().max_results)
+        function, args = g.last_search_query
 
     good = False
 
@@ -2654,13 +2549,14 @@ def nextprev(np, page=None):
                 good = True
 
     if good:
-        function(page=g.current_page, splash=True, **args)
+        function(page=g.current_page, **args)
 
     else:
         norp = "next" if np == "n" else "previous"
         g.message = "No %s items to display" % norp
 
-    g.content = generate_songlist_display()
+    if not isinstance(g.content, content.PaginatedContent):
+        g.content = generate_songlist_display()
     return good
 
 
