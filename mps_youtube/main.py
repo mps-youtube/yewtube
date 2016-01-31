@@ -199,11 +199,8 @@ def process_cl_args():
         xprint(get_version_info())
         g.debug_mode = True
         g.no_clear_screen = True
-        logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
-        logging.basicConfig(level=logging.DEBUG, filename=logfile)
-        logging.getLogger("pafy").setLevel(logging.DEBUG)
 
-    elif args.logging or os.environ.get("mpsytlog") == "1":
+    if args.logging or os.environ.get("mpsytlog") == "1" or g.debug_mode:
         logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
         logging.basicConfig(level=logging.DEBUG, filename=logfile)
         logging.getLogger("pafy").setLevel(logging.DEBUG)
