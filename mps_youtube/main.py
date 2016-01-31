@@ -578,7 +578,7 @@ def logo(col=None, version=""):
     indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
     lines = [" " * indent + l for l in lines]
     logo_txt = "\n".join(lines) + "\n" * newlines
-    return logo_txt if not g.debug_mode else ""
+    return "" if g.debug_mode else logo_txt
 
 
 def playlists_display():
