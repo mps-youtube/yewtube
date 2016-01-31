@@ -31,6 +31,7 @@ import multiprocessing
 import unicodedata
 import collections
 import subprocess
+import traceback
 import threading
 import argparse
 import platform
@@ -3341,26 +3342,30 @@ def matchfunction(func, regex, userinput):
         dbg("function call: %s", func.__name__)
         dbg("regx matches: %s", matches)
 
-        if g.debug_mode:
+        try:
             func(*matches)
 
-        else:
+        except IndexError:
+            if g.debug_mode:
+                g.content = ''.join(traceback.format_exception(
+                    *sys.exc_info()))
+            g.message = F('invalid range')
+            g.content = g.content or generate_songlist_display()
 
-            try:
-                func(*matches)
+        except (ValueError, IOError) as e:
+            if g.debug_mode:
+                g.content = ''.join(traceback.format_exception(
+                    *sys.exc_info()))
+            g.message = F('cant get track') % str(e)
+            g.content = g.content or\
+                generate_songlist_display(zeromsg=g.message)
 
-            except IndexError:
-                g.message = F('invalid range')
-                g.content = g.content or generate_songlist_display()
-
-            except (ValueError, IOError) as e:
-                g.message = F('cant get track') % str(e)
-                g.content = g.content or\
-                    generate_songlist_display(zeromsg=g.message)
-
-            except GdataError as e:
-                g.message = F('no data') % e
-                g.content = g.content
+        except GdataError as e:
+            if g.debug_mode:
+                g.content = ''.join(traceback.format_exception(
+                    *sys.exc_info()))
+            g.message = F('no data') % e
+            g.content = g.content
 
         return True
 
