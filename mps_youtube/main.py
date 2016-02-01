@@ -28,11 +28,9 @@ __url__ = "http://github.com/np1/mps-youtube"
 
 from xml.etree import ElementTree as ET
 import multiprocessing
-import unicodedata
 import collections
 import subprocess
 import traceback
-import threading
 import argparse
 import platform
 import tempfile
@@ -46,7 +44,6 @@ import shlex
 import time
 import math
 import json
-import copy
 import sys
 import re
 import os
@@ -64,10 +61,11 @@ from .playlist import Playlist, Video
 from .paths import get_config_dir
 from .config import Config, known_player_set
 from .util import has_exefile, get_mpv_version, dbg, list_update, get_near_name
-from .util import get_mplayer_version, get_pafy
+from .util import get_mplayer_version, get_pafy, fmt_time, uea_pad
 from .util import xenc, xprint, mswinfn, set_window_title, F
 from .helptext import helptext, get_help
 from .player import launch_player
+from .content import logo
 
 try:
     # pylint: disable=F0401
@@ -125,34 +123,6 @@ class IterSlicer():
                 break
 
         return self.ilist[sliced]
-
-
-def get_content_length(url, preloading=False):
-    """ Return content length of a url. """
-    prefix = "preload: " if preloading else ""
-    dbg(c.y + prefix + "getting content-length header" + c.w)
-    response = urlopen(url)
-    headers = response.headers
-    cl = headers['content-length']
-    return int(cl)
-
-
-def get_size(ytid, url, preloading=False):
-    """ Get size of stream, try stream cache first. """
-    # try cached value
-    stream = [x for x in g.streams[ytid]['meta'] if x['url'] == url][0]
-    size = stream['size']
-    prefix = "preload: " if preloading else ""
-
-    if not size == -1:
-        dbg("%s%susing cached size: %s%s", c.g, prefix, size, c.w)
-
-    else:
-        screen.writestatus("Getting content length", mute=preloading)
-        stream['size'] = get_content_length(url, preloading=preloading)
-        dbg("%s%s - content-length: %s%s", c.y, prefix, stream['size'], c.w)
-
-    return stream['size']
 
 
 def get_version_info():
@@ -556,28 +526,6 @@ def convert_playlist_to_v2():
     save_to_file()
 
 
-def logo(col=None, version=""):
-    """ Return text logo. """
-    col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
-    logo_txt = r"""                                             _         _
- _ __ ___  _ __  ___       _   _  ___  _   _| |_ _   _| |__   ___
-| '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \
-| | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
-|_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
-          |_|              |___/"""
-    version = " v" + version if version else ""
-    logo_txt = col + logo_txt + c.w + version
-    lines = logo_txt.split("\n")
-    length = max(len(x) for x in lines)
-    x, y, _ = screen.getxy()
-    indent = (x - length - 1) // 2
-    newlines = (y - 12) // 2
-    indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
-    lines = [" " * indent + l for l in lines]
-    logo_txt = "\n".join(lines) + "\n" * newlines
-    return "" if g.debug_mode else logo_txt
-
-
 def playlists_display():
     """ Produce a list of all playlists. """
     if not g.userpl:
@@ -620,23 +568,6 @@ def mplayer_help(short=True):
     fmt = "    %-20s       %-20s"
     lines = fmt % (seek, volume) + "\n" + fmt % (pause, ret)
     return lines.format(c.g, c.w)
-
-
-def fmt_time(seconds):
-    """ Format number of seconds to %H:%M:%S. """
-    hms = time.strftime('%H:%M:%S', time.gmtime(int(seconds)))
-    H, M, S = hms.split(":")
-
-    if H == "00":
-        hms = M + ":" + S
-
-    elif H == "01" and int(M) < 40:
-        hms = str(int(M) + 60) + ":" + S
-
-    elif H.startswith("0"):
-        hms = ":".join([H[1], M, S])
-
-    return hms
 
 
 def get_track_id_from_json(item):
@@ -800,58 +731,6 @@ def num_repr(num):
     return str(rounded)[0] + "." + str(rounded)[1] + suffix
 
 
-def real_len(u, alt=False):
-    """ Try to determine width of strings displayed with monospace font. """
-    if not isinstance(u, str):
-        u = u.decode("utf8")
-
-    u = xenc(u) # Handle replacements of unsuported characters
-
-    ueaw = unicodedata.east_asian_width
-
-    if alt:
-        # widths = dict(W=2, F=2, A=1, N=0.75, H=0.5)  # original
-        widths = dict(N=.75, Na=1, W=2, F=2, A=1)
-
-    else:
-        widths = dict(W=2, F=2, A=1, N=1, H=0.5)
-
-    return int(round(sum(widths.get(ueaw(char), 1) for char in u)))
-
-
-def uea_pad(num, t, direction="<", notrunc=False):
-    """ Right pad with spaces taking into account East Asian width chars. """
-    direction = direction.strip() or "<"
-
-    t = ' '.join(t.split('\n'))
-
-    # TODO: Find better way of dealing with this?
-    if num <= 0:
-        return ''
-
-    if not notrunc:
-        # Truncate to max of num characters
-        t = t[:num]
-
-    if real_len(t) < num:
-        spaces = num - real_len(t)
-
-        if direction == "<":
-            t = t + (" " * spaces)
-
-        elif direction == ">":
-            t = (" " * spaces) + t
-
-        elif direction == "^":
-            right = False
-
-            while real_len(t) < num:
-                t = t + " " if right else " " + t
-                right = not right
-
-    return t
-
-
 def yt_datetime(yt_date_time):
     """ Return a time object and locale formated date string. """
     time_obj = time.strptime(yt_date_time, "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -887,105 +766,6 @@ def generate_playlist_display():
     return out + "\n" * (5 - len(g.ytpls))
 
 
-def get_user_columns():
-    """ Get columns from user config, return dict. """
-    total_size = 0
-    user_columns = Config.COLUMNS.get
-    user_columns = user_columns.replace(",", " ").split()
-
-    defaults = {"views": dict(name="viewCount", size=4, heading="View"),
-                "rating": dict(name="rating", size=4, heading="Rtng"),
-                "comments": dict(name="commentCount", size=4, heading="Comm"),
-                "date": dict(name="uploaded", size=8, heading="Date"),
-                "user": dict(name="uploaderName", size=10, heading="User"),
-                "likes": dict(name="likes", size=4, heading="Like"),
-                "dislikes": dict(name="dislikes", size=4, heading="Dslk"),
-                "category": dict(name="category", size=8, heading="Category")}
-
-    ret = []
-    for column in user_columns:
-        namesize = column.split(":")
-        name = namesize[0]
-
-        if name in defaults:
-            z = defaults[name]
-            nm, sz, hd = z['name'], z['size'], z['heading']
-
-            if len(namesize) == 2 and namesize[1].isdigit():
-                sz = int(namesize[1])
-
-            total_size += sz
-            cw = screen.getxy().width
-            if total_size < cw - 18:
-                ret.append(dict(name=nm, size=sz, heading=hd))
-
-    return ret
-
-
-def generate_songlist_display(song=False, zeromsg=None):
-    """ Generate list of choices from a song list."""
-    # pylint: disable=R0914
-    if g.browse_mode == "ytpl":
-        return generate_playlist_display()
-
-    max_results = screen.getxy().max_results
-
-    if not g.model:
-        g.message = zeromsg or "Enter /search-term to search or [h]elp"
-        return logo(c.g) + "\n\n"
-    g.rprompt = content.page_msg(g.current_page)
-
-    have_meta = all(x.ytid in g.meta for x in g.model)
-    user_columns = get_user_columns() if have_meta else []
-    maxlength = max(x.length for x in g.model)
-    lengthsize = 8 if maxlength > 35999 else 7
-    lengthsize = 5 if maxlength < 6000 else lengthsize
-    reserved = 9 + lengthsize + len(user_columns)
-    cw = screen.getxy().width
-    cw -= 1
-    title_size = cw - sum(1 + x['size'] for x in user_columns) - reserved
-    before = [{"name": "idx", "size": 3, "heading": "Num"},
-              {"name": "title", "size": title_size, "heading": "Title"}]
-    after = [{"name": "length", "size": lengthsize, "heading": "Time"}]
-    columns = before + user_columns + after
-
-    for n, column in enumerate(columns):
-        column['idx'] = n
-        column['sign'] = "-" if not column['name'] == "length" else ""
-
-    fmt = ["%{}{}s  ".format(x['sign'], x['size']) for x in columns]
-    fmtrow = fmt[0:1] + ["%s  "] + fmt[2:]
-    fmt, fmtrow = "".join(fmt).strip(), "".join(fmtrow).strip()
-    titles = tuple([x['heading'][:x['size']] for x in columns])
-    hrow = c.ul + fmt % titles + c.w
-    out = "\n" + hrow + "\n"
-
-    for n, x in enumerate(g.model[:max_results]):
-        col = (c.r if n % 2 == 0 else c.p) if not song else c.b
-        details = {'title': x.title, "length": fmt_time(x.length)}
-        details = copy.copy(g.meta[x.ytid]) if have_meta else details
-        otitle = details['title']
-        details['idx'] = "%2d" % (n + 1)
-        details['title'] = uea_pad(columns[1]['size'], otitle)
-        cat = details.get('category') or '-'
-        details['category'] = pafy.get_categoryname(cat)
-        data = []
-
-        for z in columns:
-            fieldsize, field = z['size'], z['name']
-            if len(details[field]) > fieldsize:
-                details[field] = details[field][:fieldsize]
-
-            data.append(details[field])
-
-        line = fmtrow % tuple(data)
-        col = col if not song or song != g.model[n] else c.p
-        line = col + line + c.w
-        out += line + "\n"
-
-    return out + "\n" * (5 - len(g.model)) if not song else out
-
-
 def generate_real_playerargs(song, override, failcount):
     """ Generate args for player command.
 
@@ -1018,7 +798,7 @@ def generate_real_playerargs(song, override, failcount):
             raise IOError("%s : Sorry mplayer doesn't support this stream. "
                           "Use mpv or update mplayer to a newer version" % song.title)
 
-    size = get_size(song.ytid, stream['url'])
+    size = streams.get_size(song.ytid, stream['url'])
     songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
                 int(size / (1024 ** 2)))
 
@@ -2002,7 +1782,7 @@ def play(pre, choice, post=""):
             chosen = selection[0] - 1
 
             if len(g.model) > chosen + 1:
-                preload(g.model[chosen + 1], override=override)
+                streams.preload(g.model[chosen + 1], override=override)
 
         play_range(songlist, shuffle, repeat, override)
 
@@ -2038,44 +1818,6 @@ def vp():
     paginatesongs(g.active, msg=msg, failmsg=failmsg)
 
 
-def _preload(song, delay, override):
-    """  Get streams (runs in separate thread). """
-    if g.preload_disabled:
-        return
-
-    ytid = song.ytid
-    g.preloading.append(ytid)
-    time.sleep(delay)
-    video = Config.SHOW_VIDEO.get
-    video = True if override in ("fullscreen", "window", "forcevid") else video
-    video = False if override == "audio" else video
-
-    try:
-        m4a = "mplayer" not in Config.PLAYER.get
-        streamlist = streams.get(song)
-        stream = streams.select(streamlist, audio=not video, m4a_ok=m4a)
-
-        if not stream and not video:
-            # preload video stream, no audio available
-            stream = streams.select(streamlist, audio=False)
-
-        get_size(ytid, stream['url'], preloading=True)
-
-    except (ValueError, AttributeError, IOError) as e:
-        dbg(e)  # Fail silently on preload
-
-    finally:
-        g.preloading.remove(song.ytid)
-
-
-def preload(song, delay=2, override=False):
-    """  Get streams. """
-    args = (song, delay, override)
-    t = threading.Thread(target=_preload, args=args)
-    t.daemon = True
-    t.start()
-
-
 def play_range(songlist, shuffle=False, repeat=False, override=False):
     """ Play a range of songs, exit cleanly on keyboard interrupt. """
     if shuffle:
@@ -2092,7 +1834,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         hasnext = len(songlist) > n + 1
 
         if hasnext:
-            preload(songlist[n + 1], override=override)
+            streams.preload(songlist[n + 1], override=override)
 
         set_window_title(song.title + " - mpsyt")
         try:
@@ -2835,44 +2577,8 @@ def dump(un):
 
 def paginatesongs(func, page=0, splash=True, dumps=False,
         length=None, msg=None, failmsg=None, loadmsg=None):
-    if splash:
-        g.message = loadmsg or ''
-        g.content = logo(col=c.b)
-        screen.update()
-
-    max_results = screen.getxy().max_results
-
-    if dumps:
-        s = 0
-        e = None
-    else:
-        s = page * max_results
-        e = (page + 1) * max_results
-
-    if callable(func):
-        songs = func(s, e)
-    else:
-        songs = func[s:e]
-
-    if length is None:
-        length = len(func)
-
-    args = {'func':func, 'length':length, 'msg':msg,
-            'failmsg':failmsg, 'loadmsg': loadmsg}
-    g.last_search_query = (paginatesongs, args)
-    g.browse_mode = "normal"
-    g.current_page = page
-    g.result_count = length
-    g.model.songs = songs
-    g.content = generate_songlist_display()
-    g.last_opened = ""
-    g.message = msg or ''
-    if not songs:
-        g.message = failmsg or g.message
-
-    if songs:
-        # preload first result url
-        preload(songs[0], delay=0)
+    g.content = content.SongList(func, length=length, msg=msg,
+            failmsg=failmsg, loadmsg=loadmsg)
 
 
 @commands.command(r'pl\s+%s' % commands.pl)

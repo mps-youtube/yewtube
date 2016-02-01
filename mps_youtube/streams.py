@@ -1,8 +1,10 @@
 import time
+import threading
 
-from . import g, c
+from . import g, c, screen
 from .util import dbg, get_pafy
 from .config import Config
+from urllib.request import urlopen
 
 
 def prune():
@@ -108,3 +110,69 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
         ret = streams[0] if q and len(streams) else None
 
     return ret
+
+
+def _get_content_length(url, preloading=False):
+    """ Return content length of a url. """
+    prefix = "preload: " if preloading else ""
+    dbg(c.y + prefix + "getting content-length header" + c.w)
+    response = urlopen(url)
+    headers = response.headers
+    cl = headers['content-length']
+    return int(cl)
+
+
+def get_size(ytid, url, preloading=False):
+    """ Get size of stream, try stream cache first. """
+    # try cached value
+    stream = [x for x in g.streams[ytid]['meta'] if x['url'] == url][0]
+    size = stream['size']
+    prefix = "preload: " if preloading else ""
+
+    if not size == -1:
+        dbg("%s%susing cached size: %s%s", c.g, prefix, size, c.w)
+
+    else:
+        screen.writestatus("Getting content length", mute=preloading)
+        stream['size'] = _get_content_length(url, preloading=preloading)
+        dbg("%s%s - content-length: %s%s", c.y, prefix, stream['size'], c.w)
+
+    return stream['size']
+
+
+def _preload(song, delay, override):
+    """  Get streams (runs in separate thread). """
+    if g.preload_disabled:
+        return
+
+    ytid = song.ytid
+    g.preloading.append(ytid)
+    time.sleep(delay)
+    video = Config.SHOW_VIDEO.get
+    video = True if override in ("fullscreen", "window", "forcevid") else video
+    video = False if override == "audio" else video
+
+    try:
+        m4a = "mplayer" not in Config.PLAYER.get
+        streamlist = get(song)
+        stream = select(streamlist, audio=not video, m4a_ok=m4a)
+
+        if not stream and not video:
+            # preload video stream, no audio available
+            stream = select(streamlist, audio=False)
+
+        get_size(ytid, stream['url'], preloading=True)
+
+    except (ValueError, AttributeError, IOError) as e:
+        dbg(e)  # Fail silently on preload
+
+    finally:
+        g.preloading.remove(song.ytid)
+
+
+def preload(song, delay=2, override=False):
+    """  Get streams. """
+    args = (song, delay, override)
+    t = threading.Thread(target=_preload, args=args)
+    t.daemon = True
+    t.start()

@@ -3,7 +3,8 @@ import collections
 import os
 import sys
 
-from . import g, terminalsize, content
+from . import g, terminalsize
+from .content import PaginatedContent, page_msg
 from .util import xprint, has_exefile
 from .config import Config
 
@@ -27,19 +28,26 @@ def getxy():
     return XYTuple(x, y, max_results)
 
 
-def update(fill_blank=True):
+def update(fill_blank=True, content=None, message=None):
     """ Display content, show message, blank screen."""
     clear()
 
-    if isinstance(g.content, content.PaginatedContent):
-        xprint(g.content.getPage(g.current_page))
-        g.rprompt = content.page_msg(g.current_page)
-    elif g.content:
-        xprint(g.content)
-        g.content = False
+    if isinstance(g.content, PaginatedContent) and not content:
+        content = g.content.getPage(g.current_page)
+        g.rprompt = page_msg(g.current_page)
 
-    if g.message or g.rprompt:
-        out = g.message or ''
+    if content is None:
+        content = g.content
+        g.content = False
+    if message is None:
+        message = g.message
+        g.message = False
+
+    if content:
+        xprint(content)
+
+    if message or g.rprompt:
+        out = message or ''
         blanks = getxy().width - len(out) - len(g.rprompt or '')
         out += ' ' * blanks + (g.rprompt or '')
         xprint(out)
@@ -47,7 +55,7 @@ def update(fill_blank=True):
     elif fill_blank:
         xprint("")
 
-    g.message = g.rprompt = False
+    g.rprompt = False
 
 
 def clear():
