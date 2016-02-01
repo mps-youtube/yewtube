@@ -86,6 +86,7 @@ def helptext():
     {2}browserplay <number>{1} - open a specified previous search in browser.
 
     {2}all{1} or {2}*{1} - play all displayed items.
+    {2}**{1} - play all items on every page.
     {2}repeat <number(s)>{1} - play and repeat the specified items.
     {2}shuffle <number(s)>{1} - play specified items in random order.
     """.format(c.ul, c.w, c.y)),
