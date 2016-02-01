@@ -2014,10 +2014,10 @@ def play_all(pre, choice, post=""):
     options = pre + choice + post
     play(options, "1-" + str(len(g.model)))
 
-
-@commands.command(r'(%s{0,3})(?:\*\*|all)\s*(%s{0,3})' %
+@commands.command(r'(%s{0,3})(?:\*\*)\s*(%s{0,3})' %
         (commands.rs, commands.rs))
 def play_all_pages(pre, choice, post=""):
+    """ Play all tracks on all pages. """
     options = pre + choice + post
 
     dump(False)
