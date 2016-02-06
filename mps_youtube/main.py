@@ -3192,10 +3192,7 @@ def search_album(term):
             c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
     failmsg = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
 
-    def album_seg(s, e):
-        return songs[s:e], len(songs)
-
-    paginatesongs(album_seg, msg=msg, failmsg=failmsg)
+    paginatesongs(songs, msg=msg, failmsg=failmsg)
 
 
 @commands.command(r'encoders?')
