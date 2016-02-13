@@ -64,7 +64,7 @@ from .playlist import Playlist, Video
 from .paths import get_config_dir
 from .config import Config, known_player_set
 from .util import has_exefile, get_mpv_version, dbg, list_update, get_near_name
-from .util import get_mplayer_version, get_pafy
+from .util import get_mplayer_version, get_pafy, getxy
 from .util import xenc, xprint, mswinfn, set_window_title, F
 from .helptext import helptext, get_help
 from .player import launch_player
@@ -404,7 +404,7 @@ def init_readline():
 @commands.command(r'set|showconfig')
 def showconfig():
     """ Dump config data. """
-    width = screen.getxy().width
+    width = getxy().width
     width -= 30
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
@@ -569,7 +569,7 @@ def logo(col=None, version=""):
     logo_txt = col + logo_txt + c.w + version
     lines = logo_txt.split("\n")
     length = max(len(x) for x in lines)
-    x, y, _ = screen.getxy()
+    x, y, _ = getxy()
     indent = (x - length - 1) // 2
     newlines = (y - 12) // 2
     indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
@@ -741,7 +741,7 @@ def playback_progress(idx, allsongs, repeat=False):
     """ Generate string to show selected tracks, indicate current track. """
     # pylint: disable=R0914
     # too many local variables
-    cw = screen.getxy().width
+    cw = getxy().width
     out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
     show_key_help = (known_player_set and Config.SHOW_MPLAYER_KEYS.get)
@@ -868,7 +868,7 @@ def generate_playlist_display():
         return logo(c.g) + "\n\n"
     g.rprompt = content.page_msg(g.current_page)
 
-    cw = screen.getxy().width
+    cw = getxy().width
     fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
     fmthd = "%s%-5s %-{}s %-12s %-9s %-5s%s\n".format(cw - 36)
     head = (c.ul, "Item", "Playlist", "Author", "Updated", "Count", c.w)
@@ -915,7 +915,7 @@ def get_user_columns():
                 sz = int(namesize[1])
 
             total_size += sz
-            cw = screen.getxy().width
+            cw = getxy().width
             if total_size < cw - 18:
                 ret.append(dict(name=nm, size=sz, heading=hd))
 
@@ -928,7 +928,7 @@ def generate_songlist_display(song=False, zeromsg=None):
     if g.browse_mode == "ytpl":
         return generate_playlist_display()
 
-    max_results = screen.getxy().max_results
+    max_results = getxy().max_results
 
     if not g.model:
         g.message = zeromsg or "Enter /search-term to search or [h]elp"
@@ -941,7 +941,7 @@ def generate_songlist_display(song=False, zeromsg=None):
     lengthsize = 8 if maxlength > 35999 else 7
     lengthsize = 5 if maxlength < 6000 else lengthsize
     reserved = 9 + lengthsize + len(user_columns)
-    cw = screen.getxy().width
+    cw = getxy().width
     cw -= 1
     title_size = cw - sum(1 + x['size'] for x in user_columns) - reserved
     before = [{"name": "idx", "size": 3, "heading": "Num"},
@@ -1185,7 +1185,7 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
 
 def token(page):
     """ Returns a page token for a given start index. """
-    index = (page or 0) * screen.getxy().max_results
+    index = (page or 0) * getxy().max_results
     k = index//128 - 1
     index -= 128 * k
     f = [8, index]
@@ -1410,7 +1410,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
         qs['id'] = ','.join(id_list)
 
     pldata = call_gdata('playlists', qs)
-    playlists = get_pl_from_json(pldata)[:screen.getxy().max_results]
+    playlists = get_pl_from_json(pldata)[:getxy().max_results]
 
     if is_user:
         result_count = pldata['pageInfo']['totalResults']
@@ -2528,7 +2528,7 @@ def nextprev(np, page=None):
         function = g.content.getPage
         args = {}
     else:
-        page_count = math.ceil(g.result_count/screen.getxy().max_results)
+        page_count = math.ceil(g.result_count/getxy().max_results)
         function, args = g.last_search_query
 
     good = False
@@ -2840,7 +2840,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
         g.content = logo(col=c.b)
         screen.update()
 
-    max_results = screen.getxy().max_results
+    max_results = getxy().max_results
 
     if dumps:
         s = 0

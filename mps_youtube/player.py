@@ -7,8 +7,8 @@ import socket
 import math
 import time
 
-from . import g, screen
-from .util import dbg, xenc, F
+from . import g
+from .util import dbg, xenc, F, getxy
 from .config import Config
 from .paths import get_config_dir
 
@@ -291,7 +291,7 @@ def _make_status_line(elapsed_s, prefix, songlength=0, volume=None):
     else:
         vol_suffix = ""
 
-    cw = screen.getxy().width
+    cw = getxy().width
     prog_bar_size = cw - len(prefix) - len(status_line) - len(vol_suffix) - 7
     progress = int(math.ceil(pct / 100 * prog_bar_size))
     status_line += " [%s]" % ("=" * (progress - 1) +
