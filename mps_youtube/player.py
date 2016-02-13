@@ -7,7 +7,7 @@ import socket
 import math
 import time
 
-from . import g
+from . import g, screen
 from .util import dbg, xenc, F, getxy
 from .config import Config
 from .paths import get_config_dir
