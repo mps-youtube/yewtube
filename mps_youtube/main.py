@@ -2654,9 +2654,9 @@ def info(num):
         p = g.ytpls[int(num) - 1]
 
         # fetch the playlist item as it has more metadata
-        ytpl = g.pafy_pls.get(p['link'])[0]
-
-        if not ytpl:
+        if p['link'] in g.pafy_pls:
+            ytpl = g.pafy_pls[p['link']][0]
+        else:
             g.content = logo(col=c.g)
             g.message = "Fetching playlist info.."
             screen.update()
