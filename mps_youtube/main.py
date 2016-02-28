@@ -157,21 +157,31 @@ def get_size(ytid, url, preloading=False):
 
 def get_version_info():
     """ Return version and platform info. """
-    out = "mpsyt version  : " + __version__
-    out += "\n   notes       : " + __notes__
-    out += "\npafy version   : " + pafy.__version__
-    out += "\nPython version : " + sys.version
-    out += "\nProcessor      : " + platform.processor()
-    out += "\nMachine type   : " + platform.machine()
-    out += "\nArchitecture   : %s, %s" % platform.architecture()
-    out += "\nPlatform       : " + platform.platform()
-    out += "\nsys.stdout.enc : " + sys.stdout.encoding
-    out += "\ndefault enc    : " + sys.getdefaultencoding()
-    out += "\nConfig dir     : " + get_config_dir()
+    pafy_version = pafy.__version__
+    youtube_dl_version = None
+    if tuple(map(int, pafy_version.split('.'))) >= (0, 5, 0):
+        pafy_version += " (" + pafy.backend + " backend)"
+        if pafy.backend == "youtube-dl":
+            import youtube_dl
+            youtube_dl_version = youtube_dl.version.__version__
+
+    out = "mpsyt version      : " + __version__
+    out += "\n   notes           : " + __notes__
+    out += "\npafy version       : " + pafy_version
+    if youtube_dl_version:
+        out += "\nyoutube-dl version : " + youtube_dl_version
+    out += "\nPython version     : " + sys.version
+    out += "\nProcessor          : " + platform.processor()
+    out += "\nMachine type       : " + platform.machine()
+    out += "\nArchitecture       : %s, %s" % platform.architecture()
+    out += "\nPlatform           : " + platform.platform()
+    out += "\nsys.stdout.enc     : " + sys.stdout.encoding
+    out += "\ndefault enc        : " + sys.getdefaultencoding()
+    out += "\nConfig dir         : " + get_config_dir()
 
     for env in "TERM SHELL LANG LANGUAGE".split():
         value = os.environ.get(env)
-        out += "\nenv:%-11s: %s" % (env, value) if value else ""
+        out += "\nenv:%-15s: %s" % (env, value) if value else ""
 
     return out
 
