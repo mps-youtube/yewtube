@@ -996,7 +996,7 @@ def generate_songlist_display(song=False, zeromsg=None):
     return out + "\n" * (5 - len(g.model)) if not song else out
 
 
-def generate_real_playerargs(song, override, failcount):
+def generate_real_playerargs(song, override, stream, isvideo):
     """ Generate args for player command.
 
     Return args and songdata status.
@@ -1004,22 +1004,6 @@ def generate_real_playerargs(song, override, failcount):
     """
     # pylint: disable=R0914
     # pylint: disable=R0912
-    video = ((Config.SHOW_VIDEO.get and override != "audio") or
-             (override in ("fullscreen", "window", "forcevid")))
-    m4a = "mplayer" not in Config.PLAYER.get
-    cached = g.streams[song.ytid]
-    stream = streams.select(cached, q=failcount, audio=(not video), m4a_ok=m4a)
-
-    # handle no audio stream available, or m4a with mplayer
-    # by switching to video stream and suppressing video output.
-    if (not stream or failcount) and not video:
-        dbg(c.r + "no audio or mplayer m4a, using video stream" + c.w)
-        override = "a-v"
-        video = True
-        stream = streams.select(cached, q=failcount, audio=False, maxres=1600)
-
-    if not stream:
-        raise IOError("No streams available")
 
     if "uiressl=yes" in stream['url'] and "mplayer" in Config.PLAYER.get:
         ver = g.mplayer_version
@@ -1062,7 +1046,7 @@ def generate_real_playerargs(song, override, failcount):
             list_update(pd["fs"], args)
 
         # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
-        if not video and stream['ext'] == "m4a":
+        if not isvideo and stream['ext'] == "m4a":
             dbg("%susing ignidx flag%s", c.y, c.w)
             list_update(pd["ignidx"], args)
 
@@ -1128,7 +1112,22 @@ def playsong(song, failcount=0, override=False):
         return
 
     try:
-        cmd, songdata = generate_real_playerargs(song, override, failcount)
+        video = ((Config.SHOW_VIDEO.get and override != "audio") or
+                 (override in ("fullscreen", "window", "forcevid")))
+        m4a = "mplayer" not in Config.PLAYER.get
+        cached = g.streams[song.ytid]
+        stream = streams.select(cached, q=failcount, audio=(not video), m4a_ok=m4a)
+
+        # handle no audio stream available, or m4a with mplayer
+        # by switching to video stream and suppressing video output.
+        if (not stream or failcount) and not video:
+            dbg(c.r + "no audio or mplayer m4a, using video stream" + c.w)
+            override = "a-v"
+            video = True
+            stream = streams.select(cached, q=failcount, audio=False, maxres=1600)
+
+        if not stream:
+            raise IOError("No streams available")
 
     except (HTTPError) as e:
 
@@ -1148,6 +1147,8 @@ def playsong(song, failcount=0, override=False):
         errmsg = e.message if hasattr(e, "message") else str(e)
         g.message = c.r + str(errmsg) + c.w
         return
+
+    cmd, songdata = generate_real_playerargs(song, override, stream, video)
 
     songdata = "%s; %s; %s Mb" % songdata
     screen.writestatus(songdata)
