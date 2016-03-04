@@ -15,7 +15,7 @@ from .paths import get_config_dir
 mswin = os.name == "nt"
 
 
-def generate_real_playerargs(song, override, stream, isvideo):
+def _generate_real_playerargs(song, override, stream, isvideo):
     """ Generate args for player command.
 
     Return args.
@@ -126,8 +126,12 @@ def _get_input_file():
         return tmpfile.name
 
 
-def launch_player(song, songdata, cmd):
+def launch_player(song, songdata, override, stream, isvideo):
     """ Launch player application. """
+
+    cmd = _generate_real_playerargs(song, override, stream, isvideo)
+    dbg("playing %s", song.title)
+    dbg("calling %s", " ".join(cmd))
 
     # Fix UnicodeEncodeError when title has characters
     # not supported by encoding

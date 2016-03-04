@@ -67,7 +67,7 @@ from .util import has_exefile, get_mpv_version, dbg, get_near_name
 from .util import get_mplayer_version, get_pafy, getxy
 from .util import xenc, xprint, mswinfn, set_window_title, F
 from .helptext import helptext, get_help
-from .player import launch_player, generate_real_playerargs
+from .player import launch_player
 
 try:
     # pylint: disable=F0401
@@ -1079,10 +1079,7 @@ def playsong(song, failcount=0, override=False):
     songdata = "%s; %s; %s Mb" % songdata
     screen.writestatus(songdata)
 
-    cmd = generate_real_playerargs(song, override, stream, video)
-    dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
-    dbg("calling %s", " ".join(cmd))
-    returncode = launch_player(song, songdata, cmd)
+    returncode = launch_player(song, songdata, override, stream, video)
     failed = returncode not in (0, 42, 43)
 
     if failed and failcount < g.max_retries:
