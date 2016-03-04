@@ -6,3 +6,4 @@ __url__ = "http://github.com/np1/mps-youtube"
 
 from .init import init
 init()
+from . import main
