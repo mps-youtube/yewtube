@@ -999,7 +999,7 @@ def generate_songlist_display(song=False, zeromsg=None):
 def generate_real_playerargs(song, override, stream, isvideo):
     """ Generate args for player command.
 
-    Return args and songdata status.
+    Return args.
 
     """
     # pylint: disable=R0914
@@ -1011,10 +1011,6 @@ def generate_real_playerargs(song, override, stream, isvideo):
         if not (ver > (1,1) if isinstance(ver, tuple) else ver >= 37294):
             raise IOError("%s : Sorry mplayer doesn't support this stream. "
                           "Use mpv or update mplayer to a newer version" % song.title)
-
-    size = get_size(song.ytid, stream['url'])
-    songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
-                int(size / (1024 ** 2)))
 
     # pylint: disable=E1103
     # pylint thinks PLAYERARGS.get might be bool
@@ -1068,7 +1064,7 @@ def generate_real_playerargs(song, override, stream, isvideo):
                 list_update("--really-quiet", args, remove=True)
                 list_update(msglevel, args)
 
-    return [Config.PLAYER.get] + args + [stream['url']], songdata
+    return [Config.PLAYER.get] + args + [stream['url']]
 
 
 def playsong(song, failcount=0, override=False):
@@ -1148,10 +1144,13 @@ def playsong(song, failcount=0, override=False):
         g.message = c.r + str(errmsg) + c.w
         return
 
-    cmd, songdata = generate_real_playerargs(song, override, stream, video)
-
+    size = get_size(song.ytid, stream['url'])
+    songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
+                int(size / (1024 ** 2)))
     songdata = "%s; %s; %s Mb" % songdata
     screen.writestatus(songdata)
+
+    cmd = generate_real_playerargs(song, override, stream, video)
     dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
     dbg("calling %s", " ".join(cmd))
     returncode = launch_player(song, songdata, cmd)
