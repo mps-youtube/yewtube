@@ -63,11 +63,11 @@ from . import g, c, commands, cache, streams, screen, content
 from .playlist import Playlist, Video
 from .paths import get_config_dir
 from .config import Config, known_player_set
-from .util import has_exefile, get_mpv_version, dbg, list_update, get_near_name
+from .util import has_exefile, get_mpv_version, dbg, get_near_name
 from .util import get_mplayer_version, get_pafy, getxy
 from .util import xenc, xprint, mswinfn, set_window_title, F
 from .helptext import helptext, get_help
-from .player import launch_player
+from .player import launch_player, generate_real_playerargs
 
 try:
     # pylint: disable=F0401
@@ -994,77 +994,6 @@ def generate_songlist_display(song=False, zeromsg=None):
         out += line + "\n"
 
     return out + "\n" * (5 - len(g.model)) if not song else out
-
-
-def generate_real_playerargs(song, override, stream, isvideo):
-    """ Generate args for player command.
-
-    Return args.
-
-    """
-    # pylint: disable=R0914
-    # pylint: disable=R0912
-
-    if "uiressl=yes" in stream['url'] and "mplayer" in Config.PLAYER.get:
-        ver = g.mplayer_version
-        # Mplayer too old to support https
-        if not (ver > (1,1) if isinstance(ver, tuple) else ver >= 37294):
-            raise IOError("%s : Sorry mplayer doesn't support this stream. "
-                          "Use mpv or update mplayer to a newer version" % song.title)
-
-    # pylint: disable=E1103
-    # pylint thinks PLAYERARGS.get might be bool
-    args = Config.PLAYERARGS.get.strip().split()
-
-    known_player = known_player_set()
-    if known_player:
-        pd = g.playerargs_defaults[known_player]
-        args.extend((pd["title"], song.title))
-
-        if pd['geo'] not in args:
-            geometry = Config.WINDOW_SIZE.get or ""
-
-            if Config.WINDOW_POS.get:
-                wp = Config.WINDOW_POS.get
-                xx = "+1" if "left" in wp else "-1"
-                yy = "+1" if "top" in wp else "-1"
-                geometry += xx + yy
-
-            if geometry:
-                args.extend((pd['geo'], geometry))
-
-        # handle no audio stream available
-        if override == "a-v":
-            list_update(pd["novid"], args)
-
-        elif ((Config.FULLSCREEN.get and override != "window")
-                or override == "fullscreen"):
-            list_update(pd["fs"], args)
-
-        # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
-        if not isvideo and stream['ext'] == "m4a":
-            dbg("%susing ignidx flag%s", c.y, c.w)
-            list_update(pd["ignidx"], args)
-
-        if "mplayer" in Config.PLAYER.get:
-            list_update("-really-quiet", args, remove=True)
-            list_update("-noquiet", args)
-            list_update("-prefer-ipv4", args)
-
-        elif "mpv" in Config.PLAYER.get and not g.debug_mode:
-            msglevel = pd["msglevel"]["<0.4"]
-
-            #  undetected (negative) version number assumed up-to-date
-            if g.mpv_version[0:2] < (0, 0) or g.mpv_version[0:2] >= (0, 4):
-                msglevel = pd["msglevel"][">=0.4"]
-
-            if g.mpv_usesock:
-                list_update("--really-quiet", args)
-            else:
-                list_update("--really-quiet", args, remove=True)
-                list_update(msglevel, args)
-
-    return [Config.PLAYER.get] + args + [stream['url']]
 
 
 def playsong(song, failcount=0, override=False):
