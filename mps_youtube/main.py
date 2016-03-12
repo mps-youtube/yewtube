@@ -20,20 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-__version__ = "0.2.6"
-__notes__ = "released 1 January 2016"
-__author__ = "np1"
-__license__ = "GPLv3"
-__url__ = "http://github.com/np1/mps-youtube"
-
 from xml.etree import ElementTree as ET
-import multiprocessing
+import unicodedata
 import collections
 import subprocess
 import traceback
-import argparse
-import platform
-import tempfile
+import threading
 import difflib
 import logging
 import base64
@@ -57,23 +49,15 @@ import pafy
 from pafy import call_gdata, GdataError
 
 from . import g, c, commands, cache, streams, screen, content
+from . import __version__, __url__
 from .playlist import Playlist, Video
-from .paths import get_config_dir
 from .config import Config, known_player_set
-from .util import has_exefile, get_mpv_version, dbg, list_update, get_near_name
-from .util import get_mplayer_version, get_pafy, fmt_time, uea_pad
+from .util import has_exefile, dbg, get_near_name
+from .util import get_pafy, getxy, fmt_time, uea_pad
 from .util import xenc, xprint, mswinfn, set_window_title, F
-from .helptext import helptext, get_help
+from .helptext import get_help
 from .player import launch_player
 from .content import logo
-
-try:
-    # pylint: disable=F0401
-    import colorama
-    has_colorama = True
-
-except ImportError:
-    has_colorama = False
 
 try:
     import readline
@@ -125,256 +109,10 @@ class IterSlicer():
         return self.ilist[sliced]
 
 
-def get_version_info():
-    """ Return version and platform info. """
-    out = "mpsyt version  : " + __version__
-    out += "\n   notes       : " + __notes__
-    out += "\npafy version   : " + pafy.__version__
-    out += "\nPython version : " + sys.version
-    out += "\nProcessor      : " + platform.processor()
-    out += "\nMachine type   : " + platform.machine()
-    out += "\nArchitecture   : %s, %s" % platform.architecture()
-    out += "\nPlatform       : " + platform.platform()
-    out += "\nsys.stdout.enc : " + sys.stdout.encoding
-    out += "\ndefault enc    : " + sys.getdefaultencoding()
-    out += "\nConfig dir     : " + get_config_dir()
-
-    for env in "TERM SHELL LANG LANGUAGE".split():
-        value = os.environ.get(env)
-        out += "\nenv:%-11s: %s" % (env, value) if value else ""
-
-    return out
-
-
-def process_cl_args():
-    """ Process command line arguments. """
-
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('commands', nargs='*')
-    parser.add_argument('--help', '-h', action='store_true')
-    parser.add_argument('--version', '-v', action='store_true')
-    parser.add_argument('--debug', '-d', action='store_true')
-    parser.add_argument('--logging', '-l', action='store_true')
-    parser.add_argument('--no-autosize', action='store_true')
-    parser.add_argument('--no-preload', action='store_true')
-    args = parser.parse_args()
-
-    if args.version:
-        screen.msgexit(get_version_info())
-
-    elif args.help:
-        screen.msgexit('\n'.join(i[2] for i in helptext()))
-
-    if args.debug or os.environ.get("mpsytdebug") == "1":
-        xprint(get_version_info())
-        g.debug_mode = True
-        g.no_clear_screen = True
-
-    if args.logging or os.environ.get("mpsytlog") == "1" or g.debug_mode:
-        logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
-        logging.basicConfig(level=logging.DEBUG, filename=logfile)
-        logging.getLogger("pafy").setLevel(logging.DEBUG)
-
-    if args.no_autosize:
-        g.detectable_size = False
-
-    g.command_line = "playurl" in args.commands or "dlurl" in args.commands
-    if g.command_line:
-        g.no_clear_screen = True
-
-    if args.no_preload:
-        g.preload_disabled = True
-
-    g.argument_commands = args.commands
-
-
-def init():
-    """ Initial setup. """
-
-    # set player to mpv or mplayer if found, otherwise unset
-    suffix = ".exe" if mswin else ""
-    mplayer, mpv = "mplayer" + suffix, "mpv" + suffix
-
-    if not os.path.exists(g.CFFILE):
-
-        if has_exefile(mpv):
-            Config.PLAYER.set(mpv)
-
-        elif has_exefile(mplayer):
-            Config.PLAYER.set(mplayer)
-
-        Config.save()
-
-    else:
-        Config.load()
-
-    init_readline()
-    cache.load()
-    init_transcode()
-
-    # ensure encoder is not set beyond range of available presets
-    if Config.ENCODER.get >= len(g.encoders):
-        Config.ENCODER.set("0")
-
-    # check mpv/mplayer version
-    if "mpv" in Config.PLAYER.get and has_exefile(Config.PLAYER.get):
-        g.mpv_version = get_mpv_version(Config.PLAYER.get)
-        if not mswin:
-            options = subprocess.check_output(
-                [Config.PLAYER.get, "--list-options"]).decode()
-
-            if "--input-unix-socket" in options:
-                g.mpv_usesock = True
-                dbg(c.g + "mpv supports --input-unix-socket" + c.w)
-
-    elif "mplayer" in Config.PLAYER.get and has_exefile(Config.PLAYER.get):
-        g.mplayer_version = get_mplayer_version(Config.PLAYER.get)
-
-    # setup colorama
-    if has_colorama and mswin:
-        colorama.init()
-
-    # find muxer app
-    if mswin:
-        g.muxapp = has_exefile("ffmpeg.exe") or has_exefile("avconv.exe")
-
-    else:
-        g.muxapp = has_exefile("ffmpeg") or has_exefile("avconv")
-
-    # initialize remote interface
-    try:
-        from . import mpris
-        g.mprisctl, conn = multiprocessing.Pipe()
-        t = multiprocessing.Process(target=mpris.main, args=(conn,))
-        t.daemon = True
-        t.start()
-    except ImportError:
-        pass
-
-    # Make pafy use the same api key
-    pafy.set_api_key(Config.API_KEY.get)
-
-    process_cl_args()
-
-
-def init_transcode():
-    """ Create transcoding presets if not present.
-
-    Read transcoding presets.
-    """
-    if not os.path.exists(g.TCFILE):
-        config_file_contents = """\
-# transcoding presets for mps-youtube
-# VERSION 0
-
-# change ENCODER_PATH to the path of ffmpeg / avconv or leave it as auto
-# to let mps-youtube attempt to find ffmpeg or avconv
-ENCODER_PATH: auto
-
-# Delete original file after encoding it
-# Set to False to keep the original downloaded file
-DELETE_ORIGINAL: True
-
-# ENCODING PRESETS
-
-# Encode ogg or m4a to mp3 256k
-name: MP3 256k
-extension: mp3
-valid for: ogg,m4a
-command: ENCODER_PATH -i IN -codec:a libmp3lame -b:a 256k OUT.EXT
-
-# Encode ogg or m4a to mp3 192k
-name: MP3 192k
-extension: mp3
-valid for: ogg,m4a
-command: ENCODER_PATH -i IN -codec:a libmp3lame -b:a 192k OUT.EXT
-
-# Encode ogg or m4a to mp3 highest quality vbr
-name: MP3 VBR best
-extension: mp3
-valid for: ogg,m4a
-command: ENCODER_PATH -i IN -codec:a libmp3lame -q:a 0 OUT.EXT
-
-# Encode ogg or m4a to mp3 high quality vbr
-name: MP3 VBR good
-extension: mp3
-valid for: ogg,m4a
-command: ENCODER_PATH -i IN -codec:a libmp3lame -q:a 2 OUT.EXT
-
-# Encode m4a to ogg
-name: OGG 256k
-extension: ogg
-valid for: m4a
-command: ENCODER_PATH -i IN -codec:a libvorbis -b:a 256k OUT.EXT
-
-# Encode ogg to m4a
-name: M4A 256k
-extension: m4a
-valid for: ogg
-command: ENCODER_PATH -i IN -strict experimental -codec:a aac -b:a 256k OUT.EXT
-
-# Encode ogg or m4a to wma v2
-name: Windows Media Audio v2
-extension: wma
-valid for: ogg,m4a
-command: ENCODER_PATH -i IN -codec:a wmav2 -q:a 0 OUT.EXT"""
-
-        with open(g.TCFILE, "w") as tcf:
-            tcf.write(config_file_contents)
-            dbg("generated transcoding config file")
-
-    else:
-        dbg("transcoding config file exists")
-
-    with open(g.TCFILE, "r") as tcf:
-        g.encoders = [dict(name="None", ext="COPY", valid="*")]
-        e = {}
-
-        for line in tcf.readlines():
-
-            if line.startswith("TRANSCODER_PATH:"):
-                m = re.match("TRANSCODER_PATH:(.*)", line).group(1)
-                g.transcoder_path = m.strip()
-
-            elif line.startswith("DELETE_ORIGINAL:"):
-                m = re.match("DELETE_ORIGINAL:(.*)", line).group(1)
-                do = m.strip().lower() in ("true", "yes", "enabled", "on")
-                g.delete_orig = do
-
-            elif line.startswith("name:"):
-                e['name'] = re.match("name:(.*)", line).group(1).strip()
-
-            elif line.startswith("extension:"):
-                e['ext'] = re.match("extension:(.*)", line).group(1).strip()
-
-            elif line.startswith("valid for:"):
-                e['valid'] = re.match("valid for:(.*)", line).group(1).strip()
-
-            elif line.startswith("command:"):
-                e['command'] = re.match("command:(.*)", line).group(1).strip()
-
-                if "name" in e and "ext" in e and "valid" in e:
-                    g.encoders.append(e)
-                    e = {}
-
-
-def init_readline():
-    """ Enable readline for input history. """
-    if g.command_line:
-        return
-
-    if has_readline:
-        g.READLINE_FILE = os.path.join(get_config_dir(), "input_history")
-
-        if os.path.exists(g.READLINE_FILE):
-            readline.read_history_file(g.READLINE_FILE)
-            dbg(c.g + "Read history file" + c.w)
-
-
 @commands.command(r'set|showconfig')
 def showconfig():
     """ Dump config data. """
-    width = screen.getxy().width
+    width = getxy().width
     width -= 30
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
@@ -672,7 +410,7 @@ def playback_progress(idx, allsongs, repeat=False):
     """ Generate string to show selected tracks, indicate current track. """
     # pylint: disable=R0914
     # too many local variables
-    cw = screen.getxy().width
+    cw = getxy().width
     out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
     show_key_help = (known_player_set and Config.SHOW_MPLAYER_KEYS.get)
@@ -747,7 +485,7 @@ def generate_playlist_display():
         return logo(c.g) + "\n\n"
     g.rprompt = content.page_msg(g.current_page)
 
-    cw = screen.getxy().width
+    cw = getxy().width
     fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
     fmthd = "%s%-5s %-{}s %-12s %-9s %-5s%s\n".format(cw - 36)
     head = (c.ul, "Item", "Playlist", "Author", "Updated", "Count", c.w)
@@ -764,97 +502,6 @@ def generate_playlist_display():
         out += (fmtrow % (col, str(n + 1), title, author[:12], updated, str(length), c.w))
 
     return out + "\n" * (5 - len(g.ytpls))
-
-
-def generate_real_playerargs(song, override, failcount):
-    """ Generate args for player command.
-
-    Return args and songdata status.
-
-    """
-    # pylint: disable=R0914
-    # pylint: disable=R0912
-    video = ((Config.SHOW_VIDEO.get and override != "audio") or
-             (override in ("fullscreen", "window", "forcevid")))
-    m4a = "mplayer" not in Config.PLAYER.get
-    cached = g.streams[song.ytid]
-    stream = streams.select(cached, q=failcount, audio=(not video), m4a_ok=m4a)
-
-    # handle no audio stream available, or m4a with mplayer
-    # by switching to video stream and suppressing video output.
-    if (not stream or failcount) and not video:
-        dbg(c.r + "no audio or mplayer m4a, using video stream" + c.w)
-        override = "a-v"
-        video = True
-        stream = streams.select(cached, q=failcount, audio=False, maxres=1600)
-
-    if not stream:
-        raise IOError("No streams available")
-
-    if "uiressl=yes" in stream['url'] and "mplayer" in Config.PLAYER.get:
-        ver = g.mplayer_version
-        # Mplayer too old to support https
-        if not (ver > (1,1) if isinstance(ver, tuple) else ver >= 37294):
-            raise IOError("%s : Sorry mplayer doesn't support this stream. "
-                          "Use mpv or update mplayer to a newer version" % song.title)
-
-    size = streams.get_size(song.ytid, stream['url'])
-    songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
-                int(size / (1024 ** 2)))
-
-    # pylint: disable=E1103
-    # pylint thinks PLAYERARGS.get might be bool
-    args = Config.PLAYERARGS.get.strip().split()
-
-    known_player = known_player_set()
-    if known_player:
-        pd = g.playerargs_defaults[known_player]
-        args.extend((pd["title"], song.title))
-
-        if pd['geo'] not in args:
-            geometry = Config.WINDOW_SIZE.get or ""
-
-            if Config.WINDOW_POS.get:
-                wp = Config.WINDOW_POS.get
-                xx = "+1" if "left" in wp else "-1"
-                yy = "+1" if "top" in wp else "-1"
-                geometry += xx + yy
-
-            if geometry:
-                args.extend((pd['geo'], geometry))
-
-        # handle no audio stream available
-        if override == "a-v":
-            list_update(pd["novid"], args)
-
-        elif ((Config.FULLSCREEN.get and override != "window")
-                or override == "fullscreen"):
-            list_update(pd["fs"], args)
-
-        # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
-        if not video and stream['ext'] == "m4a":
-            dbg("%susing ignidx flag%s", c.y, c.w)
-            list_update(pd["ignidx"], args)
-
-        if "mplayer" in Config.PLAYER.get:
-            list_update("-really-quiet", args, remove=True)
-            list_update("-noquiet", args)
-            list_update("-prefer-ipv4", args)
-
-        elif "mpv" in Config.PLAYER.get and not g.debug_mode:
-            msglevel = pd["msglevel"]["<0.4"]
-
-            #  undetected (negative) version number assumed up-to-date
-            if g.mpv_version[0:2] < (0, 0) or g.mpv_version[0:2] >= (0, 4):
-                msglevel = pd["msglevel"][">=0.4"]
-
-            if g.mpv_usesock:
-                list_update("--really-quiet", args)
-            else:
-                list_update("--really-quiet", args, remove=True)
-                list_update(msglevel, args)
-
-    return [Config.PLAYER.get] + args + [stream['url']], songdata
 
 
 def playsong(song, failcount=0, override=False):
@@ -898,7 +545,22 @@ def playsong(song, failcount=0, override=False):
         return
 
     try:
-        cmd, songdata = generate_real_playerargs(song, override, failcount)
+        video = ((Config.SHOW_VIDEO.get and override != "audio") or
+                 (override in ("fullscreen", "window", "forcevid")))
+        m4a = "mplayer" not in Config.PLAYER.get
+        cached = g.streams[song.ytid]
+        stream = streams.select(cached, q=failcount, audio=(not video), m4a_ok=m4a)
+
+        # handle no audio stream available, or m4a with mplayer
+        # by switching to video stream and suppressing video output.
+        if (not stream or failcount) and not video:
+            dbg(c.r + "no audio or mplayer m4a, using video stream" + c.w)
+            override = "a-v"
+            video = True
+            stream = streams.select(cached, q=failcount, audio=False, maxres=1600)
+
+        if not stream:
+            raise IOError("No streams available")
 
     except (HTTPError) as e:
 
@@ -919,11 +581,13 @@ def playsong(song, failcount=0, override=False):
         g.message = c.r + str(errmsg) + c.w
         return
 
+    size = get_size(song.ytid, stream['url'])
+    songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
+                int(size / (1024 ** 2)))
     songdata = "%s; %s; %s Mb" % songdata
     screen.writestatus(songdata)
-    dbg("%splaying %s (%s)%s", c.b, song.title, failcount, c.w)
-    dbg("calling %s", " ".join(cmd))
-    returncode = launch_player(song, songdata, cmd)
+
+    returncode = launch_player(song, songdata, override, stream, video)
     failed = returncode not in (0, 42, 43)
 
     if failed and failcount < g.max_retries:
@@ -965,7 +629,7 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
 
 def token(page):
     """ Returns a page token for a given start index. """
-    index = (page or 0) * screen.getxy().max_results
+    index = (page or 0) * getxy().max_results
     k = index//128 - 1
     index -= 128 * k
     f = [8, index]
@@ -1190,7 +854,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
         qs['id'] = ','.join(id_list)
 
     pldata = call_gdata('playlists', qs)
-    playlists = get_pl_from_json(pldata)[:screen.getxy().max_results]
+    playlists = get_pl_from_json(pldata)[:getxy().max_results]
 
     if is_user:
         result_count = pldata['pageInfo']['totalResults']
@@ -2270,7 +1934,7 @@ def nextprev(np, page=None):
         function = g.content.getPage
         args = {}
     else:
-        page_count = math.ceil(g.result_count/screen.getxy().max_results)
+        page_count = math.ceil(g.result_count/getxy().max_results)
         function, args = g.last_search_query
 
     good = False
@@ -2396,9 +2060,9 @@ def info(num):
         p = g.ytpls[int(num) - 1]
 
         # fetch the playlist item as it has more metadata
-        ytpl = g.pafy_pls.get(p['link'])[0]
-
-        if not ytpl:
+        if p['link'] in g.pafy_pls:
+            ytpl = g.pafy_pls[p['link']][0]
+        else:
             g.content = logo(col=c.g)
             g.message = "Fetching playlist info.."
             screen.update()
@@ -2898,10 +2562,7 @@ def search_album(term):
             c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
     failmsg = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
 
-    def album_seg(s, e):
-        return songs[s:e], len(songs)
-
-    paginatesongs(album_seg, msg=msg, failmsg=failmsg)
+    paginatesongs(songs, msg=msg, failmsg=failmsg)
 
 
 @commands.command(r'encoders?')
