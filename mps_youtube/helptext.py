@@ -80,9 +80,10 @@ def helptext():
     {2}dvpl <url or id>{1} - download YouTube playlist (video) by url or id.
     {2}daupl <username>{1} - download user's YouTube playlists (audio).
     {2}dvupl <username>{1} - download user's YouTube playlists (video).
-    {2}dlurl <url or id>{1} download a YouTube video by url or video id.
-    {2}playurl <url or id>{1} play a YouTube video by url or id.
-    {2}browserplay <number>{1} open a specified previous search in browser.
+    {2}dlurl <url or id>{1} - download a YouTube video by url or video id.
+    {2}daurl <url or id>{1} - download best available audio of YouTube video by url or video id.
+    {2}playurl <url or id>{1} - play a YouTube video by url or id.
+    {2}browserplay <number>{1} - open a specified previous search in browser.
 
     {2}all{1} or {2}*{1} - play all displayed items.
     {2}repeat <number(s)>{1} - play and repeat the specified items.
@@ -234,16 +235,19 @@ def helptext():
     """.format(c.ul, c.w, c.y)),
 
         ("new", "New Features", """
-    {0}New Features in v0.2.2{1}
+    {0}New Features in v0.2.6{1}
 
-     - Display playing resolution / bitrate in status line (Brebiche38)
+     - Add browserplay command to play video in browser (rjvani)
 
-     - Skip to previously played item (ids1024)
+     - Make url command support multiple url, and allow loading urls from file
+         (paulnicolet)
 
-     - Enable custom keymap using mplayer/mpv input.conf file (ids1024)
+     - Make youtube id available to download command (ids1024)
 
-     - Enable custom downloader application (ids1024 & np1){2}
+     - Make pagination work properly for all lists of songs (local playlists,
+         etc.) and make them all support the dump command (ids1024)
 
+     - Show warning when adding duplicate track to playlist (BensonQiu){2}
     """.format(c.ul, c.w, c.y))]
 
 

@@ -61,22 +61,12 @@ def get(vid, force=False, callback=None, threeD=False):
         ps = p.allstreams if threeD else [x for x in p.allstreams
                                           if not x.threed]
 
-    streams = []
-
-    for s in ps:
-        try:
-            rawbitrate = s.rawbitrate
-        except AttributeError:
-            # Deal with bug in pafy before 88fda70 or 0.7.x
-            rawbitrate = None
-
-        x = dict(url=s.url,
-                 ext=s.extension,
-                 quality=s.quality,
-                 rawbitrate=rawbitrate,
-                 mtype=s.mediatype,
-                 size=-1)
-        streams.append(x)
+    streams = [{"url": s.url,
+                "ext": s.extension,
+                "quality": s.quality,
+                "rawbitrate": s.rawbitrate,
+                "mtype": s.mediatype,
+                "size": -1} for s in ps]
 
     g.streams[ytid] = dict(expiry=p.expiry, meta=streams)
     prune()

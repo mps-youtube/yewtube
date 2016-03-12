@@ -1,3 +1,39 @@
+Version 0.2.6
+1 January 2016
+
+Features:
+- Add browserplay command to play video in browser (rjvani) (#355 #390)
+- Make url command support multiple url, and allow loading urls from file
+    (paulnicolet) (#90 #391)
+- Make youtube id available to download command (ids1024) (#375)
+- Make pagination work properly for all lists of songs (local playlists, etc.)
+    and make them all support the dump command (ids1024) (#201)
+- Show warning when adding duplicate track to playlist (BensonQiu) (#374 #383)
+
+Bug fixes:
+- Support playlists longer than 200 items (ids1024) (#192)
+- Make dapl download complete playlist (JKatzwinkel) (#294 #325)
+- Use pyperclip instead of xerox, fixing clipboard on linux (ids1024) (#311)
+- Fix error message on windows when video title has & (ids1024) (#321)
+- Run notifier command in background (hrnr) (#339)
+- Correctly handle -v option of play (TimoDritschler) (#352)
+- Make it possible to use a pager with --help (livingBEEF) (#349)
+- Allow mplayer for https streams if version is new enough
+    (ids1024 Evidlo paddatrapper) (#315 #336 #317)
+- Use mpv.com instead of mpv.exe on windows (ids1024)
+
+Internal API changes:
+- Split code into several files (still a work in progress) (ids1024) (#208)
+- Use a python decorator to declare commands (ids1024)
+- Create a paginatesongs() function for handling the pagination and dump
+  command uniformly as mentioned in features (#399) (ids1024)
+- Various others
+
+There have been various other small bug fixes and internal API changes. Use
+`git log v0.2.5..0.2.6` to see all of them.
+
+-------------------------------------------------------------------------------
+
 Version 0.2.5
 1 June 2015
 

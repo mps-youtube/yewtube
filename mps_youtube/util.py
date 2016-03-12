@@ -8,14 +8,17 @@ import ctypes
 import subprocess
 import logging
 import time
+import collections
 
 import pafy
 
-from . import g, c
+from . import g, c, terminalsize
 
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
+
+XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
  
 
 def has_exefile(filename):
@@ -41,7 +44,7 @@ def has_exefile(filename):
 def get_mpv_version(exename):
     """ Get version of mpv as 3-tuple. """
     o = subprocess.check_output([exename, "--version"]).decode()
-    re_ver = re.compile(r"%s (\d+)\.(\d+)\.(\d+)" % exename)
+    re_ver = re.compile(r"mpv (\d+)\.(\d+)\.(\d+)")
 
     for line in o.split("\n"):
         m = re_ver.match(line)
@@ -189,3 +192,17 @@ def get_pafy(item, force=False, callback=None):
         dbg("%s%sgot new pafy object: %s%s" % (c.y, thread, p.title[:26], c.w))
         dbg("%s%sgot new pafy object: %s%s" % (c.y, thread, p.videoid, c.w))
         return p
+
+
+def getxy():
+    """ Get terminal size, terminal width and max-results. """
+    if g.detectable_size:
+        x, y = terminalsize.get_terminal_size()
+        max_results = y - 4 if y < 54 else 50
+        max_results = 1 if y <= 5 else max_results
+
+    else:
+        x, max_results = Config.CONSOLE_WIDTH.get, Config.MAX_RESULTS.get
+        y = max_results + 4
+
+    return XYTuple(x, y, max_results)

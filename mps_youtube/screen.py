@@ -1,38 +1,25 @@
 import subprocess
-import collections
 import os
 import sys
 
-from . import g, terminalsize
-from .util import xprint, has_exefile
+from . import g, content
+from .util import xprint, has_exefile, getxy
 from .config import Config
 
 
 mswin = os.name == "nt"
-
-XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
-
-
-def getxy():
-    """ Get terminal size, terminal width and max-results. """
-    if g.detectable_size:
-        x, y = terminalsize.get_terminal_size()
-        max_results = y - 4 if y < 54 else 50
-        max_results = 1 if y <= 5 else max_results
-
-    else:
-        x, max_results = Config.CONSOLE_WIDTH.get, Config.MAX_RESULTS.get
-        y = max_results + 4
-
-    return XYTuple(x, y, max_results)
 
 
 def update(fill_blank=True):
     """ Display content, show message, blank screen."""
     clear()
 
-    if g.content:
+    if isinstance(g.content, content.PaginatedContent):
+        xprint(g.content.getPage(g.current_page))
+        g.rprompt = content.page_msg(g.current_page)
+    elif g.content:
         xprint(g.content)
+        g.content = False
 
     if g.message or g.rprompt:
         out = g.message or ''
@@ -43,7 +30,7 @@ def update(fill_blank=True):
     elif fill_blank:
         xprint("")
 
-    g.message = g.content = g.rprompt = False
+    g.message = g.rprompt = False
 
 
 def clear():

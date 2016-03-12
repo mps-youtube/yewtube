@@ -17,7 +17,7 @@ from setuptools import setup
 
 options = dict(
     name="mps-youtube",
-    version="0.2.5",
+    version="0.2.6",
     description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="np1",
@@ -60,7 +60,7 @@ options = dict(
             "bundle_files": 1
         }
     },
-    data_files=[("", ["LICENSE", "README.rst", "CHANGELOG"])],
+    data_files=[("share/mps-youtube", ["LICENSE", "README.rst", "CHANGELOG"])],
     long_description=open("README.rst").read()
 )
 
