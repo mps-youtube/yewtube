@@ -26,6 +26,7 @@ import collections
 import subprocess
 import traceback
 import threading
+import difflib
 import logging
 import base64
 import random
@@ -41,7 +42,7 @@ import re
 import os
 import pickle
 import webbrowser
-from urllib.request import urlopen
+from urllib.request import urlopen, build_opener
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 
