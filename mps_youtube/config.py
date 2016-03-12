@@ -2,7 +2,6 @@ import os
 import re
 import copy
 import pickle
-import collections
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from urllib.parse import urlencode

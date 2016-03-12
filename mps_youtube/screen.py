@@ -3,7 +3,7 @@ import os
 import sys
 
 from . import g, content
-from .util import xprint, has_exefile, getxy
+from .util import xprint, getxy
 from .config import Config
 
 
