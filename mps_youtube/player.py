@@ -62,7 +62,7 @@ def _generate_real_playerargs(song, override, stream, isvideo):
 
         # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
         if not isvideo and stream['ext'] == "m4a":
-            dbg("%susing ignidx flag%s", c.y, c.w)
+            dbg("%susing ignidx flag%s")
             list_update(pd["ignidx"], args)
 
         if "mplayer" in Config.PLAYER.get:
