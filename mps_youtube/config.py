@@ -302,6 +302,8 @@ class _Config(object):
             ConfigItem("window_size", "",
                 check_fn=check_win_size, require_known_player=True),
             ConfigItem("download_command", ''),
+            ConfigItem("audio_format", "auto",
+                allowed_values="auto webm m4a".split()),
             ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo",
                 check_fn=check_api_key)
             ] 

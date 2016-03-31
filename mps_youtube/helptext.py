@@ -198,6 +198,7 @@ def helptext():
     {2}set show_video true|false{1} - show video output (audio only if false)
     {2}set window_pos <top|bottom>-<left|right>{1} - set player window position
     {2}set window_size <number>x<number>{1} - set player window width & height
+    {2}set audio_format <auto|m4a|webm>{1} - set default music audio format
     {2}set api_key <key>{1} - use a different API key for accessing the YouTube Data API
     """.format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'
                'sults when searching (max 50)'.format(c.y, c.w) if not

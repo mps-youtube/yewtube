@@ -94,6 +94,13 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
         streams = [x for x in slist if x['mtype'] == "audio"]
         if not m4a_ok:
             streams = [x for x in streams if not x['ext'] == "m4a"]
+        if not Config.AUDIO_FORMAT.get == "auto":
+            if m4a_ok and Config.AUDIO_FORMAT.get == "m4a":
+                streams = [x for x in streams if x['ext'] == "m4a"]
+            if Config.AUDIO_FORMAT.get == "webm":
+                streams = [x for x in streams if x['ext'] == "webm"]
+            if not streams:
+                streams = [x for x in slist if x['mtype'] == "audio"]
         streams = sorted(streams, key=getbitrate, reverse=True)
     else:
         streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
