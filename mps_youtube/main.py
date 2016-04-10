@@ -761,7 +761,6 @@ def playsong(song, failcount=0, override=False):
 
     try:
         streams.get(song, force=failcount, callback=screen.writestatus)
-        history_add(song)
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
         dbg("--ioerror in playsong call to streams.get %s", str(e))
@@ -838,6 +837,7 @@ def playsong(song, failcount=0, override=False):
         failcount += 1
         return playsong(song, failcount=failcount, override=override)
 
+    history_add(song)
     return returncode
 
 
