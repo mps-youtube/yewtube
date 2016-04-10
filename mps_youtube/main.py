@@ -210,6 +210,13 @@ def open_hist_from_file():
             save_to_hist()
 
 
+def save_to_hist():
+    """ Save history.  Called each time history is updated. """
+    with open(g.HISTFILE, "wb") as hlf:
+        pickle.dump(g.userhist, hlf, protocol=2)
+
+    dbg(c.r + "History saved\n---" + c.w)
+
 
 def save_to_file():
     """ Save playlists.  Called each time a playlist is saved or deleted. """
@@ -754,6 +761,7 @@ def playsong(song, failcount=0, override=False):
 
     try:
         streams.get(song, force=failcount, callback=screen.writestatus)
+        history_add(song)
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
         dbg("--ioerror in playsong call to streams.get %s", str(e))
