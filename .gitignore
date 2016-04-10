@@ -15,4 +15,3 @@ parts
 bin
 var
 tags
-*.swp
