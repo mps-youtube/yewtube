@@ -1485,6 +1485,15 @@ def view_history():
         g.message = "History empty"
 
 
+@commands.command(r'history clear')
+def clear_history():
+    """ Clears the user's play history """
+    history = g.userhist.get('history')
+    g.userhist['history'].songs = []
+    save_to_hist()
+    g.message = "History cleared"
+    g.content = logo()
+
 
 @commands.command(r'(open|save|view)\s*(%s)' % commands.word)
 def open_save_view(action, name):
