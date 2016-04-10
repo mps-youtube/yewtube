@@ -37,6 +37,7 @@ result_count = 0
 rprompt = None
 active = Playlist(name="active")
 userpl = {}
+userhist = {}
 pafs = collections.OrderedDict()
 streams = collections.OrderedDict()
 pafy_pls = {}  #
@@ -46,6 +47,7 @@ CFFILE = os.path.join(get_config_dir(), "config")
 TCFILE = os.path.join(get_config_dir(), "transcode")
 OLD_PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
 PLFILE = os.path.join(get_config_dir(), "playlist_v2")
+HISTFILE = os.path.join(get_config_dir(), "play_history")
 CACHEFILE = os.path.join(get_config_dir(), "cache_py_" + sys.version[0:5])
 READLINE_FILE = None
 playerargs_defaults = {

@@ -4,7 +4,7 @@ import sys
 
 from . import g
 from .content import PaginatedContent, page_msg
-from .util import xprint, has_exefile, getxy
+from .util import xprint, getxy
 from .config import Config
 
 
