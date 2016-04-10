@@ -2188,7 +2188,6 @@ def history_add(song):
         g.userhist['history'] = Playlist('history')
 
     g.userhist['history'].songs.append(song)
-    dur = g.userhist['history'].duration
 
     save_to_hist()
 
