@@ -2619,6 +2619,14 @@ def shuffle_fn():
     g.content = generate_songlist_display()
 
 
+@commands.command(r'reverse')
+def reverse_fn():
+    """ Reverse order of displayed items. """
+    g.model.songs = g.model.songs[::-1]
+    g.message = c.y + "Items reversed" + c.w
+    g.content = generate_songlist_display()
+
+
 @commands.command(r'clearcache')
 def clearcache():
     """ Clear cached items - for debugging use. """
