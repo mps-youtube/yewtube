@@ -1471,6 +1471,20 @@ def save_last():
 
         open_save_view("save", saveas)
 
+@commands.command(r'history')
+def view_history():
+    """ Display the user's play history """
+    history = g.userhist.get('history')
+    #g.last_opened = ""
+    try:
+        paginatesongs(list(history.songs))
+        g.message = "Viewing play history"
+
+    except AttributeError:
+        g.content = logo(c.r)
+        g.message = "History empty"
+
+
 
 @commands.command(r'(open|save|view)\s*(%s)' % commands.word)
 def open_save_view(action, name):
