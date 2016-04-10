@@ -195,6 +195,7 @@ def setconfig(key, val):
     showconfig()
     g.message = message
 
+
 def open_hist_from_file():
     """ Open history. Called once on script invocation. """
     try:
@@ -207,6 +208,7 @@ def open_hist_from_file():
         if not os.path.isfile(g.HISTFILE):
             g.userhist = {}
             save_to_hist()
+
 
 
 def save_to_file():
@@ -2939,6 +2941,9 @@ def main():
     # open playlists from file
     convert_playlist_to_v2()
     open_from_file()
+
+    #open history from file
+    open_hist_from_file()
 
     arg_inp = ' '.join(g.argument_commands)
 
