@@ -195,6 +195,19 @@ def setconfig(key, val):
     showconfig()
     g.message = message
 
+def open_hist_from_file():
+    """ Open history. Called once on script invocation. """
+    try:
+
+        with open(g.HISTFILE, "rb") as hlf:
+            g.userhist = pickle.load(hlf)
+
+    except IOError:
+        # no playlist found, create a blank one
+        if not os.path.isfile(g.HISTFILE):
+            g.userhist = {}
+            save_to_hist()
+
 
 def save_to_file():
     """ Save playlists.  Called each time a playlist is saved or deleted. """
