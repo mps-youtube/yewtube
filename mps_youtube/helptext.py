@@ -149,15 +149,6 @@ def helptext():
     {2}mv <number>,<number>{1} - move item <number> to position <number>.
     """.format(c.ul, c.w, c.y)),
 
-        ("history", "Accessing Local History", """
-    {0}Accessing Local History{1}
-
-    Access songs that have been played within mpsyt
-
-        {2}history{1} - displays a list of songs contained in history
-        {2}history clear{1} - clears the song history
-    """.format(c.ul, c.w, c.y)),
-
         ("invoke", "Invocation Parameters", """
     {0}Invocation{1}
 
