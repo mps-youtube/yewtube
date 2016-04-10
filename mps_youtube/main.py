@@ -1488,7 +1488,6 @@ def view_history():
 @commands.command(r'history clear')
 def clear_history():
     """ Clears the user's play history """
-    history = g.userhist.get('history')
     g.userhist['history'].songs = []
     save_to_hist()
     g.message = "History cleared"
