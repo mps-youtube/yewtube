@@ -2620,12 +2620,23 @@ def shuffle_fn():
 
 
 @commands.command(r'reverse')
-def reverse_fn():
+def reverse_songs():
     """ Reverse order of displayed items. """
     g.model.songs = g.model.songs[::-1]
     g.message = c.y + "Items reversed" + c.w
     g.content = generate_songlist_display()
 
+
+@commands.command(r'reverse\s*(\d{1,4})\s*-\s*(\d{1,4})\s*')
+def reverse_songs_range(lower, upper):
+    """ Reverse the songs within a specified range. """
+    lower, upper = int(lower), int(upper)
+    if lower > upper: lower, upper = upper, lower
+    
+    g.model.songs[lower-1:upper] = reversed(g.model.songs[lower-1:upper])
+    g.message = c.y + "Reversed range: " + str(lower) + "-" + str(upper) + c.w
+    g.content = generate_songlist_display()
+    
 
 @commands.command(r'clearcache')
 def clearcache():
