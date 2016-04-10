@@ -2160,6 +2160,17 @@ def playlist_add(nums, playlist):
     g.content = generate_songlist_display()
 
 
+def history_add(song):
+    """ Add song to history. """
+    if not g.userhist.get('history'):
+        g.userhist['history'] = Playlist('history')
+
+    g.userhist['history'].songs.append(song)
+    dur = g.userhist['history'].duration
+
+    save_to_hist()
+
+
 @commands.command(r'mv\s*(\d{1,3})\s*(%s)' % commands.word)
 def playlist_rename_idx(_id, name):
     """ Rename a playlist by ID. """
