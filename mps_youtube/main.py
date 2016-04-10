@@ -196,6 +196,28 @@ def setconfig(key, val):
     g.message = message
 
 
+def open_hist_from_file():
+    """ Open history. Called once on script invocation. """
+    try:
+
+        with open(g.HISTFILE, "rb") as hlf:
+            g.userhist = pickle.load(hlf)
+
+    except IOError:
+        # no playlist found, create a blank one
+        if not os.path.isfile(g.HISTFILE):
+            g.userhist = {}
+            save_to_hist()
+
+
+def save_to_hist():
+    """ Save history.  Called each time history is updated. """
+    with open(g.HISTFILE, "wb") as hlf:
+        pickle.dump(g.userhist, hlf, protocol=2)
+
+    dbg(c.r + "History saved\n---" + c.w)
+
+
 def save_to_file():
     """ Save playlists.  Called each time a playlist is saved or deleted. """
     with open(g.PLFILE, "wb") as plf:
@@ -815,6 +837,7 @@ def playsong(song, failcount=0, override=False):
         failcount += 1
         return playsong(song, failcount=failcount, override=override)
 
+    history_add(song)
     return returncode
 
 
@@ -1447,6 +1470,28 @@ def save_last():
         saveas = saveas.lstrip("0123456789")
 
         open_save_view("save", saveas)
+
+@commands.command(r'history')
+def view_history():
+    """ Display the user's play history """
+    history = g.userhist.get('history')
+    #g.last_opened = ""
+    try:
+        paginatesongs(list(history.songs))
+        g.message = "Viewing play history"
+
+    except AttributeError:
+        g.content = logo(c.r)
+        g.message = "History empty"
+
+
+@commands.command(r'history clear')
+def clear_history():
+    """ Clears the user's play history """
+    g.userhist['history'].songs = []
+    save_to_hist()
+    g.message = "History cleared"
+    g.content = logo()
 
 
 @commands.command(r'(open|save|view)\s*(%s)' % commands.word)
@@ -2135,6 +2180,16 @@ def playlist_add(nums, playlist):
         save_to_file()
 
     g.content = generate_songlist_display()
+
+
+def history_add(song):
+    """ Add song to history. """
+    if not g.userhist.get('history'):
+        g.userhist['history'] = Playlist('history')
+
+    g.userhist['history'].songs.append(song)
+
+    save_to_hist()
 
 
 @commands.command(r'mv\s*(\d{1,3})\s*(%s)' % commands.word)
@@ -2926,6 +2981,9 @@ def main():
     # open playlists from file
     convert_playlist_to_v2()
     open_from_file()
+
+    #open history from file
+    open_hist_from_file()
 
     arg_inp = ' '.join(g.argument_commands)
 
