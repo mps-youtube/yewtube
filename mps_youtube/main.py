@@ -2641,6 +2641,12 @@ def reverse_songs_range(lower, upper):
 @commands.command(r'reverse all')
 def reverse_playlist():
     """ Reverse order of entire loaded playlist. """
+    # Prevent crash if no last query
+    if g.last_search_query == (None, None):
+        g.content = logo()
+        g.message = "No playlist loaded"
+        return
+
     songs_list_or_func = g.last_search_query[1]['func']
     if callable(songs_list_or_func):
         songs = reversed(songs_list_or_func(0,None))
