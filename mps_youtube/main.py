@@ -2643,7 +2643,7 @@ def reverse_playlist():
     """ Reverse order of entire loaded playlist. """
     songs_list_or_func = g.last_search_query[1]['func']
     if callable(songs_list_or_func):
-        songs = reversed(songs_list_or_func(0,1000))
+        songs = reversed(songs_list_or_func(0,None))
     else:
         songs = reversed(songs_list_or_func)
 
