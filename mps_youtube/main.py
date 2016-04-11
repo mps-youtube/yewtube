@@ -2638,6 +2638,18 @@ def reverse_songs_range(lower, upper):
     g.content = generate_songlist_display()
     
 
+@commands.command(r'reverse all')
+def reverse_playlist():
+    """ Reverse order of entire loaded playlist. """
+    songs_list_or_func = g.last_search_query[1]['func']
+    if callable(songs_list_or_func):
+        songs = reversed(songs_list_or_func(0,1000))
+    else:
+        songs = reversed(songs_list_or_func)
+
+    paginatesongs(list(songs))
+
+
 @commands.command(r'clearcache')
 def clearcache():
     """ Clear cached items - for debugging use. """
