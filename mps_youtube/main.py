@@ -2342,12 +2342,9 @@ def clip_copy(num):
             g.content = generate_songlist_display()
 
         except Exception as e:
-            xprint(link)
-            xprint("Error - couldn't copy to clipboard.")
-            xprint(e.__doc__)
-            xprint("")
-            input("Press Enter to continue.")
             g.content = generate_songlist_display()
+            g.message = link + "\nError - couldn't copy to clipboard.\n" + \
+                    ''.join(traceback.format_exception_only(type(e), e))
 
     else:
         g.message = "pyperclip module must be installed for clipboard support\n"
