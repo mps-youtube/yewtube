@@ -2664,8 +2664,6 @@ def reverse_playlist():
         g.message = c.r + "A problem occured reversing all. " 
         g.message += "Use " + c.y + "reverse" + c.r + " instead." + c.w
         g.content = generate_songlist_display()
-        return
-
 
 
 @commands.command(r'clearcache')
