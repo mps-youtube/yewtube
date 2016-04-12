@@ -87,9 +87,15 @@ class IterSlicer():
     """ Class that takes an iterable and allows slicing,
         loading from the iterable as needed."""
 
-    def __init__(self, iterable):
+    def __init__(self, iterable, length=None):
         self.ilist = []
         self.iterable = iter(iterable)
+        self.length = length
+        if length is None:
+            try:
+                self.length = len(iterable)
+            except TypeError:
+                pass
 
     def __getitem__(self, sliced):
         if isinstance(sliced, slice):
@@ -108,7 +114,9 @@ class IterSlicer():
         return self.ilist[sliced]
 
     def __len__(self):
-        return len(self[:])
+        if self.length is None:
+            self.length = len(self[:])
+        return self.length
 
 
 def get_content_length(url, preloading=False):
@@ -862,9 +870,9 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
             qs['pageToken'] = wdata2['nextPageToken']
             wdata2 = call_gdata('search', qs)
 
-    slicer = IterSlicer(iter_songs())
     # The youtube search api returns a maximum of 500 results
     length = min(wdata['pageInfo']['totalResults'], 500)
+    slicer = IterSlicer(iter_songs(), length)
 
     paginatesongs(slicer, length=length, msg=msg, failmsg=failmsg,
             loadmsg=loadmsg)
