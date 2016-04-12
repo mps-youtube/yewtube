@@ -1477,7 +1477,7 @@ def view_history():
     history = g.userhist.get('history')
     #g.last_opened = ""
     try:
-        paginatesongs(list(history.songs))
+        paginatesongs(list(reversed(history.songs)))
         g.message = "Viewing play history"
 
     except AttributeError:
