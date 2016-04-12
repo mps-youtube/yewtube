@@ -107,6 +107,9 @@ class IterSlicer():
 
         return self.ilist[sliced]
 
+    def __len__(self):
+        return len(self[:])
+
 
 def get_content_length(url, preloading=False):
     """ Return content length of a url. """
@@ -2648,22 +2651,15 @@ def reverse_playlist():
         g.message = "No playlist loaded"
         return
 
-    try:
-        songs_list_or_func = g.last_search_query[1]['func']
-        if callable(songs_list_or_func):
-            songs = reversed(songs_list_or_func(0,None))
-        else:
-            songs = reversed(songs_list_or_func)
+    songs_list_or_func = g.last_search_query[1]['func']
+    if callable(songs_list_or_func):
+        songs = reversed(songs_list_or_func(0,None))
+    else:
+        songs = reversed(songs_list_or_func)
 
-        paginatesongs(list(songs))
-        g.message = c.y + "Reversed entire playlist" + c.w
-        g.content = generate_songlist_display()
-        
-    except TypeError:
-        #TODO Error occurs reversing certain playlists (eg. YT user songs). 
-        g.message = c.r + "A problem occured reversing all. " 
-        g.message += "Use " + c.y + "reverse" + c.r + " instead." + c.w
-        g.content = generate_songlist_display()
+    paginatesongs(list(songs))
+    g.message = c.y + "Reversed entire playlist" + c.w
+    g.content = generate_songlist_display()
 
 
 @commands.command(r'clearcache')
