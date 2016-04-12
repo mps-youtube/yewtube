@@ -63,6 +63,8 @@ def helptext():
     {2}mix <number>{1} - show YouTube mix playlist from item in results.
 
     {2}shuffle{1} - Shuffle the displayed results.
+    {2}reverse{1} or {2}reverse <number>-<number>{1} - Reverse the displayed items or item range.
+    {2}reverse all{1} - Reverse order of entire loaded playlist
     """.format(c.ul, c.w, c.y)),
 
         ("download", "Downloading and Playback", """

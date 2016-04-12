@@ -1477,7 +1477,7 @@ def view_history():
     history = g.userhist.get('history')
     #g.last_opened = ""
     try:
-        paginatesongs(list(history.songs))
+        paginatesongs(list(reversed(history.songs)))
         g.message = "Viewing play history"
 
     except AttributeError:
@@ -2617,6 +2617,53 @@ def shuffle_fn():
     random.shuffle(g.model.songs)
     g.message = c.y + "Items shuffled" + c.w
     g.content = generate_songlist_display()
+
+
+@commands.command(r'reverse')
+def reverse_songs():
+    """ Reverse order of displayed items. """
+    g.model.songs = g.model.songs[::-1]
+    g.message = c.y + "Reversed displayed songs" + c.w
+    g.content = generate_songlist_display()
+
+
+@commands.command(r'reverse\s*(\d{1,4})\s*-\s*(\d{1,4})\s*')
+def reverse_songs_range(lower, upper):
+    """ Reverse the songs within a specified range. """
+    lower, upper = int(lower), int(upper)
+    if lower > upper: lower, upper = upper, lower
+    
+    g.model.songs[lower-1:upper] = reversed(g.model.songs[lower-1:upper])
+    g.message = c.y + "Reversed range: " + str(lower) + "-" + str(upper) + c.w
+    g.content = generate_songlist_display()
+    
+
+@commands.command(r'reverse all')
+def reverse_playlist():
+    """ Reverse order of entire loaded playlist. """
+    # Prevent crash if no last query
+    if g.last_search_query == (None, None) or \
+            'func' not in g.last_search_query[1]:
+        g.content = logo()
+        g.message = "No playlist loaded"
+        return
+
+    try:
+        songs_list_or_func = g.last_search_query[1]['func']
+        if callable(songs_list_or_func):
+            songs = reversed(songs_list_or_func(0,None))
+        else:
+            songs = reversed(songs_list_or_func)
+
+        paginatesongs(list(songs))
+        g.message = c.y + "Reversed entire playlist" + c.w
+        g.content = generate_songlist_display()
+        
+    except TypeError:
+        #TODO Error occurs reversing certain playlists (eg. YT user songs). 
+        g.message = c.r + "A problem occured reversing all. " 
+        g.message += "Use " + c.y + "reverse" + c.r + " instead." + c.w
+        g.content = generate_songlist_display()
 
 
 @commands.command(r'clearcache')
