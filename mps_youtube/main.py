@@ -1864,7 +1864,7 @@ def quits(showlogo=True):
     if Config.CHECKUPDATE.get and showlogo:
 
         try:
-            url = "https://github.com/np1/mps-youtube/raw/master/VERSION"
+            url = "https://raw.githubusercontent.com/mps-youtube/mps-youtube/master/VERSION"
             v = urlopen(url, timeout=1).read().decode()
             v = re.search(r"^version\s*([\d\.]+)\s*$", v, re.MULTILINE)
 
