@@ -1,18 +1,21 @@
 import os
 import sys
+import random
 import tempfile
 import subprocess
+import logging
 import json
 import re
 import socket
 import math
 import time
+import shlex
 from urllib.error import HTTPError, URLError
 
 from . import g, screen, c, streams, history
 from .util import dbg, xenc, F, getxy, uea_pad
 from .util import list_update, has_exefile, fmt_time
-from .util import set_window_title
+from .util import set_window_title, xprint
 from .config import Config, known_player_set
 from .paths import get_config_dir
 

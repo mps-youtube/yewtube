@@ -26,7 +26,6 @@ import traceback
 import difflib
 import logging
 import base64
-import random
 import locale
 import socket
 import shlex
