@@ -36,7 +36,6 @@ import json
 import sys
 import re
 import os
-import pickle
 import webbrowser
 from urllib.request import urlopen, build_opener
 from urllib.error import HTTPError, URLError
@@ -46,7 +45,7 @@ import pafy
 from pafy import call_gdata, GdataError
 
 from . import g, c, commands, cache, streams, screen, content, history
-from . import __version__, __url__
+from . import __version__, __url__, playlists
 from .content import generate_songlist_display, generate_playlist_display
 from .content import logo, playlists_display
 from .playlist import Playlist, Video
@@ -175,101 +174,6 @@ def setconfig(key, val):
 
     showconfig()
     g.message = message
-
-
-def save_to_file():
-    """ Save playlists.  Called each time a playlist is saved or deleted. """
-    with open(g.PLFILE, "wb") as plf:
-        pickle.dump(g.userpl, plf, protocol=2)
-
-    dbg(c.r + "Playlist saved\n---" + c.w)
-
-
-def open_from_file():
-    """ Open playlists. Called once on script invocation. """
-    try:
-
-        with open(g.PLFILE, "rb") as plf:
-            g.userpl = pickle.load(plf)
-
-    except IOError:
-        # no playlist found, create a blank one
-        if not os.path.isfile(g.PLFILE):
-            g.userpl = {}
-            save_to_file()
-
-    except AttributeError:
-        # playlist is from a time when this module was __main__
-        # https://github.com/np1/mps-youtube/issues/214
-        import __main__
-        __main__.Playlist = Playlist
-        __main__.Video = Video
-
-        with open(g.PLFILE, "rb") as plf:
-            g.userpl = pickle.load(plf)
-
-        save_to_file()
-        screen.msgexit("Updated playlist file. Please restart mpsyt", 1)
-
-    except EOFError:
-        screen.msgexit("Error opening playlists from %s" % g.PLFILE, 1)
-
-    # remove any cached urls from playlist file, these are now
-    # stored in a separate cache file
-
-    save = False
-
-    for k, v in g.userpl.items():
-
-        for song in v.songs:
-
-            if hasattr(song, "urls"):
-                dbg("remove %s: %s", k, song.urls)
-                del song.urls
-                save = True
-
-    if save:
-        save_to_file()
-
-
-def convert_playlist_to_v2():
-    """ Convert previous playlist file to v2 playlist. """
-    # skip if previously done
-    if os.path.isfile(g.PLFILE):
-        return
-
-    # skip if no playlist files exist
-    elif not os.path.isfile(g.OLD_PLFILE):
-        return
-
-    try:
-        with open(g.OLD_PLFILE, "rb") as plf:
-            old_playlists = pickle.load(plf)
-
-    except IOError:
-        sys.exit("Couldn't open old playlist file")
-
-    # rename old playlist file
-    backup = g.OLD_PLFILE + "_v1_backup"
-
-    if os.path.isfile(backup):
-        sys.exit("Error, backup exists but new playlist exists not!")
-
-    os.rename(g.OLD_PLFILE, backup)
-
-    # do the conversion
-    for plname, plitem in old_playlists.items():
-
-        songs = []
-
-        for video in plitem.songs:
-            v = Video(video['link'], video['title'], video['duration'])
-            songs.append(v)
-
-        g.userpl[plname] = Playlist(plname, songs)
-
-    # save as v2
-    save_to_file()
 
 
 def get_track_id_from_json(item):
@@ -1036,7 +940,7 @@ def open_save_view(action, name):
         else:
             g.userpl[name] = Playlist(name, list(g.model.songs))
             g.message = F('pl saved') % name
-            save_to_file()
+            playlists.save()
             g.content = generate_songlist_display()
 
 
@@ -1561,7 +1465,7 @@ def playlist_remove(name):
         del g.userpl[name]
         g.message = "Deleted playlist %s%s%s" % (c.y, name, c.w)
         g.content = playlists_display()
-        save_to_file()
+        playlists.save()
 
     else:
         g.message = F('pl not found advise ls') % name
@@ -1600,7 +1504,7 @@ def playlist_add(nums, playlist):
         g.message = F('added to saved pl') % f
 
     if nums:
-        save_to_file()
+        playlists.save()
 
     g.content = generate_songlist_display()
 
@@ -1629,7 +1533,7 @@ def playlist_rename(playlists):
     g.userpl[b].songs = list(g.userpl[a].songs)
     playlist_remove(a)
     g.message = F('pl renamed') % (a, b)
-    save_to_file()
+    playlists.save()
 
 
 @commands.command(r'(rm|add)\s(?:\*|all)')
@@ -2429,8 +2333,7 @@ def main():
         screen.update()
 
     # open playlists from file
-    convert_playlist_to_v2()
-    open_from_file()
+    playlists.load()
 
     #open history from file
     history.load()
