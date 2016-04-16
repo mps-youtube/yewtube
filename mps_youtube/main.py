@@ -1573,6 +1573,7 @@ def play(pre, choice, post=""):
                 streams.preload(g.model[chosen + 1], override=override)
 
         play_range(songlist, shuffle, repeat, override)
+        g.content = generate_songlist_display()
 
 
 @commands.command(r'(%s{0,3})(?:\*|all)\s*(%s{0,3})' %
@@ -1650,8 +1651,6 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
         elif n == len(songlist) and repeat:
             n = 0
-
-    g.content = generate_songlist_display()
 
 
 @commands.command(r'(?:help|h)(?:\s+([-_a-zA-Z]+))?')
