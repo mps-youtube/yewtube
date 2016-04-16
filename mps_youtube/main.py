@@ -24,7 +24,6 @@ from xml.etree import ElementTree as ET
 import unicodedata
 import subprocess
 import traceback
-import threading
 import difflib
 import logging
 import base64
@@ -1571,7 +1570,7 @@ def play(pre, choice, post=""):
             chosen = selection[0] - 1
 
             if len(g.model) > chosen + 1:
-                preload(g.model[chosen + 1], override=override)
+                streams.preload(g.model[chosen + 1], override=override)
 
         play_range(songlist, shuffle, repeat, override)
 
@@ -1607,44 +1606,6 @@ def vp():
     paginatesongs(g.active, msg=msg, failmsg=failmsg)
 
 
-def _preload(song, delay, override):
-    """  Get streams (runs in separate thread). """
-    if g.preload_disabled:
-        return
-
-    ytid = song.ytid
-    g.preloading.append(ytid)
-    time.sleep(delay)
-    video = Config.SHOW_VIDEO.get
-    video = True if override in ("fullscreen", "window", "forcevid") else video
-    video = False if override == "audio" else video
-
-    try:
-        m4a = "mplayer" not in Config.PLAYER.get
-        streamlist = streams.get(song)
-        stream = streams.select(streamlist, audio=not video, m4a_ok=m4a)
-
-        if not stream and not video:
-            # preload video stream, no audio available
-            stream = streams.select(streamlist, audio=False)
-
-        streams.get_size(ytid, stream['url'], preloading=True)
-
-    except (ValueError, AttributeError, IOError) as e:
-        dbg(e)  # Fail silently on preload
-
-    finally:
-        g.preloading.remove(song.ytid)
-
-
-def preload(song, delay=2, override=False):
-    """  Get streams. """
-    args = (song, delay, override)
-    t = threading.Thread(target=_preload, args=args)
-    t.daemon = True
-    t.start()
-
-
 def play_range(songlist, shuffle=False, repeat=False, override=False):
     """ Play a range of songs, exit cleanly on keyboard interrupt. """
     if shuffle:
@@ -1661,7 +1622,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         hasnext = len(songlist) > n + 1
 
         if hasnext:
-            preload(songlist[n + 1], override=override)
+            streams.preload(songlist[n + 1], override=override)
 
         set_window_title(song.title + " - mpsyt")
         try:
@@ -2438,7 +2399,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
 
     if songs:
         # preload first result url
-        preload(songs[0], delay=0)
+        streams.preload(songs[0], delay=0)
 
 
 @commands.command(r'pl\s+%s' % commands.pl)

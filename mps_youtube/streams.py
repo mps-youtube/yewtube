@@ -1,4 +1,5 @@
 import time
+import threading
 from urllib.request import urlopen
 
 from . import g, c, screen
@@ -144,3 +145,41 @@ def _get_content_length(url, preloading=False):
     headers = response.headers
     cl = headers['content-length']
     return int(cl)
+
+
+def preload(song, delay=2, override=False):
+    """  Get streams. """
+    args = (song, delay, override)
+    t = threading.Thread(target=_preload, args=args)
+    t.daemon = True
+    t.start()
+
+
+def _preload(song, delay, override):
+    """  Get streams (runs in separate thread). """
+    if g.preload_disabled:
+        return
+
+    ytid = song.ytid
+    g.preloading.append(ytid)
+    time.sleep(delay)
+    video = Config.SHOW_VIDEO.get
+    video = True if override in ("fullscreen", "window", "forcevid") else video
+    video = False if override == "audio" else video
+
+    try:
+        m4a = "mplayer" not in Config.PLAYER.get
+        streamlist = get(song)
+        stream = select(streamlist, audio=not video, m4a_ok=m4a)
+
+        if not stream and not video:
+            # preload video stream, no audio available
+            stream = select(streamlist, audio=False)
+
+        get_size(ytid, stream['url'], preloading=True)
+
+    except (ValueError, AttributeError, IOError) as e:
+        dbg(e)  # Fail silently on preload
+
+    finally:
+        g.preloading.remove(song.ytid)
