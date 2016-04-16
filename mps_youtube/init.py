@@ -5,7 +5,6 @@ import logging
 import tempfile
 import argparse
 import platform
-import subprocess
 import multiprocessing
 
 import pafy
@@ -27,8 +26,8 @@ except ImportError:
     has_readline = False
 
 from . import cache, g, __version__, __notes__, screen, c
-from .util import has_exefile, dbg, get_mpv_version, get_mplayer_version, xprint
-from .config import Config
+from .util import has_exefile, dbg, xprint
+from .config import Config, load_player_info
 from .helptext import helptext
 from .paths import get_config_dir
 
@@ -64,21 +63,8 @@ def init():
         Config.ENCODER.set("0")
 
     # check mpv/mplayer version
-    if "mpv" in Config.PLAYER.get and has_exefile(Config.PLAYER.get):
-        g.mpv_version = get_mpv_version(Config.PLAYER.get)
-        if not mswin:
-            options = subprocess.check_output(
-                [Config.PLAYER.get, "--list-options"]).decode()
-
-            if "--input-unix-socket" in options:
-                g.mpv_usesock = "--input-unix-socket"
-                dbg(c.g + "mpv supports --input-unix-socket" + c.w)
-            elif "--input-ipc-server" in options:
-                g.mpv_usesock = "--input-ipc-server"
-                dbg(c.g + "mpv supports --input-ipc-server" + c.w)
-
-    elif "mplayer" in Config.PLAYER.get and has_exefile(Config.PLAYER.get):
-        g.mplayer_version = get_mplayer_version(Config.PLAYER.get)
+    if has_exefile(Config.PLAYER.get):
+        load_player_info()
 
     # setup colorama
     if has_colorama and mswin:

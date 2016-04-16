@@ -41,41 +41,6 @@ def has_exefile(filename):
     return False
 
 
-def get_mpv_version(exename):
-    """ Get version of mpv as 3-tuple. """
-    o = subprocess.check_output([exename, "--version"]).decode()
-    re_ver = re.compile(r"mpv (\d+)\.(\d+)\.(\d+)")
-
-    for line in o.split("\n"):
-        m = re_ver.match(line)
-
-        if m:
-            v = tuple(map(int, m.groups()))
-            dbg("%s version %s.%s.%s detected", exename, *v)
-            return v
-
-    dbg("%sFailed to detect mpv version%s", c.r, c.w)
-    return -1, 0, 0
-
-
-def get_mplayer_version(exename):
-    o = subprocess.check_output([exename]).decode()
-    m = re.search('^MPlayer SVN[\s-]r([0-9]+)', o, re.MULTILINE|re.IGNORECASE)
-
-    ver = 0
-    if m:
-        ver = int(m.groups()[0])
-    else:
-        m = re.search('^MPlayer ([0-9])+.([0-9]+)', o, re.MULTILINE)
-        if m: 
-            ver = tuple(int(i) for i in m.groups())
-
-        else:
-            dbg("%sFailed to detect mplayer version%s", c.r, c.w)
-
-    return ver
-
-
 def dbg(*args):
     """Emit a debug message."""
     # Uses xenc to deal with UnicodeEncodeError when writing to terminal

@@ -2,6 +2,7 @@ import os
 import re
 import copy
 import pickle
+import subprocess
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from urllib.parse import urlencode
@@ -10,7 +11,7 @@ import pafy
 
 from . import g, c
 from .paths import get_default_ddir
-from .util import get_mpv_version, has_exefile, dbg, list_update
+from .util import has_exefile, dbg, list_update
 
 
 mswin = os.name == "nt"
@@ -244,9 +245,9 @@ def check_encoder(option):
 def check_player(player):
     """ Check player exefile exists and get mpv version. """
     if has_exefile(player):
+        load_player_info(player)
 
         if "mpv" in player:
-            g.mpv_version = get_mpv_version(player)
             version = "%s.%s.%s" % g.mpv_version
             fmt = c.g, c.w, c.g, c.w, version
             msg = "%splayer%s set to %smpv%s (version %s)" % fmt
@@ -378,3 +379,59 @@ def known_player_set():
             return allowed_player
 
     return None
+
+
+def load_player_info(player=None):
+    if player is None:
+        player = Config.PLAYER.get
+
+    if "mpv" in player:
+        g.mpv_version = _get_mpv_version(player)
+        if not mswin:
+            options = subprocess.check_output(
+                [player, "--list-options"]).decode()
+
+            if "--input-unix-socket" in options:
+                g.mpv_usesock = "--input-unix-socket"
+                dbg(c.g + "mpv supports --input-unix-socket" + c.w)
+            elif "--input-ipc-server" in options:
+                g.mpv_usesock = "--input-ipc-server"
+                dbg(c.g + "mpv supports --input-ipc-server" + c.w)
+
+    elif "mplayer" in player:
+        g.mplayer_version = _get_mplayer_version(player)
+
+
+def _get_mpv_version(exename):
+    """ Get version of mpv as 3-tuple. """
+    o = subprocess.check_output([exename, "--version"]).decode()
+    re_ver = re.compile(r"mpv (\d+)\.(\d+)\.(\d+)")
+
+    for line in o.split("\n"):
+        m = re_ver.match(line)
+
+        if m:
+            v = tuple(map(int, m.groups()))
+            dbg("%s version %s.%s.%s detected", exename, *v)
+            return v
+
+    dbg("%sFailed to detect mpv version%s", c.r, c.w)
+    return -1, 0, 0
+
+
+def _get_mplayer_version(exename):
+    o = subprocess.check_output([exename]).decode()
+    m = re.search('^MPlayer SVN[\s-]r([0-9]+)', o, re.MULTILINE|re.IGNORECASE)
+
+    ver = 0
+    if m:
+        ver = int(m.groups()[0])
+    else:
+        m = re.search('^MPlayer ([0-9])+.([0-9]+)', o, re.MULTILINE)
+        if m:
+            ver = tuple(int(i) for i in m.groups())
+
+        else:
+            dbg("%sFailed to detect mplayer version%s", c.r, c.w)
+
+    return ver
