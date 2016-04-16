@@ -1,6 +1,7 @@
 import time
+from urllib.request import urlopen
 
-from . import g, c
+from . import g, c, screen
 from .util import dbg, get_pafy
 from .config import Config
 
@@ -115,3 +116,31 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
         ret = streams[0] if q and len(streams) else None
 
     return ret
+
+
+def get_size(ytid, url, preloading=False):
+    """ Get size of stream, try stream cache first. """
+    # try cached value
+    stream = [x for x in g.streams[ytid]['meta'] if x['url'] == url][0]
+    size = stream['size']
+    prefix = "preload: " if preloading else ""
+
+    if not size == -1:
+        dbg("%s%susing cached size: %s%s", c.g, prefix, size, c.w)
+
+    else:
+        screen.writestatus("Getting content length", mute=preloading)
+        stream['size'] = _get_content_length(url, preloading=preloading)
+        dbg("%s%s - content-length: %s%s", c.y, prefix, stream['size'], c.w)
+
+    return stream['size']
+
+
+def _get_content_length(url, preloading=False):
+    """ Return content length of a url. """
+    prefix = "preload: " if preloading else ""
+    dbg(c.y + prefix + "getting content-length header" + c.w)
+    response = urlopen(url)
+    headers = response.headers
+    cl = headers['content-length']
+    return int(cl)

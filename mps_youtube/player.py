@@ -6,13 +6,112 @@ import re
 import socket
 import math
 import time
+from urllib.error import HTTPError, URLError
 
-from . import g, screen
-from .util import dbg, xenc, F, getxy, list_update
+from . import g, screen, c, streams, history
+from .util import dbg, xenc, F, getxy, list_update, has_exefile
 from .config import Config, known_player_set
 from .paths import get_config_dir
 
 mswin = os.name == "nt"
+
+
+def playsong(song, failcount=0, override=False):
+    """ Play song using config.PLAYER called with args config.PLAYERARGS."""
+    # pylint: disable=R0911,R0912
+    if not Config.PLAYER.get or not has_exefile(Config.PLAYER.get):
+        g.message = "Player not configured! Enter %sset player <player_app> "\
+            "%s to set a player" % (c.g, c.w)
+        return
+
+    if Config.NOTIFIER.get:
+        subprocess.Popen(shlex.split(Config.NOTIFIER.get) + [song.title])
+
+    # don't interrupt preloading:
+    while song.ytid in g.preloading:
+        screen.writestatus("fetching item..")
+        time.sleep(0.1)
+
+    try:
+        streams.get(song, force=failcount, callback=screen.writestatus)
+
+    except (IOError, URLError, HTTPError, socket.timeout) as e:
+        dbg("--ioerror in playsong call to streams.get %s", str(e))
+
+        if "Youtube says" in str(e):
+            g.message = F('cant get track') % (song.title + " " + str(e))
+            return
+
+        elif failcount < g.max_retries:
+            dbg("--ioerror - trying next stream")
+            failcount += 1
+            return playsong(song, failcount=failcount, override=override)
+
+        elif "pafy" in str(e):
+            g.message = str(e) + " - " + song.ytid
+            return
+
+    except ValueError:
+        g.message = F('track unresolved')
+        dbg("----valueerror in playsong call to streams.get")
+        return
+
+    try:
+        video = ((Config.SHOW_VIDEO.get and override != "audio") or
+                 (override in ("fullscreen", "window", "forcevid")))
+        m4a = "mplayer" not in Config.PLAYER.get
+        cached = g.streams[song.ytid]
+        stream = streams.select(cached, q=failcount, audio=(not video), m4a_ok=m4a)
+
+        # handle no audio stream available, or m4a with mplayer
+        # by switching to video stream and suppressing video output.
+        if (not stream or failcount) and not video:
+            dbg(c.r + "no audio or mplayer m4a, using video stream" + c.w)
+            override = "a-v"
+            video = True
+            stream = streams.select(cached, q=failcount, audio=False, maxres=1600)
+
+        if not stream:
+            raise IOError("No streams available")
+
+    except (HTTPError) as e:
+
+        # Fix for invalid streams (gh-65)
+        dbg("----htterror in playsong call to gen_real_args %s", str(e))
+        if failcount < g.max_retries:
+            failcount += 1
+            return playsong(song, failcount=failcount, override=override)
+        else:
+            g.message = str(e)
+            return
+
+    except IOError as e:
+        # this may be cause by attempting to play a https stream with
+        # mplayer
+        # ====
+        errmsg = e.message if hasattr(e, "message") else str(e)
+        g.message = c.r + str(errmsg) + c.w
+        return
+
+    size = streams.get_size(song.ytid, stream['url'])
+    songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
+                int(size / (1024 ** 2)))
+    songdata = "%s; %s; %s Mb" % songdata
+    screen.writestatus(songdata)
+
+    returncode = _launch_player(song, songdata, override, stream, video)
+    failed = returncode not in (0, 42, 43)
+
+    if failed and failcount < g.max_retries:
+        dbg(c.r + "stream failed to open" + c.w)
+        dbg("%strying again (attempt %s)%s", c.r, (2 + failcount), c.w)
+        screen.writestatus("error: retrying")
+        time.sleep(1.2)
+        failcount += 1
+        return playsong(song, failcount=failcount, override=override)
+
+    history.add(song)
+    return returncode
 
 
 def _generate_real_playerargs(song, override, stream, isvideo):
@@ -126,7 +225,7 @@ def _get_input_file():
         return tmpfile.name
 
 
-def launch_player(song, songdata, override, stream, isvideo):
+def _launch_player(song, songdata, override, stream, isvideo):
     """ Launch player application. """
 
     cmd = _generate_real_playerargs(song, override, stream, isvideo)

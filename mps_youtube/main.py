@@ -48,15 +48,15 @@ from urllib.parse import urlencode
 import pafy
 from pafy import call_gdata, GdataError
 
-from . import g, c, commands, cache, streams, screen, content
+from . import g, c, commands, cache, streams, screen, content, history
 from . import __version__, __url__
 from .playlist import Playlist, Video
 from .config import Config, known_player_set
-from .util import has_exefile, dbg, get_near_name
+from .util import dbg, get_near_name
 from .util import get_pafy, getxy
 from .util import xenc, xprint, mswinfn, set_window_title, F
 from .helptext import get_help
-from .player import launch_player
+from .player import playsong
 
 try:
     import readline
@@ -119,34 +119,6 @@ class IterSlicer():
         return self.length
 
 
-def get_content_length(url, preloading=False):
-    """ Return content length of a url. """
-    prefix = "preload: " if preloading else ""
-    dbg(c.y + prefix + "getting content-length header" + c.w)
-    response = urlopen(url)
-    headers = response.headers
-    cl = headers['content-length']
-    return int(cl)
-
-
-def get_size(ytid, url, preloading=False):
-    """ Get size of stream, try stream cache first. """
-    # try cached value
-    stream = [x for x in g.streams[ytid]['meta'] if x['url'] == url][0]
-    size = stream['size']
-    prefix = "preload: " if preloading else ""
-
-    if not size == -1:
-        dbg("%s%susing cached size: %s%s", c.g, prefix, size, c.w)
-
-    else:
-        screen.writestatus("Getting content length", mute=preloading)
-        stream['size'] = get_content_length(url, preloading=preloading)
-        dbg("%s%s - content-length: %s%s", c.y, prefix, stream['size'], c.w)
-
-    return stream['size']
-
-
 @commands.command(r'set|showconfig')
 def showconfig():
     """ Dump config data. """
@@ -205,28 +177,6 @@ def setconfig(key, val):
 
     showconfig()
     g.message = message
-
-
-def open_hist_from_file():
-    """ Open history. Called once on script invocation. """
-    try:
-
-        with open(g.HISTFILE, "rb") as hlf:
-            g.userhist = pickle.load(hlf)
-
-    except IOError:
-        # no playlist found, create a blank one
-        if not os.path.isfile(g.HISTFILE):
-            g.userhist = {}
-            save_to_hist()
-
-
-def save_to_hist():
-    """ Save history.  Called each time history is updated. """
-    with open(g.HISTFILE, "wb") as hlf:
-        pickle.dump(g.userhist, hlf, protocol=2)
-
-    dbg(c.r + "History saved\n---" + c.w)
 
 
 def save_to_file():
@@ -752,104 +702,6 @@ def generate_songlist_display(song=False, zeromsg=None):
         out += line + "\n"
 
     return out + "\n" * (5 - len(g.model)) if not song else out
-
-
-def playsong(song, failcount=0, override=False):
-    """ Play song using config.PLAYER called with args config.PLAYERARGS."""
-    # pylint: disable=R0911,R0912
-    if not Config.PLAYER.get or not has_exefile(Config.PLAYER.get):
-        g.message = "Player not configured! Enter %sset player <player_app> "\
-            "%s to set a player" % (c.g, c.w)
-        return
-
-    if Config.NOTIFIER.get:
-        subprocess.Popen(shlex.split(Config.NOTIFIER.get) + [song.title])
-
-    # don't interrupt preloading:
-    while song.ytid in g.preloading:
-        screen.writestatus("fetching item..")
-        time.sleep(0.1)
-
-    try:
-        streams.get(song, force=failcount, callback=screen.writestatus)
-
-    except (IOError, URLError, HTTPError, socket.timeout) as e:
-        dbg("--ioerror in playsong call to streams.get %s", str(e))
-
-        if "Youtube says" in str(e):
-            g.message = F('cant get track') % (song.title + " " + str(e))
-            return
-
-        elif failcount < g.max_retries:
-            dbg("--ioerror - trying next stream")
-            failcount += 1
-            return playsong(song, failcount=failcount, override=override)
-
-        elif "pafy" in str(e):
-            g.message = str(e) + " - " + song.ytid
-            return
-
-    except ValueError:
-        g.message = F('track unresolved')
-        dbg("----valueerror in playsong call to streams.get")
-        return
-
-    try:
-        video = ((Config.SHOW_VIDEO.get and override != "audio") or
-                 (override in ("fullscreen", "window", "forcevid")))
-        m4a = "mplayer" not in Config.PLAYER.get
-        cached = g.streams[song.ytid]
-        stream = streams.select(cached, q=failcount, audio=(not video), m4a_ok=m4a)
-
-        # handle no audio stream available, or m4a with mplayer
-        # by switching to video stream and suppressing video output.
-        if (not stream or failcount) and not video:
-            dbg(c.r + "no audio or mplayer m4a, using video stream" + c.w)
-            override = "a-v"
-            video = True
-            stream = streams.select(cached, q=failcount, audio=False, maxres=1600)
-
-        if not stream:
-            raise IOError("No streams available")
-
-    except (HTTPError) as e:
-
-        # Fix for invalid streams (gh-65)
-        dbg("----htterror in playsong call to gen_real_args %s", str(e))
-        if failcount < g.max_retries:
-            failcount += 1
-            return playsong(song, failcount=failcount, override=override)
-        else:
-            g.message = str(e)
-            return
-
-    except IOError as e:
-        # this may be cause by attempting to play a https stream with
-        # mplayer
-        # ====
-        errmsg = e.message if hasattr(e, "message") else str(e)
-        g.message = c.r + str(errmsg) + c.w
-        return
-
-    size = get_size(song.ytid, stream['url'])
-    songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
-                int(size / (1024 ** 2)))
-    songdata = "%s; %s; %s Mb" % songdata
-    screen.writestatus(songdata)
-
-    returncode = launch_player(song, songdata, override, stream, video)
-    failed = returncode not in (0, 42, 43)
-
-    if failed and failcount < g.max_retries:
-        dbg(c.r + "stream failed to open" + c.w)
-        dbg("%strying again (attempt %s)%s", c.r, (2 + failcount), c.w)
-        screen.writestatus("error: retrying")
-        time.sleep(1.2)
-        failcount += 1
-        return playsong(song, failcount=failcount, override=override)
-
-    history_add(song)
-    return returncode
 
 
 def _search(progtext, qs=None, msg=None, failmsg=None):
@@ -1500,7 +1352,7 @@ def view_history():
 def clear_history():
     """ Clears the user's play history """
     g.userhist['history'].songs = []
-    save_to_hist()
+    history.save()
     g.message = "History cleared"
     g.content = logo()
 
@@ -1776,7 +1628,7 @@ def _preload(song, delay, override):
             # preload video stream, no audio available
             stream = streams.select(streamlist, audio=False)
 
-        get_size(ytid, stream['url'], preloading=True)
+        streams.get_size(ytid, stream['url'], preloading=True)
 
     except (ValueError, AttributeError, IOError) as e:
         dbg(e)  # Fail silently on preload
@@ -2191,16 +2043,6 @@ def playlist_add(nums, playlist):
         save_to_file()
 
     g.content = generate_songlist_display()
-
-
-def history_add(song):
-    """ Add song to history. """
-    if not g.userhist.get('history'):
-        g.userhist['history'] = Playlist('history')
-
-    g.userhist['history'].songs.append(song)
-
-    save_to_hist()
 
 
 @commands.command(r'mv\s*(\d{1,3})\s*(%s)' % commands.word)
@@ -3031,7 +2873,7 @@ def main():
     open_from_file()
 
     #open history from file
-    open_hist_from_file()
+    history.load()
 
     arg_inp = ' '.join(g.argument_commands)
 
