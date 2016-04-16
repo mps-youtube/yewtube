@@ -47,7 +47,8 @@ from pafy import call_gdata, GdataError
 
 from . import g, c, commands, cache, streams, screen, content, history
 from . import __version__, __url__
-from .content import generate_songlist_display, generate_playlist_display, logo
+from .content import generate_songlist_display, generate_playlist_display
+from .content import logo, playlists_display
 from .playlist import Playlist, Video
 from .config import Config, known_player_set
 from .util import dbg, get_near_name, yt_datetime
@@ -269,28 +270,6 @@ def convert_playlist_to_v2():
 
     # save as v2
     save_to_file()
-
-
-def playlists_display():
-    """ Produce a list of all playlists. """
-    if not g.userpl:
-        g.message = F("no playlists")
-        return generate_songlist_display() if g.model else (logo(c.y) + "\n\n")
-
-    maxname = max(len(a) for a in g.userpl)
-    out = "      {0}Local Playlists{1}\n".format(c.ul, c.w)
-    start = "      "
-    fmt = "%s%s%-3s %-" + str(maxname + 3) + "s%s %s%-7s%s %-5s%s"
-    head = (start, c.b, "ID", "Name", c.b, c.b, "Count", c.b, "Duration", c.w)
-    out += "\n" + fmt % head + "\n\n"
-
-    for v, z in enumerate(sorted(g.userpl)):
-        n, p = z, g.userpl[z]
-        l = fmt % (start, c.g, v + 1, n, c.w, c.y, str(len(p)), c.y,
-                   p.duration, c.w) + "\n"
-        out += l
-
-    return out
 
 
 def get_track_id_from_json(item):

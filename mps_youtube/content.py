@@ -213,3 +213,25 @@ def logo(col=None, version=""):
     lines = [" " * indent + l for l in lines]
     logo_txt = "\n".join(lines) + "\n" * newlines
     return "" if g.debug_mode else logo_txt
+
+
+def playlists_display():
+    """ Produce a list of all playlists. """
+    if not g.userpl:
+        g.message = F("no playlists")
+        return generate_songlist_display() if g.model else (logo(c.y) + "\n\n")
+
+    maxname = max(len(a) for a in g.userpl)
+    out = "      {0}Local Playlists{1}\n".format(c.ul, c.w)
+    start = "      "
+    fmt = "%s%s%-3s %-" + str(maxname + 3) + "s%s %s%-7s%s %-5s%s"
+    head = (start, c.b, "ID", "Name", c.b, c.b, "Count", c.b, "Duration", c.w)
+    out += "\n" + fmt % head + "\n\n"
+
+    for v, z in enumerate(sorted(g.userpl)):
+        n, p = z, g.userpl[z]
+        l = fmt % (start, c.g, v + 1, n, c.w, c.y, str(len(p)), c.y,
+                   p.duration, c.w) + "\n"
+        out += l
+
+    return out
