@@ -252,3 +252,46 @@ def yt_datetime(yt_date_time):
     # strip first two digits of four digit year
     short_date = re.sub(r"(\d\d\D\d\d\D)20(\d\d)$", r"\1\2", locale_date)
     return time_obj, short_date
+
+
+def parse_multi(choice, end=None):
+    """ Handle ranges like 5-9, 9-5, 5- and -5. Return list of ints. """
+    end = end or str(len(g.model))
+    pattern = r'(?<![-\d])(\d+-\d+|-\d+|\d+-|\d+)(?![-\d])'
+    items = re.findall(pattern, choice)
+    alltracks = []
+
+    for x in items:
+
+        if x.startswith("-"):
+            x = "1" + x
+
+        elif x.endswith("-"):
+            x = x + str(end)
+
+        if "-" in x:
+            nrange = x.split("-")
+            startend = map(int, nrange)
+            alltracks += _bi_range(*startend)
+
+        else:
+            alltracks.append(int(x))
+
+    return alltracks
+
+
+def _bi_range(start, end):
+    """
+    Inclusive range function, works for reverse ranges.
+
+    eg. 5,2 returns [5,4,3,2] and 2, 4 returns [2,3,4]
+
+    """
+    if start == end:
+        return (start,)
+
+    elif end < start:
+        return reversed(range(end, start + 1))
+
+    else:
+        return range(start, end + 1)

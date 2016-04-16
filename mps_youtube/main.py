@@ -51,7 +51,7 @@ from .content import generate_songlist_display, generate_playlist_display, logo
 from .playlist import Playlist, Video
 from .config import Config, known_player_set
 from .util import dbg, get_near_name, yt_datetime
-from .util import get_pafy, getxy, fmt_time
+from .util import get_pafy, getxy, fmt_time, parse_multi
 from .util import xenc, xprint, mswinfn, set_window_title, F
 from .helptext import get_help
 from .player import play_range
@@ -951,49 +951,6 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     return filename
 
 
-def _bi_range(start, end):
-    """
-    Inclusive range function, works for reverse ranges.
-
-    eg. 5,2 returns [5,4,3,2] and 2, 4 returns [2,3,4]
-
-    """
-    if start == end:
-        return (start,)
-
-    elif end < start:
-        return reversed(range(end, start + 1))
-
-    else:
-        return range(start, end + 1)
-
-
-def _parse_multi(choice, end=None):
-    """ Handle ranges like 5-9, 9-5, 5- and -5. Return list of ints. """
-    end = end or str(len(g.model))
-    pattern = r'(?<![-\d])(\d+-\d+|-\d+|\d+-|\d+)(?![-\d])'
-    items = re.findall(pattern, choice)
-    alltracks = []
-
-    for x in items:
-
-        if x.startswith("-"):
-            x = "1" + x
-
-        elif x.endswith("-"):
-            x = x + str(end)
-
-        if "-" in x:
-            nrange = x.split("-")
-            startend = map(int, nrange)
-            alltracks += _bi_range(*startend)
-
-        else:
-            alltracks.append(int(x))
-
-    return alltracks
-
-
 @commands.command(r'play\s+(%s|\d+)' % commands.word)
 def play_pl(name):
     """ Play a playlist by name. """
@@ -1115,7 +1072,7 @@ def open_view_bynum(action, num):
 @commands.command(r'(rm|add)\s*(-?\d[-,\d\s]{,250})')
 def songlist_rm_add(action, songrange):
     """ Remove or add tracks. works directly on user input. """
-    selection = _parse_multi(songrange)
+    selection = parse_multi(songrange)
 
     if action == "add":
         duplicate_songs = []
@@ -1146,7 +1103,7 @@ def songlist_rm_add(action, songrange):
 @commands.command(r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))')
 def down_many(dltype, choice, subdir=None):
     """ Download multiple items. """
-    choice = _parse_multi(choice)
+    choice = parse_multi(choice)
     choice = list(set(choice))
     downsongs = [g.model[int(x) - 1] for x in choice]
     temp = g.model[::]
@@ -1271,7 +1228,7 @@ def play(pre, choice, post=""):
         if (not fs) and (not nofs):
             override = "forcevid" if forcevid else override
 
-        selection = _parse_multi(choice)
+        selection = parse_multi(choice)
         songlist = [g.model[x - 1] for x in selection]
 
         # cache next result of displayed items
@@ -1651,7 +1608,7 @@ def songlist_mv_sw(action, a, b):
 @commands.command(r'add\s*(-?\d[-,\d\s]{1,250})(%s)' % commands.word)
 def playlist_add(nums, playlist):
     """ Add selected song nums to saved playlist. """
-    nums = _parse_multi(nums)
+    nums = parse_multi(nums)
 
     if not g.userpl.get(playlist):
         playlist = playlist.replace(" ", "-")
