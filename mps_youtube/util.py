@@ -162,6 +162,8 @@ def get_pafy(item, force=False, callback=None):
 
 def getxy():
     """ Get terminal size, terminal width and max-results. """
+    # Import here to avoid circular dependency
+    from .config import Config
     if g.detectable_size:
         x, y = terminalsize.get_terminal_size()
         max_results = y - 4 if y < 54 else 50
