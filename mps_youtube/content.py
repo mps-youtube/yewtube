@@ -5,6 +5,7 @@ import random
 import pafy
 
 from . import g, c
+from .config import Config
 from .util import getxy, fmt_time, uea_pad, yt_datetime
 
 # In the future, this could support more advanced features
