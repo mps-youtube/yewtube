@@ -33,7 +33,6 @@ import shlex
 import time
 import math
 import json
-import copy
 import sys
 import re
 import os
@@ -48,7 +47,7 @@ from pafy import call_gdata, GdataError
 
 from . import g, c, commands, cache, streams, screen, content, history
 from . import __version__, __url__
-from .content import generate_songlist_display, generate_playlist_display
+from .content import generate_songlist_display, generate_playlist_display, logo
 from .playlist import Playlist, Video
 from .config import Config, known_player_set
 from .util import dbg, get_near_name, yt_datetime
@@ -272,28 +271,6 @@ def convert_playlist_to_v2():
     save_to_file()
 
 
-def logo(col=None, version=""):
-    """ Return text logo. """
-    col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
-    logo_txt = r"""                                             _         _
- _ __ ___  _ __  ___       _   _  ___  _   _| |_ _   _| |__   ___
-| '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \
-| | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
-|_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
-          |_|              |___/"""
-    version = " v" + version if version else ""
-    logo_txt = col + logo_txt + c.w + version
-    lines = logo_txt.split("\n")
-    length = max(len(x) for x in lines)
-    x, y, _ = getxy()
-    indent = (x - length - 1) // 2
-    newlines = (y - 12) // 2
-    indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
-    lines = [" " * indent + l for l in lines]
-    logo_txt = "\n".join(lines) + "\n" * newlines
-    return "" if g.debug_mode else logo_txt
-
-
 def playlists_display():
     """ Produce a list of all playlists. """
     if not g.userpl:
@@ -434,41 +411,6 @@ def num_repr(num):
         return str(rounded)[0:front] + suffix
 
     return str(rounded)[0] + "." + str(rounded)[1] + suffix
-
-
-def get_user_columns():
-    """ Get columns from user config, return dict. """
-    total_size = 0
-    user_columns = Config.COLUMNS.get
-    user_columns = user_columns.replace(",", " ").split()
-
-    defaults = {"views": dict(name="viewCount", size=4, heading="View"),
-                "rating": dict(name="rating", size=4, heading="Rtng"),
-                "comments": dict(name="commentCount", size=4, heading="Comm"),
-                "date": dict(name="uploaded", size=8, heading="Date"),
-                "user": dict(name="uploaderName", size=10, heading="User"),
-                "likes": dict(name="likes", size=4, heading="Like"),
-                "dislikes": dict(name="dislikes", size=4, heading="Dslk"),
-                "category": dict(name="category", size=8, heading="Category")}
-
-    ret = []
-    for column in user_columns:
-        namesize = column.split(":")
-        name = namesize[0]
-
-        if name in defaults:
-            z = defaults[name]
-            nm, sz, hd = z['name'], z['size'], z['heading']
-
-            if len(namesize) == 2 and namesize[1].isdigit():
-                sz = int(namesize[1])
-
-            total_size += sz
-            cw = getxy().width
-            if total_size < cw - 18:
-                ret.append(dict(name=nm, size=sz, heading=hd))
-
-    return ret
 
 
 def _search(progtext, qs=None, msg=None, failmsg=None):

@@ -1,4 +1,5 @@
 import math
+import copy
 
 import pafy
 
@@ -79,7 +80,7 @@ def generate_songlist_display(song=False, zeromsg=None):
     g.rprompt = page_msg(g.current_page)
 
     have_meta = all(x.ytid in g.meta for x in g.model)
-    user_columns = get_user_columns() if have_meta else []
+    user_columns = _get_user_columns() if have_meta else []
     maxlength = max(x.length for x in g.model)
     lengthsize = 8 if maxlength > 35999 else 7
     lengthsize = 5 if maxlength < 6000 else lengthsize
@@ -153,3 +154,60 @@ def generate_playlist_display():
         out += (fmtrow % (col, str(n + 1), title, author[:12], updated, str(length), c.w))
 
     return out + "\n" * (5 - len(g.ytpls))
+
+
+def _get_user_columns():
+    """ Get columns from user config, return dict. """
+    total_size = 0
+    user_columns = Config.COLUMNS.get
+    user_columns = user_columns.replace(",", " ").split()
+
+    defaults = {"views": dict(name="viewCount", size=4, heading="View"),
+                "rating": dict(name="rating", size=4, heading="Rtng"),
+                "comments": dict(name="commentCount", size=4, heading="Comm"),
+                "date": dict(name="uploaded", size=8, heading="Date"),
+                "user": dict(name="uploaderName", size=10, heading="User"),
+                "likes": dict(name="likes", size=4, heading="Like"),
+                "dislikes": dict(name="dislikes", size=4, heading="Dslk"),
+                "category": dict(name="category", size=8, heading="Category")}
+
+    ret = []
+    for column in user_columns:
+        namesize = column.split(":")
+        name = namesize[0]
+
+        if name in defaults:
+            z = defaults[name]
+            nm, sz, hd = z['name'], z['size'], z['heading']
+
+            if len(namesize) == 2 and namesize[1].isdigit():
+                sz = int(namesize[1])
+
+            total_size += sz
+            cw = getxy().width
+            if total_size < cw - 18:
+                ret.append(dict(name=nm, size=sz, heading=hd))
+
+    return ret
+
+
+def logo(col=None, version=""):
+    """ Return text logo. """
+    col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
+    logo_txt = r"""                                             _         _
+ _ __ ___  _ __  ___       _   _  ___  _   _| |_ _   _| |__   ___
+| '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \
+| | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
+|_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
+          |_|              |___/"""
+    version = " v" + version if version else ""
+    logo_txt = col + logo_txt + c.w + version
+    lines = logo_txt.split("\n")
+    length = max(len(x) for x in lines)
+    x, y, _ = getxy()
+    indent = (x - length - 1) // 2
+    newlines = (y - 12) // 2
+    indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
+    lines = [" " * indent + l for l in lines]
+    logo_txt = "\n".join(lines) + "\n" * newlines
+    return "" if g.debug_mode else logo_txt
