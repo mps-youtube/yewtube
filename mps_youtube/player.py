@@ -13,6 +13,7 @@ import shlex
 from urllib.error import HTTPError, URLError
 
 from . import g, screen, c, streams, history
+from .content import generate_songlist_display
 from .util import dbg, xenc, F, getxy, uea_pad
 from .util import list_update, has_exefile, fmt_time
 from .util import set_window_title, xprint

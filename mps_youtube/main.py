@@ -48,9 +48,10 @@ from pafy import call_gdata, GdataError
 
 from . import g, c, commands, cache, streams, screen, content, history
 from . import __version__, __url__
+from .content import generate_songlist_display, generate_playlist_display
 from .playlist import Playlist, Video
 from .config import Config, known_player_set
-from .util import dbg, get_near_name, uea_pad
+from .util import dbg, get_near_name, yt_datetime
 from .util import get_pafy, getxy, fmt_time
 from .util import xenc, xprint, mswinfn, set_window_title, F
 from .helptext import get_help
@@ -435,41 +436,6 @@ def num_repr(num):
     return str(rounded)[0] + "." + str(rounded)[1] + suffix
 
 
-def yt_datetime(yt_date_time):
-    """ Return a time object and locale formated date string. """
-    time_obj = time.strptime(yt_date_time, "%Y-%m-%dT%H:%M:%S.%fZ")
-    locale_date = time.strftime("%x", time_obj)
-    # strip first two digits of four digit year
-    short_date = re.sub(r"(\d\d\D\d\d\D)20(\d\d)$", r"\1\2", locale_date)
-    return time_obj, short_date
-
-
-def generate_playlist_display():
-    """ Generate list of playlists. """
-    if not g.ytpls:
-        g.message = c.r + "No playlists found!"
-        return logo(c.g) + "\n\n"
-    g.rprompt = content.page_msg(g.current_page)
-
-    cw = getxy().width
-    fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
-    fmthd = "%s%-5s %-{}s %-12s %-9s %-5s%s\n".format(cw - 36)
-    head = (c.ul, "Item", "Playlist", "Author", "Updated", "Count", c.w)
-    out = "\n" + fmthd % head
-
-    for n, x in enumerate(g.ytpls):
-        col = (c.g if n % 2 == 0 else c.w)
-        length = x.get('size') or "?"
-        length = "%4s" % length
-        title = x.get('title') or "unknown"
-        author = x.get('author') or "unknown"
-        updated = yt_datetime(x.get('updated'))[1]
-        title = uea_pad(cw - 36, title)
-        out += (fmtrow % (col, str(n + 1), title, author[:12], updated, str(length), c.w))
-
-    return out + "\n" * (5 - len(g.ytpls))
-
-
 def get_user_columns():
     """ Get columns from user config, return dict. """
     total_size = 0
@@ -503,70 +469,6 @@ def get_user_columns():
                 ret.append(dict(name=nm, size=sz, heading=hd))
 
     return ret
-
-
-def generate_songlist_display(song=False, zeromsg=None):
-    """ Generate list of choices from a song list."""
-    # pylint: disable=R0914
-    if g.browse_mode == "ytpl":
-        return generate_playlist_display()
-
-    max_results = getxy().max_results
-
-    if not g.model:
-        g.message = zeromsg or "Enter /search-term to search or [h]elp"
-        return logo(c.g) + "\n\n"
-    g.rprompt = content.page_msg(g.current_page)
-
-    have_meta = all(x.ytid in g.meta for x in g.model)
-    user_columns = get_user_columns() if have_meta else []
-    maxlength = max(x.length for x in g.model)
-    lengthsize = 8 if maxlength > 35999 else 7
-    lengthsize = 5 if maxlength < 6000 else lengthsize
-    reserved = 9 + lengthsize + len(user_columns)
-    cw = getxy().width
-    cw -= 1
-    title_size = cw - sum(1 + x['size'] for x in user_columns) - reserved
-    before = [{"name": "idx", "size": 3, "heading": "Num"},
-              {"name": "title", "size": title_size, "heading": "Title"}]
-    after = [{"name": "length", "size": lengthsize, "heading": "Time"}]
-    columns = before + user_columns + after
-
-    for n, column in enumerate(columns):
-        column['idx'] = n
-        column['sign'] = "-" if not column['name'] == "length" else ""
-
-    fmt = ["%{}{}s  ".format(x['sign'], x['size']) for x in columns]
-    fmtrow = fmt[0:1] + ["%s  "] + fmt[2:]
-    fmt, fmtrow = "".join(fmt).strip(), "".join(fmtrow).strip()
-    titles = tuple([x['heading'][:x['size']] for x in columns])
-    hrow = c.ul + fmt % titles + c.w
-    out = "\n" + hrow + "\n"
-
-    for n, x in enumerate(g.model[:max_results]):
-        col = (c.r if n % 2 == 0 else c.p) if not song else c.b
-        details = {'title': x.title, "length": fmt_time(x.length)}
-        details = copy.copy(g.meta[x.ytid]) if have_meta else details
-        otitle = details['title']
-        details['idx'] = "%2d" % (n + 1)
-        details['title'] = uea_pad(columns[1]['size'], otitle)
-        cat = details.get('category') or '-'
-        details['category'] = pafy.get_categoryname(cat)
-        data = []
-
-        for z in columns:
-            fieldsize, field = z['size'], z['name']
-            if len(details[field]) > fieldsize:
-                details[field] = details[field][:fieldsize]
-
-            data.append(details[field])
-
-        line = fmtrow % tuple(data)
-        col = col if not song or song != g.model[n] else c.p
-        line = col + line + c.w
-        out += line + "\n"
-
-    return out + "\n" * (5 - len(g.model)) if not song else out
 
 
 def _search(progtext, qs=None, msg=None, failmsg=None):

@@ -241,3 +241,12 @@ def real_len(u, alt=False):
         widths = dict(W=2, F=2, A=1, N=1, H=0.5)
 
     return int(round(sum(widths.get(ueaw(char), 1) for char in u)))
+
+
+def yt_datetime(yt_date_time):
+    """ Return a time object and locale formated date string. """
+    time_obj = time.strptime(yt_date_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+    locale_date = time.strftime("%x", time_obj)
+    # strip first two digits of four digit year
+    short_date = re.sub(r"(\d\d\D\d\d\D)20(\d\d)$", r"\1\2", locale_date)
+    return time_obj, short_date
