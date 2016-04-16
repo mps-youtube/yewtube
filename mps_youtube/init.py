@@ -71,8 +71,11 @@ def init():
                 [Config.PLAYER.get, "--list-options"]).decode()
 
             if "--input-unix-socket" in options:
-                g.mpv_usesock = True
+                g.mpv_usesock = "--input-unix-socket"
                 dbg(c.g + "mpv supports --input-unix-socket" + c.w)
+            elif "--input-ipc-server" in options:
+                g.mpv_usesock = "--input-ipc-server"
+                dbg(c.g + "mpv supports --input-ipc-server" + c.w)
 
     elif "mplayer" in Config.PLAYER.get and has_exefile(Config.PLAYER.get):
         g.mplayer_version = get_mplayer_version(Config.PLAYER.get)

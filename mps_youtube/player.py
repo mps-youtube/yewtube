@@ -171,7 +171,7 @@ def launch_player(song, songdata, override, stream, isvideo):
 
             if g.mpv_usesock:
                 sockpath = tempfile.mktemp('.sock', 'mpsyt-mpv')
-                cmd.append('--input-unix-socket=' + sockpath)
+                cmd.append(g.mpv_usesock + '=' + sockpath)
 
                 with open(os.devnull, "w") as devnull:
                     p = subprocess.Popen(cmd, shell=False, stderr=devnull)
