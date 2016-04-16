@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 import subprocess
 import json
@@ -9,14 +10,126 @@ import time
 from urllib.error import HTTPError, URLError
 
 from . import g, screen, c, streams, history
-from .util import dbg, xenc, F, getxy, list_update, has_exefile
+from .util import dbg, xenc, F, getxy, uea_pad
+from .util import list_update, has_exefile, fmt_time
+from .util import set_window_title
 from .config import Config, known_player_set
 from .paths import get_config_dir
 
 mswin = os.name == "nt"
+not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
-def playsong(song, failcount=0, override=False):
+def play_range(songlist, shuffle=False, repeat=False, override=False):
+    """ Play a range of songs, exit cleanly on keyboard interrupt. """
+    if shuffle:
+        random.shuffle(songlist)
+
+    n = 0
+    while 0 <= n <= len(songlist)-1:
+        song = songlist[n]
+        g.content = _playback_progress(n, songlist, repeat=repeat)
+
+        if not g.command_line:
+            screen.update(fill_blank=False)
+
+        hasnext = len(songlist) > n + 1
+
+        if hasnext:
+            streams.preload(songlist[n + 1], override=override)
+
+        set_window_title(song.title + " - mpsyt")
+        try:
+            returncode = _playsong(song, override=override)
+
+        except KeyboardInterrupt:
+            logging.info("Keyboard Interrupt")
+            xprint(c.w + "Stopping...                          ")
+            screen.reset_terminal()
+            g.message = c.y + "Playback halted" + c.w
+            break
+        set_window_title("mpsyt")
+
+        if returncode == 42:
+            n -= 1
+
+        elif returncode == 43:
+            break
+
+        else:
+            n += 1
+
+        if n == -1:
+            n = len(songlist) - 1 if repeat else 0
+
+        elif n == len(songlist) and repeat:
+            n = 0
+
+
+def _playback_progress(idx, allsongs, repeat=False):
+    """ Generate string to show selected tracks, indicate current track. """
+    # pylint: disable=R0914
+    # too many local variables
+    cw = getxy().width
+    out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
+    out = out % (c.ul, "Title", "Time", c.w)
+    show_key_help = (known_player_set and Config.SHOW_MPLAYER_KEYS.get)
+    multi = len(allsongs) > 1
+
+    for n, song in enumerate(allsongs):
+        length_orig = fmt_time(song.length)
+        length = " " * (8 - len(length_orig)) + length_orig
+        i = uea_pad(cw - 14, song.title), length, length_orig
+        fmt = (c.w, "  ", c.b, i[0], c.w, c.y, i[1], c.w)
+
+        if n == idx:
+            fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w)
+            cur = i
+
+        out += "%s%s%s%s%s %s%s%s\n" % fmt
+
+    out += "\n" * (3 - len(allsongs))
+    pos = 8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w
+    playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
+    keys = _mplayer_help(short=(not multi and not repeat))
+    out = out if multi else generate_songlist_display(song=allsongs[0])
+
+    if show_key_help:
+        out += "\n" + keys
+
+    else:
+        playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
+        out += "\n" + " " * (cw - 19) if multi else ""
+
+    fmt = playing, c.r, cur[0].strip()[:cw - 19], c.w, c.w, cur[2], c.w
+    out += "%s    %s%s%s %s[%s]%s" % fmt
+    out += "    REPEAT MODE" if repeat else ""
+    return out
+
+
+def _mplayer_help(short=True):
+    """ Mplayer help.  """
+    # pylint: disable=W1402
+
+    volume = "[{0}9{1}] volume [{0}0{1}]"
+    volume = volume if short else volume + "      [{0}q{1}] return"
+    seek = "[{0}\u2190{1}] seek [{0}\u2192{1}]"
+    pause = "[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
+
+    if not_utf8_environment:
+        seek = "[{0}<-{1}] seek [{0}->{1}]"
+        pause = "[{0}DN{1}] SEEK [{0}UP{1}]       [{0}space{1}] pause"
+
+    single = "[{0}q{1}] return"
+    next_prev = "[{0}>{1}] next/prev [{0}<{1}]"
+    # ret = "[{0}q{1}] %s" % ("return" if short else "next track")
+    ret = single if short else next_prev
+    fmt = "    %-20s       %-20s"
+    lines = fmt % (seek, volume) + "\n" + fmt % (pause, ret)
+    return lines.format(c.g, c.w)
+
+
+def _playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
     # pylint: disable=R0911,R0912
     if not Config.PLAYER.get or not has_exefile(Config.PLAYER.get):
@@ -36,7 +149,7 @@ def playsong(song, failcount=0, override=False):
         streams.get(song, force=failcount, callback=screen.writestatus)
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
-        dbg("--ioerror in playsong call to streams.get %s", str(e))
+        dbg("--ioerror in _playsong call to streams.get %s", str(e))
 
         if "Youtube says" in str(e):
             g.message = F('cant get track') % (song.title + " " + str(e))
@@ -45,7 +158,7 @@ def playsong(song, failcount=0, override=False):
         elif failcount < g.max_retries:
             dbg("--ioerror - trying next stream")
             failcount += 1
-            return playsong(song, failcount=failcount, override=override)
+            return _playsong(song, failcount=failcount, override=override)
 
         elif "pafy" in str(e):
             g.message = str(e) + " - " + song.ytid
@@ -53,7 +166,7 @@ def playsong(song, failcount=0, override=False):
 
     except ValueError:
         g.message = F('track unresolved')
-        dbg("----valueerror in playsong call to streams.get")
+        dbg("----valueerror in _playsong call to streams.get")
         return
 
     try:
@@ -77,10 +190,10 @@ def playsong(song, failcount=0, override=False):
     except (HTTPError) as e:
 
         # Fix for invalid streams (gh-65)
-        dbg("----htterror in playsong call to gen_real_args %s", str(e))
+        dbg("----htterror in _playsong call to gen_real_args %s", str(e))
         if failcount < g.max_retries:
             failcount += 1
-            return playsong(song, failcount=failcount, override=override)
+            return _playsong(song, failcount=failcount, override=override)
         else:
             g.message = str(e)
             return
@@ -108,7 +221,7 @@ def playsong(song, failcount=0, override=False):
         screen.writestatus("error: retrying")
         time.sleep(1.2)
         failcount += 1
-        return playsong(song, failcount=failcount, override=override)
+        return _playsong(song, failcount=failcount, override=override)
 
     history.add(song)
     return returncode

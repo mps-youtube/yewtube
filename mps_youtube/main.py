@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from xml.etree import ElementTree as ET
-import unicodedata
 import subprocess
 import traceback
 import difflib
@@ -51,11 +50,11 @@ from . import g, c, commands, cache, streams, screen, content, history
 from . import __version__, __url__
 from .playlist import Playlist, Video
 from .config import Config, known_player_set
-from .util import dbg, get_near_name
-from .util import get_pafy, getxy
+from .util import dbg, get_near_name, uea_pad
+from .util import get_pafy, getxy, fmt_time
 from .util import xenc, xprint, mswinfn, set_window_title, F
 from .helptext import get_help
-from .player import playsong
+from .player import play_range
 
 try:
     import readline
@@ -75,7 +74,6 @@ except ImportError:
 
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 
@@ -317,45 +315,6 @@ def playlists_display():
     return out
 
 
-def mplayer_help(short=True):
-    """ Mplayer help.  """
-    # pylint: disable=W1402
-
-    volume = "[{0}9{1}] volume [{0}0{1}]"
-    volume = volume if short else volume + "      [{0}q{1}] return"
-    seek = "[{0}\u2190{1}] seek [{0}\u2192{1}]"
-    pause = "[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
-
-    if not_utf8_environment:
-        seek = "[{0}<-{1}] seek [{0}->{1}]"
-        pause = "[{0}DN{1}] SEEK [{0}UP{1}]       [{0}space{1}] pause"
-
-    single = "[{0}q{1}] return"
-    next_prev = "[{0}>{1}] next/prev [{0}<{1}]"
-    # ret = "[{0}q{1}] %s" % ("return" if short else "next track")
-    ret = single if short else next_prev
-    fmt = "    %-20s       %-20s"
-    lines = fmt % (seek, volume) + "\n" + fmt % (pause, ret)
-    return lines.format(c.g, c.w)
-
-
-def fmt_time(seconds):
-    """ Format number of seconds to %H:%M:%S. """
-    hms = time.strftime('%H:%M:%S', time.gmtime(int(seconds)))
-    H, M, S = hms.split(":")
-
-    if H == "00":
-        hms = M + ":" + S
-
-    elif H == "01" and int(M) < 40:
-        hms = str(int(M) + 60) + ":" + S
-
-    elif H.startswith("0"):
-        hms = ":".join([H[1], M, S])
-
-    return hms
-
-
 def get_track_id_from_json(item):
     """ Try to extract video Id from various response types """
     fields = ['contentDetails/videoId',
@@ -454,47 +413,6 @@ def get_tracks_from_json(jsons):
     return songs
 
 
-def playback_progress(idx, allsongs, repeat=False):
-    """ Generate string to show selected tracks, indicate current track. """
-    # pylint: disable=R0914
-    # too many local variables
-    cw = getxy().width
-    out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
-    out = out % (c.ul, "Title", "Time", c.w)
-    show_key_help = (known_player_set and Config.SHOW_MPLAYER_KEYS.get)
-    multi = len(allsongs) > 1
-
-    for n, song in enumerate(allsongs):
-        length_orig = fmt_time(song.length)
-        length = " " * (8 - len(length_orig)) + length_orig
-        i = uea_pad(cw - 14, song.title), length, length_orig
-        fmt = (c.w, "  ", c.b, i[0], c.w, c.y, i[1], c.w)
-
-        if n == idx:
-            fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w)
-            cur = i
-
-        out += "%s%s%s%s%s %s%s%s\n" % fmt
-
-    out += "\n" * (3 - len(allsongs))
-    pos = 8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w
-    playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
-    keys = mplayer_help(short=(not multi and not repeat))
-    out = out if multi else generate_songlist_display(song=allsongs[0])
-
-    if show_key_help:
-        out += "\n" + keys
-
-    else:
-        playing = "{}{}{}{} of {}{}{}\n".format(*pos) if multi else "\n"
-        out += "\n" + " " * (cw - 19) if multi else ""
-
-    fmt = playing, c.r, cur[0].strip()[:cw - 19], c.w, c.w, cur[2], c.w
-    out += "%s    %s%s%s %s[%s]%s" % fmt
-    out += "    REPEAT MODE" if repeat else ""
-    return out
-
-
 def num_repr(num):
     """ Return up to four digit string representation of a number, eg 2.6m. """
     if num <= 9999:
@@ -515,58 +433,6 @@ def num_repr(num):
         return str(rounded)[0:front] + suffix
 
     return str(rounded)[0] + "." + str(rounded)[1] + suffix
-
-
-def real_len(u, alt=False):
-    """ Try to determine width of strings displayed with monospace font. """
-    if not isinstance(u, str):
-        u = u.decode("utf8")
-
-    u = xenc(u) # Handle replacements of unsuported characters
-
-    ueaw = unicodedata.east_asian_width
-
-    if alt:
-        # widths = dict(W=2, F=2, A=1, N=0.75, H=0.5)  # original
-        widths = dict(N=.75, Na=1, W=2, F=2, A=1)
-
-    else:
-        widths = dict(W=2, F=2, A=1, N=1, H=0.5)
-
-    return int(round(sum(widths.get(ueaw(char), 1) for char in u)))
-
-
-def uea_pad(num, t, direction="<", notrunc=False):
-    """ Right pad with spaces taking into account East Asian width chars. """
-    direction = direction.strip() or "<"
-
-    t = ' '.join(t.split('\n'))
-
-    # TODO: Find better way of dealing with this?
-    if num <= 0:
-        return ''
-
-    if not notrunc:
-        # Truncate to max of num characters
-        t = t[:num]
-
-    if real_len(t) < num:
-        spaces = num - real_len(t)
-
-        if direction == "<":
-            t = t + (" " * spaces)
-
-        elif direction == ">":
-            t = (" " * spaces) + t
-
-        elif direction == "^":
-            right = False
-
-            while real_len(t) < num:
-                t = t + " " if right else " " + t
-                right = not right
-
-    return t
 
 
 def yt_datetime(yt_date_time):
@@ -1605,52 +1471,6 @@ def vp():
     failmsg = F('pl empty') + " " + txt
 
     paginatesongs(g.active, msg=msg, failmsg=failmsg)
-
-
-def play_range(songlist, shuffle=False, repeat=False, override=False):
-    """ Play a range of songs, exit cleanly on keyboard interrupt. """
-    if shuffle:
-        random.shuffle(songlist)
-
-    n = 0
-    while 0 <= n <= len(songlist)-1:
-        song = songlist[n]
-        g.content = playback_progress(n, songlist, repeat=repeat)
-
-        if not g.command_line:
-            screen.update(fill_blank=False)
-
-        hasnext = len(songlist) > n + 1
-
-        if hasnext:
-            streams.preload(songlist[n + 1], override=override)
-
-        set_window_title(song.title + " - mpsyt")
-        try:
-            returncode = playsong(song, override=override)
-
-        except KeyboardInterrupt:
-            logging.info("Keyboard Interrupt")
-            xprint(c.w + "Stopping...                          ")
-            screen.reset_terminal()
-            g.message = c.y + "Playback halted" + c.w
-            break
-        set_window_title("mpsyt")
-
-        if returncode == 42:
-            n -= 1
-
-        elif returncode == 43:
-            break
-
-        else:
-            n += 1
-
-        if n == -1:
-            n = len(songlist) - 1 if repeat else 0
-
-        elif n == len(songlist) and repeat:
-            n = 0
 
 
 @commands.command(r'(?:help|h)(?:\s+([-_a-zA-Z]+))?')
