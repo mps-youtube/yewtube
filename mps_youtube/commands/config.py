@@ -1,5 +1,5 @@
 from .. import g, c
-from ..config import Config, known_player_set
+from ..config import Config, is_known_player
 from ..util import getxy
 from . import command
 
@@ -16,7 +16,7 @@ def showconfig():
         val = Config[setting]
 
         # don't show player specific settings if unknown player
-        if not known_player_set() and val.require_known_player:
+        if not is_known_player(Config.PLAYER.get) and val.require_known_player:
             continue
 
         # don't show max_results if auto determined

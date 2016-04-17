@@ -16,7 +16,7 @@ from . import g, screen, c, streams, history, content, paths
 from .util import dbg, xenc, F, getxy, uea_pad
 from .util import list_update, has_exefile, fmt_time
 from .util import set_window_title, xprint
-from .config import Config, known_player_set
+from .config import Config, is_known_player
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
@@ -75,7 +75,8 @@ def _playback_progress(idx, allsongs, repeat=False):
     cw = getxy().width
     out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
-    show_key_help = (known_player_set and Config.SHOW_MPLAYER_KEYS.get)
+    show_key_help = (is_known_player(Config.PLAYER.get)
+            and Config.SHOW_MPLAYER_KEYS.get)
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
@@ -249,7 +250,7 @@ def _generate_real_playerargs(song, override, stream, isvideo):
     # pylint thinks PLAYERARGS.get might be bool
     args = Config.PLAYERARGS.get.strip().split()
 
-    known_player = known_player_set()
+    known_player = is_known_player(Config.PLAYER.get)
     if known_player:
         pd = g.playerargs_defaults[known_player]
         args.extend((pd["title"], song.title))

@@ -74,7 +74,7 @@ class ConfigItem(object):
                 allowed_values[allowed_values.index('')] = "<nothing>"
             fail_msg = fail_msg.replace("*", ", ".join(allowed_values))
 
-        if self.require_known_player and not known_player_set():
+        if self.require_known_player and not is_known_player(Config.PLAYER.get):
             fail_msg = "%s requires mpv or mplayer, can't set to %s"
 
         # handle true / false values
@@ -365,14 +365,14 @@ Config = _Config()
 del _Config # _Config is a singleton and should not have more instances
 
 
-def known_player_set():
+def is_known_player(player):
     """ Return true if the set player is known. """
     for allowed_player in g.playerargs_defaults:
         regex = r'(?:\b%s($|\.[a-zA-Z0-9]+$))' % re.escape(allowed_player)
-        match = re.search(regex, Config.PLAYER.get)
+        match = re.search(regex, player)
 
         if mswin:
-            match = re.search(regex, Config.PLAYER.get, re.IGNORECASE)
+            match = re.search(regex, player, re.IGNORECASE)
 
         if match:
             return allowed_player
@@ -380,10 +380,7 @@ def known_player_set():
     return None
 
 
-def load_player_info(player=None):
-    if player is None:
-        player = Config.PLAYER.get
-
+def load_player_info(player):
     if "mpv" in player:
         g.mpv_version = _get_mpv_version(player)
         if not mswin:

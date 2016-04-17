@@ -63,7 +63,7 @@ def init():
 
     # check mpv/mplayer version
     if has_exefile(Config.PLAYER.get):
-        load_player_info()
+        load_player_info(Config.PLAYER.get)
 
     # setup colorama
     if has_colorama and mswin:
