@@ -15,6 +15,7 @@ except ImportError:
 
 try:
     import readline
+    has_readline = True
 except ImportError:
     has_readline = False
 
