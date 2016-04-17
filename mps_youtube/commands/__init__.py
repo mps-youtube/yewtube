@@ -16,8 +16,8 @@ def command(regex):
     """ Decorator to register an mps-youtube command. """
 
     def decorator(function):
-        command = Command(re.compile(regex), None, None, function)
-        g.commands.append(command)
+        cmd = Command(re.compile(regex), None, None, function)
+        g.commands.append(cmd)
         return function
     return decorator
 
