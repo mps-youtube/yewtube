@@ -22,5 +22,6 @@ def command(regex):
     return decorator
 
 
+# Placed at bottom to deal with cyclic imports
 from . import download, search, album_search, misc, config, local_playlist
 from . import play, songlist
