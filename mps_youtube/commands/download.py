@@ -12,7 +12,7 @@ from .. import g, c, screen, streams
 from ..content import generate_songlist_display
 from ..util import dbg, xprint, parse_multi, F, get_pafy, fmt_time, mswinfn
 from ..config import Config
-from . import command, pl
+from . import command, PL
 from .search import yt_url, user_pls
 from .songlist import dump, plist
 
@@ -191,7 +191,7 @@ def down_many(dltype, choice, subdir=None):
         g.content = generate_songlist_display()
 
 
-@command(r'(da|dv)pl\s+%s' % pl)
+@command(r'(da|dv)pl\s+%s' % PL)
 def down_plist(dltype, parturl):
     """ Download YouTube playlist. """
 

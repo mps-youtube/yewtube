@@ -5,13 +5,13 @@ from urllib.error import HTTPError, URLError
 from .. import g, c, streams
 from ..util import F, get_near_name, parse_multi
 from ..content import playlists_display, generate_songlist_display, logo
-from . import command, word, rs
+from . import command, WORD, RS
 from .songlist import plist
 from .search import yt_url
 from ..player import play_range
 
 
-@command(r'play\s+(%s|\d+)' % word)
+@command(r'play\s+(%s|\d+)' % WORD)
 def play_pl(name):
     """ Play a playlist by name. """
     if name.isdigit():
@@ -34,7 +34,7 @@ def play_pl(name):
 
 
 @command(r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' %
-        (rs, rs))
+        (RS, RS))
 def play(pre, choice, post=""):
     """ Play choice.  Use repeat/random if appears in pre/post. """
     # pylint: disable=R0914
@@ -89,7 +89,7 @@ def play(pre, choice, post=""):
 
 
 @command(r'(%s{0,3})(?:\*|all)\s*(%s{0,3})' %
-        (rs, rs))
+        (RS, RS))
 def play_all(pre, choice, post=""):
     """ Play all tracks in model (last displayed). shuffle/repeat if req'd."""
     options = pre + choice + post

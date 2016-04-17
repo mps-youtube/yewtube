@@ -7,7 +7,7 @@ from .. import g, c, screen, streams, content
 from ..util import getxy, dbg, F, parse_multi, IterSlicer
 from ..playlist import Video
 from ..content import generate_songlist_display, logo
-from . import command, pl
+from . import command, PL
 
 
 def paginatesongs(func, page=0, splash=True, dumps=False,
@@ -52,7 +52,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
         streams.preload(songs[0], delay=0)
 
 
-@command(r'pl\s+%s' % pl)
+@command(r'pl\s+%s' % PL)
 def plist(parturl):
     """ Retrieve YouTube playlist. """
 

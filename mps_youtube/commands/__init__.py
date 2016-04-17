@@ -7,9 +7,9 @@ from .. import g
 Command = collections.namedtuple('Command', 'regex category usage function')
 
 # input types
-word = r'[^\W\d][-\w\s]{,100}'
-rs = r'(?:(?:repeat|shuffle|-[avfw])\s*)'
-pl = r'\S*((?:RD|PL)[-_0-9a-zA-Z]+)$\S*'
+WORD = r'[^\W\d][-\w\s]{,100}'
+RS = r'(?:(?:repeat|shuffle|-[avfw])\s*)'
+PL = r'\S*((?:RD|PL)[-_0-9a-zA-Z]+)$\S*'
 
 
 def command(regex):

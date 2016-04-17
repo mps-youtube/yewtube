@@ -4,11 +4,11 @@ from .. import g, c, playlists
 from ..playlist import Playlist
 from ..util import F, parse_multi, get_near_name
 from ..content import playlists_display, generate_songlist_display
-from . import command, word
+from . import command, WORD
 from .songlist import paginatesongs, songlist_rm_add
 
 
-@command(r'rmp\s*(\d+|%s)' % word)
+@command(r'rmp\s*(\d+|%s)' % WORD)
 def playlist_remove(name):
     """ Delete a saved playlist by name - or purge working playlist if *all."""
     if name.isdigit() or g.userpl.get(name):
@@ -27,7 +27,7 @@ def playlist_remove(name):
         g.content = playlists_display()
 
 
-@command(r'add\s*(-?\d[-,\d\s]{1,250})(%s)' % word)
+@command(r'add\s*(-?\d[-,\d\s]{1,250})(%s)' % WORD)
 def playlist_add(nums, playlist):
     """ Add selected song nums to saved playlist. """
     nums = parse_multi(nums)
@@ -48,14 +48,14 @@ def playlist_add(nums, playlist):
     g.content = generate_songlist_display()
 
 
-@command(r'mv\s*(\d{1,3})\s*(%s)' % word)
+@command(r'mv\s*(\d{1,3})\s*(%s)' % WORD)
 def playlist_rename_idx(_id, name):
     """ Rename a playlist by ID. """
     _id = int(_id) - 1
     playlist_rename(sorted(g.userpl)[_id] + " " + name)
 
 
-@command(r'mv\s*(%s\s+%s)' % (word, word))
+@command(r'mv\s*(%s\s+%s)' % (WORD, WORD))
 def playlist_rename(playlists_):
     """ Rename a playlist using mv command. """
     # Deal with old playlist names that permitted spaces
@@ -120,7 +120,7 @@ def save_last():
         open_save_view("save", saveas)
 
 
-@command(r'(open|save|view)\s*(%s)' % word)
+@command(r'(open|save|view)\s*(%s)' % WORD)
 def open_save_view(action, name):
     """ Open, save or view a playlist by name.  Get closest name match. """
     name = name.replace(" ", "-")
