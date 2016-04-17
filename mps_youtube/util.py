@@ -5,7 +5,6 @@ import os
 import re
 import sys
 import ctypes
-import subprocess
 import logging
 import time
 import collections
