@@ -12,13 +12,11 @@ import time
 import shlex
 from urllib.error import HTTPError, URLError
 
-from . import g, screen, c, streams, history
-from .content import generate_songlist_display
+from . import g, screen, c, streams, history, content, paths
 from .util import dbg, xenc, F, getxy, uea_pad
 from .util import list_update, has_exefile, fmt_time
 from .util import set_window_title, xprint
 from .config import Config, known_player_set
-from .paths import get_config_dir
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
@@ -96,7 +94,7 @@ def _playback_progress(idx, allsongs, repeat=False):
     pos = 8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w
     playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
     keys = _mplayer_help(short=(not multi and not repeat))
-    out = out if multi else generate_songlist_display(song=allsongs[0])
+    out = out if multi else content.generate_songlist_display(song=allsongs[0])
 
     if show_key_help:
         out += "\n" + keys
@@ -310,10 +308,10 @@ def _get_input_file():
     confpath = conf = ''
 
     if "mpv" in Config.PLAYER.get:
-        confpath = os.path.join(get_config_dir(), "mpv-input.conf")
+        confpath = os.path.join(paths.get_config_dir(), "mpv-input.conf")
 
     elif "mplayer" in Config.PLAYER.get:
-        confpath = os.path.join(get_config_dir(), "mplayer-input.conf")
+        confpath = os.path.join(paths.get_config_dir(), "mplayer-input.conf")
 
     if os.path.isfile(confpath):
         dbg("using %s for input key file", confpath)

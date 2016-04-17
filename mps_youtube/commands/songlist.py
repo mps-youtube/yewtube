@@ -6,7 +6,6 @@ import pafy
 from .. import g, c, screen, streams, content
 from ..util import getxy, dbg, F, parse_multi, IterSlicer
 from ..playlist import Video
-from ..content import generate_songlist_display, logo
 from . import command, PL
 
 
@@ -14,7 +13,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
         length=None, msg=None, failmsg=None, loadmsg=None):
     if splash:
         g.message = loadmsg or ''
-        g.content = logo(col=c.b)
+        g.content = content.logo(col=c.b)
         screen.update()
 
     max_results = getxy().max_results
@@ -41,7 +40,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
     g.current_page = page
     g.result_count = length
     g.model.songs = songs
-    g.content = generate_songlist_display()
+    g.content = content.generate_songlist_display()
     g.last_opened = ""
     g.message = msg or ''
     if not songs:
@@ -100,7 +99,7 @@ def songlist_rm_add(action, songrange):
 
         g.message = F('songs rm') % (len(selection), removed)
 
-    g.content = generate_songlist_display()
+    g.content = content.generate_songlist_display()
 
 
 @command(r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})')
@@ -116,7 +115,7 @@ def songlist_mv_sw(action, a, b):
         g.model[i], g.model[j] = g.model[j], g.model[i]
         g.message = F('song sw') % (min(a, b), max(a, b))
 
-    g.content = generate_songlist_display()
+    g.content = content.generate_songlist_display()
 
 
 @command(r'(n|p)\s*(\d{1,2})?')
@@ -155,7 +154,7 @@ def nextprev(np, page=None):
         g.message = "No %s items to display" % norp
 
     if not isinstance(g.content, content.PaginatedContent):
-        g.content = generate_songlist_display()
+        g.content = content.generate_songlist_display()
     return good
 
 
@@ -171,7 +170,7 @@ def dump(un):
         un = "" if not un else un
         g.message = "%s%sdump%s may only be used on an open YouTube playlist"
         g.message = g.message % (c.y, un, c.w)
-        g.content = generate_songlist_display()
+        g.content = content.generate_songlist_display()
 
 
 @command(r'shuffle')
@@ -179,7 +178,7 @@ def shuffle_fn():
     """ Shuffle displayed items. """
     random.shuffle(g.model.songs)
     g.message = c.y + "Items shuffled" + c.w
-    g.content = generate_songlist_display()
+    g.content = content.generate_songlist_display()
 
 
 @command(r'reverse')
@@ -187,7 +186,7 @@ def reverse_songs():
     """ Reverse order of displayed items. """
     g.model.songs = g.model.songs[::-1]
     g.message = c.y + "Reversed displayed songs" + c.w
-    g.content = generate_songlist_display()
+    g.content = content.generate_songlist_display()
 
 
 @command(r'reverse\s*(\d{1,4})\s*-\s*(\d{1,4})\s*')
@@ -198,7 +197,7 @@ def reverse_songs_range(lower, upper):
     
     g.model.songs[lower-1:upper] = reversed(g.model.songs[lower-1:upper])
     g.message = c.y + "Reversed range: " + str(lower) + "-" + str(upper) + c.w
-    g.content = generate_songlist_display()
+    g.content = content.generate_songlist_display()
     
 
 @command(r'reverse all')
@@ -207,7 +206,7 @@ def reverse_playlist():
     # Prevent crash if no last query
     if g.last_search_query == (None, None) or \
             'func' not in g.last_search_query[1]:
-        g.content = logo()
+        g.content = content.logo()
         g.message = "No playlist loaded"
         return
 

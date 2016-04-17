@@ -6,11 +6,10 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from xml.etree import ElementTree as ET
 
-from pafy import call_gdata
+import pafy
 
-from .. import c, g, screen, __version__, __url__
+from .. import c, g, screen, __version__, __url__, content
 from ..util import dbg, xprint, fmt_time
-from ..content import logo, generate_songlist_display
 from ..config import Config
 from . import command
 from .songlist import paginatesongs
@@ -19,7 +18,7 @@ from .search import generate_search_qs, get_tracks_from_json
 
 def show_message(message, col=c.r, update=False):
     """ Show message using col, update screen if required. """
-    g.content = generate_songlist_display()
+    g.content = content.generate_songlist_display()
     g.message = col + message + c.w
 
     if update:
@@ -46,7 +45,7 @@ def _do_query(url, query, err='query failed', report=False):
 
     except (URLError, HTTPError) as e:
         g.message = "%s: %s (%s)" % (err, e, url)
-        g.content = logo(c.r)
+        g.content = content.logo(c.r)
         return None if not report else (None, False)
 
     return wdata if not report else (wdata, False)
@@ -127,7 +126,7 @@ def _match_tracks(artist, title, mb_tracks):
         dbg(query)
 
         # perform fetch
-        wdata = call_gdata('search', query)
+        wdata = pafy.call_gdata('search', query)
         results = get_tracks_from_json(wdata)
 
         if not results:
@@ -217,7 +216,7 @@ def search_album(term):
 
         if not term or len(term) < 2:
             g.message = c.r + "Not enough input!" + c.w
-            g.content = generate_songlist_display()
+            g.content = content.generate_songlist_display()
             return
 
     album = _get_mb_album(term)

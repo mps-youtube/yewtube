@@ -1,9 +1,8 @@
 import re
 
-from .. import g, c, playlists
+from .. import g, c, playlists, content
 from ..playlist import Playlist
 from ..util import F, parse_multi, get_near_name
-from ..content import playlists_display, generate_songlist_display
 from . import command, WORD
 from .songlist import paginatesongs, songlist_rm_add
 
@@ -19,12 +18,12 @@ def playlist_remove(name):
 
         del g.userpl[name]
         g.message = "Deleted playlist %s%s%s" % (c.y, name, c.w)
-        g.content = playlists_display()
+        g.content = content.playlists_display()
         playlists.save()
 
     else:
         g.message = F('pl not found advise ls') % name
-        g.content = playlists_display()
+        g.content = content.playlists_display()
 
 
 @command(r'add\s*(-?\d[-,\d\s]{1,250})(%s)' % WORD)
@@ -45,7 +44,7 @@ def playlist_add(nums, playlist):
     if nums:
         playlists.save()
 
-    g.content = generate_songlist_display()
+    g.content = content.generate_songlist_display()
 
 
 @command(r'mv\s*(\d{1,3})\s*(%s)' % WORD)
@@ -64,7 +63,7 @@ def playlist_rename(playlists_):
         a = (a + " " + (b.pop(0))).strip()
         if not b and a not in g.userpl:
             g.message = F('no pl match for rename')
-            g.content = g.content or playlists_display()
+            g.content = g.content or content.playlists_display()
             return
 
     b = "-".join(b)
@@ -85,7 +84,7 @@ def add_rm_all(action):
     if action == "rm":
         g.model.songs.clear()
         msg = c.b + "Cleared all songs" + c.w
-        g.content = generate_songlist_display(zeromsg=msg)
+        g.content = content.generate_songlist_display(zeromsg=msg)
 
     elif action == "add":
         size = len(g.model)
@@ -144,18 +143,18 @@ def open_save_view(action, name):
 
         elif not saved and action in "view open".split():
             g.message = F("pl not found") % name
-            g.content = playlists_display()
+            g.content = content.playlists_display()
 
     elif action == "save":
         if not g.model:
             g.message = "Nothing to save. " + F('advise search')
-            g.content = generate_songlist_display()
+            g.content = content.generate_songlist_display()
 
         else:
             g.userpl[name] = Playlist(name, list(g.model.songs))
             g.message = F('pl saved') % name
             playlists.save()
-            g.content = generate_songlist_display()
+            g.content = content.generate_songlist_display()
 
 
 @command(r'(open|view)\s*(\d{1,4})')
@@ -171,10 +170,11 @@ def ls():
     """ List user saved playlists. """
     if not g.userpl:
         g.message = F('no playlists')
-        g.content = g.content or generate_songlist_display(zeromsg=g.message)
+        g.content = g.content or \
+                content.generate_songlist_display(zeromsg=g.message)
 
     else:
-        g.content = playlists_display()
+        g.content = content.playlists_display()
         g.message = F('pl help')
 
 

@@ -9,8 +9,7 @@ from urllib.parse import urlencode
 
 import pafy
 
-from . import g, c
-from .paths import get_default_ddir
+from . import g, c, paths
 from .util import has_exefile, dbg, list_update
 
 
@@ -294,7 +293,7 @@ class _Config(object):
             ConfigItem("fullscreen", False, require_known_player=True),
             ConfigItem("show_status", True),
             ConfigItem("columns", ""),
-            ConfigItem("ddir", get_default_ddir(), check_fn=check_ddir),
+            ConfigItem("ddir", paths.get_default_ddir(), check_fn=check_ddir),
             ConfigItem("overwrite", True),
             ConfigItem("show_video", False),
             ConfigItem("search_music", True),

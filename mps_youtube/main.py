@@ -25,12 +25,10 @@ import locale
 import sys
 import os
 
-from pafy import GdataError
+import pafy
 
 from . import g, c, commands, screen, history
-from . import __version__, playlists
-from .content import generate_songlist_display
-from .content import logo
+from . import __version__, playlists, content
 from .util import dbg
 from .util import set_window_title, F
 
@@ -72,7 +70,7 @@ def matchfunction(func, regex, userinput):
                 g.content = ''.join(traceback.format_exception(
                     *sys.exc_info()))
             g.message = F('invalid range')
-            g.content = g.content or generate_songlist_display()
+            g.content = g.content or content.generate_songlist_display()
 
         except (ValueError, IOError) as e:
             if g.debug_mode:
@@ -80,9 +78,9 @@ def matchfunction(func, regex, userinput):
                     *sys.exc_info()))
             g.message = F('cant get track') % str(e)
             g.content = g.content or\
-                generate_songlist_display(zeromsg=g.message)
+                content.generate_songlist_display(zeromsg=g.message)
 
-        except GdataError as e:
+        except pafy.GdataError as e:
             if g.debug_mode:
                 g.content = ''.join(traceback.format_exception(
                     *sys.exc_info()))
@@ -95,7 +93,7 @@ def matchfunction(func, regex, userinput):
 def prompt_for_exit():
     """ Ask for exit confirmation. """
     g.message = c.r + "Press ctrl-c again to exit" + c.w
-    g.content = generate_songlist_display()
+    g.content = content.generate_songlist_display()
     screen.update()
 
     try:
@@ -112,7 +110,7 @@ def main():
     set_window_title("mpsyt")
 
     if not g.command_line:
-        g.content = logo(col=c.g, version=__version__) + "\n\n"
+        g.content = content.logo(col=c.g, version=__version__) + "\n\n"
         g.message = "Enter /search-term to search or [h]elp"
         screen.update()
 
@@ -146,7 +144,7 @@ def main():
                 break
 
         else:
-            g.content = g.content or generate_songlist_display()
+            g.content = g.content or content.generate_songlist_display()
 
             if g.command_line:
                 g.content = ""

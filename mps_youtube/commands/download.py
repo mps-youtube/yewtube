@@ -8,8 +8,7 @@ import subprocess
 from urllib.request import urlopen
 from urllib.error import HTTPError
 
-from .. import g, c, screen, streams
-from ..content import generate_songlist_display
+from .. import g, c, screen, streams, content
 from ..util import dbg, xprint, parse_multi, F, get_pafy, fmt_time, mswinfn
 from ..config import Config
 from . import command, PL
@@ -31,13 +30,13 @@ def download(dltype, num):
     elif g.browse_mode == "ytpl":
         g.message = "Use da or dv to specify audio / video playlist download"
         g.message = c.y + g.message + c.w
-        g.content = generate_songlist_display()
+        g.content = content.generate_songlist_display()
         return
 
     elif g.browse_mode != "normal":
         g.message = "Download must refer to a specific video item"
         g.message = c.y + g.message + c.w
-        g.content = generate_songlist_display()
+        g.content = content.generate_songlist_display()
         return
 
     screen.writestatus("Fetching video info...")
@@ -52,12 +51,12 @@ def download(dltype, num):
 
         except KeyboardInterrupt:
             g.message = c.r + "Download aborted!" + c.w
-            g.content = generate_songlist_display()
+            g.content = content.generate_songlist_display()
             return
 
         if not url or ext_au == "abort":
             # abort on invalid stream selection
-            g.content = generate_songlist_display()
+            g.content = content.generate_songlist_display()
             g.message = "%sNo download selected / invalid input%s" % (c.y, c.w)
             return
 
@@ -124,7 +123,7 @@ def download(dltype, num):
         except KeyboardInterrupt:
             g.message = "Audio/Video multiplex aborted!"
 
-    g.content = generate_songlist_display()
+    g.content = content.generate_songlist_display()
 
 
 @command(r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))')
@@ -150,7 +149,7 @@ def down_many(dltype, choice, subdir=None):
     try:
         for song in downsongs:
             g.result_count = len(g.model)
-            disp = generate_songlist_display()
+            disp = content.generate_songlist_display()
             title = "Download Queue (%s):%s\n\n" % (av, c.w)
             disp = re.sub(r"(Num\s*?Title.*?\n)", title, disp)
             g.content = disp
@@ -188,7 +187,7 @@ def down_many(dltype, choice, subdir=None):
         g.model.songs = temp[::]
         g.message = msg
         g.result_count = len(g.model)
-        g.content = generate_songlist_display()
+        g.content = content.generate_songlist_display()
 
 
 @command(r'(da|dv)pl\s+%s' % PL)

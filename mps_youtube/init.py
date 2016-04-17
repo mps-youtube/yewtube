@@ -25,11 +25,10 @@ try:
 except ImportError:
     has_readline = False
 
-from . import cache, g, __version__, __notes__, screen, c
+from . import cache, g, __version__, __notes__, screen, c, paths
 from .util import has_exefile, dbg, xprint
 from .config import Config, load_player_info
 from .helptext import helptext
-from .paths import get_config_dir
 
 mswin = os.name == "nt"
 
@@ -200,7 +199,7 @@ def _init_readline():
         return
 
     if has_readline:
-        g.READLINE_FILE = os.path.join(get_config_dir(), "input_history")
+        g.READLINE_FILE = os.path.join(paths.get_config_dir(), "input_history")
 
         if os.path.exists(g.READLINE_FILE):
             readline.read_history_file(g.READLINE_FILE)
