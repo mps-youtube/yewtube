@@ -1,6 +1,3 @@
-# python2 compatibility (for landscape)
-from __future__ import print_function
-
 import os
 import re
 import sys
