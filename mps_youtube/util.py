@@ -128,12 +128,8 @@ def get_near_name(begin, items):
     """ Return the closest matching playlist name that starts with begin. """
     for name in sorted(items):
         if name.lower().startswith(begin.lower()):
-            break
-
-    else:
-        return begin
-
-    return name
+            return name
+    return begin
 
 
 def F(key, nb=0, na=0, textlib=None):
