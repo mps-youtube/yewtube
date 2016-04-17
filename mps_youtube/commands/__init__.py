@@ -1,7 +1,7 @@
 import collections
 import re
 
-from . import g
+from .. import g
 
 
 Command = collections.namedtuple('Command', 'regex category usage function')
