@@ -364,4 +364,8 @@ class _Config(object):
 
 Config = _Config()
 del _Config # _Config is a singleton and should not have more instances
+# Prevent module from being deleted
+# http://stackoverflow.com/questions/5365562/why-is-the-value-of-name-changing-after-assignment-to-sys-modules-name
+ref = sys.modules[__name__]
+# Any module trying to import config will get the Config object instead
 sys.modules[__name__] = Config
