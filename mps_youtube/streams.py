@@ -2,9 +2,8 @@ import time
 import threading
 from urllib.request import urlopen
 
-from . import g, c, screen
+from . import g, c, screen, config
 from .util import dbg, get_pafy
-from .config import Config
 
 
 def prune():
@@ -77,7 +76,7 @@ def get(vid, force=False, callback=None, threeD=False):
 
 def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
     """ Select a stream from stream list. """
-    maxres = maxres or Config.MAX_RES.get
+    maxres = maxres or config.MAX_RES.get
     slist = slist['meta'] if isinstance(slist, dict) else slist
 
     def okres(x):
@@ -96,10 +95,10 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
         streams = [x for x in slist if x['mtype'] == "audio"]
         if not m4a_ok:
             streams = [x for x in streams if not x['ext'] == "m4a"]
-        if not Config.AUDIO_FORMAT.get == "auto":
-            if m4a_ok and Config.AUDIO_FORMAT.get == "m4a":
+        if not config.AUDIO_FORMAT.get == "auto":
+            if m4a_ok and config.AUDIO_FORMAT.get == "m4a":
                 streams = [x for x in streams if x['ext'] == "m4a"]
-            if Config.AUDIO_FORMAT.get == "webm":
+            if config.AUDIO_FORMAT.get == "webm":
                 streams = [x for x in streams if x['ext'] == "webm"]
             if not streams:
                 streams = [x for x in slist if x['mtype'] == "audio"]
@@ -163,12 +162,12 @@ def _preload(song, delay, override):
     ytid = song.ytid
     g.preloading.append(ytid)
     time.sleep(delay)
-    video = Config.SHOW_VIDEO.get
+    video = config.SHOW_VIDEO.get
     video = True if override in ("fullscreen", "window", "forcevid") else video
     video = False if override == "audio" else video
 
     try:
-        m4a = "mplayer" not in Config.PLAYER.get
+        m4a = "mplayer" not in config.PLAYER.get
         streamlist = get(song)
         stream = select(streamlist, audio=not video, m4a_ok=m4a)
 

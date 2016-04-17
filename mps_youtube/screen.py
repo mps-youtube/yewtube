@@ -2,9 +2,8 @@ import subprocess
 import os
 import sys
 
-from . import g, content
+from . import g, content, config
 from .util import xprint, getxy
-from .config import Config
 
 
 mswin = os.name == "nt"
@@ -49,7 +48,7 @@ def reset_terminal():
 
 def writestatus(text, mute=False):
     """ Update status line. """
-    if not mute and Config.SHOW_STATUS.get:
+    if not mute and config.SHOW_STATUS.get:
         _writeline(text)
 
 

@@ -6,11 +6,10 @@ import logging
 
 import pafy
 
-from .. import g, c, screen
+from .. import g, c, screen, config
 from ..util import fmt_time, dbg, yt_datetime, F, IterSlicer, xprint
 from ..util import get_pafy, getxy
 from ..playlist import Video
-from ..config import Config
 from ..content import generate_songlist_display, generate_playlist_display, logo
 from . import command
 from .songlist import plist, paginatesongs
@@ -66,17 +65,17 @@ def generate_search_qs(term, match='term'):
         'q': term,
         'maxResults': 50,
         'safeSearch': "none",
-        'order': aliases.get(Config.ORDER.get, Config.ORDER.get),
+        'order': aliases.get(config.ORDER.get, config.ORDER.get),
         'part': 'id,snippet',
         'type': 'video',
-        'key': Config.API_KEY.get
+        'key': config.API_KEY.get
     }
 
     if match == 'related':
         qs['relatedToVideoId'] = term
         del qs['q']
 
-    if Config.SEARCH_MUSIC.get:
+    if config.SEARCH_MUSIC.get:
         qs['videoCategoryId'] = 10
 
     return qs
@@ -162,9 +161,9 @@ def usersearch_id(user, channel_id, term):
 
     query = generate_search_qs(term)
     aliases = dict(views='viewCount')  # The value of the config item is 'views' not 'viewCount'
-    if Config.USER_ORDER.get:
-        query['order'] = aliases.get(Config.USER_ORDER.get,
-                Config.USER_ORDER.get)
+    if config.USER_ORDER.get:
+        query['order'] = aliases.get(config.USER_ORDER.get,
+                config.USER_ORDER.get)
     query['channelId'] = channel_id
 
     termuser = tuple([c.y + x + c.w for x in (term, user)])
@@ -175,7 +174,7 @@ def usersearch_id(user, channel_id, term):
     else:
         msg = "Video uploads by {2}{4}{0}"
         progtext = termuser[1]
-        if Config.SEARCH_MUSIC:
+        if config.SEARCH_MUSIC:
             failmsg = """User %s not found or has no videos in the Music category.
 Use 'set search_music False' to show results not in the Music category.""" % termuser[1]
         else:

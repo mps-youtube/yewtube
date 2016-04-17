@@ -8,9 +8,8 @@ import subprocess
 from urllib.request import urlopen
 from urllib.error import HTTPError
 
-from .. import g, c, screen, streams, content
+from .. import g, c, screen, streams, content, config
 from ..util import dbg, xprint, parse_multi, F, get_pafy, fmt_time, mswinfn
-from ..config import Config
 from . import command, PL
 from .search import yt_url, user_pls
 from .songlist import dump, plist
@@ -218,7 +217,7 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     """" Create download directory, generate filename. """
     # pylint: disable=E1103
     # Instance of 'bool' has no 'extension' member (some types not inferable)
-    ddir = os.path.join(Config.DDIR.get, subdir) if subdir else Config.DDIR.get
+    ddir = os.path.join(config.DDIR.get, subdir) if subdir else config.DDIR.get
     if not os.path.exists(ddir):
         os.makedirs(ddir)
 
@@ -318,8 +317,8 @@ def transcode(filename, enc_data):
 
 def external_download(song, filename, url):
     """ Perform download using external application. """
-    cmd = Config.DOWNLOAD_COMMAND.get
-    ddir, basename = Config.DDIR.get, os.path.basename(filename)
+    cmd = config.DOWNLOAD_COMMAND.get
+    ddir, basename = config.DDIR.get, os.path.basename(filename)
     cmd_list = shlex.split(cmd)
 
     def list_string_sub(orig, repl, lst):
@@ -350,13 +349,13 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
         url = stream['url']
 
     # if an external download command is set, use it
-    if Config.DOWNLOAD_COMMAND.get:
+    if config.DOWNLOAD_COMMAND.get:
         title = c.y + os.path.splitext(os.path.basename(filename))[0] + c.w
         xprint("Downloading %s using custom command" % title)
         external_download(song, filename, url)
         return None
 
-    if not Config.OVERWRITE.get:
+    if not config.OVERWRITE.get:
         if os.path.exists(filename):
             xprint("File exists. Skipping %s%s%s ..\n" % (c.r, filename, c.w))
             time.sleep(0.2)
@@ -388,14 +387,14 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
         sys.stdout.write("\r" + status + ' ' * 4 + "\r")
         sys.stdout.flush()
 
-    active_encoder = g.encoders[Config.ENCODER.get]
+    active_encoder = g.encoders[config.ENCODER.get]
     ext = filename.split(".")[-1]
     valid_ext = ext in active_encoder['valid'].split(",")
 
     if audio and g.muxapp:
         remux_audio(filename, song.title)
 
-    if Config.ENCODER.get != 0 and valid_ext and allow_transcode:
+    if config.ENCODER.get != 0 and valid_ext and allow_transcode:
         filename = transcode(filename, active_encoder)
 
     return filename
@@ -447,7 +446,7 @@ def prompt_dl(song):
     url2 = ext2 = None
     mediatype = [i for i in dl_data if i['url'] == url][0]['mediatype']
 
-    if mediatype == "video" and g.muxapp and not Config.DOWNLOAD_COMMAND.get:
+    if mediatype == "video" and g.muxapp and not config.DOWNLOAD_COMMAND.get:
         # offer mux if not using external downloader
         dl_data, p = get_dl_data(song, mediatype="audio")
         dl_text = gen_dl_text(dl_data, song, p)

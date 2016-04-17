@@ -8,9 +8,8 @@ from xml.etree import ElementTree as ET
 
 import pafy
 
-from .. import c, g, screen, __version__, __url__, content
+from .. import c, g, screen, __version__, __url__, content, config
 from ..util import dbg, xprint, fmt_time
-from ..config import Config
 from . import command
 from .songlist import paginatesongs
 from .search import generate_search_qs, get_tracks_from_json
@@ -275,9 +274,9 @@ def search_album(term):
     screen.clear()
     itt = _match_tracks(artist, title, mb_tracks)
 
-    stash = Config.SEARCH_MUSIC.get, Config.ORDER.get
-    Config.SEARCH_MUSIC.value = True
-    Config.ORDER.value = "relevance"
+    stash = config.SEARCH_MUSIC.get, config.ORDER.get
+    config.SEARCH_MUSIC.value = True
+    config.ORDER.value = "relevance"
 
     try:
         songs.extend(itt)
@@ -286,7 +285,7 @@ def search_album(term):
         xprint("%sHalted!%s" % (c.r, c.w))
 
     finally:
-        Config.SEARCH_MUSIC.value, Config.ORDER.value = stash
+        config.SEARCH_MUSIC.value, config.ORDER.value = stash
 
     if songs:
         xprint("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))

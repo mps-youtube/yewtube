@@ -1,5 +1,4 @@
-from .. import g, c
-from ..config import Config
+from .. import g, c, config
 from ..util import getxy, is_known_player
 from . import command
 
@@ -12,11 +11,11 @@ def showconfig():
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
 
-    for setting in Config:
-        val = Config[setting]
+    for setting in config:
+        val = config[setting]
 
         # don't show player specific settings if unknown player
-        if not is_known_player(Config.PLAYER.get) and val.require_known_player:
+        if not is_known_player(config.PLAYER.get) and val.require_known_player:
             continue
 
         # don't show max_results if auto determined
@@ -39,26 +38,26 @@ def setconfig(key, val):
     key = key.replace("-", "_")
     if key.upper() == "ALL" and val.upper() == "DEFAULT":
 
-        for ci in Config:
-            Config[ci].value = Config[ci].default
+        for ci in config:
+            config[ci].value = config[ci].default
 
-        Config.save()
+        config.save()
         message = "Default configuration reinstated"
 
-    elif not key.upper() in Config:
+    elif not key.upper() in config:
         message = "Unknown config item: %s%s%s" % (c.r, key, c.w)
 
     elif val.upper() == "DEFAULT":
-        att = Config[key.upper()]
+        att = config[key.upper()]
         att.value = att.default
         message = "%s%s%s set to %s%s%s (default)"
         dispval = att.display or "None"
         message = message % (c.y, key, c.w, c.y, dispval, c.w)
-        Config.save()
+        config.save()
 
     else:
-        # Config.save() will be called by Config.set() method
-        message = Config[key.upper()].set(val)
+        # config.save() will be called by config.set() method
+        message = config[key.upper()].set(val)
 
     showconfig()
     g.message = message
@@ -70,7 +69,7 @@ def show_encs():
     out = "%sEncoding profiles:%s\n\n" % (c.ul, c.w)
 
     for x, e in enumerate(g.encoders):
-        sel = " (%sselected%s)" % (c.y, c.w) if Config.ENCODER.get == x else ""
+        sel = " (%sselected%s)" % (c.y, c.w) if config.ENCODER.get == x else ""
         out += "%2d. %s%s\n" % (x, e['name'], sel)
 
     g.content = out

@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import copy
 import pickle
 from urllib.request import urlopen
@@ -363,3 +364,4 @@ class _Config(object):
 
 Config = _Config()
 del _Config # _Config is a singleton and should not have more instances
+sys.modules[__name__] = Config

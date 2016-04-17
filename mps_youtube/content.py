@@ -4,8 +4,7 @@ import random
 
 import pafy
 
-from . import g, c
-from .config import Config
+from . import g, c, config
 from .util import getxy, fmt_time, uea_pad, yt_datetime, F
 
 # In the future, this could support more advanced features
@@ -161,7 +160,7 @@ def generate_playlist_display():
 def _get_user_columns():
     """ Get columns from user config, return dict. """
     total_size = 0
-    user_columns = Config.COLUMNS.get
+    user_columns = config.COLUMNS.get
     user_columns = user_columns.replace(",", " ").split()
 
     defaults = {"views": dict(name="viewCount", size=4, heading="View"),

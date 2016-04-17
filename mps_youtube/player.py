@@ -12,11 +12,10 @@ import time
 import shlex
 from urllib.error import HTTPError, URLError
 
-from . import g, screen, c, streams, history, content, paths
+from . import g, screen, c, streams, history, content, paths, config
 from .util import dbg, xenc, F, getxy, uea_pad
 from .util import list_update, has_exefile, fmt_time
 from .util import set_window_title, xprint, is_known_player
-from .config import Config
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
@@ -75,8 +74,8 @@ def _playback_progress(idx, allsongs, repeat=False):
     cw = getxy().width
     out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
     out = out % (c.ul, "Title", "Time", c.w)
-    show_key_help = (is_known_player(Config.PLAYER.get)
-            and Config.SHOW_MPLAYER_KEYS.get)
+    show_key_help = (is_known_player(config.PLAYER.get)
+            and config.SHOW_MPLAYER_KEYS.get)
     multi = len(allsongs) > 1
 
     for n, song in enumerate(allsongs):
@@ -135,13 +134,13 @@ def _mplayer_help(short=True):
 def _playsong(song, failcount=0, override=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
     # pylint: disable=R0911,R0912
-    if not Config.PLAYER.get or not has_exefile(Config.PLAYER.get):
+    if not config.PLAYER.get or not has_exefile(config.PLAYER.get):
         g.message = "Player not configured! Enter %sset player <player_app> "\
             "%s to set a player" % (c.g, c.w)
         return
 
-    if Config.NOTIFIER.get:
-        subprocess.Popen(shlex.split(Config.NOTIFIER.get) + [song.title])
+    if config.NOTIFIER.get:
+        subprocess.Popen(shlex.split(config.NOTIFIER.get) + [song.title])
 
     # don't interrupt preloading:
     while song.ytid in g.preloading:
@@ -173,9 +172,9 @@ def _playsong(song, failcount=0, override=False):
         return
 
     try:
-        video = ((Config.SHOW_VIDEO.get and override != "audio") or
+        video = ((config.SHOW_VIDEO.get and override != "audio") or
                  (override in ("fullscreen", "window", "forcevid")))
-        m4a = "mplayer" not in Config.PLAYER.get
+        m4a = "mplayer" not in config.PLAYER.get
         cached = g.streams[song.ytid]
         stream = streams.select(cached, q=failcount, audio=(not video), m4a_ok=m4a)
 
@@ -239,7 +238,7 @@ def _generate_real_playerargs(song, override, stream, isvideo):
     # pylint: disable=R0914
     # pylint: disable=R0912
 
-    if "uiressl=yes" in stream['url'] and "mplayer" in Config.PLAYER.get:
+    if "uiressl=yes" in stream['url'] and "mplayer" in config.PLAYER.get:
         ver = g.mplayer_version
         # Mplayer too old to support https
         if not (ver > (1,1) if isinstance(ver, tuple) else ver >= 37294):
@@ -248,18 +247,18 @@ def _generate_real_playerargs(song, override, stream, isvideo):
 
     # pylint: disable=E1103
     # pylint thinks PLAYERARGS.get might be bool
-    args = Config.PLAYERARGS.get.strip().split()
+    args = config.PLAYERARGS.get.strip().split()
 
-    known_player = is_known_player(Config.PLAYER.get)
+    known_player = is_known_player(config.PLAYER.get)
     if known_player:
         pd = g.playerargs_defaults[known_player]
         args.extend((pd["title"], song.title))
 
         if pd['geo'] not in args:
-            geometry = Config.WINDOW_SIZE.get or ""
+            geometry = config.WINDOW_SIZE.get or ""
 
-            if Config.WINDOW_POS.get:
-                wp = Config.WINDOW_POS.get
+            if config.WINDOW_POS.get:
+                wp = config.WINDOW_POS.get
                 xx = "+1" if "left" in wp else "-1"
                 yy = "+1" if "top" in wp else "-1"
                 geometry += xx + yy
@@ -271,7 +270,7 @@ def _generate_real_playerargs(song, override, stream, isvideo):
         if override == "a-v":
             list_update(pd["novid"], args)
 
-        elif ((Config.FULLSCREEN.get and override != "window")
+        elif ((config.FULLSCREEN.get and override != "window")
                 or override == "fullscreen"):
             list_update(pd["fs"], args)
 
@@ -280,12 +279,12 @@ def _generate_real_playerargs(song, override, stream, isvideo):
             dbg("%susing ignidx flag%s")
             list_update(pd["ignidx"], args)
 
-        if "mplayer" in Config.PLAYER.get:
+        if "mplayer" in config.PLAYER.get:
             list_update("-really-quiet", args, remove=True)
             list_update("-noquiet", args)
             list_update("-prefer-ipv4", args)
 
-        elif "mpv" in Config.PLAYER.get and not g.debug_mode:
+        elif "mpv" in config.PLAYER.get and not g.debug_mode:
             msglevel = pd["msglevel"]["<0.4"]
 
             #  undetected (negative) version number assumed up-to-date
@@ -298,7 +297,7 @@ def _generate_real_playerargs(song, override, stream, isvideo):
                 list_update("--really-quiet", args, remove=True)
                 list_update(msglevel, args)
 
-    return [Config.PLAYER.get] + args + [stream['url']]
+    return [config.PLAYER.get] + args + [stream['url']]
 
 
 def _get_input_file():
@@ -308,10 +307,10 @@ def _get_input_file():
     """
     confpath = conf = ''
 
-    if "mpv" in Config.PLAYER.get:
+    if "mpv" in config.PLAYER.get:
         confpath = os.path.join(paths.get_config_dir(), "mpv-input.conf")
 
-    elif "mplayer" in Config.PLAYER.get:
+    elif "mplayer" in config.PLAYER.get:
         confpath = os.path.join(paths.get_config_dir(), "mplayer-input.conf")
 
     if os.path.isfile(confpath):
@@ -358,7 +357,7 @@ def _launch_player(song, songdata, override, stream, isvideo):
     fifopath = None
 
     try:
-        if "mplayer" in Config.PLAYER.get:
+        if "mplayer" in config.PLAYER.get:
             cmd.append('-input')
 
             if mswin:
@@ -381,7 +380,7 @@ def _launch_player(song, songdata, override, stream, isvideo):
             _player_status(p, songdata + "; ", song.length)
             returncode = p.wait()
 
-        elif "mpv" in Config.PLAYER.get:
+        elif "mpv" in config.PLAYER.get:
             cmd.append('--input-conf=' + input_file)
 
             if g.mpv_usesock:
@@ -420,7 +419,7 @@ def _launch_player(song, songdata, override, stream, isvideo):
         return returncode
 
     except OSError:
-        g.message = F('no player') % Config.PLAYER.get
+        g.message = F('no player') % config.PLAYER.get
         return None
 
     finally:

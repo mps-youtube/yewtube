@@ -25,9 +25,8 @@ try:
 except ImportError:
     has_readline = False
 
-from . import cache, g, __version__, __notes__, screen, c, paths
-from .util import has_exefile, dbg, xprint
-from .config import Config, load_player_info
+from . import cache, g, __version__, __notes__, screen, c, paths, config
+from .util import has_exefile, dbg, xprint, load_player_info
 from .helptext import helptext
 
 mswin = os.name == "nt"
@@ -43,27 +42,27 @@ def init():
     if not os.path.exists(g.CFFILE):
 
         if has_exefile(mpv):
-            Config.PLAYER.set(mpv)
+            config.PLAYER.set(mpv)
 
         elif has_exefile(mplayer):
-            Config.PLAYER.set(mplayer)
+            config.PLAYER.set(mplayer)
 
-        Config.save()
+        config.save()
 
     else:
-        Config.load()
+        config.load()
 
     _init_readline()
     cache.load()
     _init_transcode()
 
     # ensure encoder is not set beyond range of available presets
-    if Config.ENCODER.get >= len(g.encoders):
-        Config.ENCODER.set("0")
+    if config.ENCODER.get >= len(g.encoders):
+        config.ENCODER.set("0")
 
     # check mpv/mplayer version
-    if has_exefile(Config.PLAYER.get):
-        load_player_info(Config.PLAYER.get)
+    if has_exefile(config.PLAYER.get):
+        load_player_info(config.PLAYER.get)
 
     # setup colorama
     if has_colorama and mswin:
@@ -87,7 +86,7 @@ def init():
         pass
 
     # Make pafy use the same api key
-    pafy.set_api_key(Config.API_KEY.get)
+    pafy.set_api_key(config.API_KEY.get)
 
     _process_cl_args()
 

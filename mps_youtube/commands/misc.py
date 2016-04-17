@@ -21,9 +21,9 @@ except ImportError:
 
 import pafy
 
-from .. import g, c, __version__, content, screen, cache, streams, history
+from .. import g, c, __version__, content, screen, cache
+from .. import streams, history, config
 from ..util import dbg, yt_datetime, IterSlicer, get_pafy, F
-from ..config import Config
 from ..helptext import get_help
 from ..content import generate_songlist_display, logo
 from . import command
@@ -59,7 +59,7 @@ def quits(showlogo=True):
     msg = logo(c.r, version=__version__) if showlogo else ""
     msg += F("exitmsg", 2)
 
-    if Config.CHECKUPDATE.get and showlogo:
+    if config.CHECKUPDATE.get and showlogo:
 
         try:
             url = "https://raw.githubusercontent.com/mps-youtube/mps-youtube/master/VERSION"
