@@ -29,7 +29,7 @@ import os
 from pafy import GdataError
 
 from . import g, c, commands, screen, history
-from . import __version__, __url__, playlists
+from . import __version__, playlists
 from .content import generate_songlist_display
 from .content import logo
 from .util import dbg
