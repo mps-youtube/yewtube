@@ -218,4 +218,4 @@ def reverse_playlist():
 
     paginatesongs(list(songs))
     g.message = c.y + "Reversed entire playlist" + c.w
-    g.content = generate_songlist_display()
+    g.content = content.generate_songlist_display()

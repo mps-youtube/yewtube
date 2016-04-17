@@ -270,7 +270,7 @@ def _get_version_info():
     out += "\nPlatform           : " + platform.platform()
     out += "\nsys.stdout.enc     : " + sys.stdout.encoding
     out += "\ndefault enc        : " + sys.getdefaultencoding()
-    out += "\nConfig dir         : " + get_config_dir()
+    out += "\nConfig dir         : " + paths.get_config_dir()
 
     for env in "TERM SHELL LANG LANGUAGE".split():
         value = os.environ.get(env)
