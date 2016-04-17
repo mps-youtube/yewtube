@@ -8,8 +8,7 @@ from xml.etree import ElementTree as ET
 
 import pafy
 
-from .. import c, g, screen, __version__, __url__, content, config
-from ..util import dbg, xprint, fmt_time
+from .. import c, g, screen, __version__, __url__, content, config, util
 from . import command
 from .songlist import paginatesongs
 from .search import generate_search_qs, get_tracks_from_json
@@ -70,7 +69,7 @@ def _best_song_match(songs, title, duration):
 
     for song in songs:
         dur, tit = int(song.length), song.title
-        dbg("Title: %s, Duration: %s", tit, dur)
+        util.dbg("Title: %s, Duration: %s", tit, dur)
 
         for word in extra:
             if word in tit.lower() and word not in title.lower():
@@ -89,7 +88,7 @@ def _best_song_match(songs, title, duration):
 
         title_score = seqmatch(None, title.lower(), tit.lower()).ratio()
         duration_score = 1 - variance(duration, dur)
-        dbg("Title score: %s, Duration score: %s", title_score,
+        util.dbg("Title score: %s, Duration score: %s", title_score,
             duration_score)
 
         # apply weightings
@@ -104,10 +103,10 @@ def _best_song_match(songs, title, duration):
 def _match_tracks(artist, title, mb_tracks):
     """ Match list of tracks in mb_tracks by performing multiple searches. """
     # pylint: disable=R0914
-    dbg("artists is %s", artist)
-    dbg("title is %s", title)
+    util.dbg("artists is %s", artist)
+    util.dbg("title is %s", title)
     title_artist_str = c.g + title + c.w, c.g + artist + c.w
-    xprint("\nSearching for %s by %s\n\n" % title_artist_str)
+    util.xprint("\nSearching for %s by %s\n\n" % title_artist_str)
 
     def dtime(x):
         """ Format time to M:S. """
@@ -117,26 +116,26 @@ def _match_tracks(artist, title, mb_tracks):
     for track in mb_tracks:
         ttitle = track['title']
         length = track['length']
-        xprint("Search :  %s%s - %s%s - %s" % (c.y, artist, ttitle, c.w,
+        util.xprint("Search :  %s%s - %s%s - %s" % (c.y, artist, ttitle, c.w,
                                                dtime(length)))
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
         query = generate_search_qs(w, 0)
-        dbg(query)
+        util.dbg(query)
 
         # perform fetch
         wdata = pafy.call_gdata('search', query)
         results = get_tracks_from_json(wdata)
 
         if not results:
-            xprint(c.r + "Nothing matched :(\n" + c.w)
+            util.xprint(c.r + "Nothing matched :(\n" + c.w)
             continue
 
         s, score = _best_song_match(results, artist + " " + ttitle, length)
         cc = c.g if score > 85 else c.y
         cc = c.r if score < 75 else cc
-        xprint("Matched:  %s%s%s - %s \n[%sMatch confidence: "
-               "%s%s]\n" % (c.y, s.title, c.w, fmt_time(s.length),
+        util.xprint("Matched:  %s%s%s - %s \n[%sMatch confidence: "
+               "%s%s]\n" % (c.y, s.title, c.w, util.fmt_time(s.length),
                             cc, score, c.w))
         yield s
 
@@ -167,7 +166,7 @@ def _get_mb_tracks(albumid):
             length = int(round(float(rawlength) / 1000))
 
         except (ValueError, AttributeError):
-            xprint("not found")
+            util.xprint("not found")
 
         tracks.append(dict(title=title, length=length, rawlength=rawlength))
 
@@ -230,7 +229,7 @@ def search_album(term):
             "    %s" % (c.y + term + c.w + "\n"))
 
     prompt = "Artist? [%s] > " % album['artist']
-    xprint(prompt, end="")
+    util.xprint(prompt, end="")
     artistentry = input().strip()
 
     if artistentry:
@@ -282,13 +281,13 @@ def search_album(term):
         songs.extend(itt)
 
     except KeyboardInterrupt:
-        xprint("%sHalted!%s" % (c.r, c.w))
+        util.xprint("%sHalted!%s" % (c.r, c.w))
 
     finally:
         config.SEARCH_MUSIC.value, config.ORDER.value = stash
 
     if songs:
-        xprint("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
+        util.xprint("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
         input("Press Enter to continue")
 
     msg =  "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (

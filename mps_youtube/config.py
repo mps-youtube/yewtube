@@ -9,9 +9,7 @@ from urllib.parse import urlencode
 
 import pafy
 
-from . import g, c, paths
-from .util import has_exefile, dbg, list_update
-from .util import is_known_player, load_player_info
+from . import g, c, paths, util
 
 
 mswin = os.name == "nt"
@@ -75,7 +73,8 @@ class ConfigItem(object):
                 allowed_values[allowed_values.index('')] = "<nothing>"
             fail_msg = fail_msg.replace("*", ", ".join(allowed_values))
 
-        if self.require_known_player and not is_known_player(Config.PLAYER.get):
+        if self.require_known_player and \
+                not util.is_known_player(Config.PLAYER.get):
             fail_msg = "%s requires mpv or mplayer, can't set to %s"
 
         # handle true / false values
@@ -244,8 +243,8 @@ def check_encoder(option):
 
 def check_player(player):
     """ Check player exefile exists and get mpv version. """
-    if has_exefile(player):
-        load_player_info(player)
+    if util.has_exefile(player):
+        util.load_player_info(player)
 
         if "mpv" in player:
             version = "%s.%s.%s" % g.mpv_version
@@ -332,7 +331,7 @@ class _Config(object):
         with open(g.CFFILE, "wb") as cf:
             pickle.dump(config, cf, protocol=2)
 
-        dbg(c.p + "Saved config: " + g.CFFILE + c.w)
+        util.dbg(c.p + "Saved config: " + g.CFFILE + c.w)
 
     def load(self):
         """ Override config if config file exists. """
@@ -347,7 +346,7 @@ class _Config(object):
                     self[k].value = v
 
                 except KeyError:  # Ignore unrecognised data in config
-                    dbg("Unrecognised config item: %s", k)
+                    util.dbg("Unrecognised config item: %s", k)
 
             # Update config files from versions <= 0.01.41
             if isinstance(self.PLAYERARGS.get, list):
@@ -356,8 +355,8 @@ class _Config(object):
                              "-fs --fs".split())
 
                 for r in redundant:
-                    dbg("removing redundant arg %s", r)
-                    list_update(r, self.PLAYERARGS.value, remove=True)
+                    util.dbg("removing redundant arg %s", r)
+                    util.list_update(r, self.PLAYERARGS.value, remove=True)
 
                 self.PLAYERARGS.value = " ".join(self.PLAYERARGS.get)
                 self.save()

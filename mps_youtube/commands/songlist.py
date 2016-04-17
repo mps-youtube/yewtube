@@ -3,8 +3,7 @@ import random
 
 import pafy
 
-from .. import g, c, screen, streams, content
-from ..util import getxy, dbg, F, parse_multi, IterSlicer
+from .. import g, c, screen, streams, content, util
 from ..playlist import Video
 from . import command, PL
 
@@ -16,7 +15,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
         g.content = content.logo(col=c.b)
         screen.update()
 
-    max_results = getxy().max_results
+    max_results = util.getxy().max_results
 
     if dumps:
         s = 0
@@ -58,9 +57,9 @@ def plist(parturl):
     if parturl in g.pafy_pls:
         ytpl, plitems = g.pafy_pls[parturl]
     else:
-        dbg("%sFetching playlist using pafy%s", c.y, c.w)
+        util.dbg("%sFetching playlist using pafy%s", c.y, c.w)
         ytpl = pafy.get_playlist2(parturl)
-        plitems = IterSlicer(ytpl)
+        plitems = util.IterSlicer(ytpl)
         g.pafy_pls[parturl] = (ytpl, plitems)
 
     def pl_seg(s, e):
@@ -74,7 +73,7 @@ def plist(parturl):
 @command(r'(rm|add)\s*(-?\d[-,\d\s]{,250})')
 def songlist_rm_add(action, songrange):
     """ Remove or add tracks. works directly on user input. """
-    selection = parse_multi(songrange)
+    selection = util.parse_multi(songrange)
 
     if action == "add":
         duplicate_songs = []
@@ -84,11 +83,11 @@ def songlist_rm_add(action, songrange):
             g.active.songs.append(g.model[songnum - 1])
 
         d = g.active.duration
-        g.message = F('added to pl') % (len(selection), len(g.active), d)
+        g.message = util.F('added to pl') % (len(selection), len(g.active), d)
         if duplicate_songs:
             duplicate_songs = ', '.join(sorted(duplicate_songs))
             g.message += '\n'
-            g.message += F('duplicate tracks') % duplicate_songs
+            g.message += util.F('duplicate tracks') % duplicate_songs
 
     elif action == "rm":
         selection = sorted(set(selection), reverse=True)
@@ -97,7 +96,7 @@ def songlist_rm_add(action, songrange):
         for x in selection:
             g.model.songs.pop(x - 1)
 
-        g.message = F('songs rm') % (len(selection), removed)
+        g.message = util.F('songs rm') % (len(selection), removed)
 
     g.content = content.generate_songlist_display()
 
@@ -109,11 +108,11 @@ def songlist_mv_sw(action, a, b):
 
     if action == "mv":
         g.model.songs.insert(j, g.model.songs.pop(i))
-        g.message = F('song move') % (g.model[j].title, b)
+        g.message = util.F('song move') % (g.model[j].title, b)
 
     elif action == "sw":
         g.model[i], g.model[j] = g.model[j], g.model[i]
-        g.message = F('song sw') % (min(a, b), max(a, b))
+        g.message = util.F('song sw') % (min(a, b), max(a, b))
 
     g.content = content.generate_songlist_display()
 
@@ -126,7 +125,7 @@ def nextprev(np, page=None):
         function = g.content.getPage
         args = {}
     else:
-        page_count = math.ceil(g.result_count/getxy().max_results)
+        page_count = math.ceil(g.result_count/util.getxy().max_results)
         function, args = g.last_search_query
 
     good = False

@@ -27,10 +27,8 @@ import os
 
 import pafy
 
-from . import g, c, commands, screen, history
+from . import g, c, commands, screen, history, util
 from . import __version__, playlists, content
-from .util import dbg
-from .util import set_window_title, F
 
 try:
     import readline
@@ -58,9 +56,9 @@ def matchfunction(func, regex, userinput):
     match = regex.match(userinput)
     if match and match.group(0) == userinput:
         matches = match.groups()
-        dbg("input: %s", userinput)
-        dbg("function call: %s", func.__name__)
-        dbg("regx matches: %s", matches)
+        util.dbg("input: %s", userinput)
+        util.dbg("function call: %s", func.__name__)
+        util.dbg("regx matches: %s", matches)
 
         try:
             func(*matches)
@@ -69,14 +67,14 @@ def matchfunction(func, regex, userinput):
             if g.debug_mode:
                 g.content = ''.join(traceback.format_exception(
                     *sys.exc_info()))
-            g.message = F('invalid range')
+            g.message = util.F('invalid range')
             g.content = g.content or content.generate_songlist_display()
 
         except (ValueError, IOError) as e:
             if g.debug_mode:
                 g.content = ''.join(traceback.format_exception(
                     *sys.exc_info()))
-            g.message = F('cant get track') % str(e)
+            g.message = util.F('cant get track') % str(e)
             g.content = g.content or\
                 content.generate_songlist_display(zeromsg=g.message)
 
@@ -84,7 +82,7 @@ def matchfunction(func, regex, userinput):
             if g.debug_mode:
                 g.content = ''.join(traceback.format_exception(
                     *sys.exc_info()))
-            g.message = F('no data') % e
+            g.message = util.F('no data') % e
             g.content = g.content
 
         return True
@@ -107,7 +105,7 @@ def prompt_for_exit():
 
 def main():
     """ Main control loop. """
-    set_window_title("mpsyt")
+    util.set_window_title("mpsyt")
 
     if not g.command_line:
         g.content = content.logo(col=c.g, version=__version__) + "\n\n"

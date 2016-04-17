@@ -1,8 +1,7 @@
 import re
 
-from .. import g, c, playlists, content
+from .. import g, c, playlists, content, util
 from ..playlist import Playlist
-from ..util import F, parse_multi, get_near_name
 from . import command, WORD
 from .songlist import paginatesongs, songlist_rm_add
 
@@ -22,14 +21,14 @@ def playlist_remove(name):
         playlists.save()
 
     else:
-        g.message = F('pl not found advise ls') % name
+        g.message = util.F('pl not found advise ls') % name
         g.content = content.playlists_display()
 
 
 @command(r'add\s*(-?\d[-,\d\s]{1,250})(%s)' % WORD)
 def playlist_add(nums, playlist):
     """ Add selected song nums to saved playlist. """
-    nums = parse_multi(nums)
+    nums = util.parse_multi(nums)
 
     if not g.userpl.get(playlist):
         playlist = playlist.replace(" ", "-")
@@ -39,7 +38,7 @@ def playlist_add(nums, playlist):
         g.userpl[playlist].songs.append(g.model[songnum - 1])
         dur = g.userpl[playlist].duration
         f = (len(nums), playlist, len(g.userpl[playlist]), dur)
-        g.message = F('added to saved pl') % f
+        g.message = util.F('added to saved pl') % f
 
     if nums:
         playlists.save()
@@ -62,7 +61,7 @@ def playlist_rename(playlists_):
     while a not in g.userpl:
         a = (a + " " + (b.pop(0))).strip()
         if not b and a not in g.userpl:
-            g.message = F('no pl match for rename')
+            g.message = util.F('no pl match for rename')
             g.content = g.content or content.playlists_display()
             return
 
@@ -70,7 +69,7 @@ def playlist_rename(playlists_):
     g.userpl[b] = Playlist(b)
     g.userpl[b].songs = list(g.userpl[a].songs)
     playlist_remove(a)
-    g.message = F('pl renamed') % (a, b)
+    g.message = util.F('pl renamed') % (a, b)
     playlists.save()
 
 
@@ -127,32 +126,32 @@ def open_save_view(action, name):
         saved = g.userpl.get(name)
 
         if not saved:
-            name = get_near_name(name, g.userpl)
+            name = util.get_near_name(name, g.userpl)
             saved = g.userpl.get(name)
 
         elif action == "open":
             g.active.songs = list(saved.songs)
             g.last_opened = name
-            msg = F("pl loaded") % name
+            msg = util.F("pl loaded") % name
             paginatesongs(g.active, msg=msg)
 
         elif action == "view":
             g.last_opened = ""
-            msg = F("pl viewed") % name
+            msg = util.F("pl viewed") % name
             paginatesongs(list(saved.songs), msg=msg)
 
         elif not saved and action in "view open".split():
-            g.message = F("pl not found") % name
+            g.message = util.F("pl not found") % name
             g.content = content.playlists_display()
 
     elif action == "save":
         if not g.model:
-            g.message = "Nothing to save. " + F('advise search')
+            g.message = "Nothing to save. " + util.F('advise search')
             g.content = content.generate_songlist_display()
 
         else:
             g.userpl[name] = Playlist(name, list(g.model.songs))
-            g.message = F('pl saved') % name
+            g.message = util.F('pl saved') % name
             playlists.save()
             g.content = content.generate_songlist_display()
 
@@ -169,21 +168,21 @@ def open_view_bynum(action, num):
 def ls():
     """ List user saved playlists. """
     if not g.userpl:
-        g.message = F('no playlists')
+        g.message = util.F('no playlists')
         g.content = g.content or \
                 content.generate_songlist_display(zeromsg=g.message)
 
     else:
         g.content = content.playlists_display()
-        g.message = F('pl help')
+        g.message = util.F('pl help')
 
 
 @command(r'vp')
 def vp():
     """ View current working playlist. """
 
-    msg = F('current pl')
-    txt = F('advise add') if g.model else F('advise search')
-    failmsg = F('pl empty') + " " + txt
+    msg = util.F('current pl')
+    txt = util.F('advise add') if g.model else util.F('advise search')
+    failmsg = util.F('pl empty') + " " + txt
 
     paginatesongs(g.active, msg=msg, failmsg=failmsg)

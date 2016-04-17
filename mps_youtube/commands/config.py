@@ -1,12 +1,11 @@
-from .. import g, c, config
-from ..util import getxy, is_known_player
+from .. import g, c, config, util
 from . import command
 
 
 @command(r'set|showconfig')
 def showconfig():
     """ Dump config data. """
-    width = getxy().width
+    width = util.getxy().width
     width -= 30
     s = "  %s%-17s%s : %s\n"
     out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
@@ -15,7 +14,8 @@ def showconfig():
         val = config[setting]
 
         # don't show player specific settings if unknown player
-        if not is_known_player(config.PLAYER.get) and val.require_known_player:
+        if not util.is_known_player(config.PLAYER.get) and \
+                val.require_known_player:
             continue
 
         # don't show max_results if auto determined

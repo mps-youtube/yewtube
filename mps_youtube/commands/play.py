@@ -2,9 +2,7 @@ import sys
 import webbrowser
 from urllib.error import HTTPError, URLError
 
-from .. import g, c, streams
-from ..util import F, get_near_name, parse_multi
-from ..content import playlists_display, generate_songlist_display, logo
+from .. import g, c, streams, util, content
 from . import command, WORD, RS
 from .songlist import plist
 from .search import yt_url
@@ -21,7 +19,7 @@ def play_pl(name):
     saved = g.userpl.get(name)
 
     if not saved:
-        name = get_near_name(name, g.userpl)
+        name = util.get_near_name(name, g.userpl)
         saved = g.userpl.get(name)
 
     if saved:
@@ -29,8 +27,8 @@ def play_pl(name):
         play_all("", "", "")
 
     else:
-        g.message = F("pl not found") % name
-        g.content = playlists_display()
+        g.message = util.F("pl not found") % name
+        g.content = content.playlists_display()
 
 
 @command(r'(%s{0,3})([-,\d\s]{1,250})\s*(%s{0,3})$' %
@@ -46,12 +44,12 @@ def play(pre, choice, post=""):
             return plist(g.ytpls[int(choice) - 1]['link'])
         else:
             g.message = "Invalid playlist selection: %s" % c.y + choice + c.w
-            g.content = generate_songlist_display()
+            g.content = content.generate_songlist_display()
             return
 
     if not g.model:
         g.message = c.r + "There are no tracks to select" + c.w
-        g.content = g.content or generate_songlist_display()
+        g.content = g.content or content.generate_songlist_display()
 
     else:
         shuffle = "shuffle" in pre + post
@@ -73,7 +71,7 @@ def play(pre, choice, post=""):
         if (not fs) and (not nofs):
             override = "forcevid" if forcevid else override
 
-        selection = parse_multi(choice)
+        selection = util.parse_multi(choice)
         songlist = [g.model[x - 1] for x in selection]
 
         # cache next result of displayed items
@@ -85,7 +83,7 @@ def play(pre, choice, post=""):
                 streams.preload(g.model[chosen + 1], override=override)
 
         play_range(songlist, shuffle, repeat, override)
-        g.content = generate_songlist_display()
+        g.content = content.generate_songlist_display()
 
 
 @command(r'(%s{0,3})(?:\*|all)\s*(%s{0,3})' %
@@ -115,7 +113,7 @@ def browser_play(number):
     """Open a previously searched result in the browser."""
     if (len(g.model) == 0):
         g.message = c.r + "No previous search." + c.w
-        g.content = logo(c.r)
+        g.content = content.logo(c.r)
         return
 
     try:
@@ -126,14 +124,14 @@ def browser_play(number):
             video = g.model[index]
             url = base_url + video.ytid
             webbrowser.open(url)
-            g.content = g.content or generate_songlist_display()
+            g.content = g.content or content.generate_songlist_display()
 
         else:
             g.message = c.r + "Out of range." + c.w
-            g.content = g.content or generate_songlist_display()
+            g.content = g.content or content.generate_songlist_display()
             return
 
     except (HTTPError, URLError, Exception) as e:
         g.message = c.r + str(e) + c.w
-        g.content = g.content or generate_songlist_display()
+        g.content = g.content or content.generate_songlist_display()
         return

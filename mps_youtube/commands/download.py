@@ -8,8 +8,7 @@ import subprocess
 from urllib.request import urlopen
 from urllib.error import HTTPError
 
-from .. import g, c, screen, streams, content, config
-from ..util import dbg, xprint, parse_multi, F, get_pafy, fmt_time, mswinfn
+from .. import g, c, screen, streams, content, config, util
 from . import command, PL
 from .search import yt_url, user_pls
 from .songlist import dump, plist
@@ -128,7 +127,7 @@ def download(dltype, num):
 @command(r'(da|dv)\s+((?:\d+\s\d+|-\d|\d+-|\d,)(?:[\d\s,-]*))')
 def down_many(dltype, choice, subdir=None):
     """ Download multiple items. """
-    choice = parse_multi(choice)
+    choice = util.parse_multi(choice)
     choice = list(set(choice))
     downsongs = [g.model[int(x) - 1] for x in choice]
     temp = g.model[::]
@@ -196,7 +195,7 @@ def down_plist(dltype, parturl):
     plist(parturl)
     dump(False)
     title = g.pafy_pls[parturl][0].title
-    subdir = mswinfn(title.replace("/", "-"))
+    subdir = util.mswinfn(title.replace("/", "-"))
     down_many(dltype, "1-", subdir=subdir)
     msg = g.message
     plist(parturl)
@@ -228,7 +227,7 @@ def _make_fname(song, ext=None, av=None, subdir=None):
 
     # filename = song.title[:59] + "." + ext
     filename = song.title + "." + ext
-    filename = os.path.join(ddir, mswinfn(filename.replace("/", "-")))
+    filename = os.path.join(ddir, util.mswinfn(filename.replace("/", "-")))
     filename = filename.replace('"', '')
     return filename
 
@@ -252,7 +251,7 @@ def extract_metadata(name):
 
 def remux_audio(filename, title):
     """ Remux audio file. Insert limited metadata tags. """
-    dbg("starting remux")
+    util.dbg("starting remux")
     temp_file = filename + "." + str(random.randint(10000, 99999))
     os.rename(filename, temp_file)
     meta = extract_metadata(title)
@@ -264,19 +263,19 @@ def remux_audio(filename, title):
 
     cmd = [g.muxapp, "-y", "-i", temp_file, "-acodec", "copy", "-metadata"]
     cmd += metadata + ["-vn", filename]
-    dbg(cmd)
+    util.dbg(cmd)
 
     try:
         with open(os.devnull, "w") as devnull:
             subprocess.call(cmd, stdout=devnull, stderr=subprocess.STDOUT)
 
     except OSError:
-        dbg("Failed to remux audio using %s", g.muxapp)
+        util.dbg("Failed to remux audio using %s", g.muxapp)
         os.rename(temp_file, filename)
 
     else:
         os.unlink(temp_file)
-        dbg("remuxed audio file using %s" % g.muxapp)
+        util.dbg("remuxed audio file using %s" % g.muxapp)
 
 
 def transcode(filename, enc_data):
@@ -286,7 +285,7 @@ def transcode(filename, enc_data):
 
     # ensure valid executable
     if not exe or not os.path.exists(exe) or not os.access(exe, os.X_OK):
-        xprint("Encoding failed. Couldn't find a valid encoder :(\n")
+        util.xprint("Encoding failed. Couldn't find a valid encoder :(\n")
         time.sleep(2)
         return filename
 
@@ -330,7 +329,7 @@ def external_download(song, filename, url):
     cmd_list = list_string_sub("%f", basename, cmd_list)
     cmd_list = list_string_sub("%u", url, cmd_list)
     cmd_list = list_string_sub("%i", song.ytid, cmd_list)
-    dbg("Downloading using: %s", " ".join(cmd_list))
+    util.dbg("Downloading using: %s", " ".join(cmd_list))
     subprocess.call(cmd_list)
 
 
@@ -351,17 +350,18 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     # if an external download command is set, use it
     if config.DOWNLOAD_COMMAND.get:
         title = c.y + os.path.splitext(os.path.basename(filename))[0] + c.w
-        xprint("Downloading %s using custom command" % title)
+        util.xprint("Downloading %s using custom command" % title)
         external_download(song, filename, url)
         return None
 
     if not config.OVERWRITE.get:
         if os.path.exists(filename):
-            xprint("File exists. Skipping %s%s%s ..\n" % (c.r, filename, c.w))
+            util.xprint("File exists. Skipping %s%s%s ..\n" %
+                    (c.r, filename, c.w))
             time.sleep(0.2)
             return filename
 
-    xprint("Downloading to %s%s%s .." % (c.r, filename, c.w))
+    util.xprint("Downloading to %s%s%s .." % (c.r, filename, c.w))
     status_string = ('  {0}{1:,}{2} Bytes [{0}{3:.2%}{2}] received. Rate: '
                      '[{0}{4:4.0f} kbps{2}].  ETA: [{0}{5:.0f} secs{2}]')
 
@@ -451,7 +451,7 @@ def prompt_dl(song):
         dl_data, p = get_dl_data(song, mediatype="audio")
         dl_text = gen_dl_text(dl_data, song, p)
         au_choices = "1" if len(dl_data) == 1 else "1-%s" % len(dl_data)
-        footer = [F('-audio') % ext, F('select mux') % au_choices]
+        footer = [util.F('-audio') % ext, util.F('select mux') % au_choices]
         dl_text = tuple(dl_text[0:3]) + (footer,)
         aext = ("ogg", "m4a")
         model = [x['url'] for x in dl_data if x['ext'] in aext]
@@ -469,7 +469,7 @@ def gen_dl_text(ddata, song, p):
     hdr.append("  %s%s%s" % (c.r, song.title, c.w))
     author = p.author
     hdr.append(c.r + "  Uploaded by " + author + c.w)
-    hdr.append("  [" + fmt_time(song.length) + "]")
+    hdr.append("  [" + util.fmt_time(song.length) + "]")
     hdr.append("")
 
     heading = tuple("Item Format Quality Media Size Notes".split())
@@ -499,7 +499,7 @@ def get_dl_data(song, mediatype="any"):
         """ Return size in MB. """
         return str(int(x / (1024 ** 2)))
 
-    p = get_pafy(song)
+    p = util.get_pafy(song)
     dldata = []
     text = " [Fetching stream info] >"
     streamlist = [x for x in p.allstreams]
@@ -516,7 +516,7 @@ def get_dl_data(song, mediatype="any"):
             size = mbsize(stream.get_filesize())
 
         except TypeError:
-            dbg(c.r + "---Error getting stream size" + c.w)
+            util.dbg(c.r + "---Error getting stream size" + c.w)
             size = 0
 
         item = {'mediatype': stream.mediatype,

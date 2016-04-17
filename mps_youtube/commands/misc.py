@@ -22,8 +22,7 @@ except ImportError:
 import pafy
 
 from .. import g, c, __version__, content, screen, cache
-from .. import streams, history, config
-from ..util import dbg, yt_datetime, IterSlicer, get_pafy, F
+from .. import streams, history, config, util
 from ..helptext import get_help
 from ..content import generate_songlist_display, logo
 from . import command
@@ -35,7 +34,7 @@ def clearcache():
     """ Clear cached items - for debugging use. """
     g.pafs = {}
     g.streams = {}
-    dbg("%scache cleared%s", c.p, c.w)
+    util.dbg("%scache cleared%s", c.p, c.w)
     g.message = "cache cleared"
 
 
@@ -51,13 +50,13 @@ def quits(showlogo=True):
     """ Exit the program. """
     if has_readline:
         readline.write_history_file(g.READLINE_FILE)
-        dbg("Saved history file")
+        util.dbg("Saved history file")
 
     cache.save()
 
     screen.clear()
     msg = logo(c.r, version=__version__) if showlogo else ""
-    msg += F("exitmsg", 2)
+    msg += util.F("exitmsg", 2)
 
     if config.CHECKUPDATE.get and showlogo:
 
@@ -73,7 +72,7 @@ def quits(showlogo=True):
                     msg += "\n\nA newer version is available (%s)\n" % v
 
         except (URLError, HTTPError, socket.timeout):
-            dbg("check update timed out")
+            util.dbg("check update timed out")
 
     screen.msgexit(msg)
 
@@ -83,7 +82,7 @@ def fetch_comments(item):
     # pylint: disable=R0912
     # pylint: disable=R0914
     ytid, title = item.ytid, item.title
-    dbg("Fetching comments for %s", c.c("y", ytid))
+    util.dbg("Fetching comments for %s", c.c("y", ytid))
     screen.writestatus("Fetching comments for %s" % c.c("y", title[:55]))
     qs = {'textFormat': 'plainText',
           'videoId': ytid,
@@ -110,7 +109,7 @@ def fetch_comments(item):
     for n, com in enumerate(coms, 1):
         snippet = com.get('snippet', {})
         poster = snippet.get('authorDisplayName')
-        _, shortdate = yt_datetime(snippet.get('publishedAt', ''))
+        _, shortdate = util.yt_datetime(snippet.get('publishedAt', ''))
         text = snippet.get('textDisplay', '')
         cid = ("%s/%s" % (n, len(coms)))
         commentstext += ("%s %-35s %s\n" % (cid, c.c("g", poster), shortdate))
@@ -179,15 +178,15 @@ def info(num):
             g.content = logo(col=c.g)
             g.message = "Fetching playlist info.."
             screen.update()
-            dbg("%sFetching playlist using pafy%s", c.y, c.w)
+            util.dbg("%sFetching playlist using pafy%s", c.y, c.w)
             ytpl = pafy.get_playlist2(p['link'])
-            g.pafy_pls[p['link']] = (ytpl, IterSlicer(ytpl))
+            g.pafy_pls[p['link']] = (ytpl, util.IterSlicer(ytpl))
 
         ytpl_desc = ytpl.description
         g.content = generate_songlist_display()
 
-        created = yt_datetime(p['created'])[0]
-        updated = yt_datetime(p['updated'])[0]
+        created = util.yt_datetime(p['created'])[0]
+        updated = util.yt_datetime(p['updated'])[0]
         out = c.ul + "Playlist Info" + c.w + "\n\n"
         out += p['title']
         out += "\n" + ytpl_desc
@@ -205,7 +204,7 @@ def info(num):
         screen.writestatus("Fetching video metadata..")
         item = (g.model[int(num) - 1])
         streams.get(item)
-        p = get_pafy(item)
+        p = util.get_pafy(item)
         pub = time.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
         screen.writestatus("Fetched")
         out = c.ul + "Video Info" + c.w + "\n\n"

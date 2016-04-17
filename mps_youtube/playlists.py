@@ -2,8 +2,7 @@ import os
 import sys
 import pickle
 
-from . import g, c, screen
-from .util import dbg
+from . import g, c, screen, util
 from .playlist import Playlist, Video
 
 
@@ -12,7 +11,7 @@ def save():
     with open(g.PLFILE, "wb") as plf:
         pickle.dump(g.userpl, plf, protocol=2)
 
-    dbg(c.r + "Playlist saved\n---" + c.w)
+    util.dbg(c.r + "Playlist saved\n---" + c.w)
 
 
 def load():
@@ -55,7 +54,7 @@ def load():
         for song in v.songs:
 
             if hasattr(song, "urls"):
-                dbg("remove %s: %s", k, song.urls)
+                util.dbg("remove %s: %s", k, song.urls)
                 del song.urls
                 do_save = True
 

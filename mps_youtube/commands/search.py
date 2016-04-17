@@ -6,11 +6,8 @@ import logging
 
 import pafy
 
-from .. import g, c, screen, config
-from ..util import fmt_time, dbg, yt_datetime, F, IterSlicer, xprint
-from ..util import get_pafy, getxy
+from .. import g, c, screen, config, util, content
 from ..playlist import Video
-from ..content import generate_songlist_display, generate_playlist_display, logo
 from . import command
 from .songlist import plist, paginatesongs
 
@@ -38,7 +35,7 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
 
     # The youtube search api returns a maximum of 500 results
     length = min(wdata['pageInfo']['totalResults'], 500)
-    slicer = IterSlicer(iter_songs(), length)
+    slicer = util.IterSlicer(iter_songs(), length)
 
     paginatesongs(slicer, length=length, msg=msg, failmsg=failmsg,
             loadmsg=loadmsg)
@@ -46,7 +43,7 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
 
 def token(page):
     """ Returns a page token for a given start index. """
-    index = (page or 0) * getxy().max_results
+    index = (page or 0) * util.getxy().max_results
     k = index//128 - 1
     index -= 128 * k
     f = [8, index]
@@ -91,7 +88,7 @@ def cache_userdata(userterm, username, channel_id):
     """ Cache user name and channel id tuple """
     userterm = ''.join([t.strip().lower() for t in userterm.split(' ')])
     g.username_query_cache[userterm] = (username, channel_id)
-    dbg('Cache data for username search query "{}": {} ({})'.format(
+    util.dbg('Cache data for username search query "{}": {} ({})'.format(
         userterm, username, channel_id))
 
     while len(g.username_query_cache) > 300:
@@ -128,7 +125,7 @@ def channelfromname(user):
         except pafy.GdataError as e:
             g.message = "Could not retrieve information for user {}\n{}".format(
                 c.y + user + c.w, e)
-            dbg('Error during channel request for user {}:\n{}'.format(
+            util.dbg('Error during channel request for user {}:\n{}'.format(
                 user, e))
             return
 
@@ -205,7 +202,7 @@ def search(term):
     """ Perform search. """
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
-        g.content = generate_songlist_display()
+        g.content = content.generate_songlist_display()
         return
 
     logging.info("search for %s", term)
@@ -230,11 +227,11 @@ def pl_search(term, page=0, splash=True, is_user=False):
     """
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
-        g.content = generate_songlist_display()
+        g.content = content.generate_songlist_display()
         return
 
     if splash:
-        g.content = logo(c.g)
+        g.content = content.logo(c.g)
         prog = "user: " + term if is_user else term
         g.message = "Searching playlists for %s" % c.y + prog + c.w
         screen.update()
@@ -271,7 +268,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
         qs['id'] = ','.join(id_list)
 
     pldata = pafy.call_gdata('playlists', qs)
-    playlists = get_pl_from_json(pldata)[:getxy().max_results]
+    playlists = get_pl_from_json(pldata)[:util.getxy().max_results]
 
     if is_user:
         result_count = pldata['pageInfo']['totalResults']
@@ -283,12 +280,12 @@ def pl_search(term, page=0, splash=True, is_user=False):
         g.result_count = result_count
         g.ytpls = playlists
         g.message = "Playlist results for %s" % c.y + prog + c.w
-        g.content = generate_playlist_display()
+        g.content = content.generate_playlist_display()
 
     else:
         g.message = "No playlists found for: %s" % c.y + prog + c.w
         g.current_page = 0
-        g.content = generate_songlist_display(zeromsg=g.message)
+        g.content = content.generate_songlist_display(zeromsg=g.message)
 
 
 def get_pl_from_json(pldata):
@@ -337,7 +334,7 @@ def get_tracks_from_json(jsons):
 
     items = jsons.get("items")
     if not items:
-        dbg("got unexpected data or no search results")
+        util.dbg("got unexpected data or no search results")
         return ()
 
     # fetch detailed information about items from videos API
@@ -390,13 +387,13 @@ def get_tracks_from_json(jsons):
                                   {'title':snippet.get('title',
                                                        '[!!!]')}).get('title',
                                                                       '[!]'),
-                length=str(fmt_time(cursong.length)),
+                length=str(util.fmt_time(cursong.length)),
                 rating=str('{}'.format(rating))[:4].ljust(4, "0"),
                 uploader=snippet.get('channelId'),
                 uploaderName=snippet.get('channelTitle'),
                 category=category,
                 aspect="custom", #XXX
-                uploaded=yt_datetime(snippet.get('publishedAt', ''))[1],
+                uploaded=util.yt_datetime(snippet.get('publishedAt', ''))[1],
                 likes=str(num_repr(likes)),
                 dislikes=str(num_repr(dislikes)),
                 commentCount=str(num_repr(int(stats.get('commentCount', 0)))),
@@ -404,9 +401,9 @@ def get_tracks_from_json(jsons):
 
         except Exception as e:
 
-            dbg(json.dumps(item, indent=2))
-            dbg('Error during metadata extraction/instantiation of search ' +
-                'result {}\n{}'.format(ytid, e))
+            util.dbg(json.dumps(item, indent=2))
+            util.dbg('Error during metadata extraction/instantiation of ' +
+                'search result {}\n{}'.format(ytid, e))
 
         songs.append(cursong)
 
@@ -442,7 +439,7 @@ def user_more(num):
     if g.browse_mode != "normal":
         g.message = "User uploads must refer to a specific video item"
         g.message = c.y + g.message + c.w
-        g.content = generate_songlist_display()
+        g.content = content.generate_songlist_display()
         return
 
     g.current_page = 0
@@ -458,7 +455,7 @@ def related(num):
     if g.browse_mode != "normal":
         g.message = "Related items must refer to a specific video item"
         g.message = c.y + g.message + c.w
-        g.content = generate_songlist_display()
+        g.content = content.generate_songlist_display()
         return
 
     g.current_page = 0
@@ -469,20 +466,20 @@ def related(num):
 @command(r'mix\s*(\d{1,4})')
 def mix(num):
     """ Retrieves the YouTube mix for the selected video. """
-    g.content = g.content or generate_songlist_display()
+    g.content = g.content or content.generate_songlist_display()
     if g.browse_mode != "normal":
-        g.message = F('mix only videos')
+        g.message = util.F('mix only videos')
     else:
         item = (g.model[int(num) - 1])
         if item is None:
-            g.message = F('invalid item')
+            g.message = util.F('invalid item')
             return
-        item = get_pafy(item)
+        item = util.get_pafy(item)
         # Mix playlists are made up of 'RD' + video_id
         try:
             plist("RD" + item.videoid)
         except OSError:
-            g.message = F('no mix')
+            g.message = util.F('no mix')
 
 
 @command(r'url\s(.*[-_a-zA-Z0-9]{11}.*)')
@@ -498,7 +495,8 @@ def yt_url(url, print_title=0):
 
         except (IOError, ValueError) as e:
             g.message = c.r + str(e) + c.w
-            g.content = g.content or generate_songlist_display(zeromsg=g.message)
+            g.content = g.content or content.generate_songlist_display(
+                    zeromsg=g.message)
             return
 
         g.browse_mode = "normal"
@@ -506,10 +504,10 @@ def yt_url(url, print_title=0):
         g.model.songs.append(v)
 
     if not g.command_line:
-        g.content = generate_songlist_display()
+        g.content = content.generate_songlist_display()
 
     if print_title:
-        xprint(v.title)
+        util.xprint(v.title)
 
 
 @command(r'url_file\s(\S+)')
@@ -523,7 +521,8 @@ def yt_url_file(file_name):
 
     except (IOError):
         g.message = c.r + 'Error while opening the file, check the validity of the path' + c.w
-        g.content = g.content or generate_songlist_display(zeromsg=g.message)
+        g.content = g.content or content.generate_songlist_display(
+                zeromsg=g.message)
         return
 
     #Finally pass the input to yt_url
