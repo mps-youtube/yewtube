@@ -20,3 +20,7 @@ def command(regex):
         g.commands.append(command)
         return function
     return decorator
+
+
+from . import download, search, album_search, misc, config, local_playlist
+from . import play, songlist
