@@ -20,7 +20,43 @@ mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
- 
+
+
+class IterSlicer():
+    """ Class that takes an iterable and allows slicing,
+        loading from the iterable as needed."""
+
+    def __init__(self, iterable, length=None):
+        self.ilist = []
+        self.iterable = iter(iterable)
+        self.length = length
+        if length is None:
+            try:
+                self.length = len(iterable)
+            except TypeError:
+                pass
+
+    def __getitem__(self, sliced):
+        if isinstance(sliced, slice):
+            stop = sliced.stop
+        else:
+            stop = sliced
+        # To get the last item in an iterable, must iterate over all items
+        if (stop is None) or (stop < 0):
+            stop = None
+        while (stop is None) or (stop > len(self.ilist) - 1):
+            try:
+                self.ilist.append(next(self.iterable))
+            except StopIteration:
+                break
+
+        return self.ilist[sliced]
+
+    def __len__(self):
+        if self.length is None:
+            self.length = len(self[:])
+        return self.length
+
 
 def has_exefile(filename):
     """ Check whether file exists in path and is executable.

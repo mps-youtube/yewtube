@@ -50,7 +50,7 @@ from .content import generate_songlist_display, generate_playlist_display
 from .content import logo, playlists_display
 from .playlist import Playlist, Video
 from .config import Config, known_player_set
-from .util import dbg, get_near_name, yt_datetime
+from .util import dbg, get_near_name, yt_datetime, IterSlicer
 from .util import get_pafy, getxy, fmt_time, parse_multi
 from .util import xenc, xprint, mswinfn, set_window_title, F
 from .helptext import get_help
@@ -78,42 +78,6 @@ mswin = os.name == "nt"
 locale.setlocale(locale.LC_ALL, "")  # for date formatting
 
 ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?((\d{1,2})S)?')
-
-
-class IterSlicer():
-    """ Class that takes an iterable and allows slicing,
-        loading from the iterable as needed."""
-
-    def __init__(self, iterable, length=None):
-        self.ilist = []
-        self.iterable = iter(iterable)
-        self.length = length
-        if length is None:
-            try:
-                self.length = len(iterable)
-            except TypeError:
-                pass
-
-    def __getitem__(self, sliced):
-        if isinstance(sliced, slice):
-            stop = sliced.stop
-        else:
-            stop = sliced
-        # To get the last item in an iterable, must iterate over all items
-        if (stop is None) or (stop < 0):
-            stop = None
-        while (stop is None) or (stop > len(self.ilist) - 1):
-            try:
-                self.ilist.append(next(self.iterable))
-            except StopIteration:
-                break
-
-        return self.ilist[sliced]
-
-    def __len__(self):
-        if self.length is None:
-            self.length = len(self[:])
-        return self.length
 
 
 @commands.command(r'set|showconfig')
