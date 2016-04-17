@@ -1,6 +1,6 @@
 from .. import g, c
-from ..config import Config, is_known_player
-from ..util import getxy
+from ..config import Config
+from ..util import getxy, is_known_player
 from . import command
 
 

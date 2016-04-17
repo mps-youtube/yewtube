@@ -4,6 +4,7 @@ import sys
 import ctypes
 import logging
 import time
+import subprocess
 import collections
 import unicodedata
 
@@ -323,3 +324,71 @@ def _bi_range(start, end):
 
     else:
         return range(start, end + 1)
+
+
+def is_known_player(player):
+    """ Return true if the set player is known. """
+    for allowed_player in g.playerargs_defaults:
+        regex = r'(?:\b%s($|\.[a-zA-Z0-9]+$))' % re.escape(allowed_player)
+        match = re.search(regex, player)
+
+        if mswin:
+            match = re.search(regex, player, re.IGNORECASE)
+
+        if match:
+            return allowed_player
+
+    return None
+
+
+def load_player_info(player):
+    if "mpv" in player:
+        g.mpv_version = _get_mpv_version(player)
+        if not mswin:
+            options = subprocess.check_output(
+                [player, "--list-options"]).decode()
+
+            if "--input-unix-socket" in options:
+                g.mpv_usesock = "--input-unix-socket"
+                dbg(c.g + "mpv supports --input-unix-socket" + c.w)
+            elif "--input-ipc-server" in options:
+                g.mpv_usesock = "--input-ipc-server"
+                dbg(c.g + "mpv supports --input-ipc-server" + c.w)
+
+    elif "mplayer" in player:
+        g.mplayer_version = _get_mplayer_version(player)
+
+
+def _get_mpv_version(exename):
+    """ Get version of mpv as 3-tuple. """
+    o = subprocess.check_output([exename, "--version"]).decode()
+    re_ver = re.compile(r"mpv (\d+)\.(\d+)\.(\d+)")
+
+    for line in o.split("\n"):
+        m = re_ver.match(line)
+
+        if m:
+            v = tuple(map(int, m.groups()))
+            dbg("%s version %s.%s.%s detected", exename, *v)
+            return v
+
+    dbg("%sFailed to detect mpv version%s", c.r, c.w)
+    return -1, 0, 0
+
+
+def _get_mplayer_version(exename):
+    o = subprocess.check_output([exename]).decode()
+    m = re.search('^MPlayer SVN[\s-]r([0-9]+)', o, re.MULTILINE|re.IGNORECASE)
+
+    ver = 0
+    if m:
+        ver = int(m.groups()[0])
+    else:
+        m = re.search('^MPlayer ([0-9])+.([0-9]+)', o, re.MULTILINE)
+        if m:
+            ver = tuple(int(i) for i in m.groups())
+
+        else:
+            dbg("%sFailed to detect mplayer version%s", c.r, c.w)
+
+    return ver

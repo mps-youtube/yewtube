@@ -15,8 +15,8 @@ from urllib.error import HTTPError, URLError
 from . import g, screen, c, streams, history, content, paths
 from .util import dbg, xenc, F, getxy, uea_pad
 from .util import list_update, has_exefile, fmt_time
-from .util import set_window_title, xprint
-from .config import Config, is_known_player
+from .util import set_window_title, xprint, is_known_player
+from .config import Config
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
