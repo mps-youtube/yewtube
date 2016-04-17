@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import traceback
 import locale
 import sys
-import re
 import os
 
 from pafy import GdataError
