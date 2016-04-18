@@ -66,6 +66,7 @@ def init():
 
     # setup colorama
     if has_colorama and mswin:
+        # Colorama converts ansi escape codes to Windows system calls
         colorama.init()
 
     # find muxer app
