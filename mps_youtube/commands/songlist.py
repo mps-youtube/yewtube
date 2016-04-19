@@ -10,6 +10,32 @@ from . import command, PL
 
 def paginatesongs(func, page=0, splash=True, dumps=False,
         length=None, msg=None, failmsg=None, loadmsg=None):
+    """
+    A utility function for handling lists of songs, so that
+    the pagination and the dump command will work properly.
+
+    :param func: Either a function taking a start and end index,
+        or a slicable object. Either way, it should produce an iterable
+        of :class:`mps_youtube.playlist.Video` objects.
+    :param page: The page number to display
+    :param splash: Whether or not to display a splash screen while
+        loading.
+    :param dumps: Used by :func:`dump` command to load all songs, instead
+        of only those that fit on a page
+    :param length: The total number of songs. It it is not provided,
+        `len(func)` will be used instead.
+    :param msg: Message to display after loading successfully
+    :param failmsg: Message to display on failure (if no songs are
+        returned by func
+    :param loadmsg: Message to display while loading
+    :type page: int
+    :type splash: bool
+    :type dumps: bool
+    :type length: int
+    :type msg: str
+    :type failmsg: str
+    :type loadmsg: str
+    """
     if splash:
         g.message = loadmsg or ''
         g.content = content.logo(col=c.b)
