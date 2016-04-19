@@ -91,7 +91,7 @@ def utf8_replace(txt):
     :param txt: text to filter
     :type txt: str
     :returns: Unicode text without any characters unsupported by locale
-    :rype: str
+    :rtype: str
     """
     sse = sys.stdout.encoding
     txt = txt.encode(sse, "replace").decode(sse)
