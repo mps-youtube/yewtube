@@ -58,7 +58,9 @@ class IterSlicer():
 def has_exefile(filename):
     """ Check whether file exists in path and is executable.
 
-    Return path to file or False if not found
+    :param filename: name of executable
+    :type filename: str
+    :returns: Path to file or False if not found
     """
     paths = [os.getcwd()] + os.environ.get("PATH", '').split(os.pathsep)
     paths = [i for i in paths if i]
@@ -82,7 +84,13 @@ def dbg(*args):
 
 
 def utf8_replace(txt):
-    """ Replace unsupported characters in unicode string, returns unicode. """
+    """
+    Replace unsupported characters in unicode string, returns unicode.
+
+    :param txt: text to filter
+    :type txt: str
+    :returns: str
+    """
     sse = sys.stdout.encoding
     txt = txt.encode(sse, "replace").decode(sse)
     return txt
@@ -137,9 +145,12 @@ def F(key, nb=0, na=0, textlib=None):
     """Format text.
 
     :param nb: newline before
+    :type nb: int
     :param na: newline after
+    :type na: int
     :param textlib: the dictionary to use (defaults to g.text if not given)
-
+    :type textlib: dict
+    :returns: str
     """
     textlib = textlib or g.text
 
@@ -156,7 +167,17 @@ def F(key, nb=0, na=0, textlib=None):
 
 
 def get_pafy(item, force=False, callback=None):
-    """ Get pafy object for an item. """
+    """
+    Get pafy object for an item.
+
+    :param item: video to retrieve
+    :type item: :class:`mps_youtube.playlist.Video`
+    :param force: ignore cache and retrieve anyway
+    :type force: bool
+    :param callback: callpack to pass to pafy
+    :type callback: func
+    :returns: Pafy object
+    """
 
     callback_fn = callback or (lambda x: None)
     cached = g.pafs.get(item.ytid)
@@ -189,7 +210,11 @@ def get_pafy(item, force=False, callback=None):
 
 
 def getxy():
-    """ Get terminal size, terminal width and max-results. """
+    """
+    Get terminal size, terminal width and max-results.
+    
+    :returns: :class:`XYTuple`
+    """
     # Import here to avoid circular dependency
     from . import config
     if g.detectable_size:
