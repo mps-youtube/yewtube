@@ -23,7 +23,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
     :param dumps: Used by :func:`dump` command to load all songs, instead
         of only those that fit on a page
     :param length: The total number of songs. It it is not provided,
-        `len(func)` will be used instead.
+        ``len(func)`` will be used instead.
     :param msg: Message to display after loading successfully
     :param failmsg: Message to display on failure (if no songs are
         returned by func
