@@ -61,6 +61,7 @@ def has_exefile(filename):
     :param filename: name of executable
     :type filename: str
     :returns: Path to file or False if not found
+    :rtype: str or False
     """
     paths = [os.getcwd()] + os.environ.get("PATH", '').split(os.pathsep)
     paths = [i for i in paths if i]
@@ -85,11 +86,12 @@ def dbg(*args):
 
 def utf8_replace(txt):
     """
-    Replace unsupported characters in unicode string, returns unicode.
+    Replace unsupported characters in unicode string.
 
     :param txt: text to filter
     :type txt: str
-    :returns: str
+    :returns: Unicode text without any characters unsupported by locale
+    :rype: str
     """
     sse = sys.stdout.encoding
     txt = txt.encode(sse, "replace").decode(sse)
@@ -150,7 +152,8 @@ def F(key, nb=0, na=0, textlib=None):
     :type na: int
     :param textlib: the dictionary to use (defaults to g.text if not given)
     :type textlib: dict
-    :returns: str
+    :returns: A string, potentially containing one or more %s
+    :rtype: str
     """
     textlib = textlib or g.text
 
@@ -176,7 +179,7 @@ def get_pafy(item, force=False, callback=None):
     :type force: bool
     :param callback: callpack to pass to pafy
     :type callback: func
-    :returns: Pafy object
+    :rtype: Pafy
     """
 
     callback_fn = callback or (lambda x: None)
@@ -213,7 +216,7 @@ def getxy():
     """
     Get terminal size, terminal width and max-results.
     
-    :returns: :class:`XYTuple`
+    :rtype: :class:`XYTuple`
     """
     # Import here to avoid circular dependency
     from . import config
