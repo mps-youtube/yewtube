@@ -136,10 +136,9 @@ def get_near_name(begin, items):
 def F(key, nb=0, na=0, textlib=None):
     """Format text.
 
-    nb, na indicate newlines before and after to return
-    percent is the delimter for %s
-    nums is the delimiter for the str.format command (**1 will become {1})
-    textlib is the dictionary to use (defaults to g.text if not given)
+    :param nb: newline before
+    :param na: newline after
+    :param textlib: the dictionary to use (defaults to g.text if not given)
 
     """
     textlib = textlib or g.text
