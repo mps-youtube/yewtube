@@ -188,7 +188,6 @@ def helptext():
     {2}set <item> default{1} - set an item to its default value
     {2}set all default{1} - restore default settings
     {2}set checkupdate true|false{1} - check for updates on exit
-    {2}set colours true|false{1} - use colours in display output
     {2}set columns <columns>{1} - select extra displayed fields in search results:
          (valid: views comments rating date user likes dislikes category)
     {2}set ddir <download direcory>{1} - set where downloads are saved
