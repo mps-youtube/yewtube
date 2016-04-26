@@ -211,7 +211,8 @@ def _playsong(song, failcount=0, override=False):
     songdata = "%s; %s; %s Mb" % songdata
     screen.writestatus(songdata)
 
-    returncode = _launch_player(song, songdata, override, stream, video)
+    cmd = _generate_real_playerargs(song, override, stream, video)
+    returncode = _launch_player(song, songdata, cmd)
     failed = returncode not in (0, 42, 43)
 
     if failed and failcount < g.max_retries:
@@ -337,10 +338,9 @@ def _get_input_file():
         return tmpfile.name
 
 
-def _launch_player(song, songdata, override, stream, isvideo):
+def _launch_player(song, songdata, cmd):
     """ Launch player application. """
 
-    cmd = _generate_real_playerargs(song, override, stream, isvideo)
     util.dbg("playing %s", song.title)
     util.dbg("calling %s", " ".join(cmd))
 
