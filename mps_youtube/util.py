@@ -11,6 +11,7 @@ import unicodedata
 import pafy
 
 from . import g, c, terminalsize
+from .playlist import Video
 
 
 mswin = os.name == "nt"
@@ -182,8 +183,12 @@ def get_pafy(item, force=False, callback=None):
     :rtype: Pafy
     """
 
+    if isinstance(item, Video):
+        ytid = item.ytid
+    else:
+        ytid = item
     callback_fn = callback or (lambda x: None)
-    cached = g.pafs.get(item.ytid)
+    cached = g.pafs.get(ytid)
 
     if not force and cached and cached.expiry > time.time():
         dbg("get pafy cache hit for %s", cached.title)
@@ -193,18 +198,18 @@ def get_pafy(item, force=False, callback=None):
     else:
 
         try:
-            p = pafy.new(item.ytid, callback=callback_fn)
+            p = pafy.new(ytid, callback=callback_fn)
 
         except IOError as e:
 
             if "pafy" in str(e):
-                dbg(c.p + "retrying failed pafy get: " + item.ytid + c.w)
-                p = pafy.new(item.ytid, callback=callback)
+                dbg(c.p + "retrying failed pafy get: " + ytid + c.w)
+                p = pafy.new(ytid, callback=callback)
 
             else:
                 raise
 
-        g.pafs[item.ytid] = p
+        g.pafs[ytid] = p
         p.fresh = True
         thread = "preload: " if not callback else ""
         dbg("%s%sgot new pafy object: %s%s" % (c.y, thread, p.title[:26], c.w))

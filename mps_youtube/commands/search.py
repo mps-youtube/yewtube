@@ -444,8 +444,15 @@ def user_more(num):
 
     g.current_page = 0
     item = g.model[int(num) - 1]
-    channel_id = g.meta.get(item.ytid, {}).get('uploader')
-    user = g.meta.get(item.ytid, {}).get('uploaderName')
+
+    #TODO: Cleaner way of doing this?
+    if item.ytid in g.meta:
+        channel_id = g.meta.get(item.ytid, {}).get('uploader')
+        user = g.meta.get(item.ytid, {}).get('uploaderName')
+    else:
+        paf = util.get_pafy(item)
+        user, channel_id = channelfromname(paf.author)
+
     usersearch_id(user, channel_id, '')
 
 
@@ -491,7 +498,7 @@ def yt_url(url, print_title=0):
 
     for u in url_list:
         try:
-            p = pafy.new(u)
+            p = util.get_pafy(u)
 
         except (IOError, ValueError) as e:
             g.message = c.r + str(e) + c.w
