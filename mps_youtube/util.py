@@ -175,7 +175,7 @@ def get_pafy(item, force=False, callback=None):
     Get pafy object for an item.
 
     :param item: video to retrieve
-    :type item: :class:`mps_youtube.playlist.Video`
+    :type item: :class:`mps_youtube.playlist.Video` or str
     :param force: ignore cache and retrieve anyway
     :type force: bool
     :param callback: callpack to pass to pafy
