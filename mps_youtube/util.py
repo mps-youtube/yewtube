@@ -316,27 +316,37 @@ def yt_datetime(yt_date_time):
 
 
 def parse_multi(choice, end=None):
-    """ Handle ranges like 5-9, 9-5, 5- and -5. Return list of ints. """
+    """
+    Handle ranges like 5-9, 9-5, 5- and -5 with optional repetitions number [n]
+
+    eg. 2-4[2] is the same as 2 3 4 2 3 4 and 3[4] is 3 3 3 3
+
+    Return list of ints.
+
+    """
     end = end or str(len(g.model))
-    pattern = r'(?<![-\d])(\d+-\d+|-\d+|\d+-|\d+)(?![-\d])'
+    pattern = r'(?<![-\d\[\]])(\d+-\d+|-\d+|\d+-|\d+)(?:\[(\d+)\])?(?![-\d\[\]])'
     items = re.findall(pattern, choice)
     alltracks = []
 
-    for x in items:
+    for x, nreps in items:
+        # nreps is in the inclusive range [1,100]
+        nreps = min(int(nreps), 100) if nreps else 1
+        for _ in range(nreps):
 
-        if x.startswith("-"):
-            x = "1" + x
+            if x.startswith("-"):
+                x = "1" + x
 
-        elif x.endswith("-"):
-            x = x + str(end)
+            elif x.endswith("-"):
+                x = x + str(end)
 
-        if "-" in x:
-            nrange = x.split("-")
-            startend = map(int, nrange)
-            alltracks += _bi_range(*startend)
+            if "-" in x:
+                nrange = x.split("-")
+                startend = map(int, nrange)
+                alltracks += _bi_range(*startend)
 
-        else:
-            alltracks.append(int(x))
+            else:
+                alltracks.append(int(x))
 
     return alltracks
 
