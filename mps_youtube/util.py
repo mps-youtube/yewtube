@@ -386,14 +386,14 @@ def is_known_player(player):
 def load_player_info(player):
     if "mpv" in player:
         g.mpv_version = _get_mpv_version(player)
-        if not mswin:
-            options = subprocess.check_output(
+        g.mpv_options = subprocess.check_output(
                 [player, "--list-options"]).decode()
 
-            if "--input-unix-socket" in options:
+        if not mswin:
+            if "--input-unix-socket" in g.mpv_options:
                 g.mpv_usesock = "--input-unix-socket"
                 dbg(c.g + "mpv supports --input-unix-socket" + c.w)
-            elif "--input-ipc-server" in options:
+            elif "--input-ipc-server" in g.mpv_options:
                 g.mpv_usesock = "--input-ipc-server"
                 dbg(c.g + "mpv supports --input-ipc-server" + c.w)
 

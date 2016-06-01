@@ -19,6 +19,7 @@ debug_mode = False
 preload_disabled = False
 ytpls = []
 mpv_version = 0, 0, 0
+mpv_options = None
 mpv_usesock = False
 mplayer_version = 0
 mprisctl = None
