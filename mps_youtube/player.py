@@ -349,7 +349,9 @@ def _launch_player(song, songdata, cmd):
     cmd = [util.xenc(i) for i in cmd]
 
     arturl = "http://i.ytimg.com/vi/%s/default.jpg" % song.ytid
-    input_file = _get_input_file()
+    input_file = None
+    if ("mplayer" in config.PLAYER.get) or ("mpv" in config.PLAYER.get):
+        input_file = _get_input_file()
     sockpath = None
     fifopath = None
 
@@ -420,7 +422,8 @@ def _launch_player(song, songdata, cmd):
         return None
 
     finally:
-        os.unlink(input_file)
+        if input_file:
+            os.unlink(input_file)
 
         # May not exist if mpv has not yet created the file
         if sockpath and os.path.exists(sockpath):
