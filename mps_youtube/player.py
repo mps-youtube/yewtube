@@ -282,18 +282,22 @@ def _generate_real_playerargs(song, override, stream, isvideo):
             util.list_update("-noquiet", args)
             util.list_update("-prefer-ipv4", args)
 
-        elif "mpv" in config.PLAYER.get and not g.debug_mode:
+        elif "mpv" in config.PLAYER.get:
+            if "--ytdl" in g.mpv_options:
+                util.list_update("--no-ytdl", args)
+
             msglevel = pd["msglevel"]["<0.4"]
 
             #  undetected (negative) version number assumed up-to-date
             if g.mpv_version[0:2] < (0, 0) or g.mpv_version[0:2] >= (0, 4):
                 msglevel = pd["msglevel"][">=0.4"]
 
-            if g.mpv_usesock:
-                util.list_update("--really-quiet", args)
-            else:
-                util.list_update("--really-quiet", args, remove=True)
-                util.list_update(msglevel, args)
+            if not g.debug_mode:
+                if g.mpv_usesock:
+                    util.list_update("--really-quiet", args)
+                else:
+                    util.list_update("--really-quiet", args, remove=True)
+                    util.list_update(msglevel, args)
 
     return [config.PLAYER.get] + args + [stream['url']]
 
