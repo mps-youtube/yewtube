@@ -35,6 +35,8 @@ mswin = os.name == "nt"
 def init():
     """ Initial setup. """
 
+    _process_cl_args()
+
     # set player to mpv or mplayer if found, otherwise unset
     suffix = ".exe" if mswin else ""
     mplayer, mpv = "mplayer" + suffix, "mpv" + suffix
@@ -88,8 +90,6 @@ def init():
 
     # Make pafy use the same api key
     pafy.set_api_key(config.API_KEY.get)
-
-    _process_cl_args()
 
 
 def _init_transcode():
