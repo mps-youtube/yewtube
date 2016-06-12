@@ -299,6 +299,9 @@ def _generate_real_playerargs(song, override, stream, isvideo):
                     util.list_update("--really-quiet", args, remove=True)
                     util.list_update(msglevel, args)
 
+    elif "vlc" in config.PLAYER.get:
+        util.list_update("--play-and-exit", args)
+
     return [config.PLAYER.get] + args + [stream['url']]
 
 
