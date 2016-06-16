@@ -5,7 +5,6 @@ import logging
 import tempfile
 import argparse
 import platform
-import subprocess
 import multiprocessing
 
 import pafy
@@ -26,17 +25,17 @@ try:
 except ImportError:
     has_readline = False
 
-from . import cache, g, __version__, __notes__, screen, c
-from .util import has_exefile, dbg, get_mpv_version, get_mplayer_version, xprint
-from .config import Config
+from . import cache, g, __version__, __notes__, screen, c, paths, config
+from .util import has_exefile, dbg, xprint, load_player_info
 from .helptext import helptext
-from .paths import get_config_dir
 
 mswin = os.name == "nt"
 
 
 def init():
     """ Initial setup. """
+
+    _process_cl_args()
 
     # set player to mpv or mplayer if found, otherwise unset
     suffix = ".exe" if mswin else ""
@@ -45,40 +44,31 @@ def init():
     if not os.path.exists(g.CFFILE):
 
         if has_exefile(mpv):
-            Config.PLAYER.set(mpv)
+            config.PLAYER.set(mpv)
 
         elif has_exefile(mplayer):
-            Config.PLAYER.set(mplayer)
+            config.PLAYER.set(mplayer)
 
-        Config.save()
+        config.save()
 
     else:
-        Config.load()
+        config.load()
 
     _init_readline()
     cache.load()
     _init_transcode()
 
     # ensure encoder is not set beyond range of available presets
-    if Config.ENCODER.get >= len(g.encoders):
-        Config.ENCODER.set("0")
+    if config.ENCODER.get >= len(g.encoders):
+        config.ENCODER.set("0")
 
     # check mpv/mplayer version
-    if "mpv" in Config.PLAYER.get and has_exefile(Config.PLAYER.get):
-        g.mpv_version = get_mpv_version(Config.PLAYER.get)
-        if not mswin:
-            options = subprocess.check_output(
-                [Config.PLAYER.get, "--list-options"]).decode()
-
-            if "--input-unix-socket" in options:
-                g.mpv_usesock = True
-                dbg(c.g + "mpv supports --input-unix-socket" + c.w)
-
-    elif "mplayer" in Config.PLAYER.get and has_exefile(Config.PLAYER.get):
-        g.mplayer_version = get_mplayer_version(Config.PLAYER.get)
+    if has_exefile(config.PLAYER.get):
+        load_player_info(config.PLAYER.get)
 
     # setup colorama
     if has_colorama and mswin:
+        # Colorama converts ansi escape codes to Windows system calls
         colorama.init()
 
     # find muxer app
@@ -99,9 +89,7 @@ def init():
         pass
 
     # Make pafy use the same api key
-    pafy.set_api_key(Config.API_KEY.get)
-
-    _process_cl_args()
+    pafy.set_api_key(config.API_KEY.get)
 
 
 def _init_transcode():
@@ -211,7 +199,7 @@ def _init_readline():
         return
 
     if has_readline:
-        g.READLINE_FILE = os.path.join(get_config_dir(), "input_history")
+        g.READLINE_FILE = os.path.join(paths.get_config_dir(), "input_history")
 
         if os.path.exists(g.READLINE_FILE):
             readline.read_history_file(g.READLINE_FILE)
@@ -282,7 +270,7 @@ def _get_version_info():
     out += "\nPlatform           : " + platform.platform()
     out += "\nsys.stdout.enc     : " + sys.stdout.encoding
     out += "\ndefault enc        : " + sys.getdefaultencoding()
-    out += "\nConfig dir         : " + get_config_dir()
+    out += "\nConfig dir         : " + paths.get_config_dir()
 
     for env in "TERM SHELL LANG LANGUAGE".split():
         value = os.environ.get(env)

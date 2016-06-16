@@ -4,11 +4,10 @@ __author__ = "np1"
 __license__ = "GPLv3"
 __url__ = "http://github.com/np1/mps-youtube"
 
-from .config import Config
-from . import c
+from . import c, config
 from .plugin import Plugin
 from .util import dbg
 
-from .init import init
-init()
+from . import init
+init.init()
 from . import main
