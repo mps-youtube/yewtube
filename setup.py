@@ -24,7 +24,7 @@ options = dict(
     author_email="np1nagev@gmail.com",
     url="http://github.com/np1/mps-youtube",
     download_url="https://github.com/np1/mps-youtube/tarball/master",
-    packages=['mps_youtube'],
+    packages=['mps_youtube', 'mps_youtube.commands'],
     entry_points={'console_scripts': ['mpsyt = mps_youtube:main.main']},
     install_requires=['pafy >= 0.3.82, != 0.4.0, != 0.4.1, != 0.4.2'],
     classifiers=[

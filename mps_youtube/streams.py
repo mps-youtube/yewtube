@@ -1,10 +1,8 @@
 import time
 import threading
-
-from . import g, c, screen
-from .util import dbg, get_pafy
-from .config import Config
 from urllib.request import urlopen
+
+from . import g, c, screen, config, util
 
 
 def prune():
@@ -21,7 +19,7 @@ def prune():
     oldpafs = [k for k in g.pafs if g.pafs[k].expiry < now]
 
     if len(oldpafs):
-        dbg(c.r + "%s old pafy items pruned%s", len(oldpafs), c.w)
+        util.dbg(c.r + "%s old pafy items pruned%s", len(oldpafs), c.w)
 
     for oldpaf in oldpafs:
         g.pafs.pop(oldpaf, 0)
@@ -29,12 +27,12 @@ def prune():
     oldstreams = [k for k in g.streams if g.streams[k]['expiry'] < now]
 
     if len(oldstreams):
-        dbg(c.r + "%s old stream items pruned%s", len(oldstreams), c.w)
+        util.dbg(c.r + "%s old stream items pruned%s", len(oldstreams), c.w)
 
     for oldstream in oldstreams:
         g.streams.pop(oldstream, 0)
 
-    dbg(c.b + "paf: %s, streams: %s%s", len(g.pafs), len(g.streams), c.w)
+    util.dbg(c.b + "paf: %s, streams: %s%s", len(g.pafs), len(g.streams), c.w)
 
 
 def get(vid, force=False, callback=None, threeD=False):
@@ -46,10 +44,11 @@ def get(vid, force=False, callback=None, threeD=False):
 
     if not force and have_stream:
         ss = str(int(g.streams[ytid]['expiry'] - now) // 60)
-        dbg("%s%sGot streams from cache (%s mins left)%s", c.g, prfx, ss, c.w)
+        util.dbg("%s%sGot streams from cache (%s mins left)%s",
+                c.g, prfx, ss, c.w)
         return g.streams.get(ytid)['meta']
 
-    p = get_pafy(vid, force=force, callback=callback)
+    p = util.get_pafy(vid, force=force, callback=callback)
     ps = p.allstreams if threeD else [x for x in p.allstreams if not x.threed]
 
     try:
@@ -58,8 +57,8 @@ def get(vid, force=False, callback=None, threeD=False):
 
     except TypeError:
         # refetch if problem
-        dbg("%s****Type Error in get_streams. Retrying%s", c.r, c.w)
-        p = get_pafy(vid, force=True, callback=callback)
+        util.dbg("%s****Type Error in get_streams. Retrying%s", c.r, c.w)
+        p = util.get_pafy(vid, force=True, callback=callback)
         ps = p.allstreams if threeD else [x for x in p.allstreams
                                           if not x.threed]
 
@@ -77,7 +76,7 @@ def get(vid, force=False, callback=None, threeD=False):
 
 def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
     """ Select a stream from stream list. """
-    maxres = maxres or Config.MAX_RES.get
+    maxres = maxres or config.MAX_RES.get
     slist = slist['meta'] if isinstance(slist, dict) else slist
 
     def okres(x):
@@ -96,10 +95,10 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
         streams = [x for x in slist if x['mtype'] == "audio"]
         if not m4a_ok:
             streams = [x for x in streams if not x['ext'] == "m4a"]
-        if not Config.AUDIO_FORMAT.get == "auto":
-            if m4a_ok and Config.AUDIO_FORMAT.get == "m4a":
+        if not config.AUDIO_FORMAT.get == "auto":
+            if m4a_ok and config.AUDIO_FORMAT.get == "m4a":
                 streams = [x for x in streams if x['ext'] == "m4a"]
-            if Config.AUDIO_FORMAT.get == "webm":
+            if config.AUDIO_FORMAT.get == "webm":
                 streams = [x for x in streams if x['ext'] == "webm"]
             if not streams:
                 streams = [x for x in slist if x['mtype'] == "audio"]
@@ -108,7 +107,7 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
         streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
         streams = sorted(streams, key=getq, reverse=True)
 
-    dbg("select stream, q: %s, audio: %s, len: %s", q, audio, len(streams))
+    util.dbg("select stream, q: %s, audio: %s, len: %s", q, audio, len(streams))
 
     try:
         ret = streams[q]
@@ -119,16 +118,6 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
     return ret
 
 
-def _get_content_length(url, preloading=False):
-    """ Return content length of a url. """
-    prefix = "preload: " if preloading else ""
-    dbg(c.y + prefix + "getting content-length header" + c.w)
-    response = urlopen(url)
-    headers = response.headers
-    cl = headers['content-length']
-    return int(cl)
-
-
 def get_size(ytid, url, preloading=False):
     """ Get size of stream, try stream cache first. """
     # try cached value
@@ -137,14 +126,32 @@ def get_size(ytid, url, preloading=False):
     prefix = "preload: " if preloading else ""
 
     if not size == -1:
-        dbg("%s%susing cached size: %s%s", c.g, prefix, size, c.w)
+        util.dbg("%s%susing cached size: %s%s", c.g, prefix, size, c.w)
 
     else:
         screen.writestatus("Getting content length", mute=preloading)
         stream['size'] = _get_content_length(url, preloading=preloading)
-        dbg("%s%s - content-length: %s%s", c.y, prefix, stream['size'], c.w)
+        util.dbg("%s%s - content-length: %s%s", c.y, prefix, stream['size'], c.w)
 
     return stream['size']
+
+
+def _get_content_length(url, preloading=False):
+    """ Return content length of a url. """
+    prefix = "preload: " if preloading else ""
+    util.dbg(c.y + prefix + "getting content-length header" + c.w)
+    response = urlopen(url)
+    headers = response.headers
+    cl = headers['content-length']
+    return int(cl)
+
+
+def preload(song, delay=2, override=False):
+    """  Get streams. """
+    args = (song, delay, override)
+    t = threading.Thread(target=_preload, args=args)
+    t.daemon = True
+    t.start()
 
 
 def _preload(song, delay, override):
@@ -155,12 +162,12 @@ def _preload(song, delay, override):
     ytid = song.ytid
     g.preloading.append(ytid)
     time.sleep(delay)
-    video = Config.SHOW_VIDEO.get
+    video = config.SHOW_VIDEO.get
     video = True if override in ("fullscreen", "window", "forcevid") else video
     video = False if override == "audio" else video
 
     try:
-        m4a = "mplayer" not in Config.PLAYER.get
+        m4a = "mplayer" not in config.PLAYER.get
         streamlist = get(song)
         stream = select(streamlist, audio=not video, m4a_ok=m4a)
 
@@ -171,15 +178,7 @@ def _preload(song, delay, override):
         get_size(ytid, stream['url'], preloading=True)
 
     except (ValueError, AttributeError, IOError) as e:
-        dbg(e)  # Fail silently on preload
+        util.dbg(e)  # Fail silently on preload
 
     finally:
         g.preloading.remove(song.ytid)
-
-
-def preload(song, delay=2, override=False):
-    """  Get streams. """
-    args = (song, delay, override)
-    t = threading.Thread(target=_preload, args=args)
-    t.daemon = True
-    t.start()

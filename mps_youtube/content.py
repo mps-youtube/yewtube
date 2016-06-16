@@ -1,11 +1,11 @@
 import math
 import copy
+import random
 
 import pafy
 
-from . import g, screen, c, streams
-from .config import Config
-from .util import getxy, fmt_time, uea_pad, real_len
+from . import g, c, config, screen, streams
+from .util import getxy, fmt_time, uea_pad, yt_datetime, F
 
 # In the future, this could support more advanced features
 class Content:
@@ -76,7 +76,7 @@ class SongList(LineContent):
         # preload first result url
         streams.preload(songs[0], delay=0)
 
-        return _generate_songlist_display(songs)
+        return generate_songlist_display(songs)
      
     def get_count(self):
         return self._length
@@ -99,45 +99,13 @@ def page_msg(page=0):
     return None
 
 
-def _get_user_columns():
-    """ Get columns from user config, return dict. """
-    total_size = 0
-    user_columns = Config.COLUMNS.get
-    user_columns = user_columns.replace(",", " ").split()
-
-    defaults = {"views": dict(name="viewCount", size=4, heading="View"),
-                "rating": dict(name="rating", size=4, heading="Rtng"),
-                "comments": dict(name="commentCount", size=4, heading="Comm"),
-                "date": dict(name="uploaded", size=8, heading="Date"),
-                "user": dict(name="uploaderName", size=10, heading="User"),
-                "likes": dict(name="likes", size=4, heading="Like"),
-                "dislikes": dict(name="dislikes", size=4, heading="Dslk"),
-                "category": dict(name="category", size=8, heading="Category")}
-
-    ret = []
-    for column in user_columns:
-        namesize = column.split(":")
-        name = namesize[0]
-
-        if name in defaults:
-            z = defaults[name]
-            nm, sz, hd = z['name'], z['size'], z['heading']
-
-            if len(namesize) == 2 and namesize[1].isdigit():
-                sz = int(namesize[1])
-
-            total_size += sz
-            cw = screen.getxy().width
-            if total_size < cw - 18:
-                ret.append(dict(name=nm, size=sz, heading=hd))
-
-    return ret
-
-
-def _generate_songlist_display(songs, song=False, zeromsg=None):
+def generate_songlist_display(songs, song=False, zeromsg=None):
     """ Generate list of choices from a song list."""
     # pylint: disable=R0914
-    max_results = screen.getxy().max_results
+    if g.browse_mode == "ytpl":
+        return generate_playlist_display()
+
+    max_results = getxy().max_results
 
     if not songs:
         g.message = zeromsg or "Enter /search-term to search or [h]elp"
@@ -149,7 +117,7 @@ def _generate_songlist_display(songs, song=False, zeromsg=None):
     lengthsize = 8 if maxlength > 35999 else 7
     lengthsize = 5 if maxlength < 6000 else lengthsize
     reserved = 9 + lengthsize + len(user_columns)
-    cw = screen.getxy().width
+    cw = getxy().width
     cw -= 1
     title_size = cw - sum(1 + x['size'] for x in user_columns) - reserved
     before = [{"name": "idx", "size": 3, "heading": "Num"},
@@ -194,6 +162,67 @@ def _generate_songlist_display(songs, song=False, zeromsg=None):
     return out + "\n" * (5 - len(songs)) if not song else out
 
 
+def generate_playlist_display():
+    """ Generate list of playlists. """
+    if not g.ytpls:
+        g.message = c.r + "No playlists found!"
+        return logo(c.g) + "\n\n"
+    g.rprompt = page_msg(g.current_page)
+
+    cw = getxy().width
+    fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
+    fmthd = "%s%-5s %-{}s %-12s %-9s %-5s%s\n".format(cw - 36)
+    head = (c.ul, "Item", "Playlist", "Author", "Updated", "Count", c.w)
+    out = "\n" + fmthd % head
+
+    for n, x in enumerate(g.ytpls):
+        col = (c.g if n % 2 == 0 else c.w)
+        length = x.get('size') or "?"
+        length = "%4s" % length
+        title = x.get('title') or "unknown"
+        author = x.get('author') or "unknown"
+        updated = yt_datetime(x.get('updated'))[1]
+        title = uea_pad(cw - 36, title)
+        out += (fmtrow % (col, str(n + 1), title, author[:12], updated, str(length), c.w))
+
+    return out + "\n" * (5 - len(g.ytpls))
+
+
+def _get_user_columns():
+    """ Get columns from user config, return dict. """
+    total_size = 0
+    user_columns = config.COLUMNS.get
+    user_columns = user_columns.replace(",", " ").split()
+
+    defaults = {"views": dict(name="viewCount", size=4, heading="View"),
+                "rating": dict(name="rating", size=4, heading="Rtng"),
+                "comments": dict(name="commentCount", size=4, heading="Comm"),
+                "date": dict(name="uploaded", size=8, heading="Date"),
+                "user": dict(name="uploaderName", size=10, heading="User"),
+                "likes": dict(name="likes", size=4, heading="Like"),
+                "dislikes": dict(name="dislikes", size=4, heading="Dslk"),
+                "category": dict(name="category", size=8, heading="Category")}
+
+    ret = []
+    for column in user_columns:
+        namesize = column.split(":")
+        name = namesize[0]
+
+        if name in defaults:
+            z = defaults[name]
+            nm, sz, hd = z['name'], z['size'], z['heading']
+
+            if len(namesize) == 2 and namesize[1].isdigit():
+                sz = int(namesize[1])
+
+            total_size += sz
+            cw = getxy().width
+            if total_size < cw - 18:
+                ret.append(dict(name=nm, size=sz, heading=hd))
+
+    return ret
+
+
 def logo(col=None, version=""):
     """ Return text logo. """
     col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
@@ -207,10 +236,32 @@ def logo(col=None, version=""):
     logo_txt = col + logo_txt + c.w + version
     lines = logo_txt.split("\n")
     length = max(len(x) for x in lines)
-    x, y, _ = screen.getxy()
+    x, y, _ = getxy()
     indent = (x - length - 1) // 2
     newlines = (y - 12) // 2
     indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
     lines = [" " * indent + l for l in lines]
     logo_txt = "\n".join(lines) + "\n" * newlines
     return "" if g.debug_mode else logo_txt
+
+
+def playlists_display():
+    """ Produce a list of all playlists. """
+    if not g.userpl:
+        g.message = F("no playlists")
+        return generate_songlist_display() if g.model else (logo(c.y) + "\n\n")
+
+    maxname = max(len(a) for a in g.userpl)
+    out = "      {0}Local Playlists{1}\n".format(c.ul, c.w)
+    start = "      "
+    fmt = "%s%s%-3s %-" + str(maxname + 3) + "s%s %s%-7s%s %-5s%s"
+    head = (start, c.b, "ID", "Name", c.b, c.b, "Count", c.b, "Duration", c.w)
+    out += "\n" + fmt % head + "\n\n"
+
+    for v, z in enumerate(sorted(g.userpl)):
+        n, p = z, g.userpl[z]
+        l = fmt % (start, c.g, v + 1, n, c.w, c.y, str(len(p)), c.y,
+                   p.duration, c.w) + "\n"
+        out += l
+
+    return out

@@ -2,10 +2,8 @@ import subprocess
 import os
 import sys
 
-from . import g
+from . import g, content, config, util
 from .content import PaginatedContent, page_msg
-from .util import xprint, getxy
-from .config import Config
 
 
 mswin = os.name == "nt"
@@ -27,16 +25,16 @@ def update(fill_blank=True, content=None, message=None):
         g.message = False
 
     if content:
-        xprint(content)
+        util.xprint(content)
 
     if message or g.rprompt:
         out = message or ''
-        blanks = getxy().width - len(out) - len(g.rprompt or '')
+        blanks = util.getxy().width - len(out) - len(g.rprompt or '')
         out += ' ' * blanks + (g.rprompt or '')
-        xprint(out)
+        util.xprint(out)
 
     elif fill_blank:
-        xprint("")
+        util.xprint("")
 
     g.rprompt = False
 
@@ -44,9 +42,9 @@ def update(fill_blank=True, content=None, message=None):
 def clear():
     """Clear all text from screen."""
     if g.no_clear_screen:
-        xprint('--\n')
+        util.xprint('--\n')
     else:
-        xprint('\n' * 200)
+        util.xprint('\n' * 200)
 
 
 def reset_terminal():
@@ -57,13 +55,13 @@ def reset_terminal():
 
 def writestatus(text, mute=False):
     """ Update status line. """
-    if not mute and Config.SHOW_STATUS.get:
+    if not mute and config.SHOW_STATUS.get:
         _writeline(text)
 
 
 def _writeline(text):
     """ Print text on same line. """
-    width = getxy().width
+    width = util.getxy().width
     spaces = width - len(text) - 1
     if mswin:
         # Avoids creating new line every time it is run
@@ -76,5 +74,5 @@ def _writeline(text):
 
 def msgexit(msg, code=0):
     """ Print a message and exit. """
-    xprint(msg)
+    util.xprint(msg)
     sys.exit(code)

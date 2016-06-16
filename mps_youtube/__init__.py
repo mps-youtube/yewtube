@@ -4,6 +4,6 @@ __author__ = "np1"
 __license__ = "GPLv3"
 __url__ = "http://github.com/np1/mps-youtube"
 
-from .init import init
-init()
+from . import init
+init.init()
 from . import main

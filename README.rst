@@ -93,6 +93,10 @@ Using `pip <http://www.pip-installer.org>`_::
     
     [sudo] pip3 install mps-youtube
 
+Installing youtube_dl is highly recommended::
+
+    [sudo] pip3 install youtube_dl
+
 Additional Mac OS X installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     

@@ -31,7 +31,6 @@ from threading import Thread
 import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
-from gi.repository import GLib
 
 
 IDENTITY = 'mps-youtube'
@@ -52,6 +51,10 @@ class Mpris2Controller(object):
         """
             Constructs an MPRIS controller. Note, you must call acquire()
         """
+        # Do not import in main process to prevent conflict with pyperclip
+        # (https://github.com/mps-youtube/mps-youtube/issues/461)
+        from gi.repository import GLib
+
         self.mpris = None
         self.bus = None
         self.main_loop = GLib.MainLoop()

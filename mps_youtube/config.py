@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import copy
 import pickle
 from urllib.request import urlopen
@@ -8,9 +9,7 @@ from urllib.parse import urlencode
 
 import pafy
 
-from . import g, c
-from .paths import get_default_ddir
-from .util import get_mpv_version, has_exefile, dbg, list_update
+from . import g, c, paths, util
 
 
 mswin = os.name == "nt"
@@ -74,7 +73,8 @@ class ConfigItem(object):
                 allowed_values[allowed_values.index('')] = "<nothing>"
             fail_msg = fail_msg.replace("*", ", ".join(allowed_values))
 
-        if self.require_known_player and not known_player_set():
+        if self.require_known_player and \
+                not util.is_known_player(Config.PLAYER.get):
             fail_msg = "%s requires mpv or mplayer, can't set to %s"
 
         # handle true / false values
@@ -243,10 +243,10 @@ def check_encoder(option):
 
 def check_player(player):
     """ Check player exefile exists and get mpv version. """
-    if has_exefile(player):
+    if util.has_exefile(player):
+        util.load_player_info(player)
 
         if "mpv" in player:
-            g.mpv_version = get_mpv_version(player)
             version = "%s.%s.%s" % g.mpv_version
             fmt = c.g, c.w, c.g, c.w, version
             msg = "%splayer%s set to %smpv%s (version %s)" % fmt
@@ -293,7 +293,7 @@ class _Config(object):
             ConfigItem("fullscreen", False, require_known_player=True),
             ConfigItem("show_status", True),
             ConfigItem("columns", ""),
-            ConfigItem("ddir", get_default_ddir(), check_fn=check_ddir),
+            ConfigItem("ddir", paths.get_default_ddir(), check_fn=check_ddir),
             ConfigItem("overwrite", True),
             ConfigItem("show_video", False),
             ConfigItem("search_music", True),
@@ -331,7 +331,7 @@ class _Config(object):
         with open(g.CFFILE, "wb") as cf:
             pickle.dump(config, cf, protocol=2)
 
-        dbg(c.p + "Saved config: " + g.CFFILE + c.w)
+        util.dbg(c.p + "Saved config: " + g.CFFILE + c.w)
 
     def load(self):
         """ Override config if config file exists. """
@@ -346,7 +346,7 @@ class _Config(object):
                     self[k].value = v
 
                 except KeyError:  # Ignore unrecognised data in config
-                    dbg("Unrecognised config item: %s", k)
+                    util.dbg("Unrecognised config item: %s", k)
 
             # Update config files from versions <= 0.01.41
             if isinstance(self.PLAYERARGS.get, list):
@@ -355,26 +355,16 @@ class _Config(object):
                              "-fs --fs".split())
 
                 for r in redundant:
-                    dbg("removing redundant arg %s", r)
-                    list_update(r, self.PLAYERARGS.value, remove=True)
+                    util.dbg("removing redundant arg %s", r)
+                    util.list_update(r, self.PLAYERARGS.value, remove=True)
 
                 self.PLAYERARGS.value = " ".join(self.PLAYERARGS.get)
                 self.save()
 
 Config = _Config()
 del _Config # _Config is a singleton and should not have more instances
-
-
-def known_player_set():
-    """ Return true if the set player is known. """
-    for allowed_player in g.playerargs_defaults:
-        regex = r'(?:\b%s($|\.[a-zA-Z0-9]+$))' % re.escape(allowed_player)
-        match = re.search(regex, Config.PLAYER.get)
-
-        if mswin:
-            match = re.search(regex, Config.PLAYER.get, re.IGNORECASE)
-
-        if match:
-            return allowed_player
-
-    return None
+# Prevent module from being deleted
+# http://stackoverflow.com/questions/5365562/why-is-the-value-of-name-changing-after-assignment-to-sys-modules-name
+ref = sys.modules[__name__]
+# Any module trying to import config will get the Config object instead
+sys.modules[__name__] = Config

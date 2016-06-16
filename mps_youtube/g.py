@@ -4,9 +4,8 @@ import os
 import sys
 import collections
 
-from . import c
+from . import c, paths
 from .playlist import Playlist
-from .paths import get_config_dir
 
 
 transcoder_path = "auto"
@@ -20,6 +19,7 @@ debug_mode = False
 preload_disabled = False
 ytpls = []
 mpv_version = 0, 0, 0
+mpv_options = None
 mpv_usesock = False
 mplayer_version = 0
 mprisctl = None
@@ -43,12 +43,12 @@ streams = collections.OrderedDict()
 pafy_pls = {}  #
 last_opened = message = content = ""
 suffix = "3" # Python 3
-CFFILE = os.path.join(get_config_dir(), "config")
-TCFILE = os.path.join(get_config_dir(), "transcode")
-OLD_PLFILE = os.path.join(get_config_dir(), "playlist" + suffix)
-PLFILE = os.path.join(get_config_dir(), "playlist_v2")
-HISTFILE = os.path.join(get_config_dir(), "play_history")
-CACHEFILE = os.path.join(get_config_dir(), "cache_py_" + sys.version[0:5])
+CFFILE = os.path.join(paths.get_config_dir(), "config")
+TCFILE = os.path.join(paths.get_config_dir(), "transcode")
+OLD_PLFILE = os.path.join(paths.get_config_dir(), "playlist" + suffix)
+PLFILE = os.path.join(paths.get_config_dir(), "playlist_v2")
+HISTFILE = os.path.join(paths.get_config_dir(), "play_history")
+CACHEFILE = os.path.join(paths.get_config_dir(), "cache_py_" + sys.version[0:5])
 READLINE_FILE = None
 playerargs_defaults = {
     "mpv": {
