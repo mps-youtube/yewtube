@@ -22,11 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import traceback
 import locale
-import socket
-import shlex
-import time
-import math
-import json
 import sys
 import os
 
@@ -42,6 +37,7 @@ try:
 
 except ImportError:
     has_readline = False
+
 
 mswin = os.name == "nt"
 
