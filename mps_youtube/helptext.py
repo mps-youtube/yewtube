@@ -210,6 +210,7 @@ def helptext():
     {2}set window_size <number>x<number>{1} - set player window width & height
     {2}set audio_format <auto|m4a|webm>{1} - set default music audio format
     {2}set api_key <key>{1} - use a different API key for accessing the YouTube Data API
+    {2}set set_title true|false{1} - change window title
     """.format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'
                'sults when searching (max 50)'.format(c.y, c.w) if not
                g.detectable_size else '')),

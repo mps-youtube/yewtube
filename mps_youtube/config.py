@@ -305,7 +305,8 @@ class _Config(object):
             ConfigItem("audio_format", "auto",
                 allowed_values="auto webm m4a".split()),
             ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo",
-                check_fn=check_api_key)
+                check_fn=check_api_key),
+            ConfigItem("set_title", True)
             ] 
 
     def __getitem__(self, key):

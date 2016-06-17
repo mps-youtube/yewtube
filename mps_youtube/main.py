@@ -29,6 +29,7 @@ import pafy
 
 from . import g, c, commands, screen, history, util
 from . import __version__, playlists, content
+from . import config
 
 try:
     import readline
@@ -105,7 +106,8 @@ def prompt_for_exit():
 
 def main():
     """ Main control loop. """
-    util.set_window_title("mpsyt")
+    if config.SET_TITLE.get:
+        util.set_window_title("mpsyt")
 
     if not g.command_line:
         g.content = content.logo(col=c.g, version=__version__) + "\n\n"
