@@ -55,7 +55,7 @@ class SearchList(LineContent):
         self._items = items
         self._length = length
         if length is None:
-            self._length = len(songs)
+            self._length = len(items)
         self._msg = msg
         self._failmsg = failmsg
         self._loadmsg = loadmsg
