@@ -78,7 +78,7 @@ class SongList(LineContent):
         # preload first result url
         streams.preload(songs[0], delay=0)
 
-        return generate_songlist_display(songs, s)
+        return _generate_songlist_display(songs, s)
      
     def get_count(self):
         return self._length
@@ -132,7 +132,7 @@ def page_msg(page=0):
     return None
 
 
-def generate_songlist_display(songs, startidx, song=False, zeromsg=None):
+def _generate_songlist_display(songs, startidx, song=False, zeromsg=None):
     """ Generate list of choices from a song list."""
     # pylint: disable=R0914
 

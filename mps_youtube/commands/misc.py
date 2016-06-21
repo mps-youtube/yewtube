@@ -24,7 +24,7 @@ import pafy
 from .. import g, c, __version__, content, screen, cache
 from .. import streams, history, config, util
 from ..helptext import get_help
-from ..content import generate_songlist_display, logo
+from ..content import logo
 from . import command
 from .songlist import paginatesongs
 
