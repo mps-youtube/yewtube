@@ -532,7 +532,6 @@ def get_dl_data(song, mediatype="any"):
 @command(r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*)')
 def dl_url(url):
     """ Open and prompt for download of youtube video url. """
-    g.browse_mode = "normal"
     yt_url(url)
 
     if len(g.model) == 1:
@@ -545,7 +544,6 @@ def dl_url(url):
 @command(r'daurl\s(.*[-_a-zA-Z0-9]{11}.*)')
 def da_url(url):
     """ Open and prompt for download of youtube best audio from url. """
-    g.browse_mode = "normal"
     yt_url(url)
 
     if len(g.model) == 1:
