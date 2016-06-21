@@ -102,8 +102,6 @@ def page_msg(page=0):
 def generate_songlist_display(songs, song=False, zeromsg=None):
     """ Generate list of choices from a song list."""
     # pylint: disable=R0914
-    if g.browse_mode == "ytpl":
-        return generate_playlist_display()
 
     max_results = getxy().max_results
 
