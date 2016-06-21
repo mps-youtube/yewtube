@@ -136,8 +136,6 @@ def generate_songlist_display(songs, song=False, zeromsg=None):
     """ Generate list of choices from a song list."""
     # pylint: disable=R0914
 
-    max_results = getxy().max_results
-
     if not songs:
         g.message = zeromsg or "Enter /search-term to search or [h]elp"
         return logo(c.g) + "\n\n"
@@ -167,7 +165,7 @@ def generate_songlist_display(songs, song=False, zeromsg=None):
     hrow = c.ul + fmt % titles + c.w
     out = "\n" + hrow + "\n"
 
-    for n, x in enumerate(songs[:max_results]):
+    for n, x in enumerate(songs):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
         details = {'title': x.title, "length": fmt_time(x.length)}
         details = copy.copy(g.meta[x.ytid]) if have_meta else details
