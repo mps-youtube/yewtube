@@ -139,21 +139,6 @@ def nextprev(np, page=None):
     return good
 
 
-@command(r'(un)?dump')
-def dump(un):
-    """ Show entire playlist. """
-    func, args = g.last_search_query
-
-    if func is paginatesongs:
-        paginatesongs(dumps=(not un), **args)
-
-    else:
-        un = "" if not un else un
-        g.message = "%s%sdump%s may only be used on an open YouTube playlist"
-        g.message = g.message % (c.y, un, c.w)
-        g.content = content.generate_songlist_display()
-
-
 @command(r'shuffle')
 def shuffle_fn():
     """ Shuffle displayed items. """
