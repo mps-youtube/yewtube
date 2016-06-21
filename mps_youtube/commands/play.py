@@ -38,20 +38,15 @@ def play(pre, choice, post=""):
     # pylint: disable=R0914
     # too many local variables
 
-    if g.browse_mode == "ytpl":
-
+    if isinstance(g.content, content.PlistList):
         if choice.isdigit():
-            return plist(g.ytpls[int(choice) - 1]['link'])
+            return plist(g.content._ytpls[int(choice) - 1]['link'])
         else:
             g.message = "Invalid playlist selection: %s" % c.y + choice + c.w
             g.content = content.generate_songlist_display()
             return
 
-    if not g.model:
-        g.message = c.r + "There are no tracks to select" + c.w
-        g.content = g.content or content.generate_songlist_display()
-
-    else:
+    elif isinstance(g.content, content.SongList):
         shuffle = "shuffle" in pre + post
         repeat = "repeat" in pre + post
         novid = "-a" in pre + post
@@ -72,18 +67,22 @@ def play(pre, choice, post=""):
             override = "forcevid" if forcevid else override
 
         selection = util.parse_multi(choice)
-        songlist = [g.model[x - 1] for x in selection]
+        songlist = [g.content._songs[x - 1] for x in selection]
 
         # cache next result of displayed items
         # when selecting a single item
         if len(songlist) == 1:
             chosen = selection[0] - 1
 
-            if len(g.model) > chosen + 1:
-                streams.preload(g.model[chosen + 1], override=override)
+            if len(g.content._songs) > chosen + 1:
+                streams.preload(g.content._songs[chosen + 1], override=override)
 
         play_range(songlist, shuffle, repeat, override)
         g.content = content.generate_songlist_display()
+
+    else:
+        g.message = c.r + "There are no tracks to select" + c.w
+        g.content = g.content or content.generate_songlist_display()
 
 
 @command(r'(%s{0,3})(?:\*|all)\s*(%s{0,3})' %
