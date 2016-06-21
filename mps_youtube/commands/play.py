@@ -40,7 +40,7 @@ def play(pre, choice, post=""):
 
     if isinstance(g.content, content.PlistList):
         if choice.isdigit():
-            return plist(g.content._ytpls[int(choice) - 1]['link'])
+            return plist(g.content[int(choice) - 1]['link'])
         else:
             g.message = "Invalid playlist selection: %s" % c.y + choice + c.w
             g.content = content.generate_songlist_display()
@@ -67,15 +67,15 @@ def play(pre, choice, post=""):
             override = "forcevid" if forcevid else override
 
         selection = util.parse_multi(choice)
-        songlist = [g.content._songs[x - 1] for x in selection]
+        songlist = [g.content[x - 1] for x in selection]
 
         # cache next result of displayed items
         # when selecting a single item
         if len(songlist) == 1:
             chosen = selection[0] - 1
 
-            if len(g.content._songs) > chosen + 1:
-                streams.preload(g.content._songs[chosen + 1], override=override)
+            if len(g.content) > chosen + 1:
+                streams.preload(g.content[chosen + 1], override=override)
 
         play_range(songlist, shuffle, repeat, override)
 

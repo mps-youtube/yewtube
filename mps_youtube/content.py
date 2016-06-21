@@ -83,7 +83,7 @@ class SearchList(LineContent):
     def __getitem__(self, sliced):
         if callable(self._items):
             if isinstance(sliced, slice):
-                return self._items(sliced.start, sliced.end)[::sliced.step]
+                return self._items(sliced.start, sliced.stop)[::sliced.step]
             else:
                 return self._items(sliced, sliced + 1)[0]
         else:
