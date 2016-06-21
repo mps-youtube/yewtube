@@ -89,7 +89,7 @@ def play(pre, choice, post=""):
 def play_all(pre, choice, post=""):
     """ Play all tracks in model (last displayed). shuffle/repeat if req'd."""
     options = pre + choice + post
-    play(options, "1-" + str(len(g.model)))
+    play(options, "1-")
 
 
 @command(r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?')
