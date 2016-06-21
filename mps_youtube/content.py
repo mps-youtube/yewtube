@@ -78,7 +78,7 @@ class SongList(LineContent):
         # preload first result url
         streams.preload(songs[0], delay=0)
 
-        return generate_songlist_display(songs)
+        return generate_songlist_display(songs, s)
      
     def get_count(self):
         return self._length
@@ -109,7 +109,7 @@ class PlistList(LineContent):
         else:
             g.message = self._msg or g.message
 
-        return _generate_playlist_display(ytpls)
+        return _generate_playlist_display(ytpls, s)
      
     def get_count(self):
         return self._length
@@ -132,7 +132,7 @@ def page_msg(page=0):
     return None
 
 
-def generate_songlist_display(songs, song=False, zeromsg=None):
+def generate_songlist_display(songs, startidx, song=False, zeromsg=None):
     """ Generate list of choices from a song list."""
     # pylint: disable=R0914
 
@@ -165,7 +165,7 @@ def generate_songlist_display(songs, song=False, zeromsg=None):
     hrow = c.ul + fmt % titles + c.w
     out = "\n" + hrow + "\n"
 
-    for n, x in enumerate(songs):
+    for n, x in enumerate(songs, startidx):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
         details = {'title': x.title, "length": fmt_time(x.length)}
         details = copy.copy(g.meta[x.ytid]) if have_meta else details
@@ -191,7 +191,7 @@ def generate_songlist_display(songs, song=False, zeromsg=None):
     return out + "\n" * (5 - len(songs)) if not song else out
 
 
-def _generate_playlist_display(ytpls):
+def _generate_playlist_display(ytpls, startidx):
     """ Generate list of playlists. """
     if not ytpls:
         g.message = c.r + "No playlists found!"
@@ -203,7 +203,7 @@ def _generate_playlist_display(ytpls):
     head = (c.ul, "Item", "Playlist", "Author", "Updated", "Count", c.w)
     out = "\n" + fmthd % head
 
-    for n, x in enumerate(ytpls):
+    for n, x in enumerate(ytpls, startidx):
         col = (c.g if n % 2 == 0 else c.w)
         length = x.get('size') or "?"
         length = "%4s" % length
