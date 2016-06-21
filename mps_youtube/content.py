@@ -109,7 +109,7 @@ def page_msg(page=0):
     if isinstance(g.content, PaginatedContent):
         page_count = g.content.numPages()
     else:
-        page_count = math.ceil(g.result_count/getxy().max_results)
+        page_count = 0
 
     if page_count > 1:
         pagemsg = "{}{}/{}{}"

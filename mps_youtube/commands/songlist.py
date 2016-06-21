@@ -115,8 +115,9 @@ def nextprev(np, page=None):
         function = g.content.getPage
         args = {}
     else:
-        page_count = math.ceil(g.result_count/util.getxy().max_results)
-        function, args = g.last_search_query
+        page_count = 0
+        function = None
+        args = {}
 
     good = False
 

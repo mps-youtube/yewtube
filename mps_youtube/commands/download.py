@@ -146,7 +146,6 @@ def down_many(dltype, choice, subdir=None):
 
     try:
         for song in downsongs:
-            g.result_count = len(g.model)
             disp = content.generate_songlist_display()
             title = "Download Queue (%s):%s\n\n" % (av, c.w)
             disp = re.sub(r"(Num\s*?Title.*?\n)", title, disp)
@@ -184,7 +183,6 @@ def down_many(dltype, choice, subdir=None):
     finally:
         g.model.songs = temp[::]
         g.message = msg
-        g.result_count = len(g.model)
         g.content = content.generate_songlist_display()
 
 
