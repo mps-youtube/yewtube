@@ -78,7 +78,6 @@ def play(pre, choice, post=""):
                 streams.preload(g.content._songs[chosen + 1], override=override)
 
         play_range(songlist, shuffle, repeat, override)
-        g.content = content.generate_songlist_display()
 
     else:
         g.message = c.r + "There are no tracks to select" + c.w

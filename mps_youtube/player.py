@@ -26,10 +26,10 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
     n = 0
     while 0 <= n <= len(songlist)-1:
         song = songlist[n]
-        g.content = _playback_progress(n, songlist, repeat=repeat)
 
         if not g.command_line:
-            screen.update(fill_blank=False)
+            screen.update(content=_playback_progress(n, songlist, repeat=repeat),
+                fill_blank=False)
 
         hasnext = len(songlist) > n + 1
 
