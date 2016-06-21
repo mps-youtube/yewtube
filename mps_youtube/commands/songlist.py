@@ -110,18 +110,10 @@ def songlist_mv_sw(action, a, b):
 @command(r'(n|p)\s*(\d{1,2})?')
 def nextprev(np, page=None):
     """ Get next / previous search results. """
+    good = False
     if isinstance(g.content, content.PaginatedContent):
         page_count = g.content.numPages()
-        function = g.content.getPage
-        args = {}
-    else:
-        page_count = 0
-        function = None
-        args = {}
 
-    good = False
-
-    if function:
         if np == "n":
             if g.current_page + 1 < page_count:
                 g.current_page += 1
@@ -135,16 +127,15 @@ def nextprev(np, page=None):
             elif g.current_page > 0:
                 g.current_page -= 1
                 good = True
+    else:
+        g.content = content.generate_songlist_display()
 
     if good:
-        function(page=g.current_page, **args)
-
+        g.content.getPage(page=g.current_page)
     else:
         norp = "next" if np == "n" else "previous"
         g.message = "No %s items to display" % norp
 
-    if not isinstance(g.content, content.PaginatedContent):
-        g.content = content.generate_songlist_display()
     return good
 
 
