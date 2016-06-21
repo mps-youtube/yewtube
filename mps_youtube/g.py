@@ -17,7 +17,6 @@ detectable_size = True
 command_line = False
 debug_mode = False
 preload_disabled = False
-ytpls = []
 mpv_version = 0, 0, 0
 mpv_options = None
 mpv_usesock = False

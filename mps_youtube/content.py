@@ -82,6 +82,28 @@ class SongList(LineContent):
         return self._length
 
 
+class PlistList(LineContent):
+    def __init__(self, ytpls, length):
+        self._ytpls = ytpls
+        self._length = length
+
+    def get_text(self, s, e):
+        # TODO: failmsg
+        # "No playlists found for: %s" % c.y + prog + c.w
+        # TODO: msg
+        # g.message = "Playlist results for %s" % c.y + prog + c.w
+
+        if callable(self._ytpls):
+            ytpls = self._ytpls(s, e)
+        else:
+            ytpls = self._ytpls[s:e]
+
+        return _generate_playlist_display(ytpls)
+     
+    def get_count(self):
+        return self._length
+
+
 def page_msg(page=0):
     """ Format information about currently displayed page to a string. """
     if isinstance(g.content, PaginatedContent):
@@ -160,12 +182,11 @@ def generate_songlist_display(songs, song=False, zeromsg=None):
     return out + "\n" * (5 - len(songs)) if not song else out
 
 
-def generate_playlist_display():
+def _generate_playlist_display(ytpls):
     """ Generate list of playlists. """
-    if not g.ytpls:
+    if not ytpls:
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
-    g.rprompt = page_msg(g.current_page)
 
     cw = getxy().width
     fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
@@ -173,7 +194,7 @@ def generate_playlist_display():
     head = (c.ul, "Item", "Playlist", "Author", "Updated", "Count", c.w)
     out = "\n" + fmthd % head
 
-    for n, x in enumerate(g.ytpls):
+    for n, x in enumerate(ytpls):
         col = (c.g if n % 2 == 0 else c.w)
         length = x.get('size') or "?"
         length = "%4s" % length
@@ -183,7 +204,7 @@ def generate_playlist_display():
         title = uea_pad(cw - 36, title)
         out += (fmtrow % (col, str(n + 1), title, author[:12], updated, str(length), c.w))
 
-    return out + "\n" * (5 - len(g.ytpls))
+    return out + "\n" * (5 - len(ytpls))
 
 
 def _get_user_columns():
