@@ -324,7 +324,7 @@ def parse_multi(choice, end=None):
     Return list of ints.
 
     """
-    end = end or str(len(g.model))
+    end = end or len(g.content)
     pattern = r'(?<![-\d\[\]])(\d+-\d+|-\d+|\d+-|\d+)(?:\[(\d+)\])?(?![-\d\[\]])'
     items = re.findall(pattern, choice)
     alltracks = []
