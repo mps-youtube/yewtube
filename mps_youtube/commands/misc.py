@@ -133,13 +133,12 @@ def comments(number):
 @command(r'x\s*(\d+)')
 def clip_copy(num):
     """ Copy item to clipboard. """
-    if g.browse_mode == "ytpl":
-
-        p = g.ytpls[int(num) - 1]
+    if isinstance(g.content, content.PlistList):
+        p = g.content[int(num) - 1]
         link = "https://youtube.com/playlist?list=%s" % p['link']
 
-    elif g.browse_mode == "normal":
-        item = (g.model[int(num) - 1])
+    elif isinstance(g.content, content.SongList):
+        item = g.content[int(num) - 1]
         link = "https://youtube.com/watch?v=%s" % item.ytid
 
     else:
@@ -148,7 +147,6 @@ def clip_copy(num):
         return
 
     if has_pyperclip:
-
         try:
             pyperclip.copy(link)
             g.message = c.y + link + c.w + " copied"
