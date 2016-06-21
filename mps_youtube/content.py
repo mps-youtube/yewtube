@@ -70,7 +70,7 @@ class SongList(LineContent):
             songs = self._songs[s:e]
 
         if not songs:
-            g.message = failmsg or g.message
+            g.message = self._failmsg or g.message
             return
 
         # preload first result url
