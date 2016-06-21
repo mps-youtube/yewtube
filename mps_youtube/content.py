@@ -50,9 +50,9 @@ class StringContent(LineContent):
         return count
 
 
-class SongList(LineContent):
-    def __init__(self, songs, length=None, msg=None, failmsg=None, loadmsg=None):
-        self._songs = songs
+class SearchList(LineContent):
+    def __init__(self, items, length=None, msg=None, failmsg=None, loadmsg=None):
+        self._items = items
         self._length = length
         if length is None:
             self._length = len(songs)
@@ -64,55 +64,37 @@ class SongList(LineContent):
         screen.update(content=logo(col=c.b),
                 message=(self._loadmsg or ''))
 
-        if callable(self._songs):
-            songs = self._songs(s, e)
+        if callable(self._items):
+            items = self._items(s, e)
         else:
-            songs = self._songs[s:e]
+            items = self._items[s:e]
 
-        if not songs:
+        if not items:
             g.message = self._failmsg or g.message
             return
         else:
             g.message = self._msg or g.message
 
+        return self.display_items(items, s)
+
+    def get_count(self):
+        return self._length
+
+    def display_items(self, startidx):
+        raise NotImplementedError
+
+
+class SongList(SearchList):
+    def display_items(self, songs, startidx):
         # preload first result url
         streams.preload(songs[0], delay=0)
 
-        return _generate_songlist_display(songs, s)
-     
-    def get_count(self):
-        return self._length
+        return _generate_songlist_display(songs, startidx)
 
 
-class PlistList(LineContent):
-    def __init__(self, ytpls,  length=None, msg=None, failmsg=None, loadmsg=None):
-        self._ytpls = ytpls
-        self._length = length
-        if length is None:
-            self._length = len(songs)
-        self._msg = msg
-        self._failmsg = failmsg
-        self._loadmsg = loadmsg
-
-    def get_text(self, s, e):
-        screen.update(content=logo(col=c.b),
-                message=(self._loadmsg or ''))
-
-        if callable(self._ytpls):
-            ytpls = self._ytpls(s, e)
-        else:
-            ytpls = self._ytpls[s:e]
-
-        if not ytpls:
-            g.message = self._failmsg or g.message
-            return
-        else:
-            g.message = self._msg or g.message
-
-        return _generate_playlist_display(ytpls, s)
-     
-    def get_count(self):
-        return self._length
+class PlistList(SearchList):
+    def display_items(self, ytpls, startidx):
+        return _generate_playlist_display(ytpls, startidx)
 
 
 def page_msg(page=0):
