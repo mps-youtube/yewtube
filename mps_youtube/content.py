@@ -75,7 +75,7 @@ class SearchList(LineContent):
         return self.display_items(items, s)
 
     def get_count(self):
-        return self._length
+        return len(self)
 
     def display_items(self, startidx):
         raise NotImplementedError
@@ -95,6 +95,9 @@ class SearchList(LineContent):
         except TypeError:
             # Not iterable
             return self[:]
+
+    def __len__(self):
+        return self._length
 
 
 class SongList(SearchList):
