@@ -168,8 +168,8 @@ def clip_copy(num):
 @command(r'i\s*(\d{1,4})')
 def info(num):
     """ Get video description. """
-    if g.browse_mode == "ytpl":
-        p = g.ytpls[int(num) - 1]
+    if isinstance(g.content, content.PlistList):
+        p = g.content[int(num) - 1]
 
         # fetch the playlist item as it has more metadata
         if p['link'] in g.pafy_pls:
@@ -198,11 +198,11 @@ def info(num):
         out += ("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
         g.content = out
 
-    elif g.browse_mode == "normal":
+    elif isinstance(g.content, content.SongList):
+        item = g.content[int(num) - 1]
         g.content = logo(c.b)
         screen.update()
         screen.writestatus("Fetching video metadata..")
-        item = (g.model[int(num) - 1])
         streams.get(item)
         p = util.get_pafy(item)
         pub = time.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
