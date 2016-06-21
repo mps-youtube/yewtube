@@ -83,20 +83,27 @@ class SongList(LineContent):
 
 
 class PlistList(LineContent):
-    def __init__(self, ytpls, length):
+    def __init__(self, ytpls,  length=None, msg=None, failmsg=None, loadmsg=None):
         self._ytpls = ytpls
         self._length = length
+        if length is None:
+            self._length = len(songs)
+        self._msg = msg
+        self._failmsg = failmsg
+        self._loadmsg = loadmsg
 
     def get_text(self, s, e):
-        # TODO: failmsg
-        # "No playlists found for: %s" % c.y + prog + c.w
-        # TODO: msg
-        # g.message = "Playlist results for %s" % c.y + prog + c.w
+        screen.update(content=logo(col=c.b),
+                message=(self._loadmsg or ''))
 
         if callable(self._ytpls):
             ytpls = self._ytpls(s, e)
         else:
             ytpls = self._ytpls[s:e]
+
+        if not ytpls:
+            g.message = self._failmsg or g.message
+            return
 
         return _generate_playlist_display(ytpls)
      

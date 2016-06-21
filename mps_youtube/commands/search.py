@@ -232,12 +232,6 @@ def pl_search(term, is_user=False):
 
     prog = "user: " + term if is_user else term
 
-    # TODO: Display splash w/ content api
-    #if splash:
-    #    g.content = content.logo(c.g)
-    #    g.message = "Searching playlists for %s" % c.y + prog + c.w
-    #    screen.update()
-
     if is_user:
         ret = channelfromname(term)
         if not ret: # Error
@@ -293,7 +287,11 @@ def pl_search(term, is_user=False):
                 pldata2 = pafy.call_gdata('search', qs)
 
     slicer = util.IterSlicer(iter_pls(), result_count)
-    g.content = content.PlistList(slicer, result_count)
+    msg = "Playlist results for %s" % c.y + prog + c.w
+    failmsg =  "No playlists found for: %s" % c.y + prog + c.w
+    loadmsg = "Searching playlists for %s" % c.y + prog + c.w
+
+    g.content = content.PlistList(slicer, result_count, msg, failmsg, loadmsg)
 
 
 def get_pl_from_json(pldata):
