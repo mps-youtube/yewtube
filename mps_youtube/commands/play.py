@@ -96,7 +96,6 @@ def play_all(pre, choice, post=""):
 def play_url(url, override):
     """ Open and play a youtube video url. """
     override = override if override else "_"
-    g.browse_mode = "normal"
     yt_url(url, print_title=1)
 
     if len(g.model) == 1:
