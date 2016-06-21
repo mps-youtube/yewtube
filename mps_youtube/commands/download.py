@@ -11,7 +11,7 @@ from urllib.error import HTTPError
 from .. import g, c, screen, streams, content, config, util
 from . import command, PL
 from .search import yt_url, user_pls
-from .songlist import dump, plist
+from .songlist import plist
 
 
 @command(r'(dv|da|d|dl|download)\s*(\d{1,4})')
@@ -191,7 +191,6 @@ def down_plist(dltype, parturl):
     """ Download YouTube playlist. """
 
     plist(parturl)
-    dump(False)
     title = g.pafy_pls[parturl][0].title
     subdir = util.mswinfn(title.replace("/", "-"))
     down_many(dltype, "1-", subdir=subdir)
