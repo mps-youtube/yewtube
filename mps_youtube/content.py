@@ -89,6 +89,13 @@ class SearchList(LineContent):
         else:
             return self._items[sliced]
 
+    def __iter__(self):
+        try:
+            return iter(self._items)
+        except TypeError:
+            # Not iterable
+            return self[:]
+
 
 class SongList(SearchList):
     def display_items(self, songs, startidx):

@@ -20,25 +20,25 @@ def download(dltype, num):
     # This function needs refactoring!
     # pylint: disable=R0912
     # pylint: disable=R0914
-    if g.browse_mode == "ytpl" and dltype in ("da", "dv"):
+    if isinstance(g.content, content.PlistList) and dltype in ("da", "dv"):
         plid = g.ytpls[int(num) - 1]["link"]
         down_plist(dltype, plid)
         return
 
-    elif g.browse_mode == "ytpl":
+    elif isinstance(g.content, content.PlistList):
         g.message = "Use da or dv to specify audio / video playlist download"
         g.message = c.y + g.message + c.w
         g.content = content.generate_songlist_display()
         return
 
-    elif g.browse_mode != "normal":
+    elif not isinstance(g.content, content.PlistList):
         g.message = "Download must refer to a specific video item"
         g.message = c.y + g.message + c.w
         g.content = content.generate_songlist_display()
         return
 
     screen.writestatus("Fetching video info...")
-    song = (g.model[int(num) - 1])
+    song = (g.content[int(num) - 1])
     best = dltype.startswith("dv") or dltype.startswith("da")
 
     if not best:
@@ -203,7 +203,7 @@ def down_plist(dltype, parturl):
 def down_user_pls(dltype, user):
     """ Download all user playlists. """
     user_pls(user)
-    for i in g.ytpls:
+    for i in g.content:
         down_plist(dltype, i.get('link'))
 
     return
