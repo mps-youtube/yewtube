@@ -90,9 +90,7 @@ def matchfunction(func, regex, userinput):
 
 def prompt_for_exit():
     """ Ask for exit confirmation. """
-    g.message = c.r + "Press ctrl-c again to exit" + c.w
-    g.content = content.generate_songlist_display()
-    screen.update()
+    screen.update(message = c.r + "Press ctrl-c again to exit" + c.w)
 
     try:
         userinput = input(c.r + " > " + c.w)
