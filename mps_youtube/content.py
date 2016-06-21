@@ -72,6 +72,8 @@ class SongList(LineContent):
         if not songs:
             g.message = self._failmsg or g.message
             return
+        else:
+            g.message = self._msg or g.message
 
         # preload first result url
         streams.preload(songs[0], delay=0)
@@ -104,6 +106,8 @@ class PlistList(LineContent):
         if not ytpls:
             g.message = self._failmsg or g.message
             return
+        else:
+            g.message = self._msg or g.message
 
         return _generate_playlist_display(ytpls)
      
