@@ -487,7 +487,7 @@ def yt_url(url, print_title=0):
     """ Acess videos by urls. """
     url_list = url.split()
 
-    g.model.songs = []
+    songs = []
 
     for u in url_list:
         try:
@@ -499,11 +499,9 @@ def yt_url(url, print_title=0):
                     zeromsg=g.message)
             return
 
-        v = Video(p.videoid, p.title, p.length)
-        g.model.songs.append(v)
+        songs.append(Video(p.videoid, p.title, p.length))
 
-    if not g.command_line:
-        g.content = content.generate_songlist_display()
+    g.content = content.SongList(songs)
 
     if print_title:
         util.xprint(v.title)
