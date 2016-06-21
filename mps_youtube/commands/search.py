@@ -429,7 +429,7 @@ def num_repr(num):
 @command(r'u\s?([\d]{1,4})')
 def user_more(num):
     """ Show more videos from user of vid num. """
-    if g.browse_mode != "normal":
+    if not isinstance(g.content, content.SongList):
         g.message = "User uploads must refer to a specific video item"
         g.message = c.y + g.message + c.w
         g.content = content.generate_songlist_display()
@@ -452,7 +452,7 @@ def user_more(num):
 @command(r'r\s?(\d{1,4})')
 def related(num):
     """ Show videos related to to vid num. """
-    if g.browse_mode != "normal":
+    if not isinstance(g.content, content.SongList):
         g.message = "Related items must refer to a specific video item"
         g.message = c.y + g.message + c.w
         g.content = content.generate_songlist_display()
@@ -467,7 +467,7 @@ def related(num):
 def mix(num):
     """ Retrieves the YouTube mix for the selected video. """
     g.content = g.content or content.generate_songlist_display()
-    if g.browse_mode != "normal":
+    if not isinstance(g.content, content.SongList):
         g.message = util.F('mix only videos')
     else:
         item = (g.model[int(num) - 1])
@@ -499,7 +499,6 @@ def yt_url(url, print_title=0):
                     zeromsg=g.message)
             return
 
-        g.browse_mode = "normal"
         v = Video(p.videoid, p.title, p.length)
         g.model.songs.append(v)
 

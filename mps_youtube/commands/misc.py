@@ -121,8 +121,8 @@ def fetch_comments(item):
 @command(r'c\s?(\d{1,4})')
 def comments(number):
     """ Receive use request to view comments. """
-    if g.browse_mode == "normal":
-        item = g.model[int(number) - 1]
+    if isinstance(g.content, content.SongList):
+        item = g.content[int(number) - 1]
         fetch_comments(item)
 
     else:

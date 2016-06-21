@@ -22,7 +22,6 @@ mpv_options = None
 mpv_usesock = False
 mplayer_version = 0
 mprisctl = None
-browse_mode = "normal"
 preloading = []
 # expiry = 5 * 60 * 60  # 5 hours
 no_clear_screen = False
