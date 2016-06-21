@@ -41,19 +41,6 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
             loadmsg=loadmsg)
 
 
-def token(page):
-    """ Returns a page token for a given start index. """
-    index = (page or 0) * util.getxy().max_results
-    k = index//128 - 1
-    index -= 128 * k
-    f = [8, index]
-    if k > 0 or index > 127:
-        f.append(k+1)
-    f += [16, 0]
-    b64 = base64.b64encode(bytes(f)).decode('utf8')
-    return b64.strip('=')
-
-
 def generate_search_qs(term, match='term'):
     """ Return query string. """
 
