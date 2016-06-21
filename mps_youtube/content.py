@@ -64,10 +64,7 @@ class SearchList(LineContent):
         screen.update(content=logo(col=c.b),
                 message=(self._loadmsg or ''))
 
-        if callable(self._items):
-            items = self._items(s, e)
-        else:
-            items = self._items[s:e]
+        items = self[s:e]
 
         if not items:
             g.message = self._failmsg or g.message
@@ -82,6 +79,15 @@ class SearchList(LineContent):
 
     def display_items(self, startidx):
         raise NotImplementedError
+
+    def __getitem__(self, sliced):
+        if callable(self._items):
+            if isinstance(sliced, slice):
+                return self._items(sliced.start, sliced.end)[::sliced.step]
+            else:
+                return self._items(sliced, sliced + 1)[0]
+        else:
+            return self._items[sliced]
 
 
 class SongList(SearchList):
