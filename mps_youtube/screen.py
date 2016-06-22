@@ -2,7 +2,7 @@ import subprocess
 import os
 import sys
 
-from . import g, content, config, util
+from . import g, config, util
 from .content import PaginatedContent, page_msg
 
 
