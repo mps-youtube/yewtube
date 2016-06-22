@@ -124,7 +124,7 @@ def set_window_title(title):
     if mswin:
         ctypes.windll.kernel32.SetConsoleTitleW(xenc(title))
     else:
-        sys.stdout.write(xenc('\x1b]2;' + title + '\x07'))
+        xprint(xenc('\x1b]2;' + title + '\x07'))
 
 
 def list_update(item, lst, remove=False):
