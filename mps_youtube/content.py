@@ -22,13 +22,18 @@ class PaginatedContent(Content):
 
 class LineContent(PaginatedContent):
     def getPage(self, page):
-        max_results = getxy().max_results
+        y = getxy().height
+        max_results = y - 4 if y < 54 else 50
+        max_results = 1 if y <= 5 else max_results
         s = page * max_results
         e = (page + 1) * max_results
         return self.get_text(s, e)
 
     def numPages(self):
-        return math.ceil(self.get_count()/getxy().max_results)
+        y = getxy().height
+        max_results = y - 4 if y < 54 else 50
+        max_results = 1 if y <= 5 else max_results
+        return math.ceil(self.get_count()/max_results)
 
     def get_text(self, s, e):
         raise NotImplementedError
@@ -262,7 +267,7 @@ def logo(col=None, version=""):
     logo_txt = col + logo_txt + c.w + version
     lines = logo_txt.split("\n")
     length = max(len(x) for x in lines)
-    x, y, _ = getxy()
+    x, y = getxy()
     indent = (x - length - 1) // 2
     newlines = (y - 12) // 2
     indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
