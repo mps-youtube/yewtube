@@ -235,10 +235,6 @@ def helptext():
     You can use spaces instead of commas: 5 3 7- -2
     Reversed ranges also work. eg., 5-2
 
-    {2}dump{1} - to show entire contents of an opened YouTube playlist.
-           (useful for playing or saving entire playlists, use {2}undump{1} to \
-    undo)
-
     {2}set player mpv{1} or {2}set player mplayer{1} - change player application
 
     Use {2}1{1} and {2}0{1} in place of true and false when using the {2}set{1} \
@@ -282,7 +278,7 @@ def get_help(choice):
              "edit": ("editing manupulate manipulating rm mv sw edit move "
                       "swap shuffle".split()),
 
-             "tips": ("undump dump -f -w -a adv advanced".split(" ")),
+             "tips": ("-f -w -a adv advanced".split(" ")),
 
              "basic": ("basic comment basics c copy clipboard comments u "
                        "i".split()),
