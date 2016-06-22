@@ -98,7 +98,7 @@ def play_url(url, override):
     override = override if override else "_"
     yt_url(url, print_title=1)
 
-    if len(g.model) == 1:
+    if len(g.content) == 1:
         play(override, "1", "_")
 
     if g.command_line:
