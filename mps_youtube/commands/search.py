@@ -504,7 +504,7 @@ def yt_url(url, print_title=0):
     g.content = content.SongList(songs)
 
     if print_title:
-        util.xprint(v.title)
+        util.xprint(p.title)
 
 
 @command(r'url_file\s(\S+)')
