@@ -22,17 +22,13 @@ class PaginatedContent(Content):
 
 class LineContent(PaginatedContent):
     def getPage(self, page):
-        y = getxy().height
-        max_results = y - 4 if y < 54 else 50
-        max_results = 1 if y <= 5 else max_results
+        max_results = max(min(getxy().height-4, 50), 1)
         s = page * max_results
         e = (page + 1) * max_results
         return self.get_text(s, e)
 
     def numPages(self):
-        y = getxy().height
-        max_results = y - 4 if y < 54 else 50
-        max_results = 1 if y <= 5 else max_results
+        max_results = max(min(getxy().height-4, 50), 1)
         return math.ceil(self.get_count()/max_results)
 
     def get_text(self, s, e):
