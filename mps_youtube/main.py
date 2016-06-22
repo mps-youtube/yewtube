@@ -103,7 +103,7 @@ def prompt_for_exit():
 
 def main():
     """ Main control loop. """
-    util.set_window_title("mpsyt")
+    screen.set_window_title("mpsyt")
 
     if not g.command_line:
         g.content = content.logo(col=c.g, version=__version__) + "\n\n"

@@ -1,7 +1,6 @@
 import os
 import re
 import sys
-import ctypes
 import logging
 import time
 import subprocess
@@ -117,14 +116,6 @@ def mswinfn(filename):
         filename = "".join(x if allowed.match(x) else "_" for x in filename)
 
     return filename
-
-
-def set_window_title(title):
-    """ Set terminal window title. """
-    if mswin:
-        ctypes.windll.kernel32.SetConsoleTitleW(xenc(title))
-    else:
-        xprint(xenc('\x1b]2;' + title + '\x07'))
 
 
 def list_update(item, lst, remove=False):

@@ -1,4 +1,5 @@
 import subprocess
+import ctypes
 import os
 import sys
 
@@ -76,3 +77,11 @@ def msgexit(msg, code=0):
     """ Print a message and exit. """
     util.xprint(msg)
     sys.exit(code)
+
+
+def set_window_title(title):
+    """ Set terminal window title. """
+    if mswin:
+        ctypes.windll.kernel32.SetConsoleTitleW(util.xenc(title))
+    else:
+        util.xprint('\x1b]2;' + title + '\x07')
