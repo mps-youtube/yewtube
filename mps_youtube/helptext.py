@@ -246,19 +246,17 @@ def helptext():
     """.format(c.ul, c.w, c.y)),
 
         ("new", "New Features", """
-    {0}New Features in v0.2.6{1}
+    {0}New Features in v0.2.7{1}
 
-     - Add browserplay command to play video in browser (rjvani)
+     - Setting for default audio format (nishanthkarthik)
 
-     - Make url command support multiple url, and allow loading urls from file
-         (paulnicolet)
+     - Search history with "history" command (kraetzin)
 
-     - Make youtube id available to download command (ids1024)
+     - Add syntax for repeating a track several times (ghallak)
 
-     - Make pagination work properly for all lists of songs (local playlists,
-         etc.) and make them all support the dump command (ids1024)
+     - New "reverse" command (kraetzin)
 
-     - Show warning when adding duplicate track to playlist (BensonQiu){2}
+     - New "daurl <url>" command (maricn){2}
     """.format(c.ul, c.w, c.y))]
 
 
