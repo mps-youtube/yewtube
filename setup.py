@@ -60,13 +60,13 @@ options = dict(
             "bundle_files": 1
         }
     },
-    data_files=[("share/mps-youtube", ["LICENSE", "README.rst", "CHANGELOG"])],
+    package_data={"": ["LICENSE", "README.rst", "CHANGELOG"]},
     long_description=open("README.rst").read()
 )
 
 if sys.platform.startswith('linux'):
     # Install desktop file. Required for mpris on Ubuntu
-    options['data_files'].append(('share/applications/', ['mps-youtube.desktop']))
+    options['data_files'] = [('share/applications/', ['mps-youtube.desktop'])]
 
 if os.name == "nt":
     try:
