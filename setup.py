@@ -17,7 +17,7 @@ from setuptools import setup
 
 options = dict(
     name="mps-youtube",
-    version="0.2.7",
+    version="0.2.7.1",
     description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="np1",

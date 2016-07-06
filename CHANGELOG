@@ -1,3 +1,14 @@
+Version 0.2.7.1
+6 July 2016
+
+Bug fixes:
+----------
+- Fix pickle error (@ids1024) (#503)
+- Install LICENSE, README.md, and CHANGELOG as package_data (@ids1024)
+- Update youtube-dl in py2exe build (@ids1024)
+
+-------------------------------------------------------------------------------
+
 Version 0.2.7
 27 June 2016
 
