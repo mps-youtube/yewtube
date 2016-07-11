@@ -9,7 +9,7 @@ Command = collections.namedtuple('Command', 'regex category usage function')
 # input types
 WORD = r'[^\W\d][-\w\s]{,100}'
 RS = r'(?:(?:repeat|shuffle|-[avfw])\s*)'
-PL = r'\S*?((?:RD|PL)[-_0-9a-zA-Z]+)\s*'
+PL = r'\S*?((?:RD|PL|LL)[-_0-9a-zA-Z]+)\s*'
 
 
 def command(regex):
