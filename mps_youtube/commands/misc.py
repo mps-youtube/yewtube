@@ -223,17 +223,31 @@ def info(num):
 
 
 @command(r'history')
-def view_history():
+def view_history(duplicates=True):
     """ Display the user's play history """
     history = g.userhist.get('history')
     #g.last_opened = ""
     try:
-        paginatesongs(list(reversed(history.songs)))
-        g.message = "Viewing play history"
+        hist_list = list(reversed(history.songs))
+        message = "Viewing play history"
+        if not duplicates:
+            # List unique elements and preserve order.
+            seen = set()
+            seen_add = seen.add  # it makes calls to add() faster
+            hist_list = [x for x in hist_list if not (x in seen or seen_add(x))]
+            message = "Viewing recent played songs"
+        paginatesongs(hist_list)
+        g.message = message
 
     except AttributeError:
         g.content = logo(c.r)
         g.message = "History empty"
+
+
+@command(r'history recent')
+def recent_history():
+    """ Display the recent user's played songs """
+    view_history(duplicates=False)
 
 
 @command(r'history clear')
