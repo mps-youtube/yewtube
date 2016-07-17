@@ -1,3 +1,54 @@
+Version 0.2.7.1
+6 July 2016
+
+Bug fixes:
+----------
+- Fix pickle error (@ids1024) (#503)
+- Install LICENSE, README.md, and CHANGELOG as package_data (@ids1024)
+- Update youtube-dl in py2exe build (@ids1024)
+
+-------------------------------------------------------------------------------
+
+Version 0.2.7
+27 June 2016
+
+Features:
+---------
+- Setting for default audio format (@nishanthkarthik) (#71 #466 #467)
+- Search history with `history` command (@kraetzin) (#344 #472)
+- Add syntax for repeating a track several times (@ghallak) (#437 #490)
+- Reverse command (@kraetzin) (#422 #473)
+- New `daurl <url>` command (@maricn) (#402)
+
+Enhancements:
+-------------
+- Pass `--no-ytdl` to mpv (@ids1024) (#492)
+- Do not suppress mpv output in debug mode (@ids1024)
+- Print traceback in debug mode (@ids1024)
+- Speed up `checkupdate` by avoiding redirects (@ids1024) (#454)
+- Pass `--play-and-exit` if vlc is used as a player (@ids1024)`
+
+Bug fixes:
+----------
+- Fix error with python 3.3 (@ids1024) (#414)
+- Fix maxres bug (@ids1024) (#430)
+- Fix playlist cache bug in info command (@ids1024) (#468)
+- Fix usersearch argument error (@ids1024) (#469 #482)
+- Fix progress bar with new mpv versions (@ids1024) (#470 #485)
+- Fix syntax error with set command (@ids1024) (#419)
+- Fix syntax error with -w, -f, -a (@ids1024) (#420)
+- Fix clipboard support (@ids1024) (#461)
+- Fix mpv version checking on windows (@ids1024) (#397)
+- Add youtube_dl as dependency to Dockerfile (@PI-Victor) (#481)
+
+Internal api changes:
+---------------------
+- The code is now split between several files (@ids1024) (#208)
+- Add initial content api, for now only used for comments (@ids1024)
+- Begin documenting internal apis using sphinx (@ids1024)
+
+-------------------------------------------------------------------------------
+
 Version 0.2.6
 1 January 2016
 

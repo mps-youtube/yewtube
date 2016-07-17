@@ -35,6 +35,10 @@ def load():
         __main__.Playlist = Playlist
         __main__.Video = Video
 
+        from . import main
+        main.Playlist = Playlist
+        main.Video = Video
+
         with open(g.PLFILE, "rb") as plf:
             g.userpl = pickle.load(plf)
 
