@@ -435,7 +435,7 @@ def user_more(num):
         g.content = content.generate_songlist_display()
         return
 
-    g.current_page = 0
+    #g.current_page = 0 #XXX
     item = g.model[int(num) - 1]
 
     #TODO: Cleaner way of doing this?
@@ -458,7 +458,7 @@ def related(num):
         g.content = content.generate_songlist_display()
         return
 
-    g.current_page = 0
+    #g.current_page = 0 #XXX
     item = g.model[int(num) - 1]
     related_search(item)
 

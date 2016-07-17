@@ -13,6 +13,8 @@ class Content:
 
 
 class PaginatedContent(Content):
+    current_page = 0
+
     def getPage(self, page):
         raise NotImplementedError
 

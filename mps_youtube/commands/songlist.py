@@ -115,23 +115,23 @@ def nextprev(np, page=None):
         page_count = g.content.numPages()
 
         if np == "n":
-            if g.current_page + 1 < page_count:
-                g.current_page += 1
+            if g.content.current_page + 1 < page_count:
+                g.content.current_page += 1
                 good = True
 
         elif np == "p":
             if page and int(page) in range(1,20):
-                g.current_page = int(page)-1
+                g.content.current_page = int(page)-1
                 good = True
 
-            elif g.current_page > 0:
-                g.current_page -= 1
+            elif g.content.current_page > 0:
+                g.content.current_page -= 1
                 good = True
     else:
         g.content = content.generate_songlist_display()
 
     if good:
-        g.content.getPage(page=g.current_page)
+        g.content.getPage(page=g.content.current_page)
     else:
         norp = "next" if np == "n" else "previous"
         g.message = "No %s items to display" % norp

@@ -29,7 +29,6 @@ max_retries = 3
 max_cached_streams = 1500
 username_query_cache = collections.OrderedDict()
 model = Playlist(name="model")
-current_page = 0
 rprompt = None
 active = Playlist(name="active")
 userpl = {}
