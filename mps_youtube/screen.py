@@ -17,6 +17,8 @@ def update(fill_blank=True, content=None, message=None):
     if isinstance(g.content, PaginatedContent) and not content:
         content = g.content.getPage(g.content.current_page)
         g.rprompt = page_msg(g.content.current_page)
+    elif isinstance(content, PaginatedContent):
+        content = content.getPage(content.current_page)
 
     if content is None:
         content = g.content

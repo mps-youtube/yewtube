@@ -172,7 +172,7 @@ def reverse_playlist():
     # Prevent crash if no last query
     if g.last_search_query == (None, None) or \
             'func' not in g.last_search_query[1]:
-        g.content = content.logo()
+        g.content = content.Logo()
         g.message = "No playlist loaded"
         return
 

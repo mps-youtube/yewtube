@@ -64,7 +64,7 @@ class SearchList(LineContent):
         self._loadmsg = loadmsg
 
     def get_text(self, s, e):
-        screen.update(content=logo(col=c.b),
+        screen.update(content=Logo(col=c.b),
                 message=(self._loadmsg or ''))
 
         items = self[s:e]
@@ -139,7 +139,7 @@ def _generate_songlist_display(songs, startidx, song=False, zeromsg=None):
 
     if not songs:
         g.message = zeromsg or "Enter /search-term to search or [h]elp"
-        return logo(c.g) + "\n\n"
+        return ""
 
     have_meta = all(x.ytid in g.meta for x in songs)
     user_columns = _get_user_columns() if have_meta else []
@@ -196,7 +196,7 @@ def _generate_playlist_display(ytpls, startidx):
     """ Generate list of playlists. """
     if not ytpls:
         g.message = c.r + "No playlists found!"
-        return logo(c.g) + "\n\n"
+        return ""
 
     cw = getxy().width
     fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
@@ -252,26 +252,31 @@ def _get_user_columns():
     return ret
 
 
-def logo(col=None, version=""):
-    """ Return text logo. """
-    col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
-    logo_txt = r"""                                             _         _
+class Logo(PaginatedContent):
+    def __init__(self, col=None, version=""):
+        self._col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
+        self._version = " v" + version if version else ""
+
+    def getPage(self, page):
+        logo_txt = r"""                                             _         _
  _ __ ___  _ __  ___       _   _  ___  _   _| |_ _   _| |__   ___
 | '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \
 | | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
 |_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
           |_|              |___/"""
-    version = " v" + version if version else ""
-    logo_txt = col + logo_txt + c.w + version
-    lines = logo_txt.split("\n")
-    length = max(len(x) for x in lines)
-    x, y = getxy()
-    indent = (x - length - 1) // 2
-    newlines = (y - 12) // 2
-    indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
-    lines = [" " * indent + l for l in lines]
-    logo_txt = "\n".join(lines) + "\n" * newlines
-    return "" if g.debug_mode else logo_txt
+        logo_txt = self._col + logo_txt + c.w + self._version
+        lines = logo_txt.split("\n")
+        length = max(len(x) for x in lines)
+        x, y = getxy()
+        indent = (x - length - 1) // 2
+        newlines = (y - 12) // 2
+        indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
+        lines = [" " * indent + l for l in lines]
+        logo_txt = "\n".join(lines) + "\n" * newlines
+        return "" if g.debug_mode else logo_txt
+
+    def numPages(self):
+        return 1
 
 
 def playlists_display():

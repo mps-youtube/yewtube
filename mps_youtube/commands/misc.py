@@ -24,7 +24,6 @@ import pafy
 from .. import g, c, __version__, content, screen, cache
 from .. import streams, history, config, util
 from ..helptext import get_help
-from ..content import logo
 from . import command
 from .songlist import paginatesongs
 
@@ -54,9 +53,9 @@ def quits(showlogo=True):
 
     cache.save()
 
-    screen.clear()
-    msg = logo(c.r, version=__version__) if showlogo else ""
-    msg += util.F("exitmsg", 2)
+    g.content = content.Logo(c.r, version=__version__) if showlogo else ""
+    screen.update()
+    msg = util.F("exitmsg", 2)
 
     if config.CHECKUPDATE.get and showlogo:
 
@@ -173,7 +172,7 @@ def info(num):
         if p['link'] in g.pafy_pls:
             ytpl = g.pafy_pls[p['link']][0]
         else:
-            g.content = logo(col=c.g)
+            g.content = Logo(col=c.g)
             g.message = "Fetching playlist info.."
             screen.update()
             util.dbg("%sFetching playlist using pafy%s", c.y, c.w)
@@ -198,7 +197,7 @@ def info(num):
 
     elif isinstance(g.content, content.SongList):
         item = g.content[int(num) - 1]
-        g.content = logo(c.b)
+        g.content = Logo(c.b)
         screen.update()
         screen.writestatus("Fetching video metadata..")
         streams.get(item)
@@ -238,7 +237,7 @@ def view_history(duplicates=True):
         g.message = message
 
     except AttributeError:
-        g.content = logo(c.r)
+        g.content = Logo(c.r)
         g.message = "History empty"
 
 
@@ -254,4 +253,4 @@ def clear_history():
     g.userhist['history'].songs = []
     history.save()
     g.message = "History cleared"
-    g.content = logo()
+    g.content = Logo()

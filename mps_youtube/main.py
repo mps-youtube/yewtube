@@ -106,7 +106,7 @@ def main():
     screen.set_window_title("mpsyt")
 
     if not g.command_line:
-        g.content = content.logo(col=c.g, version=__version__) + "\n\n"
+        g.content = content.Logo(col=c.g, version=__version__)
         g.message = "Enter /search-term to search or [h]elp"
         screen.update()
 

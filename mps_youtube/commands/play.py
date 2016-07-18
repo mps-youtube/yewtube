@@ -110,7 +110,7 @@ def browser_play(number):
     """Open a previously searched result in the browser."""
     if (len(g.model) == 0):
         g.message = c.r + "No previous search." + c.w
-        g.content = content.logo(c.r)
+        g.content = content.Logo(c.r)
         return
 
     try:
