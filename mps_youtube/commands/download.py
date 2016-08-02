@@ -376,7 +376,10 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
         elapsed = time.time() - t0
         bytesdone += len(chunk)
         rate = (bytesdone / 1024) / elapsed
-        eta = (total - bytesdone) / (rate * 1024)
+        if rate:
+            eta = (total - bytesdone) / (rate * 1024)
+        else:
+            eta = 0
         stats = (c.y, bytesdone, c.w, bytesdone * 1.0 / total, rate, eta)
 
         if not chunk:
