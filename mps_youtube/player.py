@@ -489,7 +489,8 @@ def _player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                     observe_full = True
 
                 if resp.get('event') == 'property-change' and resp['id'] == 1:
-                    elapsed_s = int(resp['data'])
+                    if resp['data'] is not None:
+                        elapsed_s = int(resp['data'])
 
                 elif resp.get('event') == 'property-change' and resp['id'] == 2:
                     volume_level = int(resp['data'])
