@@ -217,6 +217,7 @@ def _process_cl_args():
     parser.add_argument('--logging', '-l', action='store_true')
     parser.add_argument('--no-autosize', action='store_true')
     parser.add_argument('--no-preload', action='store_true')
+    parser.add_argument('--no-textart', action='store_true')
     args = parser.parse_args()
 
     if args.version:
@@ -244,6 +245,9 @@ def _process_cl_args():
 
     if args.no_preload:
         g.preload_disabled = True
+
+    if args.no_textart:
+        g.no_textart = True
 
     g.argument_commands = args.commands
 
