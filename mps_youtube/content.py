@@ -273,7 +273,7 @@ class Logo(PaginatedContent):
         indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
         lines = [" " * indent + l for l in lines]
         logo_txt = "\n".join(lines) + "\n" * newlines
-        return "" if g.debug_mode else logo_txt
+        return "" if g.debug_mode or g.no_textart else logo_txt
 
     def numPages(self):
         return 1
