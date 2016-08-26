@@ -99,7 +99,10 @@ Installing youtube_dl is highly recommended::
 
 Additional Mac OS X installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    
+Install mpv (recommended player) with `Homebrew <http://brew.sh>`_::
+
+    brew install mpv
+
 Install mplayer with `MacPorts <http://www.macports.org>`_::
 
     sudo port install MPlayer
