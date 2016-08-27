@@ -103,7 +103,7 @@ Install mpv (recommended player) with `Homebrew <http://brew.sh>`_::
 
     brew install mpv
 
-Install mplayer with `MacPorts <http://www.macports.org>`_::
+Alternately, you can install mplayer with `MacPorts <http://www.macports.org>`_::
 
     sudo port install MPlayer
 
@@ -120,11 +120,15 @@ Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to
 
     pip3 install colorama
 
-Download mplayer for your CPU type from the "Build Selection table" `here <http://oss.netfarm.it/mplayer-win32.php>`_.
+Mpsyt requires a player to use as a backend, with either mpv or mplayer supported. Mpv is the recommended option.
+
+Mpv can be downloaded from https://mpv.srsfckn.biz/
+
+Extract both ``mpv.exe`` and ``mpv.com`` to the same folder as ``mpsyt.exe`` or to a folder in the system path.
+
+Alternately, mplayer can be downloaded from http://oss.netfarm.it/mplayer
 
 Extract the ``mplayer.exe`` file, saving it to the folder that ``mpsyt.exe`` resides in (usually ``C:\PythonXX\Scripts\``) or to a folder in the system path.
-
-Alternatively to mplayer, use ``mpv.exe`` which can be downloaded from: http://mpv.io/installation/
 
 Run via Docker container
 ~~~~~~~~~~~~~~~~~~~~~~~~
