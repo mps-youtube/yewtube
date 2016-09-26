@@ -213,7 +213,7 @@ def _playsong(song, failcount=0, override=False):
 
     cmd = _generate_real_playerargs(song, override, stream, video)
     returncode = _launch_player(song, songdata, cmd)
-    failed = returncode not in (0, 42, 43)
+    failed = returncode not in (0, 3, 42, 43)
 
     if failed and failcount < g.max_retries:
         util.dbg(c.r + "stream failed to open" + c.w)
