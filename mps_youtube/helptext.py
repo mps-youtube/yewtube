@@ -45,7 +45,7 @@ def helptext():
     {2}pl <url or id>{1} - Open YouTube playlist by url or id.
     {2}url <url or id>{1} - Retrieve specific YouTube video by url or id.
     {2}url <url> <url> ... <url>{1} - Retrieve specific YouTube videos by url or id.
-    {2}url_file <file_absolute_path>{1} - Retrieve YouTube videos by url or id from a .txt file. 
+    {2}url_file <file_absolute_path>{1} - Retrieve YouTube videos by url or id from a .txt file.
     File format : .txt, with one url or id by line.
 
     {2}r <number>{1} - show videos related to video <number>.
@@ -149,6 +149,10 @@ def helptext():
     {2}rm <number(s)>{1} - remove items from displayed results.
     {2}sw <number>,<number>{1} - swap two items.
     {2}mv <number>,<number>{1} - move item <number> to position <number>.
+
+    {2}subs{1} - print list of subscriptions.
+    {2}sub <name>{1} - subscribe to channel <name>.
+    {2}unsub <name>{1} - unsubscribe to channel <name>.
     """.format(c.ul, c.w, c.y)),
 
         ("history", "Accessing Local History", """

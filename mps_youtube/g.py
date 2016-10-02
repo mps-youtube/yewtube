@@ -39,6 +39,7 @@ rprompt = None
 active = Playlist(name="active")
 userpl = {}
 userhist = {}
+usersubs = []
 pafs = collections.OrderedDict()
 streams = collections.OrderedDict()
 pafy_pls = {}  #
@@ -48,6 +49,7 @@ CFFILE = os.path.join(paths.get_config_dir(), "config")
 TCFILE = os.path.join(paths.get_config_dir(), "transcode")
 OLD_PLFILE = os.path.join(paths.get_config_dir(), "playlist" + suffix)
 PLFILE = os.path.join(paths.get_config_dir(), "playlist_v2")
+SUBFILE = os.path.join(paths.get_config_dir(), "subscriptions")
 HISTFILE = os.path.join(paths.get_config_dir(), "play_history")
 CACHEFILE = os.path.join(paths.get_config_dir(), "cache_py_" + sys.version[0:5])
 READLINE_FILE = None
@@ -119,6 +121,11 @@ text = {
                         'playlist!',
     'duplicate tracks_': (c.y, c.w),
 
+    'user not found': '*User not found!*',
+    'user not followed': '*User not followed!*',
+    'user already followed': '*User already followed!*',
+    'no subscriptions': '*No subscription!*',
+
     # Info messages..
 
     'select mux': ("Select [*&&*] to mux audio or [*Enter*] to download "
@@ -134,6 +141,7 @@ text = {
     'pl viewed_': (c.y, c.w),
     'pl help': 'Enter *open <name or ID>* to load a playlist',
     'pl help_': (c.g, c.w),
+    'sub help': 'Use *subs* to list subscriptions. Use *sub|unsub <name>*.',
     'added to pl': '*&&* tracks added (*&&* total [*&&*]). Use *vp* to '
                    'view',
     'added to pl_': (c.y, c.w, c.y, c.w, c.y, c.w, c.g, c.w),

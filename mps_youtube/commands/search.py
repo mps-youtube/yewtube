@@ -8,7 +8,7 @@ import pafy
 
 from .. import g, c, screen, config, util, content
 from ..playlist import Video
-from . import command
+from . import command, subscribe
 from .songlist import plist, paginatesongs
 
 
@@ -17,7 +17,7 @@ ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?((\d{1,2})S)?')
 
 def _search(progtext, qs=None, msg=None, failmsg=None):
     """ Perform memoized url fetch, display progtext. """
-    
+
     loadmsg = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
 
     wdata = pafy.call_gdata('search', qs)
@@ -177,6 +177,8 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
         else:
             failmsg = "User %s not found or has no videos."  % termuser[1]
     msg = str(msg).format(c.w, c.y, c.y, term, user)
+
+    subscribe.update(channel_id)
 
     _search(progtext, query, msg, failmsg)
 

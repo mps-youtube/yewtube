@@ -13,10 +13,33 @@ def save():
 
     util.dbg(c.r + "Playlist saved\n---" + c.w)
 
+    with open(g.SUBFILE, "wb") as subf:
+        pickle.dump(g.usersubs, subf, protocol=2)
+
+    util.dbg(c.r + "Subscriptions saved\n---" + c.w)
+
 
 def load():
     """ Open playlists. Called once on script invocation. """
+
+    do_save = False
+
+    try:
+
+        with open(g.SUBFILE, "rb") as subf:
+            g.usersubs = pickle.load(subf)
+
+    except IOError:
+        # no subscriptions found, create a blank one
+        if not os.path.isfile(g.SUBFILE):
+            g.usersubs = []
+            do_save = True
+
+    except EOFError:
+        screen.msgexit("Error opening subscriptions from %s" % g.SUBFILE, 1)
+
     _convert_playlist_to_v2()
+
     try:
 
         with open(g.PLFILE, "rb") as plf:
@@ -26,7 +49,7 @@ def load():
         # no playlist found, create a blank one
         if not os.path.isfile(g.PLFILE):
             g.userpl = {}
-            save()
+            do_save = True
 
     except AttributeError:
         # playlist is from a time when this module was __main__
@@ -50,8 +73,6 @@ def load():
 
     # remove any cached urls from playlist file, these are now
     # stored in a separate cache file
-
-    do_save = False
 
     for k, v in g.userpl.items():
 
