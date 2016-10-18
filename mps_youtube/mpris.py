@@ -519,7 +519,10 @@ def main(connection):
         connection - pipe to communicate with this module
     """
 
-    mprisctl = Mpris2Controller()
+    try:
+        mprisctl = Mpris2Controller()
+    except ImportError: # gi.repository import GLib
+        return
     try:
         mprisctl.acquire()
     except dbus.exceptions.DBusException:
