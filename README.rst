@@ -97,6 +97,12 @@ Installing youtube_dl is highly recommended::
 
     [sudo] pip3 install youtube_dl
 
+Additional Linux installation notes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+For mpris2 support, install the python bindings for dbus and gobject::
+
+    [sudo] pip3 install dbus pygobject
+
 Additional Mac OS X installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Install mpv (recommended player) with `Homebrew <http://brew.sh>`_::
