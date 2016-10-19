@@ -26,17 +26,17 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
     n = 0
     while 0 <= n <= len(songlist)-1:
         song = songlist[n]
-        g.content = _playback_progress(n, songlist, repeat=repeat)
 
         if not g.command_line:
-            screen.update(fill_blank=False)
+            screen.update(content=_playback_progress(n, songlist, repeat=repeat),
+                fill_blank=False)
 
         hasnext = len(songlist) > n + 1
 
         if hasnext:
             streams.preload(songlist[n + 1], override=override)
 
-        util.set_window_title(song.title + " - mpsyt")
+        screen.set_window_title(song.title + " - mpsyt")
         try:
             returncode = _playsong(song, override=override)
 
@@ -46,7 +46,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             screen.reset_terminal()
             g.message = c.y + "Playback halted" + c.w
             break
-        util.set_window_title("mpsyt")
+        screen.set_window_title("mpsyt")
 
         if returncode == 42:
             n -= 1
@@ -69,31 +69,34 @@ def _playback_progress(idx, allsongs, repeat=False):
     # pylint: disable=R0914
     # too many local variables
     cw = util.getxy().width
-    out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
-    out = out % (c.ul, "Title", "Time", c.w)
-    show_key_help = (util.is_known_player(config.PLAYER.get) and
-            config.SHOW_MPLAYER_KEYS.get)
     multi = len(allsongs) > 1
 
-    for n, song in enumerate(allsongs):
-        length_orig = util.fmt_time(song.length)
-        length = " " * (8 - len(length_orig)) + length_orig
-        i = util.uea_pad(cw - 14, song.title), length, length_orig
-        fmt = (c.w, "  ", c.b, i[0], c.w, c.y, i[1], c.w)
+    if multi:
+        out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
+        out = out % (c.ul, "Title", "Time", c.w)
 
-        if n == idx:
-            fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w)
-            cur = i
+        for n, song in enumerate(allsongs):
+            length_orig = util.fmt_time(song.length)
+            length = " " * (8 - len(length_orig)) + length_orig
+            i = util.uea_pad(cw - 14, song.title), length, length_orig
+            fmt = (c.w, "  ", c.b, i[0], c.w, c.y, i[1], c.w)
 
-        out += "%s%s%s%s%s %s%s%s\n" % fmt
+            if n == idx:
+                fmt = (c.y, "> ", c.p, i[0], c.w, c.p, i[1], c.w)
+                cur = i
 
-    out += "\n" * (3 - len(allsongs))
+            out += "%s%s%s%s%s %s%s%s\n" % fmt
+
+        out += "\n" * (3 - len(allsongs))
+    else:
+        out = content.generate_songlist_display(song=allsongs[0])
+
     pos = 8 * " ", c.y, idx + 1, c.w, c.y, len(allsongs), c.w
-    playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
-    keys = _mplayer_help(short=(not multi and not repeat))
-    out = out if multi else content.generate_songlist_display(song=allsongs[0])
 
-    if show_key_help:
+    if (util.is_known_player(config.PLAYER.get) and
+            config.SHOW_MPLAYER_KEYS.get):
+        keys = _mplayer_help(short=(not multi and not repeat))
+        playing = "{}{}{}{} of {}{}{}\n\n".format(*pos) if multi else "\n\n"
         out += "\n" + keys
 
     else:

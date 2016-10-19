@@ -38,20 +38,15 @@ def play(pre, choice, post=""):
     # pylint: disable=R0914
     # too many local variables
 
-    if g.browse_mode == "ytpl":
-
+    if isinstance(g.content, content.PlistList):
         if choice.isdigit():
-            return plist(g.ytpls[int(choice) - 1]['link'])
+            return plist(g.content[int(choice) - 1]['link'])
         else:
             g.message = "Invalid playlist selection: %s" % c.y + choice + c.w
             g.content = content.generate_songlist_display()
             return
 
-    if not g.model:
-        g.message = c.r + "There are no tracks to select" + c.w
-        g.content = g.content or content.generate_songlist_display()
-
-    else:
+    elif isinstance(g.content, content.SongList):
         shuffle = "shuffle" in pre + post
         repeat = "repeat" in pre + post
         novid = "-a" in pre + post
@@ -72,18 +67,21 @@ def play(pre, choice, post=""):
             override = "forcevid" if forcevid else override
 
         selection = util.parse_multi(choice)
-        songlist = [g.model[x - 1] for x in selection]
+        songlist = [g.content[x - 1] for x in selection]
 
         # cache next result of displayed items
         # when selecting a single item
         if len(songlist) == 1:
             chosen = selection[0] - 1
 
-            if len(g.model) > chosen + 1:
-                streams.preload(g.model[chosen + 1], override=override)
+            if len(g.content) > chosen + 1:
+                streams.preload(g.content[chosen + 1], override=override)
 
         play_range(songlist, shuffle, repeat, override)
-        g.content = content.generate_songlist_display()
+
+    else:
+        g.message = c.r + "There are no tracks to select" + c.w
+        g.content = g.content or content.generate_songlist_display()
 
 
 @command(r'(%s{0,3})(?:\*|all)\s*(%s{0,3})' %
@@ -91,17 +89,16 @@ def play(pre, choice, post=""):
 def play_all(pre, choice, post=""):
     """ Play all tracks in model (last displayed). shuffle/repeat if req'd."""
     options = pre + choice + post
-    play(options, "1-" + str(len(g.model)))
+    play(options, "1-")
 
 
 @command(r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?')
 def play_url(url, override):
     """ Open and play a youtube video url. """
     override = override if override else "_"
-    g.browse_mode = "normal"
     yt_url(url, print_title=1)
 
-    if len(g.model) == 1:
+    if len(g.content) == 1:
         play(override, "1", "_")
 
     if g.command_line:
@@ -113,7 +110,7 @@ def browser_play(number):
     """Open a previously searched result in the browser."""
     if (len(g.model) == 0):
         g.message = c.r + "No previous search." + c.w
-        g.content = content.logo(c.r)
+        g.content = content.Logo(c.r)
         return
 
     try:

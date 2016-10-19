@@ -1,26 +1,37 @@
 import subprocess
+import ctypes
 import os
 import sys
 
-from . import g, content, config, util
+from . import g, config, util
+from .content import PaginatedContent, page_msg
 
 
 mswin = os.name == "nt"
 
 
-def update(fill_blank=True):
+def update(fill_blank=True, content=None, message=None):
     """ Display content, show message, blank screen."""
     clear()
 
-    if isinstance(g.content, content.PaginatedContent):
-        util.xprint(g.content.getPage(g.current_page))
-        g.rprompt = content.page_msg(g.current_page)
-    elif g.content:
-        util.xprint(g.content)
-        g.content = False
+    if isinstance(g.content, PaginatedContent) and not content:
+        content = g.content.getPage(g.content.current_page)
+        g.rprompt = page_msg(g.content.current_page)
+    elif isinstance(content, PaginatedContent):
+        content = content.getPage(content.current_page)
 
-    if g.message or g.rprompt:
-        out = g.message or ''
+    if content is None:
+        content = g.content
+        g.content = False
+    if message is None:
+        message = g.message
+        g.message = False
+
+    if content:
+        util.xprint(content)
+
+    if message or g.rprompt:
+        out = message or ''
         blanks = util.getxy().width - len(out) - len(g.rprompt or '')
         out += ' ' * blanks + (g.rprompt or '')
         util.xprint(out)
@@ -28,7 +39,7 @@ def update(fill_blank=True):
     elif fill_blank:
         util.xprint("")
 
-    g.message = g.rprompt = False
+    g.rprompt = False
 
 
 def clear():
@@ -68,3 +79,11 @@ def msgexit(msg, code=0):
     """ Print a message and exit. """
     util.xprint(msg)
     sys.exit(code)
+
+
+def set_window_title(title):
+    """ Set terminal window title. """
+    if mswin:
+        ctypes.windll.kernel32.SetConsoleTitleW(util.xenc(title))
+    else:
+        util.xprint('\x1b]2;' + title + '\x07')

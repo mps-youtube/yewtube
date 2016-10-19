@@ -24,7 +24,6 @@ import pafy
 from .. import g, c, __version__, content, screen, cache
 from .. import streams, history, config, util
 from ..helptext import get_help
-from ..content import generate_songlist_display, logo
 from . import command
 from .songlist import paginatesongs
 
@@ -54,9 +53,9 @@ def quits(showlogo=True):
 
     cache.save()
 
-    screen.clear()
-    msg = logo(c.r, version=__version__) if showlogo else ""
-    msg += util.F("exitmsg", 2)
+    g.content = content.Logo(c.r, version=__version__) if showlogo else ""
+    screen.update()
+    msg = util.F("exitmsg", 2)
 
     if config.CHECKUPDATE.get and showlogo:
 
@@ -121,8 +120,8 @@ def fetch_comments(item):
 @command(r'c\s?(\d{1,4})')
 def comments(number):
     """ Receive use request to view comments. """
-    if g.browse_mode == "normal":
-        item = g.model[int(number) - 1]
+    if isinstance(g.content, content.SongList):
+        item = g.content[int(number) - 1]
         fetch_comments(item)
 
     else:
@@ -133,13 +132,12 @@ def comments(number):
 @command(r'x\s*(\d+)')
 def clip_copy(num):
     """ Copy item to clipboard. """
-    if g.browse_mode == "ytpl":
-
-        p = g.ytpls[int(num) - 1]
+    if isinstance(g.content, content.PlistList):
+        p = g.content[int(num) - 1]
         link = "https://youtube.com/playlist?list=%s" % p['link']
 
-    elif g.browse_mode == "normal":
-        item = (g.model[int(num) - 1])
+    elif isinstance(g.content, content.SongList):
+        item = g.content[int(num) - 1]
         link = "https://youtube.com/watch?v=%s" % item.ytid
 
     else:
@@ -148,7 +146,6 @@ def clip_copy(num):
         return
 
     if has_pyperclip:
-
         try:
             pyperclip.copy(link)
             g.message = c.y + link + c.w + " copied"
@@ -168,14 +165,14 @@ def clip_copy(num):
 @command(r'i\s*(\d{1,4})')
 def info(num):
     """ Get video description. """
-    if g.browse_mode == "ytpl":
-        p = g.ytpls[int(num) - 1]
+    if isinstance(g.content, content.PlistList):
+        p = g.content[int(num) - 1]
 
         # fetch the playlist item as it has more metadata
         if p['link'] in g.pafy_pls:
             ytpl = g.pafy_pls[p['link']][0]
         else:
-            g.content = logo(col=c.g)
+            g.content = Logo(col=c.g)
             g.message = "Fetching playlist info.."
             screen.update()
             util.dbg("%sFetching playlist using pafy%s", c.y, c.w)
@@ -198,11 +195,11 @@ def info(num):
         out += ("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
         g.content = out
 
-    elif g.browse_mode == "normal":
-        g.content = logo(c.b)
+    elif isinstance(g.content, content.SongList):
+        item = g.content[int(num) - 1]
+        g.content = Logo(c.b)
         screen.update()
         screen.writestatus("Fetching video metadata..")
-        item = (g.model[int(num) - 1])
         streams.get(item)
         p = util.get_pafy(item)
         pub = time.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
@@ -240,7 +237,7 @@ def view_history(duplicates=True):
         g.message = message
 
     except AttributeError:
-        g.content = logo(c.r)
+        g.content = Logo(c.r)
         g.message = "History empty"
 
 
@@ -256,4 +253,4 @@ def clear_history():
     g.userhist['history'].songs = []
     history.save()
     g.message = "History cleared"
-    g.content = logo()
+    g.content = Logo()

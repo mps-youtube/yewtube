@@ -26,7 +26,7 @@ except ImportError:
     has_readline = False
 
 from . import cache, g, __version__, __notes__, screen, c, paths, config
-from .util import has_exefile, dbg, xprint, load_player_info
+from .util import has_exefile, dbg, load_player_info
 from .helptext import helptext
 
 mswin = os.name == "nt"
@@ -227,7 +227,7 @@ def _process_cl_args():
         screen.msgexit('\n'.join(i[2] for i in helptext()))
 
     if args.debug or os.environ.get("mpsytdebug") == "1":
-        xprint(_get_version_info())
+        print(_get_version_info())
         g.debug_mode = True
         g.no_clear_screen = True
 

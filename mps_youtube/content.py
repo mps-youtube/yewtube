@@ -4,7 +4,7 @@ import random
 
 import pafy
 
-from . import g, c, config
+from . import g, c, config, screen, streams
 from .util import getxy, fmt_time, uea_pad, yt_datetime, F
 
 # In the future, this could support more advanced features
@@ -13,6 +13,8 @@ class Content:
 
 
 class PaginatedContent(Content):
+    current_page = 0
+
     def getPage(self, page):
         raise NotImplementedError
 
@@ -22,13 +24,14 @@ class PaginatedContent(Content):
 
 class LineContent(PaginatedContent):
     def getPage(self, page):
-        max_results = getxy().max_results
+        max_results = max(min(getxy().height-4, 50), 1)
         s = page * max_results
         e = (page + 1) * max_results
         return self.get_text(s, e)
 
     def numPages(self):
-        return math.ceil(self.get_count()/getxy().max_results)
+        max_results = max(min(getxy().height-4, 50), 1)
+        return math.ceil(self.get_count()/max_results)
 
     def get_text(self, s, e):
         raise NotImplementedError
@@ -50,12 +53,75 @@ class StringContent(LineContent):
         return count
 
 
+class SearchList(LineContent):
+    def __init__(self, items, length=None, msg=None, failmsg=None, loadmsg=None):
+        self._items = items
+        self._length = length
+        if length is None:
+            self._length = len(items)
+        self._msg = msg
+        self._failmsg = failmsg
+        self._loadmsg = loadmsg
+
+    def get_text(self, s, e):
+        screen.update(content=Logo(col=c.b),
+                message=(self._loadmsg or ''))
+
+        items = self[s:e]
+
+        if not items:
+            g.message = self._failmsg or g.message
+            return
+        else:
+            g.message = self._msg or g.message
+
+        return self.display_items(items, s)
+
+    def get_count(self):
+        return len(self)
+
+    def display_items(self, startidx):
+        raise NotImplementedError
+
+    def __getitem__(self, sliced):
+        if callable(self._items):
+            if isinstance(sliced, slice):
+                return self._items(sliced.start, sliced.stop)[::sliced.step]
+            else:
+                return self._items(sliced, sliced + 1)[0]
+        else:
+            return self._items[sliced]
+
+    def __iter__(self):
+        try:
+            return iter(self._items)
+        except TypeError:
+            # Not iterable
+            return self[:]
+
+    def __len__(self):
+        return self._length
+
+
+class SongList(SearchList):
+    def display_items(self, songs, startidx):
+        # preload first result url
+        streams.preload(songs[0], delay=0)
+
+        return _generate_songlist_display(songs, startidx)
+
+
+class PlistList(SearchList):
+    def display_items(self, ytpls, startidx):
+        return _generate_playlist_display(ytpls, startidx)
+
+
 def page_msg(page=0):
     """ Format information about currently displayed page to a string. """
     if isinstance(g.content, PaginatedContent):
         page_count = g.content.numPages()
     else:
-        page_count = math.ceil(g.result_count/getxy().max_results)
+        page_count = 0
 
     if page_count > 1:
         pagemsg = "{}{}/{}{}"
@@ -67,22 +133,17 @@ def page_msg(page=0):
     return None
 
 
-def generate_songlist_display(song=False, zeromsg=None):
+def _generate_songlist_display(songs, startidx, song=False, zeromsg=None):
     """ Generate list of choices from a song list."""
     # pylint: disable=R0914
-    if g.browse_mode == "ytpl":
-        return generate_playlist_display()
 
-    max_results = getxy().max_results
-
-    if not g.model:
+    if not songs:
         g.message = zeromsg or "Enter /search-term to search or [h]elp"
-        return logo(c.g) + "\n\n"
-    g.rprompt = page_msg(g.current_page)
+        return ""
 
-    have_meta = all(x.ytid in g.meta for x in g.model)
+    have_meta = all(x.ytid in g.meta for x in songs)
     user_columns = _get_user_columns() if have_meta else []
-    maxlength = max(x.length for x in g.model)
+    maxlength = max(x.length for x in songs)
     lengthsize = 8 if maxlength > 35999 else 7
     lengthsize = 5 if maxlength < 6000 else lengthsize
     reserved = 9 + lengthsize + len(user_columns)
@@ -105,7 +166,7 @@ def generate_songlist_display(song=False, zeromsg=None):
     hrow = c.ul + fmt % titles + c.w
     out = "\n" + hrow + "\n"
 
-    for n, x in enumerate(g.model[:max_results]):
+    for n, x in enumerate(songs, startidx):
         col = (c.r if n % 2 == 0 else c.p) if not song else c.b
         details = {'title': x.title, "length": fmt_time(x.length)}
         details = copy.copy(g.meta[x.ytid]) if have_meta else details
@@ -124,19 +185,18 @@ def generate_songlist_display(song=False, zeromsg=None):
             data.append(details[field])
 
         line = fmtrow % tuple(data)
-        col = col if not song or song != g.model[n] else c.p
+        col = col if not song or song != songs[n] else c.p
         line = col + line + c.w
         out += line + "\n"
 
-    return out + "\n" * (5 - len(g.model)) if not song else out
+    return out + "\n" * (5 - len(songs)) if not song else out
 
 
-def generate_playlist_display():
+def _generate_playlist_display(ytpls, startidx):
     """ Generate list of playlists. """
-    if not g.ytpls:
+    if not ytpls:
         g.message = c.r + "No playlists found!"
-        return logo(c.g) + "\n\n"
-    g.rprompt = page_msg(g.current_page)
+        return ""
 
     cw = getxy().width
     fmtrow = "%s%-5s %s %-12s %-8s  %-2s%s\n"
@@ -144,7 +204,7 @@ def generate_playlist_display():
     head = (c.ul, "Item", "Playlist", "Author", "Updated", "Count", c.w)
     out = "\n" + fmthd % head
 
-    for n, x in enumerate(g.ytpls):
+    for n, x in enumerate(ytpls, startidx):
         col = (c.g if n % 2 == 0 else c.w)
         length = x.get('size') or "?"
         length = "%4s" % length
@@ -154,7 +214,7 @@ def generate_playlist_display():
         title = uea_pad(cw - 36, title)
         out += (fmtrow % (col, str(n + 1), title, author[:12], updated, str(length), c.w))
 
-    return out + "\n" * (5 - len(g.ytpls))
+    return out + "\n" * (5 - len(ytpls))
 
 
 def _get_user_columns():
@@ -192,26 +252,31 @@ def _get_user_columns():
     return ret
 
 
-def logo(col=None, version=""):
-    """ Return text logo. """
-    col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
-    logo_txt = r"""                                             _         _
+class Logo(PaginatedContent):
+    def __init__(self, col=None, version=""):
+        self._col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
+        self._version = " v" + version if version else ""
+
+    def getPage(self, page):
+        logo_txt = r"""                                             _         _
  _ __ ___  _ __  ___       _   _  ___  _   _| |_ _   _| |__   ___
 | '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \
 | | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
 |_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
           |_|              |___/"""
-    version = " v" + version if version else ""
-    logo_txt = col + logo_txt + c.w + version
-    lines = logo_txt.split("\n")
-    length = max(len(x) for x in lines)
-    x, y, _ = getxy()
-    indent = (x - length - 1) // 2
-    newlines = (y - 12) // 2
-    indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
-    lines = [" " * indent + l for l in lines]
-    logo_txt = "\n".join(lines) + "\n" * newlines
-    return "" if g.debug_mode or g.no_textart else logo_txt
+        logo_txt = self._col + logo_txt + c.w + self._version
+        lines = logo_txt.split("\n")
+        length = max(len(x) for x in lines)
+        x, y = getxy()
+        indent = (x - length - 1) // 2
+        newlines = (y - 12) // 2
+        indent, newlines = (0 if x < 0 else x for x in (indent, newlines))
+        lines = [" " * indent + l for l in lines]
+        logo_txt = "\n".join(lines) + "\n" * newlines
+        return "" if g.debug_mode or g.no_textart else logo_txt
+
+    def numPages(self):
+        return 1
 
 
 def playlists_display():

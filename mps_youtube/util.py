@@ -1,7 +1,6 @@
 import os
 import re
 import sys
-import ctypes
 import logging
 import time
 import subprocess
@@ -17,7 +16,7 @@ from .playlist import Video
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
-XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
+XYTuple = collections.namedtuple('XYTuple', 'width height')
 
 
 class IterSlicer():
@@ -117,14 +116,6 @@ def mswinfn(filename):
         filename = "".join(x if allowed.match(x) else "_" for x in filename)
 
     return filename
-
-
-def set_window_title(title):
-    """ Set terminal window title. """
-    if mswin:
-        ctypes.windll.kernel32.SetConsoleTitleW(xenc(title))
-    else:
-        sys.stdout.write(xenc('\x1b]2;' + title + '\x07'))
 
 
 def list_update(item, lst, remove=False):
@@ -227,14 +218,11 @@ def getxy():
     from . import config
     if g.detectable_size:
         x, y = terminalsize.get_terminal_size()
-        max_results = y - 4 if y < 54 else 50
-        max_results = 1 if y <= 5 else max_results
-
     else:
-        x, max_results = config.CONSOLE_WIDTH.get, config.MAX_RESULTS.get
-        y = max_results + 4
+        x = config.CONSOLE_WIDTH.get
+        y = config.MAX_RESULTS.get + 4
 
-    return XYTuple(x, y, max_results)
+    return XYTuple(x, y)
 
 
 def fmt_time(seconds):
@@ -324,7 +312,7 @@ def parse_multi(choice, end=None):
     Return list of ints.
 
     """
-    end = end or str(len(g.model))
+    end = end or len(g.content)
     pattern = r'(?<![-\d\[\]])(\d+-\d+|-\d+|\d+-|\d+)(?:\[(\d+)\])?(?![-\d\[\]])'
     items = re.findall(pattern, choice)
     alltracks = []

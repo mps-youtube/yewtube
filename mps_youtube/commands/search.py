@@ -41,19 +41,6 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
             loadmsg=loadmsg)
 
 
-def token(page):
-    """ Returns a page token for a given start index. """
-    index = (page or 0) * util.getxy().max_results
-    k = index//128 - 1
-    index -= 128 * k
-    f = [8, index]
-    if k > 0 or index > 127:
-        f.append(k+1)
-    f += [16, 0]
-    b64 = base64.b64encode(bytes(f)).decode('utf8')
-    return b64.strip('=')
-
-
 def generate_search_qs(term, match='term'):
     """ Return query string. """
 
@@ -219,7 +206,7 @@ def user_pls(user):
 
 
 @command(r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)')
-def pl_search(term, page=0, splash=True, is_user=False):
+def pl_search(term, is_user=False):
     """ Search for YouTube playlists.
 
     term can be query str or dict indicating user playlist search.
@@ -230,62 +217,68 @@ def pl_search(term, page=0, splash=True, is_user=False):
         g.content = content.generate_songlist_display()
         return
 
-    if splash:
-        g.content = content.logo(c.g)
-        prog = "user: " + term if is_user else term
-        g.message = "Searching playlists for %s" % c.y + prog + c.w
-        screen.update()
+    prog = "user: " + term if is_user else term
 
     if is_user:
         ret = channelfromname(term)
         if not ret: # Error
             return
         user, channel_id = ret
+        qs = {'part': 'contentDetails,snippet',
+              'maxResults': 50,
+              'channelId': channel_id}
+
+        pldata = pafy.call_gdata('playlists', qs)
+        result_count = pldata['pageInfo']['totalResults']
+
+        def iter_pls():
+            pldata2 = pldata
+            while True:
+                for pl in get_pl_from_json(pldata2):
+                    yield pl
+
+                if not pldata2.get('nextPageToken'):
+                    break
+                qs['pageToken'] = pldata2['nextPageToken']
+                pldata2 = pafy.call_gdata('playlists', qs)
 
     else:
         # playlist search is done with the above url and param type=playlist
         logging.info("playlist search for %s", prog)
         qs = generate_search_qs(term)
-        qs['pageToken'] = token(page)
         qs['type'] = 'playlist'
         if 'videoCategoryId' in qs:
             del qs['videoCategoryId'] # Incompatable with type=playlist
 
         pldata = pafy.call_gdata('search', qs)
-        id_list = [i.get('id', {}).get('playlistId')
-                    for i in pldata.get('items', ())]
-
         result_count = min(pldata['pageInfo']['totalResults'], 500)
 
-    qs = {'part': 'contentDetails,snippet',
-          'maxResults': 50}
+        def iter_pls():
+            pldata2 = pldata
+            while True:
+                id_list = [i.get('id', {}).get('playlistId')
+                            for i in pldata2.get('items', ())]
 
-    if is_user:
-        if page:
-            qs['pageToken'] = token(page)
-        qs['channelId'] = channel_id
-    else:
-        qs['id'] = ','.join(id_list)
+                qs2 = {'part': 'contentDetails,snippet',
+                      'maxResults': 50,
+                      'id': ','.join(id_list)}
 
-    pldata = pafy.call_gdata('playlists', qs)
-    playlists = get_pl_from_json(pldata)[:util.getxy().max_results]
+                pldata_pls = pafy.call_gdata('playlists', qs2)
 
-    if is_user:
-        result_count = pldata['pageInfo']['totalResults']
+                for pl in get_pl_from_json(pldata_pls):
+                    yield pl
 
-    if playlists:
-        g.last_search_query = (pl_search, {"term": term, "is_user": is_user})
-        g.browse_mode = "ytpl"
-        g.current_page = page
-        g.result_count = result_count
-        g.ytpls = playlists
-        g.message = "Playlist results for %s" % c.y + prog + c.w
-        g.content = content.generate_playlist_display()
+                if not pldata2.get('nextPageToken'):
+                    break
+                qs['pageToken'] = pldata2['nextPageToken']
+                pldata2 = pafy.call_gdata('search', qs)
 
-    else:
-        g.message = "No playlists found for: %s" % c.y + prog + c.w
-        g.current_page = 0
-        g.content = content.generate_songlist_display(zeromsg=g.message)
+    slicer = util.IterSlicer(iter_pls(), result_count)
+    msg = "Playlist results for %s" % c.y + prog + c.w
+    failmsg =  "No playlists found for: %s" % c.y + prog + c.w
+    loadmsg = "Searching playlists for %s" % c.y + prog + c.w
+
+    g.content = content.PlistList(slicer, result_count, msg, failmsg, loadmsg)
 
 
 def get_pl_from_json(pldata):
@@ -436,13 +429,13 @@ def num_repr(num):
 @command(r'u\s?([\d]{1,4})')
 def user_more(num):
     """ Show more videos from user of vid num. """
-    if g.browse_mode != "normal":
+    if not isinstance(g.content, content.SongList):
         g.message = "User uploads must refer to a specific video item"
         g.message = c.y + g.message + c.w
         g.content = content.generate_songlist_display()
         return
 
-    g.current_page = 0
+    #g.current_page = 0 #XXX
     item = g.model[int(num) - 1]
 
     #TODO: Cleaner way of doing this?
@@ -459,13 +452,13 @@ def user_more(num):
 @command(r'r\s?(\d{1,4})')
 def related(num):
     """ Show videos related to to vid num. """
-    if g.browse_mode != "normal":
+    if not isinstance(g.content, content.SongList):
         g.message = "Related items must refer to a specific video item"
         g.message = c.y + g.message + c.w
         g.content = content.generate_songlist_display()
         return
 
-    g.current_page = 0
+    #g.current_page = 0 #XXX
     item = g.model[int(num) - 1]
     related_search(item)
 
@@ -474,7 +467,7 @@ def related(num):
 def mix(num):
     """ Retrieves the YouTube mix for the selected video. """
     g.content = g.content or content.generate_songlist_display()
-    if g.browse_mode != "normal":
+    if not isinstance(g.content, content.SongList):
         g.message = util.F('mix only videos')
     else:
         item = (g.model[int(num) - 1])
@@ -494,7 +487,7 @@ def yt_url(url, print_title=0):
     """ Acess videos by urls. """
     url_list = url.split()
 
-    g.model.songs = []
+    songs = []
 
     for u in url_list:
         try:
@@ -506,15 +499,12 @@ def yt_url(url, print_title=0):
                     zeromsg=g.message)
             return
 
-        g.browse_mode = "normal"
-        v = Video(p.videoid, p.title, p.length)
-        g.model.songs.append(v)
+        songs.append(Video(p.videoid, p.title, p.length))
 
-    if not g.command_line:
-        g.content = content.generate_songlist_display()
+    g.content = content.SongList(songs)
 
     if print_title:
-        util.xprint(v.title)
+        util.xprint(p.title)
 
 
 @command(r'url_file\s(\S+)')

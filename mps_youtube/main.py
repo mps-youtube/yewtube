@@ -90,9 +90,7 @@ def matchfunction(func, regex, userinput):
 
 def prompt_for_exit():
     """ Ask for exit confirmation. """
-    g.message = c.r + "Press ctrl-c again to exit" + c.w
-    g.content = content.generate_songlist_display()
-    screen.update()
+    screen.update(message = c.r + "Press ctrl-c again to exit" + c.w)
 
     try:
         userinput = input(c.r + " > " + c.w)
@@ -105,10 +103,10 @@ def prompt_for_exit():
 
 def main():
     """ Main control loop. """
-    util.set_window_title("mpsyt")
+    screen.set_window_title("mpsyt")
 
     if not g.command_line:
-        g.content = content.logo(col=c.g, version=__version__) + "\n\n"
+        g.content = content.Logo(col=c.g, version=__version__)
         g.message = "Enter /search-term to search or [h]elp"
         screen.update()
 

@@ -17,13 +17,11 @@ detectable_size = True
 command_line = False
 debug_mode = False
 preload_disabled = False
-ytpls = []
 mpv_version = 0, 0, 0
 mpv_options = None
 mpv_usesock = False
 mplayer_version = 0
 mprisctl = None
-browse_mode = "normal"
 preloading = []
 # expiry = 5 * 60 * 60  # 5 hours
 no_clear_screen = False
@@ -32,9 +30,6 @@ max_retries = 3
 max_cached_streams = 1500
 username_query_cache = collections.OrderedDict()
 model = Playlist(name="model")
-last_search_query = (None, None)
-current_page = 0
-result_count = 0
 rprompt = None
 active = Playlist(name="active")
 userpl = {}

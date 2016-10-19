@@ -11,7 +11,7 @@ from urllib.error import HTTPError
 from .. import g, c, screen, streams, content, config, util
 from . import command, PL
 from .search import yt_url, user_pls
-from .songlist import dump, plist
+from .songlist import plist
 
 
 @command(r'(dv|da|d|dl|download)\s*(\d{1,4})')
@@ -20,25 +20,25 @@ def download(dltype, num):
     # This function needs refactoring!
     # pylint: disable=R0912
     # pylint: disable=R0914
-    if g.browse_mode == "ytpl" and dltype in ("da", "dv"):
+    if isinstance(g.content, content.PlistList) and dltype in ("da", "dv"):
         plid = g.ytpls[int(num) - 1]["link"]
         down_plist(dltype, plid)
         return
 
-    elif g.browse_mode == "ytpl":
+    elif isinstance(g.content, content.PlistList):
         g.message = "Use da or dv to specify audio / video playlist download"
         g.message = c.y + g.message + c.w
         g.content = content.generate_songlist_display()
         return
 
-    elif g.browse_mode != "normal":
+    elif not isinstance(g.content, content.PlistList):
         g.message = "Download must refer to a specific video item"
         g.message = c.y + g.message + c.w
         g.content = content.generate_songlist_display()
         return
 
     screen.writestatus("Fetching video info...")
-    song = (g.model[int(num) - 1])
+    song = (g.content[int(num) - 1])
     best = dltype.startswith("dv") or dltype.startswith("da")
 
     if not best:
@@ -146,7 +146,6 @@ def down_many(dltype, choice, subdir=None):
 
     try:
         for song in downsongs:
-            g.result_count = len(g.model)
             disp = content.generate_songlist_display()
             title = "Download Queue (%s):%s\n\n" % (av, c.w)
             disp = re.sub(r"(Num\s*?Title.*?\n)", title, disp)
@@ -184,7 +183,6 @@ def down_many(dltype, choice, subdir=None):
     finally:
         g.model.songs = temp[::]
         g.message = msg
-        g.result_count = len(g.model)
         g.content = content.generate_songlist_display()
 
 
@@ -193,7 +191,6 @@ def down_plist(dltype, parturl):
     """ Download YouTube playlist. """
 
     plist(parturl)
-    dump(False)
     title = g.pafy_pls[parturl][0].title
     subdir = util.mswinfn(title.replace("/", "-"))
     down_many(dltype, "1-", subdir=subdir)
@@ -206,7 +203,7 @@ def down_plist(dltype, parturl):
 def down_user_pls(dltype, user):
     """ Download all user playlists. """
     user_pls(user)
-    for i in g.ytpls:
+    for i in g.content:
         down_plist(dltype, i.get('link'))
 
     return
@@ -538,7 +535,6 @@ def get_dl_data(song, mediatype="any"):
 @command(r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*)')
 def dl_url(url):
     """ Open and prompt for download of youtube video url. """
-    g.browse_mode = "normal"
     yt_url(url)
 
     if len(g.model) == 1:
@@ -551,7 +547,6 @@ def dl_url(url):
 @command(r'daurl\s(.*[-_a-zA-Z0-9]{11}.*)')
 def da_url(url):
     """ Open and prompt for download of youtube best audio from url. """
-    g.browse_mode = "normal"
     yt_url(url)
 
     if len(g.model) == 1:

@@ -36,44 +36,8 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
     :type failmsg: str
     :type loadmsg: str
     """
-    if splash:
-        g.message = loadmsg or ''
-        g.content = content.logo(col=c.b)
-        screen.update()
-
-    max_results = util.getxy().max_results
-
-    if dumps:
-        s = 0
-        e = None
-    else:
-        s = page * max_results
-        e = (page + 1) * max_results
-
-    if callable(func):
-        songs = func(s, e)
-    else:
-        songs = func[s:e]
-
-    if length is None:
-        length = len(func)
-
-    args = {'func':func, 'length':length, 'msg':msg,
-            'failmsg':failmsg, 'loadmsg': loadmsg}
-    g.last_search_query = (paginatesongs, args)
-    g.browse_mode = "normal"
-    g.current_page = page
-    g.result_count = length
-    g.model.songs = songs
-    g.content = content.generate_songlist_display()
-    g.last_opened = ""
-    g.message = msg or ''
-    if not songs:
-        g.message = failmsg or g.message
-
-    if songs:
-        # preload first result url
-        streams.preload(songs[0], delay=0)
+    g.content = content.SongList(func, length=length, msg=msg,
+            failmsg=failmsg, loadmsg=loadmsg)
 
 
 @command(r'pl\s+%s' % PL)
@@ -146,56 +110,33 @@ def songlist_mv_sw(action, a, b):
 @command(r'(n|p)\s*(\d{1,2})?')
 def nextprev(np, page=None):
     """ Get next / previous search results. """
+    good = False
     if isinstance(g.content, content.PaginatedContent):
         page_count = g.content.numPages()
-        function = g.content.getPage
-        args = {}
-    else:
-        page_count = math.ceil(g.result_count/util.getxy().max_results)
-        function, args = g.last_search_query
 
-    good = False
-
-    if function:
         if np == "n":
-            if g.current_page + 1 < page_count:
-                g.current_page += 1
+            if g.content.current_page + 1 < page_count:
+                g.content.current_page += 1
                 good = True
 
         elif np == "p":
             if page and int(page) in range(1,20):
-                g.current_page = int(page)-1
+                g.content.current_page = int(page)-1
                 good = True
 
-            elif g.current_page > 0:
-                g.current_page -= 1
+            elif g.content.current_page > 0:
+                g.content.current_page -= 1
                 good = True
+    else:
+        g.content = content.generate_songlist_display()
 
     if good:
-        function(page=g.current_page, **args)
-
+        g.content.getPage(page=g.content.current_page)
     else:
         norp = "next" if np == "n" else "previous"
         g.message = "No %s items to display" % norp
 
-    if not isinstance(g.content, content.PaginatedContent):
-        g.content = content.generate_songlist_display()
     return good
-
-
-@command(r'(un)?dump')
-def dump(un):
-    """ Show entire playlist. """
-    func, args = g.last_search_query
-
-    if func is paginatesongs:
-        paginatesongs(dumps=(not un), **args)
-
-    else:
-        un = "" if not un else un
-        g.message = "%s%sdump%s may only be used on an open YouTube playlist"
-        g.message = g.message % (c.y, un, c.w)
-        g.content = content.generate_songlist_display()
 
 
 @command(r'shuffle')
@@ -231,7 +172,7 @@ def reverse_playlist():
     # Prevent crash if no last query
     if g.last_search_query == (None, None) or \
             'func' not in g.last_search_query[1]:
-        g.content = content.logo()
+        g.content = content.Logo()
         g.message = "No playlist loaded"
         return
 

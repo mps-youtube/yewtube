@@ -43,7 +43,7 @@ def _do_query(url, query, err='query failed', report=False):
 
     except (URLError, HTTPError) as e:
         g.message = "%s: %s (%s)" % (err, e, url)
-        g.content = content.logo(c.r)
+        g.content = content.Logo(c.r)
         return None if not report else (None, False)
 
     return wdata if not report else (wdata, False)
