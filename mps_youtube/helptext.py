@@ -33,7 +33,7 @@ def helptext():
     {2}set search_music true{1}  - search only YouTube music category.
 
     {2}/<query>{1} or {2}.<query>{1} to search for videos. e.g., {2}/daft punk{1}
-    {2}/[<videoDuration>]<query>{1} or {2}.[<videoDuration>]<query>{1} e.g., {2}/[long] daft punk{1}
+    {2}/[<videoDuration>] <query>{1} or {2}.[<videoDuration>] <query>{1} e.g., {2}/[long] daft punk{1}
         videoDuration options: any, long, medium, short
     {2}//<query>{1} or {2}..<query>{1} - search for YouTube playlists. e.g., \
     {2}//80's music{1}
