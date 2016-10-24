@@ -34,7 +34,10 @@ def helptext():
 
     {2}/<query>{1} or {2}.<query>{1} to search for videos. e.g., {2}/daft punk{1}
     {2}/[<videoDuration>] <query>{1} or {2}.[<videoDuration>] <query>{1} e.g., {2}/[long] daft punk{1}
-        videoDuration options: any, long, medium, short
+      {2}videoDuration{1} options: any, long, medium, short
+    {2}/<query> |<searchAfter>|{1} to search for videos after a certain time frame. e.g., {2}/daft punk |week|{1}
+      {2}searchAfter{1}: day, week, month, year, yyyy-mm-dd, yyyy-mm-ddThh:mm:ddZ
+        {2}/query |2015-02-23T00:00:00Z|{1} is the same as {2}/query |2015-02-23|{1}
     {2}//<query>{1} or {2}..<query>{1} - search for YouTube playlists. e.g., \
     {2}//80's music{1}
     {2}n{1} and {2}p{1} - continue search to next/previous pages.

@@ -3,6 +3,7 @@ import json
 import math
 import base64
 import logging
+from datetime import datetime, timedelta
 
 import pafy
 
@@ -13,6 +14,11 @@ from .songlist import plist, paginatesongs
 
 
 ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?((\d{1,2})S)?')
+
+DAYS = dict(day = 1,
+            week = 7,
+            month = 30,
+            year = 365)
 
 
 def _search(progtext, qs=None, msg=None, failmsg=None):
@@ -54,7 +60,7 @@ def token(page):
     return b64.strip('=')
 
 
-def generate_search_qs(term, match='term', videoDuration='any'):
+def generate_search_qs(term, match='term', videoDuration='any', after=None):
     """ Return query string. """
 
     aliases = dict(views='viewCount')
@@ -68,6 +74,11 @@ def generate_search_qs(term, match='term', videoDuration='any'):
         'videoDuration': videoDuration,
         'key': config.API_KEY.get
     }
+
+    if after:
+        after = after.lower()
+        qs['publishedAfter'] = '%sZ' % (datetime.utcnow() - timedelta(days=DAYS[after])).isoformat() \
+                                if after in DAYS.keys() else '%s%s' % (after, 'T00:00:00Z' * (len(after) == 10))
 
     if match == 'related':
         qs['relatedToVideoId'] = term
@@ -208,13 +219,20 @@ def search(term):
             videoDuration = split[0][1:-1]
             term = ' '.join(split[1:])
 
+    after = None
+    if term.endswith('|'):
+        split = term.split(' ')
+        if len(split) > 1 and split[-1].startswith('|'):
+            after = split[-1][1:-1]
+            term = ' '.join(split[:-1])
+
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
         g.content = content.generate_songlist_display()
         return
 
     logging.info("search for %s", term)
-    query = generate_search_qs(term, videoDuration=videoDuration)
+    query = generate_search_qs(term, videoDuration=videoDuration, after=after)
     msg = "Search results for %s%s%s" % (c.y, term, c.w)
     failmsg = "Found nothing for %s%s%s" % (c.y, term, c.w)
     _search(term, query, msg, failmsg)
