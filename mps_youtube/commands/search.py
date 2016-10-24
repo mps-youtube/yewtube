@@ -17,7 +17,7 @@ ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?((\d{1,2})S)?')
 
 def _search(progtext, qs=None, msg=None, failmsg=None):
     """ Perform memoized url fetch, display progtext. """
-    
+
     loadmsg = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
 
     wdata = pafy.call_gdata('search', qs)
@@ -54,7 +54,7 @@ def token(page):
     return b64.strip('=')
 
 
-def generate_search_qs(term, match='term'):
+def generate_search_qs(term, match='term', videoDuration='any'):
     """ Return query string. """
 
     aliases = dict(views='viewCount')
@@ -65,6 +65,7 @@ def generate_search_qs(term, match='term'):
         'order': aliases.get(config.ORDER.get, config.ORDER.get),
         'part': 'id,snippet',
         'type': 'video',
+        'videoDuration': videoDuration,
         'key': config.API_KEY.get
     }
 
@@ -200,13 +201,20 @@ def related_search(vitem):
 @command(r'(?:search|\.|/)\s*([^./].{1,500})')
 def search(term):
     """ Perform search. """
+    videoDuration = 'any'
+    if term.startswith('['):
+        split = term.split(' ')
+        if len(split) > 1 and split[0].endswith(']'):
+            videoDuration = split[0][1:-1]
+            term = ' '.join(split[1:])
+
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
         g.content = content.generate_songlist_display()
         return
 
     logging.info("search for %s", term)
-    query = generate_search_qs(term)
+    query = generate_search_qs(term, videoDuration=videoDuration)
     msg = "Search results for %s%s%s" % (c.y, term, c.w)
     failmsg = "Found nothing for %s%s%s" % (c.y, term, c.w)
     _search(term, query, msg, failmsg)

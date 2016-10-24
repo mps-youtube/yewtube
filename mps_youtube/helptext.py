@@ -33,6 +33,8 @@ def helptext():
     {2}set search_music true{1}  - search only YouTube music category.
 
     {2}/<query>{1} or {2}.<query>{1} to search for videos. e.g., {2}/daft punk{1}
+    {2}/[<videoDuration>] <query>{1} or {2}.[<videoDuration>] <query>{1} e.g., {2}/[long] daft punk{1}
+        videoDuration options: any, long, medium, short
     {2}//<query>{1} or {2}..<query>{1} - search for YouTube playlists. e.g., \
     {2}//80's music{1}
     {2}n{1} and {2}p{1} - continue search to next/previous pages.
@@ -45,7 +47,7 @@ def helptext():
     {2}pl <url or id>{1} - Open YouTube playlist by url or id.
     {2}url <url or id>{1} - Retrieve specific YouTube video by url or id.
     {2}url <url> <url> ... <url>{1} - Retrieve specific YouTube videos by url or id.
-    {2}url_file <file_absolute_path>{1} - Retrieve YouTube videos by url or id from a .txt file. 
+    {2}url_file <file_absolute_path>{1} - Retrieve YouTube videos by url or id from a .txt file.
     File format : .txt, with one url or id by line.
 
     {2}r <number>{1} - show videos related to video <number>.
