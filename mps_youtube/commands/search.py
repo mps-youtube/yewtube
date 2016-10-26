@@ -5,6 +5,12 @@ import base64
 import logging
 from datetime import datetime, timedelta
 
+from argparse import ArgumentParser
+parser = ArgumentParser()
+parser.add_argument('-d', '--duration', choices=('any', 'short', 'medium', 'long'))
+parser.add_argument('-a', '--after')
+parser.add_argument('search', nargs='+')
+
 import pafy
 
 from .. import g, c, screen, config, util, content
@@ -212,19 +218,10 @@ def related_search(vitem):
 @command(r'(?:search|\.|/)\s*([^./].{1,500})')
 def search(term):
     """ Perform search. """
-    videoDuration = 'any'
-    if term.startswith('['):
-        split = term.split(' ')
-        if len(split) > 1 and split[0].endswith(']'):
-            videoDuration = split[0][1:-1]
-            term = ' '.join(split[1:])
-
-    after = None
-    if term.endswith('|'):
-        split = term.split(' ')
-        if len(split) > 1 and split[-1].startswith('|'):
-            after = split[-1][1:-1]
-            term = ' '.join(split[:-1])
+    args = parser.parse_args(term.split(' '))
+    videoDuration = args.duration if args.duration else 'any'
+    after = args.after
+    term = ' '.join(args.search)
 
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
