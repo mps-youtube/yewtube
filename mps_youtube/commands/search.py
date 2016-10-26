@@ -218,10 +218,14 @@ def related_search(vitem):
 @command(r'(?:search|\.|/)\s*([^./].{1,500})')
 def search(term):
     """ Perform search. """
-    args = parser.parse_args(term.split(' '))
-    videoDuration = args.duration if args.duration else 'any'
-    after = args.after
-    term = ' '.join(args.search)
+    try:     #TODO make use of unkowns
+        args, unknown = parser.parse_known_args(term.split(' '))
+        videoDuration = args.duration if args.duration else 'any'
+        after = args.after
+        term = ' '.join(args.search)
+    except SystemExit as e:  #<------ argsparse calls exit()
+        g.message = c.b + "Bad syntax. Enter h for help" + c.w
+        return
 
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
