@@ -219,7 +219,7 @@ def related_search(vitem):
 def search(term):
     """ Perform search. """
     try:     #TODO make use of unknowns
-        args, unknown = parser.parse_known_args(term.split(' '))
+        args, unknown = parser.parse_known_args(term.split())
         videoDuration = args.duration if args.duration else 'any'
         after = args.after
         term = ' '.join(args.search)
