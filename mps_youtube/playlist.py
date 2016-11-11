@@ -8,7 +8,6 @@ class Playlist(object):
     def __init__(self, name=None, songs=None):
         """ class members. """
         self.name = name
-        self.creation = time.time()
         self.songs = songs or []
 
     def __len__(self):
