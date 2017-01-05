@@ -355,7 +355,7 @@ def _launch_player(song, songdata, cmd):
     # not supported by encoding
     cmd = [util.xenc(i) for i in cmd]
 
-    arturl = "http://i.ytimg.com/vi/%s/default.jpg" % song.ytid
+    arturl = "https://i.ytimg.com/vi/%s/default.jpg" % song.ytid
     input_file = None
     if ("mplayer" in config.PLAYER.get) or ("mpv" in config.PLAYER.get):
         input_file = _get_input_file()
