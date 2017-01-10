@@ -361,6 +361,7 @@ def _launch_player(song, songdata, cmd):
         input_file = _get_input_file()
     sockpath = None
     fifopath = None
+    p = None
 
     try:
         if "mplayer" in config.PLAYER.get:
@@ -420,7 +421,6 @@ def _launch_player(song, songdata, cmd):
         else:
             with open(os.devnull, "w") as devnull:
                 returncode = subprocess.call(cmd, stderr=devnull)
-            p = None
 
         return returncode
 
