@@ -20,7 +20,7 @@ Features
 - Convert to mp3 & other formats (requires ffmpeg or avconv)
 - View video comments
 - Works with Python 3.x
-- Works with Windows, Linux and Mac OS X 
+- Works with Windows, Linux and Mac OS X
 - Requires mplayer or mpv
 
 This project is based on `mps <https://github.com/np1/mps>`_, a terminal based program to search, stream and download music.  This implementation uses YouTube as a source of content and can play and download video as well as audio.  The `pafy <https://github.com/np1/pafy>`_ library handles interfacing with YouTube.
@@ -68,7 +68,7 @@ Music Album Matching
 
 .. image:: http://np1.github.io/mpsyt-images2/album-2.png
 
-An album title can be specified and mps-youtube will attempt to find matches for each track of the album, based on title and duration.  Type ``help search`` for more info.  
+An album title can be specified and mps-youtube will attempt to find matches for each track of the album, based on title and duration.  Type ``help search`` for more info.
 
 Customisation
 ~~~~~~~~~~~~~
@@ -90,7 +90,7 @@ Installation
 ------------
 
 Using `pip <http://www.pip-installer.org>`_::
-    
+
     [sudo] pip3 install mps-youtube
 
 Installing youtube_dl is highly recommended::
@@ -141,7 +141,7 @@ Run via Docker container
 
 Using `Docker <http://www.docker.com>`_, run with::
 
-    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt mpsyt
+    sudo docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt rothgar/mpsyt
 
 Additional Docker notes
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,9 +174,9 @@ Usage
 -----
 
 mps-youtube is run on the command line using the command::
-    
+
     mpsyt
-    
+
 Enter ``h`` from within the program for help.
 
 IRC
