@@ -7,6 +7,7 @@ import time
 import subprocess
 import collections
 import unicodedata
+from datetime import datetime, timezone
 
 import pafy
 
@@ -314,6 +315,21 @@ def yt_datetime(yt_date_time):
     # strip first two digits of four digit year
     short_date = re.sub(r"(\d\d\D\d\d\D)20(\d\d)$", r"\1\2", locale_date)
     return time_obj, short_date, locale_time
+
+
+def yt_datetime_local(yt_date_time):
+    """ Return a datetime object, locale converted and formated date string and locale converted and formatted time string. """
+    datetime_obj = datetime.strptime(yt_date_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+    datetime_obj = utc2local(datetime_obj)
+    locale_date = datetime_obj.strftime("%x")
+    locale_time = datetime_obj.strftime("%X")
+    # strip first two digits of four digit year
+    short_date = re.sub(r"(\d\d\D\d\d\D)20(\d\d)$", r"\1\2", locale_date)
+    return datetime_obj, short_date, locale_time
+
+
+def utc2local(utc):
+    return utc.replace(tzinfo=timezone.utc).astimezone(tz=None)
 
 
 def parse_multi(choice, end=None):

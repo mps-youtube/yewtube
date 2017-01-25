@@ -1,5 +1,5 @@
 import re
-import time
+from datetime import datetime
 import socket
 import traceback
 from urllib.request import urlopen
@@ -184,16 +184,15 @@ def info(num):
 
         ytpl_desc = ytpl.description
         g.content = generate_songlist_display()
-
-        created = util.yt_datetime(p['created'])[0]
-        updated = util.yt_datetime(p['updated'])[0]
+        created = util.yt_datetime_local(p['created'])
+        updated = util.yt_datetime_local(p['updated'])
         out = c.ul + "Playlist Info" + c.w + "\n\n"
         out += p['title']
         out += "\n" + ytpl_desc
         out += ("\n\nAuthor     : " + p['author'])
         out += "\nSize       : " + str(p['size']) + " videos"
-        out += "\nCreated    : " + time.strftime("%x %X", created)
-        out += "\nUpdated    : " + time.strftime("%x %X", updated)
+        out += "\nCreated    : " + created[1] + " " + created[2]
+        out += "\nUpdated    : " + updated[1] + " " + updated[2]
         out += "\nID         : " + str(p['link'])
         out += ("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
         g.content = out
@@ -205,13 +204,14 @@ def info(num):
         item = (g.model[int(num) - 1])
         streams.get(item)
         p = util.get_pafy(item)
-        pub = time.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
+        pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
+        pub = util.utc2local(pub)
         screen.writestatus("Fetched")
         out = c.ul + "Video Info" + c.w + "\n\n"
         out += p.title or ""
         out += "\n" + (p.description or "")
         out += "\n\nAuthor     : " + str(p.author)
-        out += "\nPublished  : " + time.strftime("%c", pub)
+        out += "\nPublished  : " + pub.strftime("%c")
         out += "\nView count : " + str(p.viewcount)
         out += "\nRating     : " + str(p.rating)[:4]
         out += "\nLikes      : " + str(p.likes)
