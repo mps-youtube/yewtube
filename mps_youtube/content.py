@@ -84,14 +84,14 @@ def generate_songlist_display(song=False, zeromsg=None):
     user_columns = _get_user_columns() if have_meta else []
     maxlength = max(x.length for x in g.model)
     lengthsize = 8 if maxlength > 35999 else 7
-    lengthsize = 5 if maxlength < 6000 else lengthsize
+    lengthsize = 6 if maxlength < 6000 else lengthsize
     reserved = 9 + lengthsize + len(user_columns)
     cw = getxy().width
     cw -= 1
     title_size = cw - sum(1 + x['size'] for x in user_columns) - reserved
     before = [{"name": "idx", "size": 3, "heading": "Num"},
               {"name": "title", "size": title_size, "heading": "Title"}]
-    after = [{"name": "length", "size": lengthsize, "heading": "Time"}]
+    after = [{"name": "length", "size": lengthsize, "heading": "Length"}]
     columns = before + user_columns + after
 
     for n, column in enumerate(columns):
@@ -167,6 +167,7 @@ def _get_user_columns():
                 "rating": dict(name="rating", size=4, heading="Rtng"),
                 "comments": dict(name="commentCount", size=4, heading="Comm"),
                 "date": dict(name="uploaded", size=8, heading="Date"),
+                "time": dict(name="uploadedTime", size=11, heading="Time"),
                 "user": dict(name="uploaderName", size=10, heading="User"),
                 "likes": dict(name="likes", size=4, heading="Like"),
                 "dislikes": dict(name="dislikes", size=4, heading="Dslk"),

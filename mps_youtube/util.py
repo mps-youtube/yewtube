@@ -307,12 +307,13 @@ def real_len(u, alt=False):
 
 
 def yt_datetime(yt_date_time):
-    """ Return a time object and locale formated date string. """
+    """ Return a time object, locale formated date string and locale formatted time string. """
     time_obj = time.strptime(yt_date_time, "%Y-%m-%dT%H:%M:%S.%fZ")
     locale_date = time.strftime("%x", time_obj)
+    locale_time = time.strftime("%X", time_obj)
     # strip first two digits of four digit year
     short_date = re.sub(r"(\d\d\D\d\d\D)20(\d\d)$", r"\1\2", locale_date)
-    return time_obj, short_date
+    return time_obj, short_date, locale_time
 
 
 def parse_multi(choice, end=None):

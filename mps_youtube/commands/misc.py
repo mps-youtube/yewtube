@@ -109,7 +109,7 @@ def fetch_comments(item):
     for n, com in enumerate(coms, 1):
         snippet = com.get('snippet', {})
         poster = snippet.get('authorDisplayName')
-        _, shortdate = util.yt_datetime(snippet.get('publishedAt', ''))
+        shortdate = util.yt_datetime(snippet.get('publishedAt', ''))[1]
         text = snippet.get('textDisplay', '')
         cid = ("%s/%s" % (n, len(coms)))
         commentstext += ("%s %-35s %s\n" % (cid, c.c("g", poster), shortdate))

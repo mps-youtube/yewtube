@@ -406,6 +406,7 @@ def get_tracks_from_json(jsons):
             #XXX this is a very poor attempt to calculate a rating value
             rating = 5.*likes/(likes+dislikes) if (likes+dislikes) > 0 else 0
             category = snippet.get('categoryId')
+            publisheddatetime = util.yt_datetime(snippet.get('publishedAt', ''))
 
             # cache video information in custom global variable store
             g.meta[ytid] = dict(
@@ -420,7 +421,8 @@ def get_tracks_from_json(jsons):
                 uploaderName=snippet.get('channelTitle'),
                 category=category,
                 aspect="custom", #XXX
-                uploaded=util.yt_datetime(snippet.get('publishedAt', ''))[1],
+                uploaded=publisheddatetime[1],
+                uploadedTime=publisheddatetime[2],
                 likes=str(num_repr(likes)),
                 dislikes=str(num_repr(dislikes)),
                 commentCount=str(num_repr(int(stats.get('commentCount', 0)))),
