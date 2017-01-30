@@ -72,7 +72,7 @@ argument_commands = []
 commands = []
 
 text = {
-    "exitmsg": ("*mps-youtube - *http://github.com/np1/mps-youtube*"
+    "exitmsg": ("*mps-youtube - *https://github.com/mps-youtube/mps-youtube*"
                 "\nReleased under the GPLv3 license\n"
                 "(c) 2014, 2015 np1 and contributors*\n"""),
     "exitmsg_": (c.r, c.b, c.r, c.w),

@@ -15,15 +15,17 @@ if sys.version_info < (3,0):
 
 from setuptools import setup
 
+VERSION = "0.2.7.1"
+
 options = dict(
     name="mps-youtube",
-    version="0.2.7.1",
+    version=VERSION,
     description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="np1",
     author_email="np1nagev@gmail.com",
-    url="http://github.com/np1/mps-youtube",
-    download_url="https://github.com/np1/mps-youtube/tarball/master",
+    url="https://github.com/mps-youtube/mps-youtube",
+    download_url="https://github.com/mps-youtube/mps-youtube/archive/v%s.tar.gz" % VERSION
     packages=['mps_youtube', 'mps_youtube.commands'],
     entry_points={'console_scripts': ['mpsyt = mps_youtube:main.main']},
     install_requires=['pafy >= 0.3.82, != 0.4.0, != 0.4.1, != 0.4.2'],
