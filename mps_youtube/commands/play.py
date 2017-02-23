@@ -1,11 +1,12 @@
 import sys
 import webbrowser
+import random
 from urllib.error import HTTPError, URLError
 
-from .. import g, c, streams, util, content
+from .. import g, c, streams, util, content, config
 from . import command, WORD, RS
 from .songlist import plist
-from .search import yt_url
+from .search import yt_url, related
 from ..player import play_range
 
 
@@ -82,8 +83,15 @@ def play(pre, choice, post=""):
             if len(g.model) > chosen + 1:
                 streams.preload(g.model[chosen + 1], override=override)
 
-        play_range(songlist, shuffle, repeat, override)
-        g.content = content.generate_songlist_display()
+        try:
+            play_range(songlist, shuffle, repeat, override)
+        except KeyboardInterrupt:
+            g.content = content.generate_songlist_display()
+            return
+
+        if config.AUTOPLAY.get:
+            related(selection.pop())
+            play(pre, str(random.randint(1, 15)), post="")
 
 
 @command(r'(%s{0,3})(?:\*|all)\s*(%s{0,3})' %
