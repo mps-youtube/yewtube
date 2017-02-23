@@ -45,6 +45,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             util.xprint(c.w + "Stopping...                          ")
             screen.reset_terminal()
             g.message = c.y + "Playback halted" + c.w
+            raise KeyboardInterrupt
             break
         util.set_window_title("mpsyt")
 
@@ -110,8 +111,7 @@ def _mplayer_help(short=True):
     """ Mplayer help.  """
     # pylint: disable=W1402
 
-    volume = "[{0}9{1}] volume [{0}0{1}]"
-    volume = volume if short else volume + "      [{0}q{1}] return"
+    volume = "[{0}9{1}] volume [{0}0{1}]      [{0}CTRL-C{1}] return"
     seek = "[{0}\u2190{1}] seek [{0}\u2192{1}]"
     pause = "[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
 
@@ -119,10 +119,11 @@ def _mplayer_help(short=True):
         seek = "[{0}<-{1}] seek [{0}->{1}]"
         pause = "[{0}DN{1}] SEEK [{0}UP{1}]       [{0}space{1}] pause"
 
-    single = "[{0}q{1}] return"
+    single = "[{0}q{1}] next"
     next_prev = "[{0}>{1}] next/prev [{0}<{1}]"
     # ret = "[{0}q{1}] %s" % ("return" if short else "next track")
-    ret = single if short else next_prev
+    ret = single if short and config.AUTOPLAY.get else ""
+    ret = next_prev if not short else ret
     fmt = "    %-20s       %-20s"
     lines = fmt % (seek, volume) + "\n" + fmt % (pause, ret)
     return lines.format(c.g, c.w)
@@ -204,7 +205,6 @@ def _playsong(song, failcount=0, override=False):
         errmsg = e.message if hasattr(e, "message") else str(e)
         g.message = c.r + str(errmsg) + c.w
         return
-
     size = streams.get_size(song.ytid, stream['url'])
     songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
                 int(size / (1024 ** 2)))

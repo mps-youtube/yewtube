@@ -221,7 +221,7 @@ def get_pafy(item, force=False, callback=None):
 def getxy():
     """
     Get terminal size, terminal width and max-results.
-    
+
     :rtype: :class:`XYTuple`
     """
     # Import here to avoid circular dependency
