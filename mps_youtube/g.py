@@ -50,6 +50,7 @@ OLD_PLFILE = os.path.join(paths.get_config_dir(), "playlist" + suffix)
 PLFILE = os.path.join(paths.get_config_dir(), "playlist_v2")
 HISTFILE = os.path.join(paths.get_config_dir(), "play_history")
 CACHEFILE = os.path.join(paths.get_config_dir(), "cache_py_" + sys.version[0:5])
+PLUGINDIR = os.path.join(paths.get_config_dir(), "plugins")
 READLINE_FILE = None
 playerargs_defaults = {
     "mpv": {
@@ -69,7 +70,9 @@ playerargs_defaults = {
         "geo": "-geometry"}
     }
 argument_commands = []
+enabled_plugins = {}
 commands = []
+eventhandlers = []
 
 text = {
     "exitmsg": ("*mps-youtube - *https://github.com/mps-youtube/mps-youtube*"

@@ -29,6 +29,7 @@ import pafy
 
 from . import g, c, commands, screen, history, util
 from . import __version__, playlists, content
+from .plugin import loadPlugins
 
 try:
     import readline
@@ -117,6 +118,8 @@ def main():
 
     #open history from file
     history.load()
+
+    loadPlugins()
 
     arg_inp = ' '.join(g.argument_commands)
 
