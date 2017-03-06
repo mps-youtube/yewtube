@@ -306,8 +306,9 @@ class _Config(object):
                 allowed_values="auto webm m4a".split()),
             ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo",
                 check_fn=check_api_key),
-            ConfigItem("autoplay", False)
-            ]
+            ConfigItem("autoplay", False),
+            ConfigItem("set_title", True)
+            ] 
 
     def __getitem__(self, key):
         # TODO: Possibly more efficient algorithm, w/ caching

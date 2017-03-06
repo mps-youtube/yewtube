@@ -36,7 +36,8 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         if hasnext:
             streams.preload(songlist[n + 1], override=override)
 
-        util.set_window_title(song.title + " - mpsyt")
+        if config.SET_TITLE.get:
+            util.set_window_title(song.title + " - mpsyt")
         try:
             returncode = _playsong(song, override=override)
 
@@ -47,7 +48,8 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             g.message = c.y + "Playback halted" + c.w
             raise KeyboardInterrupt
             break
-        util.set_window_title("mpsyt")
+        if config.SET_TITLE.get:
+            util.set_window_title("mpsyt")
 
         if returncode == 42:
             n -= 1
