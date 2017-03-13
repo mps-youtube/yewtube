@@ -101,7 +101,7 @@ Additional Linux installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 For mpris2 support, install the python bindings for dbus and gobject::
 
-    [sudo] pip3 install dbus pygobject
+    [sudo] pip3 install dbus-python pygobject
 
 Additional Mac OS X installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
