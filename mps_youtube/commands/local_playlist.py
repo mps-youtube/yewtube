@@ -102,7 +102,7 @@ def save_last():
         # save using artist name in postion 1
         if g.model:
             saveas = g.model[0].title[:18].strip()
-            saveas = re.sub(r"[^-\w]", "-", saveas, re.UNICODE)
+            saveas = re.sub(r"[^-\w]", "-", saveas, flags=re.UNICODE)
 
         # loop to find next available name
         post = 0
