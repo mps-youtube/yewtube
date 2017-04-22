@@ -375,7 +375,9 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
         outfh.write(chunk)
         elapsed = time.time() - t0
         bytesdone += len(chunk)
-        rate = (bytesdone / 1024) / elapsed
+        rate = 0
+        if elapsed != 0:
+            rate = (bytesdone / 1024) / elapsed
         if rate:
             eta = (total - bytesdone) / (rate * 1024)
         else:
