@@ -115,6 +115,7 @@ def fetch_comments(item):
         commentstext += ("%s %-35s %s\n" % (cid, c.c("g", poster), shortdate))
         commentstext += c.c("y", text.strip()) + '\n\n'
 
+    g.current_page = 0
     g.content = content.StringContent(commentstext)
 
 
