@@ -81,6 +81,7 @@ def generate_songlist_display(song=False, zeromsg=None):
     g.rprompt = page_msg(g.current_page)
 
     have_meta = all(x.ytid in g.meta for x in g.model)
+
     user_columns = _get_user_columns() if have_meta else []
     maxlength = max(x.length for x in g.model)
     lengthsize = 8 if maxlength > 35999 else 7
@@ -114,13 +115,13 @@ def generate_songlist_display(song=False, zeromsg=None):
         details['title'] = uea_pad(columns[1]['size'], otitle)
         cat = details.get('category') or '-'
         details['category'] = pafy.get_categoryname(cat)
+        details['ytid'] = x.ytid
         data = []
 
         for z in columns:
             fieldsize, field = z['size'], z['name']
             if len(details[field]) > fieldsize:
                 details[field] = details[field][:fieldsize]
-
             data.append(details[field])
 
         line = fmtrow % tuple(data)
@@ -133,6 +134,7 @@ def generate_songlist_display(song=False, zeromsg=None):
 
 def generate_playlist_display():
     """ Generate list of playlists. """
+
     if not g.ytpls:
         g.message = c.r + "No playlists found!"
         return logo(c.g) + "\n\n"
@@ -171,7 +173,8 @@ def _get_user_columns():
                 "user": dict(name="uploaderName", size=10, heading="User"),
                 "likes": dict(name="likes", size=4, heading="Like"),
                 "dislikes": dict(name="dislikes", size=4, heading="Dslk"),
-                "category": dict(name="category", size=8, heading="Category")}
+                "category": dict(name="category", size=8, heading="Category"),
+                "ytid": dict(name="ytid", size=12, heading="Video ID")}
 
     ret = []
     for column in user_columns:
