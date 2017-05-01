@@ -33,7 +33,7 @@ def helptext():
     {2}set search_music true{1}  - search only YouTube music category.
 
     {2}/<query>{1} or {2}.<query>{1} to search for videos. e.g., {2}/daft punk{1}
-        [-d {{any,short,medium,long}}] [-a AFTER] search [search ...] {2}/-a short -d day hits{1}
+        [-d {{any,short,medium,long}}] [-a AFTER] search [search ...] {2}/-d short -a day hits{1}
          AFTER: day, week, month, year, yyyy-mm-dd, yyyy-mm-ddThh:mm:ddZ
         {2}/ --after 2016-08-11 tweekaz --duration long{1}
     {2}//<query>{1} or {2}..<query>{1} - search for YouTube playlists. e.g., \
