@@ -125,15 +125,14 @@ def channelfromname(user):
         # we have to sent an additional request to find their
         # channel id
         qs = {'part': 'id,snippet',
-              'maxResults': 1,
-              'q': user,
-              'type': 'channel'}
+              'forUsername': user,
+              'key': config.API_KEY.get}
 
         try:
-            userinfo = pafy.call_gdata('search', qs)['items']
+            userinfo = pafy.call_gdata('channels', qs)['items']
             if len(userinfo) > 0:
                 snippet = userinfo[0].get('snippet', {})
-                channel_id = snippet.get('channelId', user)
+                channel_id = userinfo[0].get('id', user)
                 username = snippet.get('title', user)
                 user = cache_userdata(user, username, channel_id)[0]
             else:
