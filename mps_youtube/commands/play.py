@@ -33,11 +33,19 @@ def play_pl(name):
 
 
 @command(r'(%s{0,3})([-,\d\s\[\]]{1,250})\s*(%s{0,3})$' %
-        (RS, RS))
+         (RS, RS))
 def play(pre, choice, post=""):
     """ Play choice.  Use repeat/random if appears in pre/post. """
     # pylint: disable=R0914
     # too many local variables
+
+    # Im just highjacking this if g.content is a
+    # content.Content class
+    if isinstance(g.content, content.Content):
+        play_call = getattr(g.content, "_play", None)
+        if callable(c):
+            play_call(pre, choice, post)
+        return
 
     if g.browse_mode == "ytpl":
 

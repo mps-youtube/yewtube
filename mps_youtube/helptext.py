@@ -42,6 +42,7 @@ def helptext():
     {2}p <number>{1} - switch to page <number>.
 
     {2}album <album title>{1} - Search for matching tracks using album title
+    {2}channels <Channel name> - Search for channels by channelname
     {2}user <username>{1} - list YouTube uploads by <username>.
     {2}user <username>/<query>{1} - as above, but matches <query>.
     {2}userpl <username>{1} - list YouTube playlists created by <username>.

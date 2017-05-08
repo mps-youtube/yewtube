@@ -13,7 +13,7 @@ parser.add_argument('search', nargs='+')
 
 import pafy
 
-from .. import g, c, screen, config, util, content
+from .. import g, c, screen, config, util, content, listview, contentquery
 from ..playlist import Video
 from . import command
 from .songlist import plist, paginatesongs
@@ -150,6 +150,32 @@ def channelfromname(user):
     return (user, channel_id)
 
 
+@command(r'channels\s+(.+)')
+def channelsearch(q_user):
+
+    qs = {'part': 'id,snippet',
+          'q': q_user,
+          'maxResults': 50,
+          'type': 'channel',
+          'order': "relevance"
+          }
+
+    QueryObj = contentquery.ContentQuery(listview.ListUser, 'search', qs)
+    columns = [
+        {"name": "idx", "size": 3, "heading": "Num"},
+        {"name": "name", "size": 30, "heading": "Username"},
+        {"name": "description", "size": "remaining", "heading": "Description"},
+        ]
+
+    def run_m(user_id):
+        """ Search ! """
+        usersearch_id(*user_id)
+    del g.content
+
+    g.content = listview.ListView(columns, QueryObj, run_m)
+    g.message = "Results for channel search: '%s'" % q_user
+
+
 @command(r'user\s+(.+)')
 def usersearch(q_user, identify='forUsername'):
     """ Fetch uploads by a YouTube user. """
@@ -157,7 +183,7 @@ def usersearch(q_user, identify='forUsername'):
     user, _, term = (x.strip() for x in q_user.partition("/"))
     if identify == 'forUsername':
         ret = channelfromname(user)
-        if not ret: # Error
+        if not ret:  # Error
             return
         user, channel_id = ret
 

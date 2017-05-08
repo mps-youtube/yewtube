@@ -28,7 +28,7 @@ import os
 import pafy
 
 from . import g, c, commands, screen, history, util
-from . import __version__, playlists, content
+from . import __version__, playlists, content, listview
 from . import config
 
 try:
@@ -117,7 +117,7 @@ def main():
     # open playlists from file
     playlists.load()
 
-    #open history from file
+    # open history from file
     history.load()
 
     arg_inp = ' '.join(g.argument_commands)
@@ -138,6 +138,13 @@ def main():
 
         except (KeyboardInterrupt, EOFError):
             userinput = prompt_for_exit()
+
+        if isinstance(g.content, content.Content):
+            # g.content.run returns true if it matched one of its
+            # internal functions
+            if g.content.run(userinput):
+                screen.update()
+                continue
 
         for i in g.commands:
             if matchfunction(i.function, i.regex, userinput):
