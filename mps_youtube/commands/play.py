@@ -43,7 +43,7 @@ def play(pre, choice, post=""):
     # content.Content class
     if isinstance(g.content, content.Content):
         play_call = getattr(g.content, "_play", None)
-        if callable(c):
+        if callable(play_call):
             play_call(pre, choice, post)
         return
 
