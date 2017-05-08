@@ -184,6 +184,13 @@ class ListView(content.Content):
                     data.append(field)
             line = col + (fmtrow % tuple(data)) + c.w
             out += line + "\n"
+        
+        # Page number
+        pagenum = ""
+        pagenum += "<" if self.has_previous_page() else "["
+        pagenum += str(self.page + 1) + "/" + str(self.pages() + 1)
+        pagenum += ">" if self.has_next_page() else "]"
+        out += (" " * (util.getxy().width - len(pagenum))) + pagenum + "\n"
         return out
 
     def run(self, str_):
