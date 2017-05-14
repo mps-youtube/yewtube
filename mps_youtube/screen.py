@@ -2,7 +2,7 @@ import subprocess
 import os
 import sys
 
-from . import g, content, config, util, listview
+from . import g, content, config, util
 
 
 mswin = os.name == "nt"
@@ -12,11 +12,7 @@ def update(fill_blank=True):
     """ Display content, show message, blank screen."""
     clear()
 
-    if isinstance(g.content, listview.ListView):
-        util.xprint(g.content.content())
-        return
-
-    elif isinstance(g.content, content.PaginatedContent):
+    if isinstance(g.content, content.PaginatedContent):
         util.xprint(g.content.getPage(g.current_page))
         g.rprompt = content.page_msg(g.current_page)
     elif g.content:

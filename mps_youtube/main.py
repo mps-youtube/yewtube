@@ -139,13 +139,6 @@ def main():
         except (KeyboardInterrupt, EOFError):
             userinput = prompt_for_exit()
 
-        if isinstance(g.content, content.Content):
-            # g.content.run returns true if it matched one of its
-            # internal functions
-            if g.content.run(userinput):
-                screen.update()
-                continue
-
         for i in g.commands:
             if matchfunction(i.function, i.regex, userinput):
                 break

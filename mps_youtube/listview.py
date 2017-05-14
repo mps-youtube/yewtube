@@ -2,6 +2,7 @@
     DOCSTING COMES HERE
 """
 import re
+import math
 
 from . import c, util, content
 
@@ -57,7 +58,7 @@ class ListUser(ListViewItem):
         return "ret"
 
 
-class ListView(content.Content):
+class ListView(content.PaginatedContent):
     """ Content Agnostic Numbered List
 
         This class, using ListViewItems as abstractions you can
@@ -107,26 +108,17 @@ class ListView(content.Content):
         self.object_type = [obj.__class__ for obj in objects][0]
         del types
 
-    def pages(self):
+    def numPages(self):
         """ Returns # of pages """
-        items = len(self.objects) / self.views_per_page()
-        ret = 0
-        while items > 0:
-            ret += 1
-            items -= 1
-        return ret
+        return max(1, math.ceil(len(self.objects) / self.views_per_page()))
+
+    def getPage(self, page):
+        self.page = page
+        return self.content()
 
     def _page_slice(self):
         chgt = self.views_per_page()
         return slice(self.page * chgt, (self.page+1) * chgt)
-
-    def has_next_page(self):
-        """ Returns True if this is not the last page """
-        return self.page + 1 <= self.pages()
-
-    def has_previous_page(self):
-        """ Returns True if this page is not the first one """
-        return self.page > 0
 
     def content(self):
         """ Generates content
@@ -185,41 +177,7 @@ class ListView(content.Content):
             line = col + (fmtrow % tuple(data)) + c.w
             out += line + "\n"
         
-        # Page number
-        pagenum = ""
-        pagenum += "<" if self.has_previous_page() else "["
-        pagenum += str(self.page + 1) + "/" + str(self.pages() + 1)
-        pagenum += ">" if self.has_next_page() else "]"
-        out += (" " * (util.getxy().width - len(pagenum))) + pagenum + "\n"
         return out
-
-    def run(self, str_):
-        """ Allows a ListView to have its own commands it responds to
-
-            Returns True if it found a suitable command, should stop
-            further matching.
-
-        """
-
-        def goto_next_page(obj, _):
-            """ Increase self.page by 1 """
-            obj.page = obj.page + 1 if obj.has_next_page() else obj.page
-
-        def goto_prev_page(obj, _):
-            """ Decrease Page by 1 """
-            obj.page = obj.page - 1 if obj.has_previous_page() else obj.page
-
-        commands = [
-            {"cmd": r"^n", "func": goto_next_page},
-            {"cmd": r"^p", "func": goto_prev_page}
-        ]
-
-        for cobj in commands:
-            if re.match(cobj['cmd'], str_):
-                cobj['func'](self, str_)
-                return True
-
-        return False
 
     def _play(self, _, choice, __):  # pre, choice, post
         """ Handles what happends when a user selects something from the list
@@ -234,4 +192,4 @@ class ListView(content.Content):
     def views_per_page(self):
         """ Determines how many views can be per page
         """
-        return util.getxy().height - 4
+        return util.getxy().max_results
