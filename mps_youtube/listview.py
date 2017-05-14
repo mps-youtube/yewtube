@@ -106,7 +106,6 @@ class ListView(content.PaginatedContent):
             raise BaseException("More than one kind of objects in list")
 
         self.object_type = [obj.__class__ for obj in objects][0]
-        del types
 
     def numPages(self):
         """ Returns # of pages """
