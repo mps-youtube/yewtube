@@ -10,7 +10,7 @@ import pafy
 from . import util
 
 
-class ContentQuery(object):
+class ContentQuery:
     """ A wrapper for pafy.call_gdata. I lets you treat a search as a list,
         but the results will only be fetched when needed.
     """

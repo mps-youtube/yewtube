@@ -1,7 +1,7 @@
 import time
 
 
-class Playlist(object):
+class Playlist:
 
     """ Representation of a playist, has list of songs. """
 
@@ -32,7 +32,7 @@ class Playlist(object):
         return duration
 
 
-class Video(object):
+class Video:
 
     """ Class to represent a YouTube video. """
 

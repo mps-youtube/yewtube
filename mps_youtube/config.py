@@ -14,7 +14,7 @@ from . import g, c, paths, util
 
 mswin = os.name == "nt"
 
-class ConfigItem(object):
+class ConfigItem:
 
     """ A configuration item. """
 
@@ -270,7 +270,7 @@ def check_player(player):
             return dict(valid=False, message=msg)
 
 
-class _Config(object):
+class _Config:
 
     """ Holds various configuration values. """
 

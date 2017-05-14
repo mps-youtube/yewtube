@@ -7,7 +7,7 @@ import math
 from . import c, util, content
 
 
-class ListViewItem(object):
+class ListViewItem:
     """ TODO
     """
     data = None

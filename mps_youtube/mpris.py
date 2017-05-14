@@ -41,7 +41,7 @@ PLAYER_INTERFACE = 'org.mpris.MediaPlayer2.Player'
 PROPERTIES_INTERFACE = 'org.freedesktop.DBus.Properties'
 MPRIS_PATH = '/org/mpris/MediaPlayer2'
 
-class Mpris2Controller(object):
+class Mpris2Controller:
 
     """
         Controller for various MPRIS objects.
