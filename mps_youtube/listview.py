@@ -234,4 +234,4 @@ class ListView(content.Content):
     def views_per_page(self):
         """ Determines how many views can be per page
         """
-        return util.getxy().height - 6
+        return util.getxy().height - 4
