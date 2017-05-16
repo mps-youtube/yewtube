@@ -159,6 +159,44 @@ def generate_playlist_display():
     return out + "\n" * (5 - len(g.ytpls))
 
 
+def generate_subscriptions_display():
+    """ Generate list of subscriptions. """
+    if len(g.usersubs) == 0:
+        g.message = c.r + "No subscription found!"
+        return logo(c.g) + "\n\n"
+    g.rprompt = page_msg(g.current_page)
+
+    cw = getxy().width
+    fmtrow = "%s%-{}s %-3s%s\n".format(cw - 4)
+    fmthd = "%s%-{}s %-3s%s\n".format(cw - 4)
+    head = (c.ul, "Username", "New", c.w)
+    out = "\n" + fmthd % head
+
+    subs = {}
+    for sub in g.usersubs:
+        new = search_new(sub.userid, sub.lastcheck)
+        subs[sub.username] = new
+
+    for n, sub in enumerate(sorted(sorted(subs), key=subs.get, reverse=True)):
+        col = (c.g if n % 2 == 0 else c.w)
+        out += (fmtrow % (col, sub, subs[sub], c.w))
+
+    return out + "\n" * (5 - len(g.usersubs))
+
+
+def search_new(user, date):
+    """ Count new videos of user. """
+
+    qs = {'part': 'snippet',
+          'channelId': user,
+          'publishedAfter': date}
+
+    pldata = pafy.call_gdata('search', qs)
+    result_count = pldata['pageInfo']['totalResults']
+
+    return result_count
+
+
 def _get_user_columns():
     """ Get columns from user config, return dict. """
     total_size = 0

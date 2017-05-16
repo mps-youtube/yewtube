@@ -15,7 +15,7 @@ import pafy
 
 from .. import g, c, screen, config, util, content, listview, contentquery
 from ..playlist import Video
-from . import command
+from . import command, subscribe
 from .songlist import plist, paginatesongs
 
 
@@ -220,6 +220,8 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
         else:
             failmsg = "User %s not found or has no videos."  % termuser[1]
     msg = str(msg).format(c.w, c.y, c.y, term, user)
+
+    subscribe.update(channel_id)
 
     _search(progtext, query, msg, failmsg)
 

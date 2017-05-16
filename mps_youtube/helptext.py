@@ -153,6 +153,10 @@ def helptext():
     {2}rm <number(s)>{1} - remove items from displayed results.
     {2}sw <number>,<number>{1} - swap two items.
     {2}mv <number>,<number>{1} - move item <number> to position <number>.
+
+    {2}subs{1} - print list of subscriptions.
+    {2}sub <name>{1} - subscribe to channel <name>.
+    {2}unsub <name>{1} - unsubscribe to channel <name>.
     """.format(c.ul, c.w, c.y)),
 
         ("history", "Accessing Local History", """
