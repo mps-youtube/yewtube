@@ -53,10 +53,10 @@ class ContentQuery:
 
     def _perform_api_call(self):
         # Include nextPageToken if it is set
-        qry = {
-            **{"pageToken": self.nextpagetoken},
+        qry = dict(
+            pageToken=self.nextpagetoken,
             **(self.queries)
-            } if self.nextpagetoken else self.queries
+            ) if self.nextpagetoken else self.queries
 
         # Run query
         util.dbg("CQ.query", qry)
