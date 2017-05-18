@@ -169,7 +169,7 @@ def channelsearch(q_user):
 
     def run_m(user_id):
         """ Search ! """
-        usersearch_id(*user_id)
+        usersearch_id(*(user_id[0]))
     del g.content
 
     g.content = listview.ListView(columns, QueryObj, run_m)

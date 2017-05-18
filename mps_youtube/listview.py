@@ -4,7 +4,7 @@
 import re
 import math
 
-from . import c, util, content
+from . import c, g, util, content
 
 
 class ListViewItem:
@@ -136,12 +136,13 @@ class ListView(content.PaginatedContent):
             TODO: Make it so set columns can set "remaining" ?
         """
         # Sums all ints, deal with strings later
-        remaining = (util.getxy().width - 2) - sum(1 + (x['size'] if x['size'] and x['size'].__class__ == int else 0) for x in self.columns)
+        remaining = (util.getxy().width) - sum(1 + (x['size'] if x['size'] and x['size'].__class__ == int else 0) for x in self.columns) - (len(self.columns))
         lengthsize = 0
         if "length" in [x['size'] for x in self.columns]:
             max_l = max((getattr(x, "length")() for x in self.objects))
             lengthsize = 8 if max_l > 35999 else 7
             lengthsize = 6 if max_l < 6000 else lengthsize
+
         for col in self.columns:
             if col['size'] == "remaining":
                 col['size'] = remaining - lengthsize
@@ -168,6 +169,7 @@ class ListView(content.PaginatedContent):
                     data.append("%2d" % (num + (self.views_per_page() * self.page) + 1))
                 else:
                     field = getattr(obj, field)(fieldsize)
+                    field = str(field) if field.__class__ != str else field
                     if len(field) > fieldsize:
                         field = field[:fieldsize]
                     else:
@@ -182,11 +184,19 @@ class ListView(content.PaginatedContent):
         """ Handles what happends when a user selects something from the list
             Currently this functions hooks into commands/play
         """
-        uid = int(choice.split(",")[0].strip()) - 1
-        attr = getattr(self.objects[uid],
-                       self.objects.datatype.return_field(), None)
 
-        return self.func(attr())
+        uids = []
+        for splitted_choice in choice.split(","):
+            cho = splitted_choice.strip()
+            if cho.isdigit():
+                uids.append(int(cho) - 1)
+            else:
+                cho = cho.split("-")
+                if cho[0].isdigit() and cho[1].isdigit():
+                    uids += list(range(int(cho[0]) - 1, int(cho[1])))
+
+        var = getattr(self.object_type, "return_field")()
+        self.func([getattr(self.objects[x], var)() for x in uids])
 
     def views_per_page(self):
         """ Determines how many views can be per page
