@@ -42,7 +42,10 @@ def helptext():
     {2}p <number>{1} - switch to page <number>.
 
     {2}album <album title>{1} - Search for matching tracks using album title
-    {2}channels <Channel name> - Search for channels by channelname
+    {2}channels <Channel name>{1} - Search for channels by channelname
+    {2}live <category>{1} - Search for livestreams from a range of categories. 
+    Categories: {2}{3}{1}
+    
     {2}user <username>{1} - list YouTube uploads by <username>.
     {2}user <username>/<query>{1} - as above, but matches <query>.
     {2}userpl <username>{1} - list YouTube playlists created by <username>.
@@ -55,7 +58,7 @@ def helptext():
     {2}r <number>{1} - show videos related to video <number>.
     {2}u <number>{1} - show videos uploaded by uploader of video <number>.
     {2}c <number>{1} - view comments for video <number>
-    """.format(c.ul, c.w, c.y)),
+    """.format(c.ul, c.w, c.y, ", ".join(g.categories.keys()))),
 
         ("edit", "Editing / Manipulating Results", """
     {0}Editing and Manipulating Results{1}

@@ -13,8 +13,8 @@ parser.add_argument('search', nargs='+')
 
 import pafy
 
-from .. import g, c, screen, config, util, content, listview, contentquery
-from ..playlist import Video
+from .. import g, c, screen, config, util, content, listview, contentquery, player
+from ..playlist import Video, Playlist
 from . import command
 from .songlist import plist, paginatesongs
 
@@ -237,6 +237,40 @@ def related_search(vitem):
     msg = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
     failmsg = "Related to %s%s%s not found" % (c.y, vitem.ytid, c.w)
     _search(ttitle, query, msg, failmsg)
+
+
+# Livestream category search
+@command(r'live\s+(.+)')
+def livestream_category_search(term):
+    sel_category = g.categories.get(term, None)
+
+    if not sel_category:
+        g.message = ("That is not a valid category. Valid categories are: ")
+        g.message += (", ".join(g.categories.keys()))
+        return
+
+    query = {
+        "part": "id,snippet",
+        "eventType": "live",
+        "maxResults": 50,
+        "type": "video",
+        "videoCategoryId": sel_category
+    }
+
+    query_obj = contentquery.ContentQuery(listview.ListLiveStream, 'search', query)
+    columns = [
+              {"name": "idx", "size": 3, "heading": "Num"},
+              {"name": "title", "size": 40, "heading": "Title"},
+              {"name": "description", "size": "remaining", "heading": "Description"},
+              ] 
+
+    def start_stream(returned):
+        songs = Playlist("Search Results", [Video(*x) for x in returned])
+        player.play_range(songs, False, False, False)
+
+    g.content = listview.ListView(columns, query_obj, start_stream)
+    g.message = "Livestreams in category: '%s'" % term
+
 
 
 # Note: [^./] is to prevent overlap with playlist search command

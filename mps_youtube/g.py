@@ -51,6 +51,16 @@ PLFILE = os.path.join(paths.get_config_dir(), "playlist_v2")
 HISTFILE = os.path.join(paths.get_config_dir(), "play_history")
 CACHEFILE = os.path.join(paths.get_config_dir(), "cache_py_" + sys.version[0:5])
 READLINE_FILE = None
+categories = {
+        "film":      1,
+        "autos":     2,
+        "music":    10,
+        "sports":   17,
+        "travel":   19,
+        "gaming":   20,
+        "blogging": 21,
+        "news":     25
+}
 playerargs_defaults = {
     "mpv": {
         "msglevel": {"<0.4": "--msglevel=all=no:statusline=status",
