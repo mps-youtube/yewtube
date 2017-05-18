@@ -6,9 +6,12 @@ import logging
 from datetime import datetime, timedelta
 
 from argparse import ArgumentParser
+
 parser = ArgumentParser()
 parser.add_argument('-d', '--duration', choices=('any', 'short', 'medium', 'long'))
 parser.add_argument('-a', '--after')
+parser.add_argument('-l', '--live', nargs="?", const=True)
+parser.add_argument('-c', '--category', nargs=1)
 parser.add_argument('search', nargs='+')
 
 import pafy
@@ -66,7 +69,7 @@ def token(page):
     return b64.strip('=')
 
 
-def generate_search_qs(term, match='term', videoDuration='any', after=None):
+def generate_search_qs(term, match='term', videoDuration='any', after=None, category=None, is_live=False):
     """ Return query string. """
 
     aliases = dict(views='viewCount')
@@ -92,6 +95,12 @@ def generate_search_qs(term, match='term', videoDuration='any', after=None):
 
     if config.SEARCH_MUSIC.get:
         qs['videoCategoryId'] = 10
+
+    if category:
+        qs['videoCategoryId'] = category
+
+    if is_live:
+        qs['eventType'] = "live"
 
     return qs
 
@@ -272,17 +281,21 @@ def livestream_category_search(term):
     g.message = "Livestreams in category: '%s'" % term
 
 
-
 # Note: [^./] is to prevent overlap with playlist search command
 @command(r'(?:search|\.|/)\s*([^./].{1,500})')
 def search(term):
     """ Perform search. """
-    try:     #TODO make use of unknowns
+    try:  # TODO make use of unknowns
         args, unknown = parser.parse_known_args(term.split())
-        videoDuration = args.duration if args.duration else 'any'
+        video_duration = args.duration if args.duration else 'any'
+        if args.category:
+            if not args.category[0].isdigit():
+                args.category = g.categories.get(args.category)
+            else:
+                args.category = "".join(args.category)
         after = args.after
         term = ' '.join(args.search)
-    except SystemExit:  #<------ argsparse calls exit()
+    except SystemExit:  # <------ argsparse calls exit()
         g.message = c.b + "Bad syntax. Enter h for help" + c.w
         return
 
@@ -292,7 +305,9 @@ def search(term):
         return
 
     logging.info("search for %s", term)
-    query = generate_search_qs(term, videoDuration=videoDuration, after=after)
+    query = generate_search_qs(term, videoDuration=video_duration, after=after,
+                               category=args.category, is_live=args.live)
+    
     msg = "Search results for %s%s%s" % (c.y, term, c.w)
     failmsg = "Found nothing for %s%s%s" % (c.y, term, c.w)
     _search(term, query, msg, failmsg)
