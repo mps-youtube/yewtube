@@ -33,16 +33,24 @@ def helptext():
     {2}set search_music true{1}  - search only YouTube music category.
 
     {2}/<query>{1} or {2}.<query>{1} to search for videos. e.g., {2}/daft punk{1}
-        [-d {{any,short,medium,long}}] [-a AFTER] search [search ...] {2}/-d short -a day hits{1}
-         AFTER: day, week, month, year, yyyy-mm-dd, yyyy-mm-ddThh:mm:ddZ
-        {2}/ --after 2016-08-11 tweekaz --duration long{1}
+    Search Arguments:
+    {2}-d, --duration{1}    Can be any/short/medium/long
+    {2}-a, --after{1}       Date in {2}YYYY-MM-DD{1} or {2}YYYY-MM-DD{1}T{2}HH:MM{1} format
+    {2}-l, --live{1}        Limit search to livestreams
+    {2}-c, --category{1}    Search within a category, (number or string)
+                      Available categories:
+                      {2}{3}{1}
+
     {2}//<query>{1} or {2}..<query>{1} - search for YouTube playlists. e.g., \
     {2}//80's music{1}
     {2}n{1} and {2}p{1} - continue search to next/previous pages.
     {2}p <number>{1} - switch to page <number>.
 
     {2}album <album title>{1} - Search for matching tracks using album title
-    {2}channels <Channel name> - Search for channels by channelname
+    {2}channels <Channel name>{1} - Search for channels by channelname
+    {2}live <category>{1} - Search for livestreams from a range of categories. 
+    Categories: {2}{3}{1}
+    
     {2}user <username>{1} - list YouTube uploads by <username>.
     {2}user <username>/<query>{1} - as above, but matches <query>.
     {2}userpl <username>{1} - list YouTube playlists created by <username>.
@@ -55,7 +63,7 @@ def helptext():
     {2}r <number>{1} - show videos related to video <number>.
     {2}u <number>{1} - show videos uploaded by uploader of video <number>.
     {2}c <number>{1} - view comments for video <number>
-    """.format(c.ul, c.w, c.y)),
+    """.format(c.ul, c.w, c.y, ", ".join(g.categories.keys()))),
 
         ("edit", "Editing / Manipulating Results", """
     {0}Editing and Manipulating Results{1}
