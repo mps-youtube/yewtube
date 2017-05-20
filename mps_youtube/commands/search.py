@@ -290,7 +290,7 @@ def search(term):
         video_duration = args.duration if args.duration else 'any'
         if args.category:
             if not args.category[0].isdigit():
-                args.category = g.categories.get(args.category)
+                args.category = g.categories.get(args.category[0])
             else:
                 args.category = "".join(args.category)
         after = args.after
