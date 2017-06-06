@@ -7,8 +7,8 @@ from .. import g, c, streams, util, content, config
 from . import command, WORD, RS
 from .songlist import plist
 from .search import yt_url, related
-from ..player import play_range
-
+from ..players.mpv import Mpv
+from ..players.mplayer import Mplayer
 
 @command(r'play\s+(%s|\d+)' % WORD)
 def play_pl(name):
@@ -33,19 +33,11 @@ def play_pl(name):
 
 
 @command(r'(%s{0,3})([-,\d\s\[\]]{1,250})\s*(%s{0,3})$' %
-         (RS, RS))
+        (RS, RS))
 def play(pre, choice, post=""):
     """ Play choice.  Use repeat/random if appears in pre/post. """
     # pylint: disable=R0914
     # too many local variables
-
-    # Im just highjacking this if g.content is a
-    # content.Content class
-    if isinstance(g.content, content.Content):
-        play_call = getattr(g.content, "_play", None)
-        if callable(play_call):
-            play_call(pre, choice, post)
-        return
 
     if g.browse_mode == "ytpl":
 
@@ -92,7 +84,21 @@ def play(pre, choice, post=""):
                 streams.preload(g.model[chosen + 1], override=override)
 
         try:
-            play_range(songlist, shuffle, repeat, override)
+            if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
+                g.message = "Player not configured! Enter %sset player <player_app> "\
+                    "%s to set a player" % (c.g, c.w)
+                return
+            else:
+                if config.PLAYER.get.endswith("mpv.exe"):
+                    mpv = Mpv()
+                    mpv.play_range(songlist, shuffle, repeat, override)
+                elif config.PLAYER.get.endswith("mplayer.exe"):
+                    mplayer = Mplayer()
+                    mplayer.play_range(songlist, shuffle, repeat, override)
+                else:
+                    g.message = "Player not supported! Enter %sset player <player_app> "\
+                        "%s to set player as mpv or mplayer." % (c.g, c.w)
+                    return
         except KeyboardInterrupt:
             g.content = content.generate_songlist_display()
             return
@@ -100,7 +106,6 @@ def play(pre, choice, post=""):
         if config.AUTOPLAY.get:
             related(selection.pop())
             play(pre, str(random.randint(1, 15)), post="")
-
 
 @command(r'(%s{0,3})(?:\*|all)\s*(%s{0,3})' %
         (RS, RS))
