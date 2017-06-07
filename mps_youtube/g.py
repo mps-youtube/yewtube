@@ -159,4 +159,10 @@ text = {
     'help topic': ("  Enter *help <topic>* for specific help:"),
     'help topic_': (c.y, c.w),
     'songs rm': '*&&* tracks removed &&',
-    'songs rm_': (c.y, c.w)}
+    'songs rm_': (c.y, c.w),
+    'genpl empty': "*&&* is either empty or doesn't exist",
+    'genpl empty_': (c.b, c.r),
+    'genpl parsed': "*&&* entries found in *&&*",
+    'genpl parsed_': (c.g, c.w, c.b, c.w),
+    'genpl finding': "Finding the best match for *&&* ...",
+    'genpl finding_': (c.y, c.w)}

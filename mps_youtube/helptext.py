@@ -50,6 +50,9 @@ def helptext():
     {2}channels <Channel name>{1} - Search for channels by channelname
     {2}live <category>{1} - Search for livestreams from a range of categories. 
     Categories: {2}{3}{1}
+
+    {2}genpl <fullfilepath>{1} - Creates a playlist automatically with video titles from fullfilepath
+    <fullfilepath>: Full path of text file with one title per line
     
     {2}user <username>{1} - list YouTube uploads by <username>.
     {2}user <username>/<query>{1} - as above, but matches <query>.
