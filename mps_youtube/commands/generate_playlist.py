@@ -41,10 +41,10 @@ def check_sourcefile(filename):
 
 
 def create_playlist(queries):
-    """
+    """Add a new playlist
+
     Create playlist with a random name, get the first
     match for each title in queries and append it to the playlist
-
     """
     plname = random_plname()
     if not g.userpl.get(plname):
