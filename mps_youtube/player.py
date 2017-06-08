@@ -1,8 +1,19 @@
 import abc
 import os
 import sys
+import random
+import tempfile
+import subprocess
+import logging
+import json
+import re
+import socket
+import math
+import time
+import shlex
+from urllib.error import HTTPError, URLError
 
-from . import c, config
+from . import g, screen, c, streams, history, content, paths, config, util
 
 class Player(metaclass=abc.ABCMeta):
 
@@ -39,6 +50,25 @@ class Player(metaclass=abc.ABCMeta):
         fmt = "    %-20s       %-20s"
         lines = fmt % (seek, volume) + "\n" + fmt % (pause, ret)
         return lines.format(c.g, c.w)
+
+    def _check_player(player_type):
+        """
+        Useful function to create the proper subclass instance when needed.
+        Perhaps it could be in a different factory-like file, loaded here as
+        a first functional attempt.
+        """
+        if "mpv" in player_type:
+            from .players.mpv import Mpv
+            return Mpv()
+        elif "mplayer" in player_type:
+            from .players.mplayer import Mplayer
+            return Mplayer()
+        elif "vlc" in player_type:
+            from .players.vlc import Vlc
+            return Vlc()
+        else:
+            from .players.other_players import OtherPlayers
+            return OtherPlayers()
 
     @abc.abstractmethod
     def play_range(self, songlist, shuffle=False, repeat=False, override=False):
