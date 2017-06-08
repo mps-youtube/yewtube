@@ -7,8 +7,7 @@ from .. import g, c, streams, util, content, config
 from . import command, WORD, RS
 from .songlist import plist
 from .search import yt_url, related
-from ..players.mpv import Mpv
-from ..players.mplayer import Mplayer
+from ..player import Player
 
 @command(r'play\s+(%s|\d+)' % WORD)
 def play_pl(name):
@@ -89,16 +88,8 @@ def play(pre, choice, post=""):
                     "%s to set a player" % (c.g, c.w)
                 return
             else:
-                if config.PLAYER.get.endswith("mpv.exe"):
-                    mpv = Mpv()
-                    mpv.play_range(songlist, shuffle, repeat, override)
-                elif config.PLAYER.get.endswith("mplayer.exe"):
-                    mplayer = Mplayer()
-                    mplayer.play_range(songlist, shuffle, repeat, override)
-                else:
-                    g.message = "Player not supported! Enter %sset player <player_app> "\
-                        "%s to set player as mpv or mplayer." % (c.g, c.w)
-                    return
+                player = Player._check_player(config.PLAYER.get)
+                player.play_range(songlist, shuffle, repeat, override)
         except KeyboardInterrupt:
             g.content = content.generate_songlist_display()
             return

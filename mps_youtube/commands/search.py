@@ -4,8 +4,7 @@ import math
 import base64
 import logging
 from datetime import datetime, timedelta
-from ..players.mpv import Mpv
-from ..players.mplayer import Mplayer
+from ..player import Player
 
 from argparse import ArgumentParser
 
@@ -279,21 +278,14 @@ def livestream_category_search(term):
         songs = Playlist("Search Results", [Video(*x) for x in returned])
         player.play_range(songs, False, False, False)
 
+
         if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
             g.message = "Player not configured! Enter %sset player <player_app> "\
                 "%s to set a player" % (c.g, c.w)
             return
         else:
-            if config.PLAYER.get.endswith("mpv.exe"):
-                mpv = Mpv()
-                mpv.play_range(songlist, shuffle, repeat, override)
-            elif config.PLAYER.get.endswith("mplayer.exe"):
-                mplayer = Mplayer()
-                mplayer.play_range(songlist, shuffle, repeat, override)
-            else:
-                g.message = "Player not supported! Enter %sset player <player_app> "\
-                    "%s to set player as mpv or mplayer." % (c.g, c.w)
-                return
+            player = Player._check_player(config.PLAYER.get)
+            player.play_range(songlist, shuffle, repeat, override)
 
     g.content = listview.ListView(columns, query_obj, start_stream)
     g.message = "Livestreams in category: '%s'" % term
@@ -340,9 +332,7 @@ def user_pls(user):
 @command(r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)')
 def pl_search(term, page=0, splash=True, is_user=False):
     """ Search for YouTube playlists.
-
     term can be query str or dict indicating user playlist search.
-
     """
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
