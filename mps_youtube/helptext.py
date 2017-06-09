@@ -51,7 +51,7 @@ def helptext():
     {2}live <category>{1} - Search for livestreams from a range of categories. 
     Categories: {2}{3}{1}
 
-    {2}genpl <fullfilepath>{1} - Creates a playlist automatically with video titles from fullfilepath
+    {2}mkp <fullfilepath>{1} - Creates a playlist automatically with video titles from fullfilepath
     <fullfilepath>: Full path of text file with one title per line
     
     {2}user <username>{1} - list YouTube uploads by <username>.

@@ -49,10 +49,11 @@ def _do_query(url, query, err='query failed', report=False):
     return wdata if not report else (wdata, False)
 
 
-def _best_song_match(songs, title, duration):
+def _best_song_match(songs, title, duration, titleweight, durationweight):
     """ Select best matching song based on title, length.
 
-    Score from 0 to 1 where 1 is best.
+    Score from 0 to 1 where 1 is best. titleweight and durationweight
+    parameters added to enable function usage when duration can't be guessed
 
     """
     # pylint: disable=R0914
@@ -89,10 +90,10 @@ def _best_song_match(songs, title, duration):
         title_score = seqmatch(None, title.lower(), tit.lower()).ratio()
         duration_score = 1 - variance(duration, dur)
         util.dbg("Title score: %s, Duration score: %s", title_score,
-            duration_score)
+                 duration_score)
 
         # apply weightings
-        score = duration_score * .5 + title_score * .5
+        score = duration_score * durationweight + title_score * titleweight
         candidates.append((score, song))
 
     best_score, best_song = max(candidates, key=lambda x: x[0])
@@ -117,7 +118,7 @@ def _match_tracks(artist, title, mb_tracks):
         ttitle = track['title']
         length = track['length']
         util.xprint("Search :  %s%s - %s%s - %s" % (c.y, artist, ttitle, c.w,
-                                               dtime(length)))
+                                                    dtime(length)))
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
         query = generate_search_qs(w, 0)
@@ -131,12 +132,13 @@ def _match_tracks(artist, title, mb_tracks):
             util.xprint(c.r + "Nothing matched :(\n" + c.w)
             continue
 
-        s, score = _best_song_match(results, artist + " " + ttitle, length)
+        s, score = _best_song_match(
+            results, artist + " " + ttitle, length, .5, .5)
         cc = c.g if score > 85 else c.y
         cc = c.r if score < 75 else cc
         util.xprint("Matched:  %s%s%s - %s \n[%sMatch confidence: "
-               "%s%s]\n" % (c.y, s.title, c.w, util.fmt_time(s.length),
-                            cc, score, c.w))
+                    "%s%s]\n" % (c.y, s.title, c.w, util.fmt_time(s.length),
+                                 cc, score, c.w))
         yield s
 
 
@@ -290,8 +292,8 @@ def search_album(term):
         util.xprint("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
         input("Press Enter to continue")
 
-    msg =  "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
-            c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
+    msg = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
+        c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
     failmsg = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
 
     paginatesongs(songs, msg=msg, failmsg=failmsg)

@@ -5,18 +5,18 @@ import string
 
 from .. import content, g, playlists, screen, util
 from ..playlist import Playlist
-from . import command, search
+from . import command, search, album_search
 
 
-@command(r'genpl\s*(.{1,100})')
+@command(r'mkp\s*(.{1,100})')
 def generate_playlist(sourcefile):
     """Generate a playlist from video titles in sourcefile"""
     expanded_sourcefile = path.expanduser(sourcefile)
     if not check_sourcefile(expanded_sourcefile):
-        g.message = util.F('genpl empty') % expanded_sourcefile
+        g.message = util.F('mkp empty') % expanded_sourcefile
     else:
         queries = read_sourcefile(expanded_sourcefile)
-        g.message = util.F('genpl parsed') % (len(queries), sourcefile)
+        g.message = util.F('mkp parsed') % (len(queries), sourcefile)
         if len(queries) > 0:
             create_playlist(queries)
             g.message = util.F('pl help')
@@ -66,7 +66,9 @@ def find_best_match(query):
     wdata = pafy.call_gdata('search', qs)
     results = search.get_tracks_from_json(wdata)
     if results:
-        return results[0]
+        res, score = album_search._best_song_match(
+            results, query, 0.1, 1.0, 0.0)
+        return res
 
 
 def random_plname():
