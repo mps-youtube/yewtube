@@ -50,7 +50,7 @@ def create_playlist(queries):
     if not g.userpl.get(plname):
         g.userpl[plname] = Playlist(plname)
     for query in queries:
-        g.message = util.F('genpl finding') % query
+        g.message = util.F('mkp finding') % query
         screen.update()
         qresult = find_best_match(query)
         if qresult:
