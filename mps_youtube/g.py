@@ -165,4 +165,8 @@ text = {
     'mkp parsed': "*&&* entries found in *&&*",
     'mkp parsed_': (c.g, c.w, c.b, c.w),
     'mkp finding': "Finding the best match for *&&* ...",
-    'mkp finding_': (c.y, c.w)}
+    'mkp finding_': (c.y, c.w),
+    'mkp desc unknown': "Unknown tabletype, *do a new search*",
+    'mkp desc unknown_': (c.y, c.w),
+    'mkp desc which data': "Which *tracks* to include?",
+    'mkp desc which data_': (c.y, c.w)}

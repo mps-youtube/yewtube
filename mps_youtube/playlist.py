@@ -35,7 +35,7 @@ class Playlist:
 class Video:
 
     """ Class to represent a YouTube video. """
-
+    description = ""
     def __init__(self, ytid, title, length):
         """ class members. """
         self.ytid = ytid
