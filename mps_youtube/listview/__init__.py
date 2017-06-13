@@ -4,82 +4,12 @@
 import re
 import math
 
-from . import c, g, util, content
+from .. import c, g, util, content
+from .base import ListViewItem
+from .user import ListUser
+from .livestream import ListLiveStream
+from .songtitle import ListSongtitle
 
-
-class ListViewItem:
-    """ TODO
-    """
-    data = None
-
-    def __init__(self, data):
-        self.data = data
-
-    def __getattr__(self, key):
-        return self.data[key] if key in self.data.keys() else None
-
-    def length(self, _=0):
-        """ Returns length of ListViewItem
-            A LVI has to return something for length
-            even if the item does not have one.
-        """
-        return 0
-
-
-class ListUser(ListViewItem):
-    """ Describes a user
-    """
-    # pylint: disable=unused-argument
-    def id(self, length=0):
-        """ Returns YTID """
-        return self.data.get("id").get("channelId")
-
-    def name(self, length=10):
-        """ Returns channel name """
-        return util.uea_pad(length, self.data.get("snippet").get("title"))
-
-    def description(self, length=10):
-        """ Channel description"""
-        return util.uea_pad(length, self.data.get("snippet").get("description"))
-
-    def kind(self, length=10):
-        """ Returns the youtube datatype
-            Example: youtube#channel, youtube#video
-        """
-        return self.data.get("id").get("kind")
-
-    def ret(self):
-        """ Used in the ListView play function """
-        return (self.data.get("snippet").get("title"), self.id(), "")
-
-    @staticmethod
-    def return_field():
-        """ Determines which function will be called on selected items """
-        return "ret"
-
-
-class ListLiveStream(ListViewItem):
-    """ Class exposing necessary components of a live stream """
-    # pylint: disable=unused-argument
-    def ytid(self, lngt=10):
-        """ Exposes ytid(string) """
-        return self.data.get("id").get("videoId")
-
-    def ret(self):
-        """ Returns content.video compatible tuple """
-        return (self.ytid(), self.title(), self.length())
-
-    def title(self, lngt=10):
-        """ exposes title """
-        return util.uea_pad(lngt, self.data.get("snippet").get("title"))
-    def description(self, lngt=10):
-        """ exposes description """
-        return util.uea_pad(lngt, self.data.get("snippet").get("description"))
-       
-    @staticmethod
-    def return_field():
-        """ ret """
-        return "ret"
 
 class ListView(content.PaginatedContent):
     """ Content Agnostic Numbered List
