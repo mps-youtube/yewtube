@@ -96,6 +96,7 @@ def utf8_replace(txt):
     :rtype: str
     """
     sse = sys.stdout.encoding
+    txt = str(txt)
     txt = txt.encode(sse, "replace").decode(sse)
     return txt
 
