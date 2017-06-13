@@ -419,6 +419,22 @@ def load_player_info(player):
         g.mplayer_version = _get_mplayer_version(player)
 
 
+def number_string_to_list(text):
+    """ Parses comma separated lists """
+    text = [x.strip() for x in text.split(",")]
+    vals = []
+    for line in text:
+        k = line
+        if "-" in line:
+            separated = [int(x.strip()) for x in k.split("-")]
+            for number in list(range(separated[0]-1, separated[1])):
+                vals.append(number)
+        else:
+            vals.append(k)
+
+    return [int(x) - 1 for x in vals]
+
+
 def _get_mpv_version(exename):
     """ Get version of mpv as 3-tuple. """
     o = subprocess.check_output([exename, "--version"]).decode()
