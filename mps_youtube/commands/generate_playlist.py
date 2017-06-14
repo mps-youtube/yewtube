@@ -1,7 +1,10 @@
+"""
+    Playlist Generation
+"""
 from os import path
-import pafy
 from random import choice
 import string
+import pafy
 
 from .. import content, g, playlists, screen, util, listview
 from ..playlist import Playlist
@@ -13,7 +16,7 @@ def generate_playlist(sourcefile):
     """Generate a playlist from video titles in sourcefile"""
 
     # Hooks into this, check if the argument --description is present
-    if "--description" in sourcefile:
+    if "--description" in sourcefile or "-d" in sourcefile:
         description_generator(sourcefile)
         return
 
@@ -23,7 +26,7 @@ def generate_playlist(sourcefile):
     else:
         queries = read_sourcefile(expanded_sourcefile)
         g.message = util.F('mkp parsed') % (len(queries), sourcefile)
-        if len(queries) > 0:
+        if queries:
             create_playlist(queries)
             g.message = util.F('pl help')
             g.content = content.playlists_display()
@@ -61,7 +64,7 @@ def create_playlist(queries, title=None):
         qresult = find_best_match(query)
         if qresult:
             g.userpl[plname].songs.append(qresult)
-    if len(g.userpl[plname]) > 0:
+    if g.userpl[plname]:
         playlists.save()
 
 
@@ -85,20 +88,23 @@ def random_plname():
 
 
 def description_generator(text):
-    # if mkp has --description
-    # TODO: use argparse for this functionality later
+    """ Fetches a videos description and parses it for
+        <artist> - <track> combinations
+    """
     if not isinstance(g.model, Playlist):
         g.message = util.F("mkp desc unknown")
-        return True
+        return
 
     # Use only the first result, for now
     num = text.replace("--description", "")
+    num = num.replace("-d", "")
     num = util.number_string_to_list(num)[0]
-    qs = {}
-    qs['id'] = g.model[num].ytid
-    qs['part'] = 'snippet'
-    qs['maxResults'] = '1'
-    data = pafy.call_gdata('videos', qs)['items'][0]['snippet']
+
+    query = {}
+    query['id'] = g.model[num].ytid
+    query['part'] = 'snippet'
+    query['maxResults'] = '1'
+    data = pafy.call_gdata('videos', query)['items'][0]['snippet']
     title = "mkp %s" % data['title']
     data = util.fetch_songs(data['description'])
 
@@ -109,8 +115,8 @@ def description_generator(text):
     ]
 
     def run_m(idx):
-        """ Create playlist based on the 
-            results selected 
+        """ Create playlist based on the
+            results selected
         """
         create_playlist(idx, title)
 
@@ -118,4 +124,4 @@ def description_generator(text):
     g.content = listview.ListView(columns, data, run_m)
     g.message = util.F("mkp desc which data")
 
-    return True
+    return

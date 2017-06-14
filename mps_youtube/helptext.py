@@ -1,3 +1,6 @@
+"""
+    Holds all help text
+"""
 from . import c, g
 from .util import get_near_name, F
 
@@ -53,6 +56,9 @@ def helptext():
 
     {2}mkp <fullfilepath>{1} - Creates a playlist automatically with video titles from fullfilepath
     <fullfilepath>: Full path of text file with one title per line
+    
+    {2}mkp -d <search result number>{1} - Create a playlist based on tracks
+    listed in that videos description. (Alternatively one can use {2}--description{1})
     
     {2}user <username>{1} - list YouTube uploads by <username>.
     {2}user <username>/<query>{1} - as above, but matches <query>.
@@ -292,7 +298,7 @@ def get_help(choice):
              "invoke": "command commands mpsyt invocation".split(),
 
              "search": ("user userpl pl pls r n p url album "
-                        "editing result results related remove swop".split()),
+                        "editing result results related remove swop mkp --description".split()),
 
              "edit": ("editing manupulate manipulating rm mv sw edit move "
                       "swap shuffle".split()),
