@@ -120,8 +120,11 @@ def description_generator(text):
         """
         create_playlist(idx, title)
 
-    data = [listview.ListSongtitle(x) for x in data]
-    g.content = listview.ListView(columns, data, run_m)
-    g.message = util.F("mkp desc which data")
+    if data:
+        data = [listview.ListSongtitle(x) for x in data]
+        g.content = listview.ListView(columns, data, run_m)
+        g.message = util.F("mkp desc which data")
+    else:
+        g.message = util.F("mkp no valid")
 
     return
