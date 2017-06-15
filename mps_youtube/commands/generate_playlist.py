@@ -106,7 +106,7 @@ def description_generator(text):
     query['maxResults'] = '1'
     data = pafy.call_gdata('videos', query)['items'][0]['snippet']
     title = "mkp %s" % data['title']
-    data = util.fetch_songs(data['description'])
+    data = util.fetch_songs(data['description'], data['title'])
 
     columns = [
         {"name": "idx", "size": 3, "heading": "Num"},

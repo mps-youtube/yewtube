@@ -120,7 +120,7 @@ def main():
     # open history from file
     history.load()
 
-    arg_inp = ' '.join(g.argument_commands)
+    arg_inp = " ".join(g.argument_commands)
 
     prompt = "> "
     arg_inp = arg_inp.replace(r",,", "[mpsyt-comma]")

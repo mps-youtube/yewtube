@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 import pafy
 
-from . import g, c, terminalsize
+from . import g, c, terminalsize, description_parser
 from .playlist import Video
 
 
@@ -419,27 +419,8 @@ def load_player_info(player):
         g.mplayer_version = _get_mplayer_version(player)
 
 
-def fetch_songs(text):
-    """ Parses cleartext to find song titles """
-
-    # Removes timestamps
-    ts_reg = r"(?:\(?(?:\d{0,4}:)?\d{0,2}:\d{0,2}\)?(?: - )?){1,2}"
-    text = re.sub(ts_reg, "", text)
-
-    # Removes Tracknumbers.
-    text = re.sub(r"\d+\.", "", text)
-
-    # Removes starting with non words
-    text = re.sub(r"^[^\w&()\[\]'\.\/]", "", text, flags=re.MULTILINE)
-
-    titles = []
-    rgex = r"(([\w&()\[\]'\.\/ ]+)([ ]?[-]+[ ]?)([\w&()\[\]'\.\/ ]+))+"
-    for result in re.findall(rgex, text):
-        artist, track = result[1].strip(), result[3].strip()
-
-        if len("%s - %s" % (artist, track)) > 5:
-            titles.append((artist, track))
-    return titles
+def fetch_songs(text,title="Unknown"):
+    return description_parser.parse(text, title)
 
 
 def number_string_to_list(text):
