@@ -105,6 +105,15 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
         streams = sorted(streams, key=getbitrate, reverse=True)
     else:
         streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
+        if not config.VIDEO_FORMAT.get == "auto":
+            if config.VIDEO_FORMAT.get == "mp4":
+                streams = [x for x in streams if x['ext'] == "mp4"]
+            if config.VIDEO_FORMAT.get == "webm":
+                streams = [x for x in streams if x['ext'] == "webm"]
+            if config.VIDEO_FORMAT.get == "3gp":
+                streams = [x for x in streams if x['ext'] == "3gp"]
+            if not streams:
+                streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
         streams = sorted(streams, key=getq, reverse=True)
 
     util.dbg("select stream, q: %s, audio: %s, len: %s", q, audio, len(streams))
