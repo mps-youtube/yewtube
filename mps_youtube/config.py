@@ -289,7 +289,7 @@ class _Config:
             ConfigItem("encoder", 0, minval=0, check_fn=check_encoder),
             ConfigItem("notifier", ""),
             ConfigItem("checkupdate", True),
-            ConfigItem("show_mplayer_keys", True, require_known_player=True),
+            ConfigItem("show_player_keys", True, require_known_player=True),
             ConfigItem("fullscreen", False, require_known_player=True),
             ConfigItem("show_status", True),
             ConfigItem("columns", ""),
@@ -310,7 +310,7 @@ class _Config:
                 check_fn=check_api_key),
             ConfigItem("autoplay", False),
             ConfigItem("set_title", True)
-            ] 
+            ]
 
     def __getitem__(self, key):
         # TODO: Possibly more efficient algorithm, w/ caching
