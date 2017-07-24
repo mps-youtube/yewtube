@@ -38,8 +38,11 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
         if config.SET_TITLE.get:
             util.set_window_title(song.title + " - mpsyt")
+
+        softrepeat = repeat and len(songlist) == 1
+
         try:
-            returncode = _playsong(song, override=override, repeat=repeat)
+            returncode = _playsong(song, override=override, softrepeat=softrepeat)
 
         except KeyboardInterrupt:
             logging.info("Keyboard Interrupt")
@@ -131,7 +134,7 @@ def _mplayer_help(short=True):
     return lines.format(c.g, c.w)
 
 
-def _playsong(song, failcount=0, override=False, repeat=False):
+def _playsong(song, failcount=0, override=False, softrepeat=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
     # pylint: disable=R0911,R0912
     if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
@@ -160,7 +163,7 @@ def _playsong(song, failcount=0, override=False, repeat=False):
         elif failcount < g.max_retries:
             util.dbg("--ioerror - trying next stream")
             failcount += 1
-            return _playsong(song, failcount=failcount, override=override, repeat=repeat)
+            return _playsong(song, failcount=failcount, override=override, softrepeat=softrepeat)
 
         elif "pafy" in str(e):
             g.message = str(e) + " - " + song.ytid
@@ -195,7 +198,7 @@ def _playsong(song, failcount=0, override=False, repeat=False):
         util.dbg("----htterror in _playsong call to gen_real_args %s", str(e))
         if failcount < g.max_retries:
             failcount += 1
-            return _playsong(song, failcount=failcount, override=override, repeat=repeat)
+            return _playsong(song, failcount=failcount, override=override, softrepeat=softrepeat)
         else:
             g.message = str(e)
             return
@@ -213,7 +216,7 @@ def _playsong(song, failcount=0, override=False, repeat=False):
     songdata = "%s; %s; %s Mb" % songdata
     screen.writestatus(songdata)
 
-    cmd = _generate_real_playerargs(song, override, stream, video, repeat)
+    cmd = _generate_real_playerargs(song, override, stream, video, softrepeat)
     returncode = _launch_player(song, songdata, cmd)
     failed = returncode not in (0, 42, 43)
 
@@ -223,13 +226,13 @@ def _playsong(song, failcount=0, override=False, repeat=False):
         screen.writestatus("error: retrying")
         time.sleep(1.2)
         failcount += 1
-        return _playsong(song, failcount=failcount, override=override, repeat=repeat)
+        return _playsong(song, failcount=failcount, override=override, softrepeat=softrepeat)
 
     history.add(song)
     return returncode
 
 
-def _generate_real_playerargs(song, override, stream, isvideo, repeat):
+def _generate_real_playerargs(song, override, stream, isvideo, softrepeat):
     """ Generate args for player command.
 
     Return args.
@@ -301,7 +304,7 @@ def _generate_real_playerargs(song, override, stream, isvideo, repeat):
                     util.list_update("--really-quiet", args, remove=True)
                     util.list_update(msglevel, args)
 
-            if repeat:
+            if softrepeat:
                 util.list_update("--loop-file", args)
 
     elif "vlc" in config.PLAYER.get:
