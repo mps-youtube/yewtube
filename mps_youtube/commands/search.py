@@ -443,7 +443,6 @@ def get_tracks_from_json(jsons):
     for item in items:
         if item['id']['kind'] == 'youtube#video':
             ids.append(get_track_id_from_json(item))
-    print(ids)
 
     qs = {'part':'contentDetails,statistics,snippet',
           'id': ','.join(ids)}
