@@ -429,6 +429,7 @@ def get_track_id_from_json(item):
             return node
     return ''
 
+
 def get_tracks_from_json(jsons):
     """ Get search results from API response """
 
