@@ -307,7 +307,7 @@ def search(term):
     logging.info("search for %s", term)
     query = generate_search_qs(term, videoDuration=video_duration, after=after,
                                category=args.category, is_live=args.live)
-    
+
     msg = "Search results for %s%s%s" % (c.y, term, c.w)
     failmsg = "Found nothing for %s%s%s" % (c.y, term, c.w)
     _search(term, query, msg, failmsg)
@@ -429,7 +429,6 @@ def get_track_id_from_json(item):
             return node
     return ''
 
-
 def get_tracks_from_json(jsons):
     """ Get search results from API response """
 
@@ -438,9 +437,15 @@ def get_tracks_from_json(jsons):
         util.dbg("got unexpected data or no search results")
         return ()
 
+    ids = []
     # fetch detailed information about items from videos API
+    for item in items:
+        if item['id']['kind'] == 'youtube#video':
+            ids.append(get_track_id_from_json(item))
+    print(ids)
+
     qs = {'part':'contentDetails,statistics,snippet',
-          'id': ','.join([get_track_id_from_json(i) for i in items])}
+          'id': ','.join(ids)}
 
     wdata = pafy.call_gdata('videos', qs)
 
