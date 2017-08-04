@@ -271,7 +271,7 @@ def livestream_category_search(term):
               {"name": "idx", "size": 3, "heading": "Num"},
               {"name": "title", "size": 40, "heading": "Title"},
               {"name": "description", "size": "remaining", "heading": "Description"},
-              ] 
+              ]
 
     def start_stream(returned):
         songs = Playlist("Search Results", [Video(*x) for x in returned])
@@ -353,8 +353,10 @@ def pl_search(term, page=0, splash=True, is_user=False):
             del qs['videoCategoryId'] # Incompatable with type=playlist
 
         pldata = pafy.call_gdata('search', qs)
+
         id_list = [i.get('id', {}).get('playlistId')
-                    for i in pldata.get('items', ())]
+                    for i in pldata.get('items', ())
+                    if i['id']['kind'] == 'youtube#playlist']
 
         result_count = min(pldata['pageInfo']['totalResults'], 500)
 
@@ -438,14 +440,13 @@ def get_tracks_from_json(jsons):
         util.dbg("got unexpected data or no search results")
         return ()
 
-    ids = []
     # fetch detailed information about items from videos API
-    for item in items:
-        if item['id']['kind'] == 'youtube#video':
-            ids.append(get_track_id_from_json(item))
+    id_list = [get_track_id_from_json(i)
+                for i in items
+                if i['id']['kind'] == 'youtube#video']
 
     qs = {'part':'contentDetails,statistics,snippet',
-          'id': ','.join(ids)}
+          'id': ','.join(id_list)}
 
     wdata = pafy.call_gdata('videos', qs)
 
