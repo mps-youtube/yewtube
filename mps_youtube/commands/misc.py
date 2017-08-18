@@ -222,7 +222,7 @@ def info(num):
         out += "\nDislikes   : " + str(p.dislikes)
         out += "\nCategory   : " + str(p.category)
         out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
-        out += "\n"
+        out += "\n\n" + c.ul + "Stream Info" + c.w + "\n"
         out += "\nExtension  : " + details['ext']
         out += "\nQuality    : " + details['quality']
         out += "\nContent    : " + details['url']
