@@ -4,6 +4,7 @@ import socket
 import traceback
 from urllib.request import urlopen
 from urllib.error import HTTPError, URLError
+from .. import player
 
 try:
     # pylint: disable=F0401
@@ -207,11 +208,13 @@ def info(num):
         p = util.get_pafy(item)
         pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
         pub = util.utc2local(pub)
+        setattr(p, 'ytid', p.videoid)
+        details = player.stream_details(p)[1]
         screen.writestatus("Fetched")
         out = c.ul + "Video Info" + c.w + "\n\n"
         out += p.title or ""
-        out += "\n" + (p.description or "")
-        out += "\n\nAuthor     : " + str(p.author)
+        out += "\n" + (p.description or "") + "\n"
+        out += "\nAuthor     : " + str(p.author)
         out += "\nPublished  : " + pub.strftime("%c")
         out += "\nView count : " + str(p.viewcount)
         out += "\nRating     : " + str(p.rating)[:4]
@@ -219,6 +222,10 @@ def info(num):
         out += "\nDislikes   : " + str(p.dislikes)
         out += "\nCategory   : " + str(p.category)
         out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
+        out += "\n"
+        out += "\nExtension  : " + details['ext']
+        out += "\nQuality    : " + details['quality']
+        out += "\nContent    : " + details['url']
         out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w)
         g.content = out
 
