@@ -76,6 +76,20 @@ def quits(showlogo=True):
 
     screen.msgexit(msg)
 
+def _format_comment(snippet, n, qnt, reply=False):
+    poster = snippet.get('authorDisplayName')
+    shortdate = util.yt_datetime(snippet.get('publishedAt', ''))[1]
+    text = snippet.get('textDisplay', '')
+    cid = ("%s%s/%s %s" % ('└── ' if reply else '', n, qnt, c.c("g", poster)))
+    return ("%-39s %s\n" % (cid, shortdate)) + \
+            c.c("y", text.strip()) + '\n\n'
+
+def _fetch_commentreplies(parentid):
+    return pafy.call_gdata('comments', {
+        'parentId': parentid,
+        'part': 'snippet',
+        'textFormat': 'plainText',
+        'maxResults': 50}).get('items', [])
 
 def fetch_comments(item):
     """ Fetch comments for item using gdata. """
@@ -89,16 +103,14 @@ def fetch_comments(item):
           'maxResults': 50,
           'part': 'snippet'}
 
-    # XXX should comment threads be expanded? this would require
-    # additional requests for comments responding on top level comments
-
     jsdata = pafy.call_gdata('commentThreads', qs)
 
-    coms = jsdata.get('items', [])
-    coms = [x.get('snippet', {}) for x in coms]
-    coms = [x.get('topLevelComment', {}) for x in coms]
+    coms = [x.get('snippet', {}) for x in jsdata.get('items', [])]
+
     # skip blanks
-    coms = [x for x in coms if len(x.get('snippet', {}).get('textDisplay', '').strip())]
+    coms = [x for x in coms
+            if len(x.get('topLevelComment', {}).get('snippet', {}).get('textDisplay', '').strip())]
+
     if not len(coms):
         g.message = "No comments for %s" % item.title[:50]
         g.content = generate_songlist_display()
@@ -107,13 +119,13 @@ def fetch_comments(item):
     commentstext = ''
 
     for n, com in enumerate(coms, 1):
-        snippet = com.get('snippet', {})
-        poster = snippet.get('authorDisplayName')
-        shortdate = util.yt_datetime(snippet.get('publishedAt', ''))[1]
-        text = snippet.get('textDisplay', '')
-        cid = ("%s/%s" % (n, len(coms)))
-        commentstext += ("%s %-35s %s\n" % (cid, c.c("g", poster), shortdate))
-        commentstext += c.c("y", text.strip()) + '\n\n'
+        snippet = com.get('topLevelComment', {}).get('snippet', {})
+        commentstext += _format_comment(snippet, n, len(coms))
+        if com.get('totalReplyCount') > 0:
+            replies = _fetch_commentreplies(com.get('topLevelComment').get('id'))
+            for n, com in enumerate(reversed(replies), 1):
+                commentstext += _format_comment(com.get('snippet', {}),
+                                                n, len(replies), True)
 
     g.current_page = 0
     g.content = content.StringContent(commentstext)
