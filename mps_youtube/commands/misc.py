@@ -167,6 +167,38 @@ def clip_copy(num):
         g.content = generate_songlist_display()
 
 
+@command(r'X\s*(\d+)')
+def clip_copy(num):
+    """ Copy item to clipboard. """
+    if g.browse_mode == "normal":
+
+        item = (g.model[int(num) - 1])
+        details = player.stream_details(item)[1]
+        stream = details['url']
+
+    else:
+        g.message = "clipboard copy not valid in this mode"
+        g.content = generate_songlist_display()
+        return
+
+    if has_pyperclip:
+
+        try:
+            pyperclip.copy(stream)
+            g.message = c.y + stream + c.w + " copied"
+            g.content = generate_songlist_display()
+
+        except Exception as e:
+            g.content = generate_songlist_display()
+            g.message = stream + "\nError - couldn't copy to clipboard.\n" + \
+                    ''.join(traceback.format_exception_only(type(e), e))
+
+    else:
+        g.message = "pyperclip module must be installed for clipboard support\n"
+        g.message += "see https://pypi.python.org/pypi/pyperclip/"
+        g.content = generate_songlist_display()
+
+
 @command(r'i\s*(\d{1,4})')
 def info(num):
     """ Get video description. """
