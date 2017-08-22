@@ -136,16 +136,7 @@ def _mplayer_help(short=True):
 
 
 def stream_details(song, failcount=0, override=False, softrepeat=False):
-    """ Play song using config.PLAYER called with args config.PLAYERARGS."""
-    # pylint: disable=R0911,R0912
-    if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
-        g.message = "Player not configured! Enter %sset player <player_app> "\
-            "%s to set a player" % (c.g, c.w)
-        return
-
-    if config.NOTIFIER.get:
-        subprocess.Popen(shlex.split(config.NOTIFIER.get) + [song.title])
-
+    """Fetch stream details for a song."""
     # don't interrupt preloading:
     while song.ytid in g.preloading:
         screen.writestatus("fetching item..")
@@ -216,6 +207,16 @@ def stream_details(song, failcount=0, override=False, softrepeat=False):
 
 
 def _playsong(song, stream, video, failcount=0, override=False, softrepeat=False):
+    """ Play song using config.PLAYER called with args config.PLAYERARGS."""
+    # pylint: disable=R0911,R0912
+    if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
+        g.message = "Player not configured! Enter %sset player <player_app> "\
+            "%s to set a player" % (c.g, c.w)
+        return
+
+    if config.NOTIFIER.get:
+        subprocess.Popen(shlex.split(config.NOTIFIER.get) + [song.title])
+
     size = streams.get_size(song.ytid, stream['url'])
     songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
                 int(size / (1024 ** 2)))
