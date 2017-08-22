@@ -134,7 +134,7 @@ def comments(number):
 
 @command(r'x\s*(\d+)')
 def clip_copy(num):
-    """ Copy item to clipboard. """
+    """ Copy video/playlist url to clipboard. """
     if g.browse_mode == "ytpl":
 
         p = g.ytpls[int(num) - 1]
@@ -169,7 +169,7 @@ def clip_copy(num):
 
 @command(r'X\s*(\d+)')
 def clip_copy(num):
-    """ Copy item to clipboard. """
+    """ Copy content stream url to clipboard. """
     if g.browse_mode == "normal":
 
         item = (g.model[int(num) - 1])
@@ -200,8 +200,8 @@ def clip_copy(num):
 
 
 @command(r'i\s*(\d{1,4})')
-def info(num):
-    """ Get video description. """
+def video_info(num):
+    """ Get video information. """
     if g.browse_mode == "ytpl":
         p = g.ytpls[int(num) - 1]
 
@@ -240,8 +240,6 @@ def info(num):
         p = util.get_pafy(item)
         pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
         pub = util.utc2local(pub)
-        setattr(p, 'ytid', p.videoid)
-        details = player.stream_details(p)[1]
         screen.writestatus("Fetched")
         out = c.ul + "Video Info" + c.w + "\n\n"
         out += p.title or ""
@@ -254,10 +252,30 @@ def info(num):
         out += "\nDislikes   : " + str(p.dislikes)
         out += "\nCategory   : " + str(p.category)
         out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
-        out += "\n\n" + c.ul + "Stream Info" + c.w + "\n"
-        out += "\nExtension  : " + details['ext']
-        out += "\nQuality    : " + details['quality']
-        out += "\nContent    : " + details['url']
+        out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w)
+        g.content = out
+
+
+@command(r's\s*(\d{1,4})')
+def stream_info(num):
+    """ Get stream information. """
+    if g.browse_mode == "normal":
+        g.content = logo(c.b)
+        screen.update()
+        screen.writestatus("Fetching stream metadata..")
+        item = (g.model[int(num) - 1])
+        streams.get(item)
+        p = util.get_pafy(item)
+        setattr(p, 'ytid', p.videoid)
+        details = player.stream_details(p)[1]
+        screen.writestatus("Fetched")
+        out = "\n\n" + c.ul + "Stream Info" + c.w + "\n"
+        out += "\nExtension   : " + details['ext']
+        out += "\nSize        : " + str(details['size'])
+        out += "\nQuality     : " + details['quality']
+        out += "\nRaw bitrate : " + str(details['rawbitrate'])
+        out += "\nMedia type  : " + details['mtype']
+        out += "\nLink        : " + details['url']
         out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w)
         g.content = out
 
