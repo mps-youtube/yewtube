@@ -133,7 +133,7 @@ def comments(number):
 
 
 @command(r'x\s*(\d+)')
-def clip_copy(num):
+def clipcopy_video(num):
     """ Copy video/playlist url to clipboard. """
     if g.browse_mode == "ytpl":
 
@@ -168,7 +168,7 @@ def clip_copy(num):
 
 
 @command(r'X\s*(\d+)')
-def clip_copy(num):
+def clipcopy_stream(num):
     """ Copy content stream url to clipboard. """
     if g.browse_mode == "normal":
 
