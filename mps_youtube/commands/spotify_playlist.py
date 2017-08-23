@@ -48,7 +48,31 @@ def grab_playlist(spotify, playlist):
         else:
             break
 
-    # TODO
+    if playlists['total'] == 0:
+        return
+
+    owner_id = playlist['owner']['id']
+    playlist_id = playlist['id']
+    results = spotify.user_playlist(owner_id, playlist_id, fields='tracks,next')
+
+    all_tracks = []
+    tracks = results['tracks']
+    while True:
+        for item in tracks['items']:
+            track = item['track']
+            try:
+                #util.xprint(track['external_urls']['spotify'])
+                all_tracks.append(track)
+            except KeyError:
+                pass
+        # 1 page = 50 results
+        # check if there are more pages
+        if tracks['next']:
+            tracks = spotify.next(tracks)
+        else:
+            break
+
+    return all_tracks
 
 
 def show_message(message, col=c.r, update=False):
@@ -260,13 +284,13 @@ def search_playlist(term):
     token = credentials.get_access_token()
     spotify = spotipy.Spotify(auth=token)
 
-    grab_playlist(spotify, 'https://open.spotify.com/user/1110716798/playlist/2NwWoITrXtgxDBAvzGIz52')
-    exit()
-    playlist = _get_mb_album(term)
+    tracks = grab_playlist(spotify, 'https://open.spotify.com/user/1110716798/playlist/2NwWoITrXtgxDBAvzGIz52')
 
-    if not playlist:
+    if not tracks:
         show_message("Playlist '%s' not found!" % term)
         return
+
+    playlist = _get_mb_album(term)
 
     out = "'%s' by %s%s%s\n\n" % (album['title'],
                                   c.g, album['artist'], c.w)
