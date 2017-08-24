@@ -42,7 +42,8 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         softrepeat = repeat and len(songlist) == 1
 
         try:
-            returncode = _playsong(song, override=override, softrepeat=softrepeat)
+            video, stream = stream_details(song, override=override, softrepeat=softrepeat)
+            returncode = _playsong(song, stream, video, override=override, softrepeat=softrepeat)
 
         except KeyboardInterrupt:
             logging.info("Keyboard Interrupt")
@@ -134,17 +135,8 @@ def _mplayer_help(short=True):
     return lines.format(c.g, c.w)
 
 
-def _playsong(song, failcount=0, override=False, softrepeat=False):
-    """ Play song using config.PLAYER called with args config.PLAYERARGS."""
-    # pylint: disable=R0911,R0912
-    if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
-        g.message = "Player not configured! Enter %sset player <player_app> "\
-            "%s to set a player" % (c.g, c.w)
-        return
-
-    if config.NOTIFIER.get:
-        subprocess.Popen(shlex.split(config.NOTIFIER.get) + [song.title])
-
+def stream_details(song, failcount=0, override=False, softrepeat=False):
+    """Fetch stream details for a song."""
     # don't interrupt preloading:
     while song.ytid in g.preloading:
         screen.writestatus("fetching item..")
@@ -154,7 +146,7 @@ def _playsong(song, failcount=0, override=False, softrepeat=False):
         streams.get(song, force=failcount, callback=screen.writestatus)
 
     except (IOError, URLError, HTTPError, socket.timeout) as e:
-        util.dbg("--ioerror in _playsong call to streams.get %s", str(e))
+        util.dbg("--ioerror in stream_details call to streams.get %s", str(e))
 
         if "Youtube says" in str(e):
             g.message = util.F('cant get track') % (song.title + " " + str(e))
@@ -163,7 +155,7 @@ def _playsong(song, failcount=0, override=False, softrepeat=False):
         elif failcount < g.max_retries:
             util.dbg("--ioerror - trying next stream")
             failcount += 1
-            return _playsong(song, failcount=failcount, override=override, softrepeat=softrepeat)
+            return stream_details(song, failcount=failcount, override=override, softrepeat=softrepeat)
 
         elif "pafy" in str(e):
             g.message = str(e) + " - " + song.ytid
@@ -171,7 +163,7 @@ def _playsong(song, failcount=0, override=False, softrepeat=False):
 
     except ValueError:
         g.message = util.F('track unresolved')
-        util.dbg("----valueerror in _playsong call to streams.get")
+        util.dbg("----valueerror in stream_details call to streams.get")
         return
 
     try:
@@ -192,13 +184,15 @@ def _playsong(song, failcount=0, override=False, softrepeat=False):
         if not stream:
             raise IOError("No streams available")
 
+        return (video, stream)
+
     except (HTTPError) as e:
 
         # Fix for invalid streams (gh-65)
-        util.dbg("----htterror in _playsong call to gen_real_args %s", str(e))
+        util.dbg("----htterror in stream_details call to gen_real_args %s", str(e))
         if failcount < g.max_retries:
             failcount += 1
-            return _playsong(song, failcount=failcount, override=override, softrepeat=softrepeat)
+            return stream_details(song, failcount=failcount, override=override, softrepeat=softrepeat)
         else:
             g.message = str(e)
             return
@@ -210,6 +204,19 @@ def _playsong(song, failcount=0, override=False, softrepeat=False):
         errmsg = e.message if hasattr(e, "message") else str(e)
         g.message = c.r + str(errmsg) + c.w
         return
+
+
+def _playsong(song, stream, video, failcount=0, override=False, softrepeat=False):
+    """ Play song using config.PLAYER called with args config.PLAYERARGS."""
+    # pylint: disable=R0911,R0912
+    if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
+        g.message = "Player not configured! Enter %sset player <player_app> "\
+            "%s to set a player" % (c.g, c.w)
+        return
+
+    if config.NOTIFIER.get:
+        subprocess.Popen(shlex.split(config.NOTIFIER.get) + [song.title])
+
     size = streams.get_size(song.ytid, stream['url'])
     songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
                 int(size / (1024 ** 2)))
@@ -226,7 +233,7 @@ def _playsong(song, failcount=0, override=False, softrepeat=False):
         screen.writestatus("error: retrying")
         time.sleep(1.2)
         failcount += 1
-        return _playsong(song, failcount=failcount, override=override, softrepeat=softrepeat)
+        return _playsong(song, stream, video, failcount=failcount, override=override, softrepeat=softrepeat)
 
     history.add(song)
     return returncode
