@@ -169,12 +169,12 @@ def _match_tracks(tracks):
         yield s
 
 
-@command(r'splaylist\s(.*[-_a-zA-Z0-9].*)')
-def search_playlist(term):
-    """Search for Spotify playlist. """
+@command(r'suser\s(.*[-_a-zA-Z0-9].*)')
+def search_user(term):
+    """Search for Spotify user playlists. """
     # pylint: disable=R0914,R0912
     if not term:
-        show_message("Enter playlist url:", c.g, update=True)
+        show_message("Enter username:", c.g, update=True)
         term = input("> ")
 
         if not term or len(term) < 2:
@@ -186,14 +186,61 @@ def search_playlist(term):
     token = credentials.get_access_token()
     spotify = spotipy.Spotify(auth=token)
 
-    playlist, tracks = grab_playlist(spotify, 'https://open.spotify.com/user/1110716798/playlist/2NwWoITrXtgxDBAvzGIz52')
+    playlists = spotify.user_playlists(term)
+    links = []
+    check = 1
+
+    g.content = "Playlists:\n"
+
+    while True:
+        for playlist in playlists['items']:
+            if playlist['name'] is not None:
+                g.content += (u'{0:>2}. {1:<30}  ({2} tracks)'.format(
+                    check, playlist['name'],
+                    playlist['tracks']['total']))
+                g.content += "\n"
+                links.append(playlist)
+                check += 1
+        if playlists['next']:
+            playlists = spotify.next(playlists)
+        else:
+            break
+
+    g.message = c.g + "Choose your playlist:" + c.w
+    screen.update()
+
+    choice = int(input("> "))
+    playlist = links[choice-1]
+
+    search_playlist(playlist['external_urls']['spotify'], spotify=spotify)
+
+
+@command(r'splaylist\s(.*[-_a-zA-Z0-9].*)')
+def search_playlist(term, spotify=None):
+    """Search for Spotify playlist. """
+    # pylint: disable=R0914,R0912
+    if not term:
+        show_message("Enter playlist url:", c.g, update=True)
+        term = input("> ")
+
+        if not term or len(term) < 2:
+            g.message = c.r + "Not enough input!" + c.w
+            g.content = content.generate_songlist_display()
+            return
+
+    if not spotify:
+        credentials = generate_credentials()
+        token = credentials.get_access_token()
+        spotify = spotipy.Spotify(auth=token)
+
+    try:
+        playlist, tracks = grab_playlist(spotify, term)
+    except TypeError:
+        tracks = None
 
     if not tracks:
         show_message("Playlist '%s' not found!" % term)
         return
-
-    out = "'%s' by %s%s%s\n\n" % (playlist['name'],
-                                  c.g, playlist['owner']['id'], c.w)
 
     if not playlist['tracks']['total']:
         show_message("Playlist '%s' by '%s' has 0 tracks!" % (playlist['name'], playlist['owner']['id']))
@@ -204,8 +251,8 @@ def search_playlist(term):
     g.message = msg
     g.content = "Tracks:\n"
     for n, track in enumerate(tracks, 1):
-        trackname = track['artists'][0]['name'] + ' - ' + track['name']
-        g.content += "%02s  %s" % (n, trackname)
+        trackname = '{0:<20} - {1}'.format(track['artists'][0]['name'], track['name'])
+        g.content += "%03s  %s" % (n, trackname)
         g.content += "\n"
 
     screen.update()
@@ -215,7 +262,7 @@ def search_playlist(term):
         pass
 
     else:
-        show_message("Album search abandoned!")
+        show_message("Playlist search abandoned!")
         return
 
     songs = []
@@ -236,11 +283,11 @@ def search_playlist(term):
         config.SEARCH_MUSIC.value, config.ORDER.value = stash
 
     if songs:
-        util.xprint("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
+        util.xprint("\n%s / %s songs matched" % (len(songs), len(tracks)))
         input("Press Enter to continue")
 
-    msg = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
-        c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
-    failmsg = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
+    msg = "Contents of playlist %s%s - %s%s %s(%d/%d)%s:" % (
+        c.y, playlist['owner']['id'], playlist['name'], c.w, c.b, len(songs), len(tracks), c.w)
+    failmsg = "Found no playlist tracks for %s%s%s" % (c.y, playlist['name'], c.w)
 
     paginatesongs(songs, msg=msg, failmsg=failmsg)
