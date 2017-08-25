@@ -15,8 +15,8 @@ from .search import generate_search_qs, get_tracks_from_json
 def generate_credentials():
     """Generate the token. Please respect these credentials :)"""
     credentials = oauth2.SpotifyClientCredentials(
-        client_id='4fe3fecfe5334023a1472516cc99d805',
-        client_secret='0f02b7c483c04257984695007a4a8d5c')
+        client_id='6451e12933bb49ed8543d41e3296a88d',
+        client_secret='40ef54678fe441bd9acd66f5d5c34e69')
     return credentials
 
 
