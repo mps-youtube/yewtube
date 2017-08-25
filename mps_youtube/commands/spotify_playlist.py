@@ -72,7 +72,7 @@ def grab_playlist(spotify, playlist):
         else:
             break
 
-    return all_tracks
+    return (playlist, all_tracks)
 
 
 def show_message(message, col=c.r, update=False):
@@ -284,48 +284,26 @@ def search_playlist(term):
     token = credentials.get_access_token()
     spotify = spotipy.Spotify(auth=token)
 
-    tracks = grab_playlist(spotify, 'https://open.spotify.com/user/1110716798/playlist/2NwWoITrXtgxDBAvzGIz52')
+    playlist, tracks = grab_playlist(spotify, 'https://open.spotify.com/user/1110716798/playlist/2NwWoITrXtgxDBAvzGIz52')
 
     if not tracks:
         show_message("Playlist '%s' not found!" % term)
         return
 
-    playlist = _get_mb_album(term)
+    out = "'%s' by %s%s%s\n\n" % (playlist['name'],
+                                  c.g, playlist['owner']['id'], c.w)
 
-    out = "'%s' by %s%s%s\n\n" % (album['title'],
-                                  c.g, album['artist'], c.w)
-    out += ("[Enter] to continue, [q] to abort, or enter artist name for:\n"
-            "    %s" % (c.y + term + c.w + "\n"))
-
-    prompt = "Artist? [%s] > " % album['artist']
-    util.xprint(prompt, end="")
-    artistentry = input().strip()
-
-    if artistentry:
-
-        if artistentry == "q":
-            show_message("Album search abandoned!")
-            return
-
-        album = _get_mb_album(term, artist=artistentry)
-
-        if not album:
-            show_message("Album '%s' by '%s' not found!" % (term, artistentry))
-            return
-
-    title, artist = album['title'], album['artist']
-    mb_tracks = _get_mb_tracks(album['aid'])
-
-    if not mb_tracks:
-        show_message("Album '%s' by '%s' has 0 tracks!" % (title, artist))
+    if not playlist['tracks']['total']:
+        show_message("Playlist '%s' by '%s' has 0 tracks!" % (playlist['name'], playlist['owner']['id']))
         return
 
-    msg = "%s%s%s by %s%s%s\n\n" % (c.g, title, c.w, c.g, artist, c.w)
+    msg = "%s%s%s by %s%s%s\n\n" % (c.g, playlist['name'], c.w, c.g, playlist['owner']['id'], c.w)
     msg += "Enter to begin matching or [q] to abort"
     g.message = msg
     g.content = "Tracks:\n"
-    for n, track in enumerate(mb_tracks, 1):
-        g.content += "%02s  %s" % (n, track['title'])
+    for n, track in enumerate(tracks, 1):
+        trackname = track['artists'][0]['name'] + ' - ' + track['name']
+        g.content += "%02s  %s" % (n, trackname)
         g.content += "\n"
 
     screen.update()
