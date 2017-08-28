@@ -1,8 +1,15 @@
-import spotipy
-import spotipy.oauth2 as oauth2
 import re
 import time
 import difflib
+
+try:
+    # pylint: disable=F0401
+    import spotipy
+    import spotipy.oauth2 as oauth2
+    has_spotipy = True
+
+except ImportError:
+    has_spotipy = False
 
 import pafy
 
@@ -173,121 +180,134 @@ def _match_tracks(tracks):
 def search_user(term):
     """Search for Spotify user playlists. """
     # pylint: disable=R0914,R0912
-    if not term:
-        show_message("Enter username:", c.g, update=True)
-        term = input("> ")
+    if has_spotipy:
 
-        if not term or len(term) < 2:
-            g.message = c.r + "Not enough input!" + c.w
-            g.content = content.generate_songlist_display()
-            return
+        if not term:
+            show_message("Enter username:", c.g, update=True)
+            term = input("> ")
 
-    credentials = generate_credentials()
-    token = credentials.get_access_token()
-    spotify = spotipy.Spotify(auth=token)
+            if not term or len(term) < 2:
+                g.message = c.r + "Not enough input!" + c.w
+                g.content = content.generate_songlist_display()
+                return
 
-    playlists = spotify.user_playlists(term)
-    links = []
-    check = 1
+        credentials = generate_credentials()
+        token = credentials.get_access_token()
+        spotify = spotipy.Spotify(auth=token)
 
-    g.content = "Playlists:\n"
+        playlists = spotify.user_playlists(term)
+        links = []
+        check = 1
 
-    while True:
-        for playlist in playlists['items']:
-            if playlist['name'] is not None:
-                g.content += (u'{0:>2}. {1:<30}  ({2} tracks)'.format(
-                    check, playlist['name'],
-                    playlist['tracks']['total']))
-                g.content += "\n"
-                links.append(playlist)
-                check += 1
-        if playlists['next']:
-            playlists = spotify.next(playlists)
-        else:
-            break
+        g.content = "Playlists:\n"
 
-    g.message = c.g + "Choose your playlist:" + c.w
-    screen.update()
+        while True:
+            for playlist in playlists['items']:
+                if playlist['name'] is not None:
+                    g.content += (u'{0:>2}. {1:<30}  ({2} tracks)'.format(
+                        check, playlist['name'],
+                        playlist['tracks']['total']))
+                    g.content += "\n"
+                    links.append(playlist)
+                    check += 1
+            if playlists['next']:
+                playlists = spotify.next(playlists)
+            else:
+                break
 
-    choice = int(input("> "))
-    playlist = links[choice-1]
+        g.message = c.g + "Choose your playlist:" + c.w
+        screen.update()
 
-    search_playlist(playlist['external_urls']['spotify'], spotify=spotify)
+        choice = int(input("> "))
+        playlist = links[choice-1]
+
+        search_playlist(playlist['external_urls']['spotify'], spotify=spotify)
+
+    else:
+        g.message = "spotipy module must be installed for Spotify support\n"
+        g.message += "see https://pypi.python.org/pypi/spotipy/"
+
 
 
 @command(r'splaylist\s(.*[-_a-zA-Z0-9].*)')
 def search_playlist(term, spotify=None):
     """Search for Spotify playlist. """
     # pylint: disable=R0914,R0912
-    if not term:
-        show_message("Enter playlist url:", c.g, update=True)
-        term = input("> ")
+    if has_spotipy:
 
-        if not term or len(term) < 2:
-            g.message = c.r + "Not enough input!" + c.w
-            g.content = content.generate_songlist_display()
+        if not term:
+            show_message("Enter playlist url:", c.g, update=True)
+            term = input("> ")
+
+            if not term or len(term) < 2:
+                g.message = c.r + "Not enough input!" + c.w
+                g.content = content.generate_songlist_display()
+                return
+
+        if not spotify:
+            credentials = generate_credentials()
+            token = credentials.get_access_token()
+            spotify = spotipy.Spotify(auth=token)
+
+        try:
+            playlist, tracks = grab_playlist(spotify, term)
+        except TypeError:
+            tracks = None
+
+        if not tracks:
+            show_message("Playlist '%s' not found!" % term)
             return
 
-    if not spotify:
-        credentials = generate_credentials()
-        token = credentials.get_access_token()
-        spotify = spotipy.Spotify(auth=token)
+        if not playlist['tracks']['total']:
+            show_message("Playlist '%s' by '%s' has 0 tracks!" % (playlist['name'], playlist['owner']['id']))
+            return
 
-    try:
-        playlist, tracks = grab_playlist(spotify, term)
-    except TypeError:
-        tracks = None
+        msg = "%s%s%s by %s%s%s\n\n" % (c.g, playlist['name'], c.w, c.g, playlist['owner']['id'], c.w)
+        msg += "Enter to begin matching or [q] to abort"
+        g.message = msg
+        g.content = "Tracks:\n"
+        for n, track in enumerate(tracks, 1):
+            trackname = '{0:<20} - {1}'.format(track['artists'][0]['name'], track['name'])
+            g.content += "%03s  %s" % (n, trackname)
+            g.content += "\n"
 
-    if not tracks:
-        show_message("Playlist '%s' not found!" % term)
-        return
+        screen.update()
+        entry = input("Continue? [Enter] > ")
 
-    if not playlist['tracks']['total']:
-        show_message("Playlist '%s' by '%s' has 0 tracks!" % (playlist['name'], playlist['owner']['id']))
-        return
+        if entry == "":
+            pass
 
-    msg = "%s%s%s by %s%s%s\n\n" % (c.g, playlist['name'], c.w, c.g, playlist['owner']['id'], c.w)
-    msg += "Enter to begin matching or [q] to abort"
-    g.message = msg
-    g.content = "Tracks:\n"
-    for n, track in enumerate(tracks, 1):
-        trackname = '{0:<20} - {1}'.format(track['artists'][0]['name'], track['name'])
-        g.content += "%03s  %s" % (n, trackname)
-        g.content += "\n"
+        else:
+            show_message("Playlist search abandoned!")
+            return
 
-    screen.update()
-    entry = input("Continue? [Enter] > ")
+        songs = []
+        screen.clear()
+        itt = _match_tracks(tracks)
 
-    if entry == "":
-        pass
+        stash = config.SEARCH_MUSIC.get, config.ORDER.get
+        config.SEARCH_MUSIC.value = True
+        config.ORDER.value = "relevance"
+
+        try:
+            songs.extend(itt)
+
+        except KeyboardInterrupt:
+            util.xprint("%sHalted!%s" % (c.r, c.w))
+
+        finally:
+            config.SEARCH_MUSIC.value, config.ORDER.value = stash
+
+        if songs:
+            util.xprint("\n%s / %s songs matched" % (len(songs), len(tracks)))
+            input("Press Enter to continue")
+
+        msg = "Contents of playlist %s%s - %s%s %s(%d/%d)%s:" % (
+            c.y, playlist['owner']['id'], playlist['name'], c.w, c.b, len(songs), len(tracks), c.w)
+        failmsg = "Found no playlist tracks for %s%s%s" % (c.y, playlist['name'], c.w)
+
+        paginatesongs(songs, msg=msg, failmsg=failmsg)
 
     else:
-        show_message("Playlist search abandoned!")
-        return
-
-    songs = []
-    screen.clear()
-    itt = _match_tracks(tracks)
-
-    stash = config.SEARCH_MUSIC.get, config.ORDER.get
-    config.SEARCH_MUSIC.value = True
-    config.ORDER.value = "relevance"
-
-    try:
-        songs.extend(itt)
-
-    except KeyboardInterrupt:
-        util.xprint("%sHalted!%s" % (c.r, c.w))
-
-    finally:
-        config.SEARCH_MUSIC.value, config.ORDER.value = stash
-
-    if songs:
-        util.xprint("\n%s / %s songs matched" % (len(songs), len(tracks)))
-        input("Press Enter to continue")
-
-    msg = "Contents of playlist %s%s - %s%s %s(%d/%d)%s:" % (
-        c.y, playlist['owner']['id'], playlist['name'], c.w, c.b, len(songs), len(tracks), c.w)
-    failmsg = "Found no playlist tracks for %s%s%s" % (c.y, playlist['name'], c.w)
-
-    paginatesongs(songs, msg=msg, failmsg=failmsg)
+        g.message = "pyperclip module must be installed for Spotify support\n"
+        g.message += "see https://pypi.python.org/pypi/spotipy/"
