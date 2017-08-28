@@ -309,5 +309,5 @@ def search_playlist(term, spotify=None):
         paginatesongs(songs, msg=msg, failmsg=failmsg)
 
     else:
-        g.message = "pyperclip module must be installed for Spotify support\n"
+        g.message = "spotipy module must be installed for Spotify support\n"
         g.message += "see https://pypi.python.org/pypi/spotipy/"
