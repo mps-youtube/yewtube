@@ -225,11 +225,6 @@ def search_album(term):
         show_message("Album '%s' not found!" % term)
         return
 
-    out = "'%s' by %s%s%s\n\n" % (album['title'],
-                                  c.g, album['artist'], c.w)
-    out += ("[Enter] to continue, [q] to abort, or enter artist name for:\n"
-            "    %s" % (c.y + term + c.w + "\n"))
-
     prompt = "Artist? [%s] > " % album['artist']
     util.xprint(prompt, end="")
     artistentry = input().strip()
