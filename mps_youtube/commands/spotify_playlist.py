@@ -176,7 +176,7 @@ def _match_tracks(tracks):
         yield s
 
 
-@command(r'suser\s(.*[-_a-zA-Z0-9].*)')
+@command(r'suser\s*(.*[-_a-zA-Z0-9].*)?')
 def search_user(term):
     """Search for Spotify user playlists. """
     # pylint: disable=R0914,R0912
@@ -229,7 +229,7 @@ def search_user(term):
 
 
 
-@command(r'splaylist\s(.*[-_a-zA-Z0-9].*)')
+@command(r'splaylist\s*(.*[-_a-zA-Z0-9].*)?')
 def search_playlist(term, spotify=None):
     """Search for Spotify playlist. """
     # pylint: disable=R0914,R0912
