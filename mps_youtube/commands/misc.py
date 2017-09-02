@@ -327,3 +327,14 @@ def clear_history():
     history.save()
     g.message = "History cleared"
     g.content = logo()
+
+
+@command(r'history export')
+def export_history():
+    """ Export the user's play history to play_history.txt. """
+    if 'history' in g.userhist:
+        history.export()
+        g.message = "History exported to: " + g.HISTFILE + ".txt"
+    else:
+        g.message = "No history to export."
+    g.content = logo()

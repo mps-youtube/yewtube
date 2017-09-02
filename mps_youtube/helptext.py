@@ -180,6 +180,8 @@ def helptext():
         {2}history{1} - displays a list of songs contained in history
         {2}history clear{1} - clears the song history
         {2}history recent{1} - displays a list of recent played songs
+        {2}history export{1} - exports song history to a human readable file
+                format: <YouTube ID> <Song name>
     """.format(c.ul, c.w, c.y)),
 
         ("invoke", "Invocation Parameters", """
