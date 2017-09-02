@@ -327,3 +327,13 @@ def clear_history():
     history.save()
     g.message = "History cleared"
     g.content = logo()
+
+
+@command(r'history export')
+def export_history():
+    """ Export the user's play history to play_history.txt. """
+    with open(g.HISTFILE + '.txt', 'w') as f:                                     
+        for song in g.userhist['history'].songs:
+            f.write("%s %s\n" % (song.ytid, song.title))
+    g.message = "History exported to: " + g.HISTFILE + '.txt'
+    g.content = logo()
