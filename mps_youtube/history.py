@@ -42,4 +42,4 @@ def export():
     """ Export history to human readable file. """
     with open(g.HISTFILE + '.txt', 'w') as f:                                     
         for song in g.userhist['history'].songs:
-            f.write("%s %s\n" % (song.ytid, song.title))
+            f.write("%s\t%s\n" % (song.ytid, song.title))
