@@ -88,7 +88,6 @@ def _read_m3u(m3u):
                     expect_ytid = True
                 if 'watch?v=' in line and expect_ytid:
                     ytid = line.strip().split('watch?v=')[1]
-                    print(ytid, title, duration)
                     songs.append(Video(ytid, title, int(duration)))
                     expect_ytid = False
         else:
