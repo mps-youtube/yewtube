@@ -9,7 +9,7 @@ from .playlist import Playlist, Video
 def save():
     """ Save playlists.  Called each time a playlist is saved or deleted. """
     for pl in g.userpl:
-        with open('%s/%s.m3u' % (g.PLFOLDER, pl), 'w') as plf:
+        with open(os.path.join(g.PLFOLDER, pl+'.m3u'), 'w') as plf:
             plf.write('#EXTM3U\n\n')
             for song in g.userpl[pl].songs:
                 plf.write('#EXTINF:%d,%s\n' % (song.length, song.title))
@@ -23,16 +23,18 @@ def load():
     _convert_playlist_to_v2()
     _convert_playlist_to_m3u()
     try:
+        # Loop through all files ending in '.m3u'
+        for m3u in [m3u for m3u in os.listdir(g.PLFOLDER) if m3u[-4:] == '.m3u']:
+            _read_m3u(os.path.join(g.PLFOLDER, m3u))
 
-        with open(g.PLFILE, "rb") as plf:
-            g.userpl = pickle.load(plf)
-
-    except IOError:
-        # no playlist found, create a blank one
-        if not os.path.isfile(g.PLFILE):
+    except FileNotFoundError:
+        # No playlist folder, create an empty one
+        if not os.path.isdir(g.PLFOLDER):
             g.userpl = {}
+            os.mkdir(g.PLFOLDER)
             save()
 
+    """
     except AttributeError:
         # playlist is from a time when this module was __main__
         # https://github.com/np1/mps-youtube/issues/214
@@ -55,6 +57,7 @@ def load():
 
     # remove any cached urls from playlist file, these are now
     # stored in a separate cache file
+    """
 
     do_save = False
 
@@ -69,6 +72,10 @@ def load():
 
     if do_save:
         save()
+
+
+def _read_m3u(m3u):
+    pass
 
 
 def _convert_playlist_to_v2():
