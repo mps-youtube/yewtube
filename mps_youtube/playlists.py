@@ -7,9 +7,12 @@ from .playlist import Playlist, Video
 
 
 def save():
-    """ Save playlists.  Called each time a playlist is saved or deleted. """
+    """ Save playlists.  Called each time a playlist is saved or deleted. 
     with open(g.PLFILE, "wb") as plf:
         pickle.dump(g.userpl, plf, protocol=2)
+    """
+    for pl in g.userpl:
+        pass
 
     util.dbg(c.r + "Playlist saved\n---" + c.w)
 
@@ -17,6 +20,7 @@ def save():
 def load():
     """ Open playlists. Called once on script invocation. """
     _convert_playlist_to_v2()
+    _convert_playlist_to_m3u()
     try:
 
         with open(g.PLFILE, "rb") as plf:
@@ -104,3 +108,29 @@ def _convert_playlist_to_v2():
 
     # save as v2
     save()
+
+
+def _convert_playlist_to_m3u():
+    """ Convert playlist_v2 file to the m3u format. 
+        This should create a .m3u playlist for each playlist in playlist_v2. """
+    # Skip if playlists folder exists
+    if os.path.isdir(g.PLFOLDER):
+        return
+
+    # Skip if no playlist files exist
+    elif not os.path.isfile(g.PLFILE):
+        return
+
+    try: 
+        with open(g.PLFILE, 'rb') as plf:
+            old_playlists = pickle.load(plf)
+
+    except IOError:
+        sys.exit("Couldn't open old playlist file")
+
+    os.mkdir(g.PLFOLDER)
+    for pl in old_playlists:
+        with open('%s/%s.m3u' % (g.PLFOLDER, pl), 'w') as plf:
+            for song in old_playlists[pl].songs:
+                plf.write('#EXTINF:%d,%s\n' % (song.length, song.title))
+                plf.write('https://www.youtube.com/watch?v=%s\n' % song.ytid)

@@ -48,6 +48,7 @@ CFFILE = os.path.join(paths.get_config_dir(), "config")
 TCFILE = os.path.join(paths.get_config_dir(), "transcode")
 OLD_PLFILE = os.path.join(paths.get_config_dir(), "playlist" + suffix)
 PLFILE = os.path.join(paths.get_config_dir(), "playlist_v2")
+PLFOLDER = os.path.join(paths.get_config_dir(), "playlists")
 HISTFILE = os.path.join(paths.get_config_dir(), "play_history")
 CACHEFILE = os.path.join(paths.get_config_dir(), "cache_py_" + sys.version[0:5])
 READLINE_FILE = None
