@@ -4,7 +4,7 @@ import pickle
 from . import g, c
 from .util import dbg
 from .playlist import Playlist
-from .playlists import _read_m3u
+from .playlists import read_m3u
 
 
 def add(song):
@@ -21,7 +21,7 @@ def load():
     """ Open history. Called once on script invocation. """
     _convert_to_m3u()
     try:
-        g.userhist['history'] = _read_m3u(g.HISTFILE)
+        g.userhist['history'] = read_m3u(g.HISTFILE)
         g.userhist['history'].name = 'history'
 
     except FileNotFoundError:

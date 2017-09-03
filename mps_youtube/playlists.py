@@ -26,7 +26,7 @@ def load():
     try:
         # Loop through all files ending in '.m3u'
         for m3u in [m3u for m3u in os.listdir(g.PLFOLDER) if m3u[-4:] == '.m3u']:
-            g.userpl[m3u[:-4]] = _read_m3u(os.path.join(g.PLFOLDER, m3u))
+            g.userpl[m3u[:-4]] = read_m3u(os.path.join(g.PLFOLDER, m3u))
 
     except FileNotFoundError:
         # No playlist folder, create an empty one
@@ -57,7 +57,7 @@ def delete(name):
     os.remove(os.path.join(g.PLFOLDER, name + '.m3u'))
     
 
-def _read_m3u(m3u):
+def read_m3u(m3u):
     """ Processes an m3u file into a Playlist object. """
     name = os.path.basename(m3u)[:-4]
     songs = []
