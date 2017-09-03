@@ -90,8 +90,17 @@ def _read_m3u(m3u):
                     ytid = line.strip().split('watch?v=')[1]
                     songs.append(Video(ytid, title, int(duration)))
                     expect_ytid = False
+
+        # Handles a simple m3u file which should just be a list of urls
         else:
-            pass
+            plf.seek(0)
+            for line in plf:
+                if not line.startswith('#'):
+                    try:
+                        p = util.get_pafy(line)
+                        songs.append(Video(p.videoid, p.title, p.length))
+                    except (IOError, ValueError) as e:
+                        util.dbg(c.r + "Error loading video: " + str(e) + c.w)
 
     return Playlist(name, songs)
 
