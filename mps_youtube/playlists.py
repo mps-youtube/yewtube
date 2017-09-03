@@ -35,30 +35,8 @@ def load():
             os.mkdir(g.PLFOLDER)
             save()
 
-    """
-    except AttributeError:
-        # playlist is from a time when this module was __main__
-        # https://github.com/np1/mps-youtube/issues/214
-        import __main__
-        __main__.Playlist = Playlist
-        __main__.Video = Video
-
-        from . import main
-        main.Playlist = Playlist
-        main.Video = Video
-
-        with open(g.PLFILE, "rb") as plf:
-            g.userpl = pickle.load(plf)
-
-        save()
-        screen.msgexit("Updated playlist file. Please restart mpsyt", 1)
-
-    except EOFError:
-        screen.msgexit("Error opening playlists from %s" % g.PLFILE, 1)
-
     # remove any cached urls from playlist file, these are now
     # stored in a separate cache file
-    """
 
     do_save = False
 
