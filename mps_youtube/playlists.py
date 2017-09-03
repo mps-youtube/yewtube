@@ -70,7 +70,7 @@ def read_m3u(m3u):
                     duration, title = line.replace('#EXTINF:', '').strip().split(',', 1)
                     expect_ytid = True
                 elif not line.startswith('\n') and not line.startswith('#') and expect_ytid:
-                    ytid = extract_video_id(line)
+                    ytid = extract_video_id(line).strip()
                     songs.append(Video(ytid, title, int(duration)))
                     expect_ytid = False
 
