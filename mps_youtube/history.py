@@ -22,7 +22,6 @@ def load():
     _convert_to_m3u()
     try:
         g.userhist['history'] = read_m3u(g.HISTFILE)
-        g.userhist['history'].name = 'history'
 
     except FileNotFoundError:
         # no playlist found, create a blank one
