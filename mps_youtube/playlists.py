@@ -4,6 +4,7 @@ import pickle
 
 from . import g, c, screen, util
 from .playlist import Playlist, Video
+from pafy.backend_shared import extract_video_id
 
 
 def save():
@@ -86,8 +87,8 @@ def _read_m3u(m3u):
                 if line.startswith('#EXTINF:') and not expect_ytid:
                     duration, title = line.replace('#EXTINF:', '').strip().split(',', 1)
                     expect_ytid = True
-                if 'watch?v=' in line and expect_ytid:
-                    ytid = line.strip().split('watch?v=')[1]
+                elif not line.startswith('\n') and not line.startswith('#') and expect_ytid:
+                    ytid = extract_video_id(line)
                     songs.append(Video(ytid, title, int(duration)))
                     expect_ytid = False
 
