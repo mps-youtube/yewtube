@@ -41,9 +41,7 @@ def load():
     do_save = False
 
     for k, v in g.userpl.items():
-
         for song in v.songs:
-
             if hasattr(song, "urls"):
                 util.dbg("remove %s: %s", k, song.urls)
                 del song.urls
@@ -145,6 +143,26 @@ def _convert_playlist_to_m3u():
     try: 
         with open(g.PLFILE, 'rb') as plf:
             old_playlists = pickle.load(plf)
+
+    except AttributeError:
+        # playlist is from a time when this module was __main__
+        # https://github.com/np1/mps-youtube/issues/214
+        import __main__
+        __main__.Playlist = Playlist
+        __main__.Video = Video
+
+        from . import main
+        main.Playlist = Playlist
+        main.Video = Video
+
+        with open(g.PLFILE, "rb") as plf:
+            g.userpl = pickle.load(plf)
+
+        save()
+        screen.msgexit("Updated playlist file. Please restart mpsyt", 1)
+
+    except EOFError:
+        screen.msgexit("Error opening playlists from %s" % g.PLFILE, 1)
 
     except IOError:
         sys.exit("Couldn't open old playlist file")
