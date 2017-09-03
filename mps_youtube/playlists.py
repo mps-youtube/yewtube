@@ -25,7 +25,7 @@ def load():
     try:
         # Loop through all files ending in '.m3u'
         for m3u in [m3u for m3u in os.listdir(g.PLFOLDER) if m3u[-4:] == '.m3u']:
-            _read_m3u(os.path.join(g.PLFOLDER, m3u))
+            g.userpl[m3u[:-4]] = _read_m3u(os.path.join(g.PLFOLDER, m3u))
 
     except FileNotFoundError:
         # No playlist folder, create an empty one
@@ -75,7 +75,26 @@ def load():
 
 
 def _read_m3u(m3u):
-    pass
+    """ Processes an m3u file into a Playlist object. """
+    name = os.path.basename(m3u)[:-4]
+    songs = []
+    expect_ytid = False
+
+    with open(m3u, 'r') as plf:
+        if plf.readline().startswith('#EXTM3U'):
+            for line in plf:
+                if line.startswith('#EXTINF:') and not expect_ytid:
+                    duration, title = line.replace('#EXTINF:', '').strip().split(',', 1)
+                    expect_ytid = True
+                if 'watch?v=' in line and expect_ytid:
+                    ytid = line.strip().split('watch?v=')[1]
+                    print(ytid, title, duration)
+                    songs.append(Video(ytid, title, int(duration)))
+                    expect_ytid = False
+        else:
+            pass
+
+    return Playlist(name, songs)
 
 
 def _convert_playlist_to_v2():
@@ -115,6 +134,7 @@ def _convert_playlist_to_v2():
         g.userpl[plname] = Playlist(plname, songs)
 
     # save as v2
+    os.mkdir(g.PLFOLDER)
     save()
 
 
