@@ -7,12 +7,13 @@ from .playlist import Playlist, Video
 
 
 def save():
-    """ Save playlists.  Called each time a playlist is saved or deleted. 
-    with open(g.PLFILE, "wb") as plf:
-        pickle.dump(g.userpl, plf, protocol=2)
-    """
+    """ Save playlists.  Called each time a playlist is saved or deleted. """
     for pl in g.userpl:
-        pass
+        with open('%s/%s.m3u' % (g.PLFOLDER, pl), 'w') as plf:
+            plf.write('#EXTM3U\n\n')
+            for song in g.userpl[pl].songs:
+                plf.write('#EXTINF:%d,%s\n' % (song.length, song.title))
+                plf.write('https://www.youtube.com/watch?v=%s\n' % song.ytid)
 
     util.dbg(c.r + "Playlist saved\n---" + c.w)
 
@@ -129,8 +130,12 @@ def _convert_playlist_to_m3u():
         sys.exit("Couldn't open old playlist file")
 
     os.mkdir(g.PLFOLDER)
+
     for pl in old_playlists:
-        with open('%s/%s.m3u' % (g.PLFOLDER, pl), 'w') as plf:
-            for song in old_playlists[pl].songs:
-                plf.write('#EXTINF:%d,%s\n' % (song.length, song.title))
-                plf.write('https://www.youtube.com/watch?v=%s\n' % song.ytid)
+        songs = []
+        for song in old_playlists[pl]:
+            songs.append(song)
+
+        g.userpl[pl] = Playlist(pl, songs)
+
+    save()
