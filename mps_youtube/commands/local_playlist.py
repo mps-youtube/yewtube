@@ -15,10 +15,10 @@ def playlist_remove(name):
             name = int(name) - 1
             name = sorted(g.userpl)[name]
 
-        del g.userpl[name]
+        playlists.delete(name)
         g.message = "Deleted playlist %s%s%s" % (c.y, name, c.w)
         g.content = content.playlists_display()
-        playlists.save()
+        #playlists.save()
 
     else:
         g.message = util.F('pl not found advise ls') % name
