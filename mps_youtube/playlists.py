@@ -158,6 +158,7 @@ def _convert_playlist_to_m3u():
         with open(g.PLFILE, "rb") as plf:
             g.userpl = pickle.load(plf)
 
+        os.mkdir(g.PLFOLDER)
         save()
         screen.msgexit("Updated playlist file. Please restart mpsyt", 1)
 
@@ -167,8 +168,6 @@ def _convert_playlist_to_m3u():
     except IOError:
         sys.exit("Couldn't open old playlist file")
 
-    os.mkdir(g.PLFOLDER)
-
     for pl in old_playlists:
         songs = []
         for song in old_playlists[pl]:
@@ -176,4 +175,5 @@ def _convert_playlist_to_m3u():
 
         g.userpl[pl] = Playlist(pl, songs)
 
+    os.mkdir(g.PLFOLDER)
     save()
