@@ -94,8 +94,9 @@ def play(pre, choice, post=""):
         try:
             play_range(songlist, shuffle, repeat, override)
         except KeyboardInterrupt:
-            g.content = content.generate_songlist_display()
             return
+        finally:
+            g.content = content.generate_songlist_display()
 
         if config.AUTOPLAY.get:
             related(selection.pop())
