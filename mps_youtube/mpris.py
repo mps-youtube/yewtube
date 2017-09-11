@@ -432,7 +432,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Sets the current track position in microseconds.
         """
         if track_id == self.properties[PLAYER_INTERFACE]['read_only']['Metadata']['mpris:trackid']:
-            self._sendcommand(["seek", position / 10**6, 2])
+            self._sendcommand(["seek", position / 10**6, 'absolute' if self.mpv else 2])
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='s')
     def OpenUri(self, uri):
