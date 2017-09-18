@@ -124,7 +124,7 @@ def download(dltype, num):
     g.content = content.generate_songlist_display()
 
 
-@command(r'(da|dv)\s+(?<![-\d\[\]])(\d+-\d+|-\d+|\d+-|\d+)(?:\[(\d+)\])?(?![-\d\[\]])')
+@command(r'(da|dv)\s+((?:\d+\s\d+|-\d+|\d+-|\d+,)(?:[\d\s,-]*))')
 def down_many(dltype, choice, subdir=None):
     """ Download multiple items. """
     choice = util.parse_multi(choice)
