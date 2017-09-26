@@ -121,6 +121,10 @@ def songlist_rm_add(action, songrange):
 
         for x in selection:
             g.model.songs.pop(x - 1)
+            try:
+                g.active.songs.pop(g.current_page * util.getxy().max_results + x - 1)
+            except IndexError:
+                pass
 
         g.message = util.F('songs rm') % (len(selection), removed)
 
