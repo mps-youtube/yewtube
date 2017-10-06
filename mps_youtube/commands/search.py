@@ -427,7 +427,7 @@ def get_track_id_from_json(item):
         for p in field.split('/'):
             if node and isinstance(node, dict):
                 node = node.get(p)
-        if node:
+        if node and isinstance(node, str):
             return node
     return ''
 
