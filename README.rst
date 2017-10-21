@@ -93,9 +93,9 @@ Using `pip <http://www.pip-installer.org>`_::
 
     [sudo] pip3 install mps-youtube
 
-Installing youtube_dl is highly recommended::
+Installing youtube-dl is highly recommended::
 
-    [sudo] pip3 install youtube_dl
+    [sudo] pip3 install youtube-dl
 
 Additional Linux installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
