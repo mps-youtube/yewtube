@@ -182,4 +182,4 @@ Enter ``h`` from within the program for help.
 IRC
 ---
 
-An IRC channel `#mps-youtube` for the project is available on Freenode (chat.freenode.net:6697).
+An IRC channel `#mps-youtube` for the project is available on Freenode (chat.freenode.net:6697). You can join directly by clicking `this link <https://webchat.freenode.net/?randomnick=1&channels=%23mps-youtube&uio=d4>`_.
