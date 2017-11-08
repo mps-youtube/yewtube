@@ -88,22 +88,31 @@ Type ``help config`` for help on configuration options
 
 Installation
 ------------
-
+Linux
+~~~~~
 Using `pip <http://www.pip-installer.org>`_::
 
     [sudo] pip3 install mps-youtube
+
+To install the experimental development version and try the latest features:
+
+    [sudo] pip3 install -U git+https://github.com/mps-youtube/mps-youtube.git
 
 Installing youtube-dl is highly recommended::
 
     [sudo] pip3 install youtube-dl
 
-Additional Linux installation notes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 For mpris2 support, install the python bindings for dbus and gobject::
 
     [sudo] pip3 install dbus-python pygobject
 
-Additional Mac OS X installation notes
+Ubuntu
+~~~~~~
+You can install mps-youtube directly from the official repositories:
+
+    [sudo] apt install mps-youtube
+
+macOS X
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Install mpv (recommended player) with `Homebrew <http://brew.sh>`_::
 
