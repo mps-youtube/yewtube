@@ -290,9 +290,13 @@ def _generate_real_playerargs(song, override, stream, isvideo, softrepeat):
             util.list_update(pd["ignidx"], args)
 
         if "mplayer" in config.PLAYER.get:
+            if g.volume:
+                util.list_update("-volume", args)
+                util.list_update(str(g.volume), args)
             util.list_update("-really-quiet", args, remove=True)
             util.list_update("-noquiet", args)
             util.list_update("-prefer-ipv4", args)
+            
 
         elif "mpv" in config.PLAYER.get:
             if "--ytdl" in g.mpv_options:
@@ -319,6 +323,7 @@ def _generate_real_playerargs(song, override, stream, isvideo, softrepeat):
     elif "vlc" in config.PLAYER.get:
         util.list_update("--play-and-exit", args)
 
+    print("args: " + str(config.PLAYER.get) + str(args) + str(stream['url']))
     return [config.PLAYER.get] + args + [stream['url']]
 
 
