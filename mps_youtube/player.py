@@ -323,7 +323,6 @@ def _generate_real_playerargs(song, override, stream, isvideo, softrepeat):
     elif "vlc" in config.PLAYER.get:
         util.list_update("--play-and-exit", args)
 
-    print("args: " + str(config.PLAYER.get) + str(args) + str(stream['url']))
     return [config.PLAYER.get] + args + [stream['url']]
 
 
