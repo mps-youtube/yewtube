@@ -82,8 +82,9 @@ def init():
     if config.MPRIS.get:
         try:
             from . import mpris
-            g.mprisctl, conn = multiprocessing.Pipe()
-            t = multiprocessing.Process(target=mpris.main, args=(conn,))
+            conn1, conn2 = multiprocessing.Pipe()
+            g.mprisctl = mpris.MprisConnection(conn1)
+            t = multiprocessing.Process(target=mpris.main, args=(conn2,))
             t.daemon = True
             t.start()
         except ImportError:
