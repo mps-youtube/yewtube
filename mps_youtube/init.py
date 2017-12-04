@@ -78,15 +78,17 @@ def init():
     else:
         g.muxapp = has_exefile("ffmpeg") or has_exefile("avconv")
 
-    # initialize remote interface
-    try:
-        from . import mpris
-        g.mprisctl, conn = multiprocessing.Pipe()
-        t = multiprocessing.Process(target=mpris.main, args=(conn,))
-        t.daemon = True
-        t.start()
-    except ImportError:
-        pass
+    # initialize MPRIS2 interface
+    if config.MPRIS.get:
+        try:
+            from . import mpris
+            conn1, conn2 = multiprocessing.Pipe()
+            g.mprisctl = mpris.MprisConnection(conn1)
+            t = multiprocessing.Process(target=mpris.main, args=(conn2,))
+            t.daemon = True
+            t.start()
+        except ImportError:
+            print("could not load MPRIS interface. missing libraries.")
 
     # Make pafy use the same api key
     pafy.set_api_key(config.API_KEY.get)

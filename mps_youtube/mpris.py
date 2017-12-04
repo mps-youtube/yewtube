@@ -513,6 +513,28 @@ class Mpris2MediaPlayer(dbus.service.Object):
         """
         pass
 
+class MprisConnection(object):
+    """
+        Object encapsulating pipe for communication with Mpris2Controller.
+        This object wraps send to ensure communicating process never crashes,
+        even when Mpris2Controller existed or crashed.
+    """
+    def __init__(self, connection):
+        super(MprisConnection, self).__init__()
+        self.connection = connection
+
+    def send(self, obj):
+        """
+            Send an object to the other end of the connection
+        """
+        if self.connection:
+            try:
+                self.connection.send(obj)
+            except BrokenPipeError:
+                self.connection = None
+                print('MPRIS process exited of crashed.')
+
+
 def main(connection):
     """
         runs mpris interface and listens for changes
@@ -522,6 +544,7 @@ def main(connection):
     try:
         mprisctl = Mpris2Controller()
     except ImportError: # gi.repository import GLib
+        print("could not load MPRIS interface. missing libraries.")
         return
     try:
         mprisctl.acquire()
