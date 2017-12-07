@@ -11,7 +11,7 @@ class ListUser(ListViewItem):
 
     def name(self, length=10):
         """ Returns channel name """
-        return util.uea_pad(length, self.data.get("snippet").get("title"))
+        return u.uea_pad(length, self.data.get("snippet").get("title"))
 
     def description(self, length=10):
         """ Channel description"""
