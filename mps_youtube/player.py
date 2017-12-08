@@ -52,6 +52,11 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
             g.message = c.y + "Playback halted" + c.w
             raise KeyboardInterrupt
             break
+
+        # skip forbidden, video removed/no longer available, etc. tracks
+        except TypeError:
+            returncode = 1
+
         if config.SET_TITLE.get:
             util.set_window_title("mpsyt")
 
