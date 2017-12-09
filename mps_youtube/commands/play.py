@@ -35,6 +35,7 @@ def play_pl(name):
 @command(r'(%s{0,3})([-,\d\s\[\]]{1,250})\s*(%s{0,3})$' %
          (RS, RS))
 def play(pre, choice, post=""):
+
     """ Play choice.  Use repeat/random if appears in pre/post. """
     # pylint: disable=R0914
     # too many local variables

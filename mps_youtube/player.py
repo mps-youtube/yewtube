@@ -290,9 +290,13 @@ def _generate_real_playerargs(song, override, stream, isvideo, softrepeat):
             util.list_update(pd["ignidx"], args)
 
         if "mplayer" in config.PLAYER.get:
+            if g.volume:
+                util.list_update("-volume", args)
+                util.list_update(str(g.volume), args)
             util.list_update("-really-quiet", args, remove=True)
             util.list_update("-noquiet", args)
             util.list_update("-prefer-ipv4", args)
+            
 
         elif "mpv" in config.PLAYER.get:
             if "--ytdl" in g.mpv_options:
@@ -311,6 +315,8 @@ def _generate_real_playerargs(song, override, stream, isvideo, softrepeat):
                     util.list_update("--really-quiet", args, remove=True)
                     util.list_update(msglevel, args)
 
+            if g.volume:
+                util.list_update("--volume=" + str(g.volume), args)
             if softrepeat:
                 util.list_update("--loop-file", args)
 
@@ -510,6 +516,8 @@ def _player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                 elif resp.get('event') == 'property-change' and resp['id'] == 2:
                     volume_level = int(resp['data'])
 
+                if(volume_level and volume_level != g.volume): 
+                    g.volume = volume_level
                 if elapsed_s:
                     line = _make_status_line(elapsed_s, prefix, songlength,
                                             volume=volume_level)
@@ -552,6 +560,9 @@ def _player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                         except ValueError:
                             continue
 
+
+                    if volume_level and volume_level != g.volume: 
+                        g.volume = volume_level
                     line = _make_status_line(elapsed_s, prefix, songlength,
                                             volume=volume_level)
 

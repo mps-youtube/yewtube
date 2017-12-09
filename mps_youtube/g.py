@@ -8,6 +8,7 @@ from . import c, paths
 from .playlist import Playlist
 
 
+volume = None
 transcoder_path = "auto"
 delete_orig = True
 encoders = []
