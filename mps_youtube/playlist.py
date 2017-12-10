@@ -35,9 +35,18 @@ class Playlist:
 class Video:
 
     """ Class to represent a YouTube video. """
-    description = ""
     def __init__(self, ytid, title, length):
         """ class members. """
         self.ytid = ytid
+        self.title = title
+        self.length = int(length)
+
+
+class LocalMedia:
+
+    """ Class to represent a local media file. """
+    def __init__(self, path, title, length):
+        """ class members. """
+        self.path = path
         self.title = title
         self.length = int(length)

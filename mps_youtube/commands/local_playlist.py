@@ -1,7 +1,9 @@
 import re
+import os
+from mutagen import mp3
 
 from .. import g, c, playlists, content, util
-from ..playlist import Playlist
+from ..playlist import Playlist, LocalMedia
 from . import command, WORD
 from .songlist import paginatesongs, songlist_rm_add
 
@@ -154,6 +156,34 @@ def open_save_view(action, name):
             g.message = util.F('pl saved') % name
             playlists.save()
             g.content = content.generate_songlist_display()
+
+
+@command(r'local (open|view) \s*(%s)' % WORD)
+def local_open_view(action, path):
+    """ Open or view music from a directory """
+    songs = []
+    for x in os.listdir(path):
+        if x.lower().endswith('.mp3'):
+            joint_path = os.path.join(path, x)
+            try:
+                length = mp3.MP3(joint_path).info.length
+                local_media = LocalMedia(joint_path, x[:-4], length)
+                songs.append(local_media)
+            except mp3.HeaderNotFoundError:
+                pass
+
+    saved = {'songs': songs, 'path': path}
+
+    if action == "open":
+        g.active.songs = list(saved['songs'])
+        g.last_opened = path
+        msg = util.F("pl loaded") % path
+        paginatesongs(g.active, msg=msg, local=True)
+
+    elif action == "view":
+        g.last_opened = ""
+        msg = util.F("pl viewed") % path
+        paginatesongs(list(saved['songs']), msg=msg, local=True)
 
 
 @command(r'(open|view)\s*(\d{1,4})')

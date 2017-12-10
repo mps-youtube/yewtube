@@ -138,37 +138,48 @@ def _mplayer_help(short=True):
 def stream_details(song, failcount=0, override=False, softrepeat=False):
     """Fetch stream details for a song."""
     # don't interrupt preloading:
-    while song.ytid in g.preloading:
-        screen.writestatus("fetching item..")
-        time.sleep(0.1)
+    local_media = "LocalMedia" == g.model[0].__class__.__name__
 
-    try:
-        streams.get(song, force=failcount, callback=screen.writestatus)
+    if not local_media:
+        while song.ytid in g.preloading:
+            screen.writestatus("fetching item..")
+            time.sleep(0.1)
 
-    except (IOError, URLError, HTTPError, socket.timeout) as e:
-        util.dbg("--ioerror in stream_details call to streams.get %s", str(e))
+    if not local_media:
+        try:
+            streams.get(song, force=failcount, callback=screen.writestatus)
 
-        if "Youtube says" in str(e):
-            g.message = util.F('cant get track') % (song.title + " " + str(e))
+        except (IOError, URLError, HTTPError, socket.timeout) as e:
+            util.dbg("--ioerror in stream_details call to streams.get %s", str(e))
+
+            if "Youtube says" in str(e):
+                g.message = util.F('cant get track') % (song.title + " " + str(e))
+                return
+
+            elif failcount < g.max_retries:
+                util.dbg("--ioerror - trying next stream")
+                failcount += 1
+                return stream_details(song, failcount=failcount, override=override, softrepeat=softrepeat)
+
+            elif "pafy" in str(e):
+                if local_media:
+                    g.message = str(e) + " - " + song.path
+                else:
+                    g.message = str(e) + " - " + song.ytid
+                return
+
+        except ValueError:
+            g.message = util.F('track unresolved')
+            util.dbg("----valueerror in stream_details call to streams.get")
             return
-
-        elif failcount < g.max_retries:
-            util.dbg("--ioerror - trying next stream")
-            failcount += 1
-            return stream_details(song, failcount=failcount, override=override, softrepeat=softrepeat)
-
-        elif "pafy" in str(e):
-            g.message = str(e) + " - " + song.ytid
-            return
-
-    except ValueError:
-        g.message = util.F('track unresolved')
-        util.dbg("----valueerror in stream_details call to streams.get")
-        return
 
     try:
         video = ((config.SHOW_VIDEO.get and override != "audio") or
                  (override in ("fullscreen", "window", "forcevid")))
+
+        if local_media:
+            return (video, song.path)
+
         m4a = "mplayer" not in config.PLAYER.get
         cached = g.streams[song.ytid]
         stream = streams.select(cached, q=failcount, audio=(not video), m4a_ok=m4a)
@@ -209,6 +220,8 @@ def stream_details(song, failcount=0, override=False, softrepeat=False):
 def _playsong(song, stream, video, failcount=0, override=False, softrepeat=False):
     """ Play song using config.PLAYER called with args config.PLAYERARGS."""
     # pylint: disable=R0911,R0912
+    local_stream = not isinstance(stream, dict)
+
     if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
         g.message = "Player not configured! Enter %sset player <player_app> "\
             "%s to set a player" % (c.g, c.w)
@@ -217,10 +230,14 @@ def _playsong(song, stream, video, failcount=0, override=False, softrepeat=False
     if config.NOTIFIER.get:
         subprocess.Popen(shlex.split(config.NOTIFIER.get) + [song.title])
 
-    size = streams.get_size(song.ytid, stream['url'])
-    songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
-                int(size / (1024 ** 2)))
-    songdata = "%s; %s; %s Mb" % songdata
+    if local_stream:
+        songdata = ""
+    else:
+        size = streams.get_size(song.ytid, stream['url'])
+        songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
+                    int(size / (1024 ** 2)))
+        songdata = "%s; %s; %s Mb" % songdata
+
     screen.writestatus(songdata)
 
     cmd = _generate_real_playerargs(song, override, stream, video, softrepeat)
@@ -248,7 +265,9 @@ def _generate_real_playerargs(song, override, stream, isvideo, softrepeat):
     # pylint: disable=R0914
     # pylint: disable=R0912
 
-    if "uiressl=yes" in stream['url'] and "mplayer" in config.PLAYER.get:
+    local_stream = not isinstance(stream, dict)
+
+    if not local_stream and "uiressl=yes" in stream['url'] and "mplayer" in config.PLAYER.get:
         ver = g.mplayer_version
         # Mplayer too old to support https
         if not (ver > (1,1) if isinstance(ver, tuple) else ver >= 37294):
@@ -285,7 +304,7 @@ def _generate_real_playerargs(song, override, stream, isvideo, softrepeat):
             util.list_update(pd["fs"], args)
 
         # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
-        if not isvideo and stream['ext'] == "m4a":
+        if not local_stream and not isvideo and stream['ext'] == "m4a":
             util.dbg("%susing ignidx flag%s")
             util.list_update(pd["ignidx"], args)
 
@@ -314,10 +333,16 @@ def _generate_real_playerargs(song, override, stream, isvideo, softrepeat):
             if softrepeat:
                 util.list_update("--loop-file", args)
 
+            if local_stream:
+                util.list_update("--no-video", args)
+
     elif "vlc" in config.PLAYER.get:
         util.list_update("--play-and-exit", args)
 
-    return [config.PLAYER.get] + args + [stream['url']]
+    if local_stream:
+        return [config.PLAYER.get] + args + [stream]
+    else:
+        return [config.PLAYER.get] + args + [stream['url']]
 
 
 def _get_input_file():
@@ -363,6 +388,8 @@ def _get_input_file():
 def _launch_player(song, songdata, cmd):
     """ Launch player application. """
 
+    local_media = "LocalMedia" == g.model[0].__class__.__name__
+
     util.dbg("playing %s", song.title)
     util.dbg("calling %s", " ".join(cmd))
 
@@ -370,7 +397,9 @@ def _launch_player(song, songdata, cmd):
     # not supported by encoding
     cmd = [util.xenc(i) for i in cmd]
 
-    arturl = "https://i.ytimg.com/vi/%s/default.jpg" % song.ytid
+    if not local_media:
+        arturl = "https://i.ytimg.com/vi/%s/default.jpg" % song.ytid
+
     input_file = None
     if ("mplayer" in config.PLAYER.get) or ("mpv" in config.PLAYER.get):
         input_file = _get_input_file()
@@ -394,8 +423,12 @@ def _launch_player(song, songdata, cmd):
                 os.mkfifo(fifopath)
                 cmd.extend(['-input', 'file=' + fifopath])
                 g.mprisctl.send(('mplayer-fifo', fifopath))
-                g.mprisctl.send(('metadata', (song.ytid, song.title,
-                                              song.length, arturl)))
+                if local_media:
+                    g.mprisctl.send(('metadata', (song.path, song.title,
+                                                  song.length)))
+                else:
+                    g.mprisctl.send(('metadata', (song.ytid, song.title,
+                                                  song.length, arturl)))
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
@@ -414,8 +447,12 @@ def _launch_player(song, songdata, cmd):
 
                 if g.mprisctl:
                     g.mprisctl.send(('socket', sockpath))
-                    g.mprisctl.send(('metadata', (song.ytid, song.title,
-                                                  song.length, arturl)))
+                    if local_media:
+                        g.mprisctl.send(('metadata', (song.path, song.title,
+                                                      song.length)))
+                    else:
+                        g.mprisctl.send(('metadata', (song.ytid, song.title,
+                                                      song.length, arturl)))
 
             else:
                 if g.mprisctl:
@@ -423,8 +460,12 @@ def _launch_player(song, songdata, cmd):
                     os.mkfifo(fifopath)
                     cmd.append('--input-file=' + fifopath)
                     g.mprisctl.send(('mpv-fifo', fifopath))
-                    g.mprisctl.send(('metadata', (song.ytid, song.title,
-                                                  song.length, arturl)))
+                    if local_media:
+                        g.mprisctl.send(('metadata', (song.path, song.title,
+                                                      song.length)))
+                    else:
+                        g.mprisctl.send(('metadata', (song.ytid, song.title,
+                                                      song.length, arturl)))
 
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                      bufsize=1)

@@ -36,8 +36,12 @@ def save():
         hf.write('#EXTM3U\n\n')
         if 'history' in g.userhist:
             for song in g.userhist['history'].songs:
+                local_media = local_media = "LocalMedia" == g.model[0].__class__.__name__
                 hf.write('#EXTINF:%d,%s\n' % (song.length, song.title))
-                hf.write('https://www.youtube.com/watch?v=%s\n' % song.ytid)
+                if local_media:
+                    hf.write(song.path)
+                else:
+                    hf.write('https://www.youtube.com/watch?v=%s\n' % song.ytid)
 
     dbg(c.r + "History saved\n---" + c.w)
 
