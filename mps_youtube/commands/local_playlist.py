@@ -158,7 +158,7 @@ def open_save_view(action, name):
             g.content = content.generate_songlist_display()
 
 
-@command(r'local (open|view) \s*(%s)' % WORD)
+@command(r'local (open|view) \s*([^\s]+)')
 def local_open_view(action, path):
     """ Open or view music from a directory """
     songs = []
