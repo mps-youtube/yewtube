@@ -80,7 +80,12 @@ def generate_songlist_display(song=False, zeromsg=None):
         return logo(c.g) + "\n\n"
     g.rprompt = page_msg(g.current_page)
 
-    have_meta = all(x.ytid in g.meta for x in g.model)
+    local_media = "LocalMedia" == g.model[0].__class__.__name__
+
+    if local_media:
+        have_meta = False
+    else:
+        have_meta = all(x.ytid in g.meta for x in g.model)
 
     user_columns = _get_user_columns() if have_meta else []
     maxlength = max(x.length for x in g.model)
@@ -115,7 +120,10 @@ def generate_songlist_display(song=False, zeromsg=None):
         details['title'] = uea_pad(columns[1]['size'], otitle)
         cat = details.get('category') or '-'
         details['category'] = pafy.get_categoryname(cat)
-        details['ytid'] = x.ytid
+        if local_media:
+            details['path'] = x.path
+        else:
+            details['ytid'] = x.ytid
         data = []
 
         for z in columns:

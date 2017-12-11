@@ -165,7 +165,8 @@ def preload(song, delay=2, override=False):
 
 def _preload(song, delay, override):
     """  Get streams (runs in separate thread). """
-    if g.preload_disabled:
+    local_media = "LocalMedia" == g.model[0].__class__.__name__
+    if g.preload_disabled or local_media:
         return
 
     ytid = song.ytid

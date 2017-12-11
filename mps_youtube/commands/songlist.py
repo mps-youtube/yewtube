@@ -9,7 +9,8 @@ from . import command, PL
 
 
 def paginatesongs(func, page=0, splash=True, dumps=False,
-        length=None, msg=None, failmsg=None, loadmsg=None):
+        length=None, msg=None, failmsg=None, loadmsg=None,
+        local=False):
     """
     A utility function for handling lists of songs, so that
     the pagination and the dump command will work properly.
@@ -68,12 +69,12 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
     g.content = content.generate_songlist_display()
     g.last_opened = ""
     g.message = msg or ''
-    if not songs:
-        g.message = failmsg or g.message
-
     if songs:
-        # preload first result url
-        streams.preload(songs[0], delay=0)
+        if not local:
+            # preload first result url
+            streams.preload(songs[0], delay=0)
+    else:
+        g.message = failmsg or g.message
 
 
 @command(r'pl\s+%s' % PL)

@@ -246,24 +246,30 @@ def video_info(num):
     elif g.browse_mode == "normal":
         g.content = logo(c.b)
         screen.update()
-        screen.writestatus("Fetching video metadata..")
         item = (g.model[int(num) - 1])
-        streams.get(item)
-        p = util.get_pafy(item)
-        pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
-        pub = util.utc2local(pub)
-        screen.writestatus("Fetched")
-        out = c.ul + "Video Info" + c.w + "\n\n"
-        out += p.title or ""
-        out += "\n" + (p.description or "") + "\n"
-        out += "\nAuthor     : " + str(p.author)
-        out += "\nPublished  : " + pub.strftime("%c")
-        out += "\nView count : " + str(p.viewcount)
-        out += "\nRating     : " + str(p.rating)[:4]
-        out += "\nLikes      : " + str(p.likes)
-        out += "\nDislikes   : " + str(p.dislikes)
-        out += "\nCategory   : " + str(p.category)
-        out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
+        if hasattr(item, 'path'):
+            out = c.ul + "Local Media Info" + c.w + "\n\n"
+            out += item.title
+            out += "\nPath   : " + str(item.path)
+            out += "\nLength : " + str(item.length)
+        else:
+            screen.writestatus("Fetching video metadata..")
+            streams.get(item)
+            p = util.get_pafy(item)
+            pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
+            pub = util.utc2local(pub)
+            screen.writestatus("Fetched")
+            out = c.ul + "Video Info" + c.w + "\n\n"
+            out += p.title or ""
+            out += "\n" + (p.description or "") + "\n"
+            out += "\nAuthor     : " + str(p.author)
+            out += "\nPublished  : " + pub.strftime("%c")
+            out += "\nView count : " + str(p.viewcount)
+            out += "\nRating     : " + str(p.rating)[:4]
+            out += "\nLikes      : " + str(p.likes)
+            out += "\nDislikes   : " + str(p.dislikes)
+            out += "\nCategory   : " + str(p.category)
+            out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
         out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w)
         g.content = out
 
@@ -274,20 +280,23 @@ def stream_info(num):
     if g.browse_mode == "normal":
         g.content = logo(c.b)
         screen.update()
-        screen.writestatus("Fetching stream metadata..")
         item = (g.model[int(num) - 1])
-        streams.get(item)
-        p = util.get_pafy(item)
-        setattr(p, 'ytid', p.videoid)
-        details = player.stream_details(p)[1]
-        screen.writestatus("Fetched")
         out = "\n\n" + c.ul + "Stream Info" + c.w + "\n"
-        out += "\nExtension   : " + details['ext']
-        out += "\nSize        : " + str(details['size'])
-        out += "\nQuality     : " + details['quality']
-        out += "\nRaw bitrate : " + str(details['rawbitrate'])
-        out += "\nMedia type  : " + details['mtype']
-        out += "\nLink        : " + details['url']
+        if hasattr(item, 'path'):
+            out += "\nCannot fetch stream info for local media"
+        else:
+            screen.writestatus("Fetching stream metadata..")
+            streams.get(item)
+            p = util.get_pafy(item)
+            setattr(p, 'ytid', p.videoid)
+            details = player.stream_details(p)[1]
+            screen.writestatus("Fetched")
+            out += "\nExtension   : " + details['ext']
+            out += "\nSize        : " + str(details['size'])
+            out += "\nQuality     : " + details['quality']
+            out += "\nRaw bitrate : " + str(details['rawbitrate'])
+            out += "\nMedia type  : " + details['mtype']
+            out += "\nLink        : " + details['url']
         out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w)
         g.content = out
 
