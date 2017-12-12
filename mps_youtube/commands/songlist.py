@@ -58,22 +58,29 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
     if length is None:
         length = len(func)
 
+    view_only = not g.active.songs == songs
+
     args = {'func':func, 'length':length, 'msg':msg,
             'failmsg':failmsg, 'loadmsg': loadmsg}
     g.last_search_query = (paginatesongs, args)
     g.browse_mode = "normal"
     g.current_page = page
     g.result_count = length
+    if view_only:
+        last_songs = g.model.songs
+
     g.model.songs = songs
     g.content = content.generate_songlist_display()
-    g.last_opened = ""
     g.message = msg or ''
     if not songs:
         g.message = failmsg or g.message
 
-    if songs:
-        # preload first result url
-        streams.preload(songs[0], delay=0)
+    if view_only:
+        g.model.songs = last_songs
+    else:
+        if songs:
+            # preload first result url
+            streams.preload(songs[0], delay=0)
 
 
 @command(r'pl\s+%s' % PL)
