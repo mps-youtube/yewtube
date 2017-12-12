@@ -133,7 +133,7 @@ def open_save_view(action, name):
             g.active.songs = list(saved.songs)
             g.last_opened = name
             msg = util.F("pl loaded") % name
-            paginatesongs(g.active, msg=msg)
+            paginatesongs(g.active.songs, msg=msg)
 
         elif action == "view":
             g.last_opened = ""
