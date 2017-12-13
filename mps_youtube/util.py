@@ -7,6 +7,8 @@ import time
 import subprocess
 import collections
 import unicodedata
+import urllib
+import json
 from datetime import datetime, timezone
 
 import pafy
@@ -472,3 +474,56 @@ def _get_mplayer_version(exename):
             dbg("%sFailed to detect mplayer version%s", c.r, c.w)
 
     return ver
+
+def _get_metadata(song_title) :
+    ''' Get metadata from a song title '''
+    t = re.sub("[\(\[].*?[\)\]]", "", song_title.lower())
+    t = t.split('-')
+
+    if len(t) != 2 : #If len is not 2, no way of properly knowing title for sure
+        t = t[0]
+        t = t.split(':')
+        if len(t) != 2 :  #Ugly, but to be safe in case all these chars exist, Will improve
+            t = t[0]
+            t = t.split('|')
+            if len(t) != 2 :
+                return None
+
+    t[0] = re.sub("(ft |ft.|feat |feat.).*.", "", t[0])
+    t[1] = re.sub("(ft |ft.|feat |feat.).*.", "", t[1])
+
+    t[0] = t[0].strip()
+    t[1] = t[1].strip()
+
+    metadata = _get_metadata_from_lastfm(t[0], t[1])
+
+    if metadata != None :
+        return metadata
+
+    metadata = _get_metadata_from_lastfm(t[1], t[0])
+    return metadata
+
+def _get_metadata_from_lastfm(artist, track) :
+    ''' Try to get metadata with a given artist and track '''
+    url = 'http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=12dec50313f885d407cf8132697b8712&'
+    url += urllib.parse.urlencode({"artist" :  artist}) + '&'
+    url += urllib.parse.urlencode({"track" :  track}) + '&'
+    url += '&format=json'
+
+    resp = urllib.request.urlopen(url)
+
+    metadata = dict()
+
+    data = json.loads(resp.read())
+
+    if 'track' != list(data.keys())[0] :
+        return None
+    try :
+        metadata['track_title'] = data['track']['name']
+        metadata['artist'] = data['track']['artist']['name']
+        metadata['album'] = data['track']['album']['title']
+        metadata['album_art_url'] = data['track']['album']['image'][-1]['#text']
+    except :
+        return None
+
+    return metadata

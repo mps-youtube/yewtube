@@ -302,7 +302,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                 'mpris:length' : dbus.Int64(length * 10**6, variant_level=1),
                 'mpris:artUrl' : dbus.String(arturl, variant_level=1),
                 'xesam:title' : dbus.String(title, variant_level=1),
-                'xesam:artist' : dbus.Array(artist),
+                'xesam:artist' : dbus.Array(artist, 's', 1),
                 'xesam:album' : dbus.String(album, variant_level=1) }
 
             if newval != oldval:
