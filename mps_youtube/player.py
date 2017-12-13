@@ -11,6 +11,7 @@ import math
 import time
 import shlex
 from urllib.error import HTTPError, URLError
+import urllib
 
 from . import g, screen, c, streams, history, content, paths, config, util
 
@@ -301,7 +302,7 @@ def _generate_real_playerargs(song, override, stream, isvideo, softrepeat):
             util.list_update("-really-quiet", args, remove=True)
             util.list_update("-noquiet", args)
             util.list_update("-prefer-ipv4", args)
-            
+
 
         elif "mpv" in config.PLAYER.get:
             if "--ytdl" in g.mpv_options:
@@ -374,6 +375,8 @@ def _get_input_file():
 def _launch_player(song, songdata, cmd):
     """ Launch player application. """
 
+    #song.title
+
     util.dbg("playing %s", song.title)
     util.dbg("calling %s", " ".join(cmd))
 
@@ -381,7 +384,15 @@ def _launch_player(song, songdata, cmd):
     # not supported by encoding
     cmd = [util.xenc(i) for i in cmd]
 
-    arturl = "https://i.ytimg.com/vi/%s/default.jpg" % song.ytid
+    metadata = _get_metadata(song.title)
+
+    if metadata == None :
+        arturl = "https://i.ytimg.com/vi/%s/default.jpg" % song.ytid
+        metadata = (song.ytid, song.title, song.length, arturl, [''], '')
+    else :
+        arturl = metadata['album_art_url']
+        temp = (song.ytid, metadata['track_title'], song.length, arturl, [metadata['artist']], metadata['album'])
+        metadata = temp
     input_file = None
     if ("mplayer" in config.PLAYER.get) or ("mpv" in config.PLAYER.get):
         input_file = _get_input_file()
@@ -405,8 +416,7 @@ def _launch_player(song, songdata, cmd):
                 os.mkfifo(fifopath)
                 cmd.extend(['-input', 'file=' + fifopath])
                 g.mprisctl.send(('mplayer-fifo', fifopath))
-                g.mprisctl.send(('metadata', (song.ytid, song.title,
-                                              song.length, arturl)))
+                g.mprisctl.send(('metadata', metadata))
 
             p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, bufsize=1)
@@ -425,8 +435,7 @@ def _launch_player(song, songdata, cmd):
 
                 if g.mprisctl:
                     g.mprisctl.send(('socket', sockpath))
-                    g.mprisctl.send(('metadata', (song.ytid, song.title,
-                                                  song.length, arturl)))
+                    g.mprisctl.send(('metadata', metadata))
 
             else:
                 if g.mprisctl:
@@ -434,8 +443,7 @@ def _launch_player(song, songdata, cmd):
                     os.mkfifo(fifopath)
                     cmd.append('--input-file=' + fifopath)
                     g.mprisctl.send(('mpv-fifo', fifopath))
-                    g.mprisctl.send(('metadata', (song.ytid, song.title,
-                                                  song.length, arturl)))
+                    g.mprisctl.send(('metadata', metadata))
 
                 p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                      bufsize=1)
@@ -521,7 +529,7 @@ def _player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                 elif resp.get('event') == 'property-change' and resp['id'] == 2:
                     volume_level = int(resp['data'])
 
-                if(volume_level and volume_level != g.volume): 
+                if(volume_level and volume_level != g.volume):
                     g.volume = volume_level
                 if elapsed_s:
                     line = _make_status_line(elapsed_s, prefix, songlength,
@@ -566,7 +574,7 @@ def _player_status(po_obj, prefix, songlength=0, mpv=False, sockpath=None):
                             continue
 
 
-                    if volume_level and volume_level != g.volume: 
+                    if volume_level and volume_level != g.volume:
                         g.volume = volume_level
                     line = _make_status_line(elapsed_s, prefix, songlength,
                                             volume=volume_level)
@@ -625,3 +633,54 @@ def _make_status_line(elapsed_s, prefix, songlength=0, volume=None):
     status_line += " [%s]" % ("=" * (progress - 1) +
                               ">").ljust(prog_bar_size, ' ')
     return prefix + status_line + vol_suffix
+
+def _get_metadata(song_title) :
+    t = re.sub("[\(\[].*?[\)\]]", "", song_title.lower())
+    t = t.split('-')
+
+    if len(t) != 2 : #If len is not 2, no way of properly knowing title for sure
+        t = t[0]
+        t = t.split(':')
+        if len(t) != 2 :  #Ugly, but to be safe in case all these chars exist, Will improve
+            t = t[0]
+            t = t.split('|')
+            if len(t) != 2 :
+                return None
+
+    t[0] = re.sub("(ft |ft.|feat |feat.).*.", "", t[0])
+    t[1] = re.sub("(ft |ft.|feat |feat.).*.", "", t[1])
+
+    t[0] = t[0].strip()
+    t[1] = t[1].strip()
+
+    metadata = _get_metadata_from_lastfm(t[0], t[1])
+
+    if metadata != None :
+        return metadata
+
+    metadata = _get_metadata_from_lastfm(t[1], t[0])
+    return metadata
+
+def _get_metadata_from_lastfm(artist, track) :
+    url = 'http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=12dec50313f885d407cf8132697b8712&'
+    url += urllib.parse.urlencode({"artist" :  artist}) + '&'
+    url += urllib.parse.urlencode({"track" :  track}) + '&'
+    url += '&format=json'
+
+    resp = urllib.request.urlopen(url)
+
+    metadata = dict()
+
+    data = json.loads(resp.read())
+
+    if 'track' != list(data.keys())[0] :
+        return None
+    try :
+        metadata['track_title'] = data['track']['name']
+        metadata['artist'] = data['track']['artist']['name']
+        metadata['album'] = data['track']['album']['title']
+        metadata['album_art_url'] = data['track']['album']['image'][-1]['#text']
+    except :
+        return None
+
+    return metadata
