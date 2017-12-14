@@ -382,7 +382,7 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     ext = filename.split(".")[-1]
     valid_ext = ext in active_encoder['valid'].split(",")
 
-    if audio and filename.split('.')[-1] == 'm4a':
+    if audio and filename.split('.')[-1] == 'm4a' and MUTAGEN_PRESENT:
         remux_audio(filename, song.title)
 
     if config.ENCODER.get != 0 and valid_ext and allow_transcode:
