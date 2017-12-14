@@ -6,7 +6,14 @@ import shlex
 import random
 import subprocess
 from urllib.request import urlopen
+import urllib
 from urllib.error import HTTPError
+
+try :
+    from mutagen import mp4
+    MUTAGEN_PRESENT = True
+except :
+    MUTAGEN_PRESENT = False
 
 from .. import g, c, screen, streams, content, config, util
 from . import command, PL
@@ -231,51 +238,30 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     filename = filename.replace('"', '')
     return filename
 
-
-def extract_metadata(name):
-    """ Try to determine metadata from video title. """
-    seps = name.count(" - ")
-    artist = title = None
-
-    if seps == 1:
-
-        pos = name.find(" - ")
-        artist = name[:pos].strip()
-        title = name[pos + 3:].strip()
-
-    else:
-        title = name.strip()
-
-    return dict(artist=artist, title=title)
-
-
 def remux_audio(filename, title):
     """ Remux audio file. Insert limited metadata tags. """
+    metadata = util._get_metadata(title)
+    if metadata == None :
+        util.dbg("Metdata not found. Not fixing.")
+        return
     util.dbg("starting remux")
-    temp_file = filename + "." + str(random.randint(10000, 99999))
-    os.rename(filename, temp_file)
-    meta = extract_metadata(title)
-    metadata = ["title=%s" % meta["title"]]
 
-    if meta["artist"]:
-        metadata = ["title=%s" % meta["title"], "-metadata",
-                    "artist=%s" % meta["artist"]]
+    audiofile = mp4.MP4(filename)
 
-    cmd = [g.muxapp, "-y", "-i", temp_file, "-acodec", "copy", "-metadata"]
-    cmd += metadata + ["-vn", filename]
-    util.dbg(cmd)
+    audiofile['\xa9nam'] = metadata['track_title']
+    audiofile['\xa9ART'] = metadata['artist']
+    audiofile['\xa9alb'] = metadata['album']
+    audiofile['aART'] = metadata['artist']
 
-    try:
-        with open(os.devnull, "w") as devnull:
-            subprocess.call(cmd, stdout=devnull, stderr=subprocess.STDOUT)
+    cover = metadata['album_art_url']
+    fd = urllib.request.urlopen(cover)
+    covr = mp4.MP4Cover(fd.read(), getattr(mp4.MP4Cover,'FORMAT_PNG' if cover.endswith('png') else 'FORMAT_JPEG'))
+    fd.close()
 
-    except OSError:
-        util.dbg("Failed to remux audio using %s", g.muxapp)
-        os.rename(temp_file, filename)
+    audiofile['covr'] = [covr]
+    audiofile.save()
 
-    else:
-        os.unlink(temp_file)
-        util.dbg("remuxed audio file using %s" % g.muxapp)
+    util.dbg("remuxed audio file")
 
 
 def transcode(filename, enc_data):
@@ -396,7 +382,7 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     ext = filename.split(".")[-1]
     valid_ext = ext in active_encoder['valid'].split(",")
 
-    if audio and g.muxapp:
+    if audio and filename.split('.')[-1] == 'm4a':
         remux_audio(filename, song.title)
 
     if config.ENCODER.get != 0 and valid_ext and allow_transcode:
