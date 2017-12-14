@@ -239,12 +239,33 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     return filename
 
 def remux_audio(filename, title):
-    """ Remux audio file. Insert limited metadata tags. """
+    """ Remux audio file."""
+    util.dbg("starting remux")
+    temp_file = filename + "." + str(random.randint(10000, 99999))
+    os.rename(filename, temp_file)
+
+    cmd = [g.muxapp, "-y", "-i", temp_file, "-acodec", "copy", "-vn", filename]
+
+    util.dbg(cmd)
+
+    try:
+        with open(os.devnull, "w") as devnull:
+            subprocess.call(cmd, stdout=devnull, stderr=subprocess.STDOUT)
+
+    except OSError:
+        util.dbg("Failed to remux audio using %s", g.muxapp)
+        os.rename(temp_file, filename)
+
+    else:
+        os.unlink(temp_file)
+        util.dbg("remuxed audio file using %s" % g.muxapp)
+
+def insert_metadata(filename, title) :
     metadata = util._get_metadata(title)
     if metadata == None :
         util.dbg("Metdata not found. Not fixing.")
         return
-    util.dbg("starting remux")
+    util.dbg("starting metdata fix")
 
     audiofile = mp4.MP4(filename)
 
@@ -261,7 +282,7 @@ def remux_audio(filename, title):
     audiofile['covr'] = [covr]
     audiofile.save()
 
-    util.dbg("remuxed audio file")
+    util.dbg("fixed metadata")
 
 
 def transcode(filename, enc_data):
@@ -383,6 +404,9 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     valid_ext = ext in active_encoder['valid'].split(",")
 
     if audio and filename.split('.')[-1] == 'm4a' and MUTAGEN_PRESENT:
+        insert_metadata(filename, song.title)
+
+    if audio and g.muxapp :
         remux_audio(filename, song.title)
 
     if config.ENCODER.get != 0 and valid_ext and allow_transcode:
