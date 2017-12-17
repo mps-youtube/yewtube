@@ -244,7 +244,12 @@ def remux_audio(filename, title):
     temp_file = filename + "." + str(random.randint(10000, 99999))
     os.rename(filename, temp_file)
 
-    cmd = [g.muxapp, "-y", "-i", temp_file, "-acodec", "copy", "-vn", filename]
+    if not MUTAGEN_PRESENT :
+        meta = "title=%s" % title
+        cmd = [g.muxapp, "-y", "-i", temp_file, "-acodec", "copy", "-metadata", meta, "-vn", filename]
+
+    else :
+        cmd = [g.muxapp, "-y", "-i", temp_file, "-acodec", "copy", "-vn", filename]
 
     util.dbg(cmd)
 
@@ -260,14 +265,29 @@ def remux_audio(filename, title):
         os.unlink(temp_file)
         util.dbg("remuxed audio file using %s" % g.muxapp)
 
-def insert_metadata(filename, title) :
+def insert_metadata(filename, title, ytid) :
+    ''' Inserts metadata into the downloaded audiofile '''
+
     metadata = util._get_metadata(title)
-    if metadata == None :
-        util.dbg("Metdata not found. Not fixing.")
-        return
+
     util.dbg("starting metdata fix")
 
-    audiofile = mp4.MP4(filename)
+    try :
+        audiofile = mp4.MP4(filename)
+    except :
+        util.dbg("Error opening file. Metadata not fixed")
+        return
+
+    if metadata == None :
+        audiofile['\xa9nam'] = title
+        cover = "https://i.ytimg.com/vi/%s/default.jpg" %ytid
+        fd = urllib.request.urlopen(cover)
+        covr = mp4.MP4Cover(fd.read(), getattr(mp4.MP4Cover, 'FORMAT_JPEG'))
+        fd.close()
+        audiofile['covr'] = [covr]
+        audiofile.save()
+        util.dbg("fixed metadata")
+        return
 
     audiofile['\xa9nam'] = metadata['track_title']
     audiofile['\xa9ART'] = metadata['artist']
@@ -403,11 +423,11 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
     ext = filename.split(".")[-1]
     valid_ext = ext in active_encoder['valid'].split(",")
 
-    if audio and filename.split('.')[-1] == 'm4a' and MUTAGEN_PRESENT:
-        insert_metadata(filename, song.title)
-
     if audio and g.muxapp :
         remux_audio(filename, song.title)
+
+    if audio and filename.split('.')[-1] == 'm4a' and MUTAGEN_PRESENT:
+        insert_metadata(filename, song.title, song.ytid)
 
     if config.ENCODER.get != 0 and valid_ext and allow_transcode:
         filename = transcode(filename, active_encoder)
