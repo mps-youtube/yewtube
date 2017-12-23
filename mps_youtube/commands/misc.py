@@ -1,10 +1,13 @@
+import os
 import re
+import time
 from datetime import datetime
 import socket
 import traceback
 from urllib.request import urlopen
 from urllib.error import HTTPError, URLError
 from .. import player
+from .download import _make_fname
 
 try:
     # pylint: disable=F0401
@@ -211,9 +214,8 @@ def clipcopy_stream(num):
         g.content = generate_songlist_display()
 
 
-@command(r'i\s*(\d{1,4})')
-def video_info(num):
-    """ Get video information. """
+def item_info(num):
+    """ Get item information. """
     if g.browse_mode == "ytpl":
         p = g.ytpls[int(num) - 1]
 
@@ -221,40 +223,29 @@ def video_info(num):
         if p['link'] in g.pafy_pls:
             ytpl = g.pafy_pls[p['link']][0]
         else:
-            g.content = logo(col=c.g)
-            g.message = "Fetching playlist info.."
-            screen.update()
             util.dbg("%sFetching playlist using pafy%s", c.y, c.w)
             ytpl = pafy.get_playlist2(p['link'])
             g.pafy_pls[p['link']] = (ytpl, util.IterSlicer(ytpl))
 
         ytpl_desc = ytpl.description
-        g.content = generate_songlist_display()
         created = util.yt_datetime_local(p['created'])
         updated = util.yt_datetime_local(p['updated'])
-        out = c.ul + "Playlist Info" + c.w + "\n\n"
-        out += p['title']
+        out = p['title']
         out += "\n" + ytpl_desc
         out += ("\n\nAuthor     : " + p['author'])
         out += "\nSize       : " + str(p['size']) + " videos"
         out += "\nCreated    : " + created[1] + " " + created[2]
         out += "\nUpdated    : " + updated[1] + " " + updated[2]
         out += "\nID         : " + str(p['link'])
-        out += ("\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w))
-        g.content = out
+        return (out, str(p['title']))
 
     elif g.browse_mode == "normal":
-        g.content = logo(c.b)
-        screen.update()
-        screen.writestatus("Fetching video metadata..")
         item = (g.model[int(num) - 1])
         streams.get(item)
         p = util.get_pafy(item)
         pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
         pub = util.utc2local(pub)
-        screen.writestatus("Fetched")
-        out = c.ul + "Video Info" + c.w + "\n\n"
-        out += p.title or ""
+        out = p.title or ""
         out += "\n" + (p.description or "") + "\n"
         out += "\nAuthor     : " + str(p.author)
         out += "\nPublished  : " + pub.strftime("%c")
@@ -264,8 +255,79 @@ def video_info(num):
         out += "\nDislikes   : " + str(p.dislikes)
         out += "\nCategory   : " + str(p.category)
         out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
+        return (out, item)
+
+
+@command(r'i\s*(\d{1,4})')
+def display_item_info(num):
+    """ Display item information. """
+    if g.browse_mode == "ytpl":
+        g.content = logo(col=c.g)
+        g.message = "Fetching playlist info.."
+        screen.update()
+        info, name = item_info(num)
+        out = c.ul + "Playlist Info" + c.w + "\n\n"
+        out += info
         out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w)
         g.content = out
+
+    elif g.browse_mode == "normal":
+        g.content = logo(c.b)
+        screen.update()
+        screen.writestatus("Fetching video metadata..")
+        info, name = item_info(num)
+        screen.writestatus("Fetched")
+        out = c.ul + "Video Info" + c.w + "\n\n"
+        out += info
+        out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w)
+        g.content = out
+
+
+@command(r'di\s*(\d{1,4})')
+def download_item_info(num):
+    """ Download item information. """
+    if g.browse_mode == "ytpl":
+        g.content = logo(col=c.g)
+        g.message = "Fetching playlist info.."
+        info, name = item_info(num)
+        screen.update()
+        g.content = generate_songlist_display()
+        filename = _make_fname(name, "txt")
+        if os.path.exists(filename):
+            util.xprint("File exists. Skipping %s%s%s ..\n" %
+                    (c.r, filename, c.w))
+            time.sleep(1)
+        else:
+            outfile = open(filename, 'w')
+            outfile.write(info)
+            outfile.close()
+            g.content = "\n\nPlaylist information saved to " + filename + "\n\nPress enter to go back"
+
+    elif g.browse_mode == "normal":
+        g.content = logo(c.b)
+        screen.update()
+        screen.writestatus("Fetching video metadata..")
+        info, name = item_info(num)
+        screen.writestatus("Fetched")
+        filename = _make_fname(name, "txt")
+        if os.path.exists(filename):
+            util.xprint("File exists. Skipping %s%s%s ..\n" %
+                    (c.r, filename, c.w))
+            time.sleep(1)
+        else:
+            outfile = open(filename, 'w')
+            outfile.write(info)
+            outfile.close()
+            g.content = "\n\nVideo information saved to " + filename + "\n\nPress enter to go back"
+
+
+@command(r'di\s+((?:\d+\s\d+|-\d+|\d+-|\d+,)(?:[\d\s,-]*))')
+def download_item_info_many(choice):
+    """ Download information for multiple items. """
+    choice = util.parse_multi(choice)
+    choice = list(set(choice))
+    for x in choice:
+        download_item_info(x)
 
 
 @command(r's\s*(\d{1,4})')

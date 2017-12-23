@@ -225,8 +225,12 @@ def _make_fname(song, ext=None, av=None, subdir=None):
                 audio=av == "audio", m4a_ok=True)
         ext = stream['ext']
 
-    # filename = song.title[:59] + "." + ext
-    filename = song.title + "." + ext
+    if isinstance(song, str):
+        # Used by the "di" command
+        filename = song + "." + ext
+    else:
+        # filename = song.title[:59] + "." + ext
+        filename = song.title + "." + ext
     filename = os.path.join(ddir, util.mswinfn(filename.replace("/", "-")))
     filename = filename.replace('"', '')
     return filename
