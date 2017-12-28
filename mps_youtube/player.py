@@ -607,7 +607,7 @@ def _make_status_line(elapsed_s, prefix, songlength=0, volume=None):
         display_m = display_s // 60
         display_s %= 60
 
-        if display_m >= 100:
+        if display_m >= 60:
             display_h = display_m // 60
             display_m %= 60
 
