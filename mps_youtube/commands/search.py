@@ -48,8 +48,7 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
             qs['pageToken'] = wdata2['nextPageToken']
             wdata2 = pafy.call_gdata('search', qs)
 
-    # The youtube search api returns a maximum of 500 results
-    length = min(wdata['pageInfo']['totalResults'], 500)
+    length = wdata['pageInfo']['totalResults']
     slicer = util.IterSlicer(iter_songs(), length)
 
     paginatesongs(slicer, length=length, msg=msg, failmsg=failmsg,
