@@ -7,7 +7,7 @@ from .. import g, c, streams, util, content, config
 from . import command, WORD, RS
 from .songlist import plist
 from .search import yt_url, related
-from ..player import play_range
+from ..player import player
 
 
 @command(r'play\s+(%s|\d+)' % WORD)
@@ -93,7 +93,8 @@ def play(pre, choice, post=""):
                 streams.preload(g.model[chosen + 1], override=override)
 
         try:
-            play_range(songlist, shuffle, repeat, override)
+            player.play(songlist, shuffle, repeat, override)
+
         except KeyboardInterrupt:
             return
         finally:
