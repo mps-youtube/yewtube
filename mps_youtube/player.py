@@ -20,6 +20,48 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 from abc import ABCMeta, abstractmethod
 
 class Player(metaclass=ABCMeta):
+    _playbackStatus="Stopped"
+
+
+    @property
+    def PlaybackStatus(self):
+        return self._playbackStatus
+
+    @PlaybackStatus.setter
+    def PlaybackStatus(self, value):
+        self._playbackStatus = value
+        if value == 'Playing':
+            paused=False
+        else:
+            paused=True
+        g.mprisctl.send(('pause', paused))
+
+    @abstractmethod
+    def _generate_real_playerargs(self, song, override, stream, isvideo, softrepeat):
+        pass
+
+    @abstractmethod
+    def clean_up(self):
+        pass
+
+    @abstractmethod
+    def launch_player(self, cmd):
+        pass
+
+    @abstractmethod
+    def _help(self, short=True):
+        pass
+
+    @abstractmethod
+    def play_pause(self):
+        pass
+
+    @abstractmethod
+    def set_position(self):
+        """Sets the current track position in microseconds.
+        """
+        pass
+
 
     def play(self, songlist, shuffle=False, repeat=False, override=False):
         """ Play a range of songs, exit cleanly on keyboard interrupt. """
@@ -81,17 +123,13 @@ class Player(metaclass=ABCMeta):
 
     def stop(self):
         self.terminate_process()
-        
-    #Maybe make these abstract methods
-    #for mpris control
-    def play_pause(self):
-        pass
 
     def seek(self):
         pass
 
-    def set_position(self):
-        pass
+    #Maybe make these abstract methods
+    #for mpris control
+
     #TODO^
 
     def terminate_process(self):
@@ -155,6 +193,7 @@ class Player(metaclass=ABCMeta):
         try:
             if g.mprisctl:
                 g.mprisctl.send(('metadata', metadata))
+                g.mprisctl.send(('pla', metadata))
 
             #song used to get songdetails
             #songdata contains printable song data
@@ -250,21 +289,6 @@ class Player(metaclass=ABCMeta):
         return prefix + status_line + vol_suffix
 
 
-    @abstractmethod
-    def _generate_real_playerargs(self, song, override, stream, isvideo, softrepeat):
-        pass
-
-    @abstractmethod
-    def clean_up(self):
-        pass
-
-    @abstractmethod
-    def launch_player(self, cmd):
-        pass
-
-    @abstractmethod
-    def _help(self, short=True):
-        pass
 
 
 
@@ -341,7 +365,8 @@ def stream_details(song, failcount=0, override=False, softrepeat=False):
 def check_player(player):
     if player == 'mpv':
         from .players.mpv import mpv
-        return mpv()
+        ref = sys.modules[__name__]
+        sys.modules[__name__] = mpv()
 
 if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
     g.message = "Player not configured! Enter %sset player <player_app> "\

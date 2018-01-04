@@ -22,6 +22,54 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 from ..player import Player
 
 class mpv(Player):
+    socket = None
+    fifo = None
+    def play_pause(self):
+        print('hi')
+        self._sendcommand(["cycle", "pause"])
+
+    def set_position(self, position):
+        self._sendcommand(["seek", position / 10**6, 'absolute'])
+
+    def _sendcommand(self, command):
+        """
+            sends commands to binded player
+        """
+        if self.sockpath:
+            if not self.socket:
+                self.socket = socket.socket(socket.AF_UNIX)
+                # wait on socket initialization
+                tries = 0
+                while tries < 10:
+                    time.sleep(.5)
+                    try:
+                        self.socket.connect(self.sockpath)
+                        break
+                    except socket.error:
+                        pass
+                    tries += 1
+                else:
+                    return
+            self.socket.send(json.dumps({"command": command}).encode() + b'\n')
+        elif self.fifopath:
+            if not self.fifo:
+                try:
+                    self.fifo = open(fifopath, 'w')
+                    self._sendcommand(['get_property', 'volume'])
+                except IOError:
+                    self.fifo = None
+
+            command = command[:]
+            for x, i in enumerate(command):
+                if i is True:
+                    command[x] = 'yes' if self.mpv else 1
+                elif i is False:
+                    command[x] = 'no' if self.mpv else 0
+
+            cmd = " ".join([str(i) for i in command]) + '\n'
+            self.fifo.write(cmd)
+            self.fifo.flush()
+
     def _generate_real_playerargs(self, song, override, stream, isvideo, softrepeat):
         """ Generate args for player command.
 
@@ -92,10 +140,14 @@ class mpv(Player):
         if self.sockpath and os.path.exists(self.sockpath):
             os.unlink(self.sockpath)
 
+        if self.fifopath and os.path.exists(self.fifopath):
+            os.unlink(self.fifopath)
+
     def launch_player(self, cmd, song, songdata):
         self.input_file = _get_input_file()
         cmd.append('--input-conf=' + self.input_file)
-        self.sockpath = tempfile.mktemp('.sock', 'mpsyt-mpv')
+        self.sockpath = None
+        self.fifopath = None
 
         if g.mpv_usesock:
             self.sockpath = tempfile.mktemp('.sock', 'mpsyt-mpv')
@@ -104,28 +156,21 @@ class mpv(Player):
             with open(os.devnull, "w") as devnull:
                 self.p = subprocess.Popen(cmd, shell=False, stderr=devnull)
 
-            if g.mprisctl:
-                '''
-                g.mprisctl.send(('socket', sockpath))
-                g.mprisctl.send(('metadata', metadata))
-                '''
-                pass
-
         else:
             if g.mprisctl:
-                fifopath = tempfile.mktemp('.fifo', 'mpsyt-mpv')
-                os.mkfifo(fifopath)
-                cmd.append('--input-file=' + fifopath)
-                '''
-                g.mprisctl.send(('mpv-fifo', fifopath))
-                g.mprisctl.send(('metadata', metadata))
-                '''
+                self.fifopath = tempfile.mktemp('.fifo', 'mpsyt-mpv')
+                os.mkfifo(self.fifopath)
+                cmd.append('--input-file=' + self.fifopath)
+
 
             self.p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                  bufsize=1)
+
+        self.PlaybackStatus = "Playing"
+        self.play_pause()
         self._player_status(songdata + "; ", song.length)
         returncode = self.p.wait()
-        print(returncode)
+        self.PlaybackStatus = "Stopped"
 
         if returncode == 42:
             self.previous()
