@@ -72,14 +72,16 @@ class Player(metaclass=ABCMeta):
 
     #TODO
     def next(self):
-        pass
+        self.terminate_process()
+        self.song_no += 1
 
     def previous(self):
-        pass
+        self.terminate_process()
+        self.song_no -= 1
 
     def stop(self):
-        pass
-
+        self.terminate_process()
+        
     #Maybe make these abstract methods
     #for mpris control
     def play_pause(self):
@@ -91,6 +93,12 @@ class Player(metaclass=ABCMeta):
     def set_position(self):
         pass
     #TODO^
+
+    def terminate_process(self):
+        self.p.terminate()
+        #If using shell=True or the player
+        #requires some obscure way of killing the process
+        #the child class can define this function
 
     def _playsong(self, song, stream, video, failcount=0, override=False, softrepeat=False):
         """ Play song using config.PLAYER called with args config.PLAYERARGS."""
@@ -112,7 +120,8 @@ class Player(metaclass=ABCMeta):
         cmd = self._generate_real_playerargs(song, override, stream, video, softrepeat)
         returncode = self._launch_player(song, songdata, cmd)
         failed = returncode not in (0, 42, 43)
-
+        print(failed)
+        '''
         if failed and failcount < g.max_retries:
             util.dbg(c.r + "stream failed to open" + c.w)
             util.dbg("%strying again (attempt %s)%s", c.r, (2 + failcount), c.w)
@@ -120,7 +129,7 @@ class Player(metaclass=ABCMeta):
             time.sleep(1.2)
             failcount += 1
             return self._playsong(song, stream, video, failcount=failcount, override=override, softrepeat=softrepeat)
-
+        '''
         history.add(song)
         return returncode
 
@@ -147,8 +156,9 @@ class Player(metaclass=ABCMeta):
             if g.mprisctl:
                 g.mprisctl.send(('metadata', metadata))
 
-            self.launch_player(cmd)
-
+            #song used to get songdetails
+            #songdata contains printable song data
+            self.launch_player(cmd, song, songdata)
 
         except OSError:
             g.message = util.F('no player') % config.PLAYER.get
@@ -203,6 +213,41 @@ class Player(metaclass=ABCMeta):
         out += "%s    %s%s%s %s[%s]%s" % fmt
         out += "    REPEAT MODE" if repeat else ""
         return out
+
+    def _make_status_line(self, elapsed_s, prefix, songlength=0, volume=None):
+        """ Format progress line output.  """
+        # pylint: disable=R0914
+
+        display_s = elapsed_s
+        display_h = display_m = 0
+
+        if elapsed_s >= 60:
+            display_m = display_s // 60
+            display_s %= 60
+
+            if display_m >= 60:
+                display_h = display_m // 60
+                display_m %= 60
+
+        pct = (float(elapsed_s) / songlength * 100) if songlength else 0
+
+        status_line = "%02i:%02i:%02i %s" % (
+            display_h, display_m, display_s,
+            ("[%.0f%%]" % pct).ljust(6)
+        )
+
+        if volume:
+            vol_suffix = " vol: %d%%" % volume
+
+        else:
+            vol_suffix = ""
+
+        cw = util.getxy().width
+        prog_bar_size = cw - len(prefix) - len(status_line) - len(vol_suffix) - 7
+        progress = int(math.ceil(pct / 100 * prog_bar_size))
+        status_line += " [%s]" % ("=" * (progress - 1) +
+                                  ">").ljust(prog_bar_size, ' ')
+        return prefix + status_line + vol_suffix
 
 
     @abstractmethod
