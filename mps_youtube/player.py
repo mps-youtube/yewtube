@@ -48,16 +48,6 @@ class Player(metaclass=ABCMeta):
     def _help(self, short=True):
         pass
 
-    @abstractmethod
-    def play_pause(self):
-        pass
-
-    @abstractmethod
-    def set_position(self):
-        """Sets the current track position in microseconds.
-        """
-        pass
-
     def play(self, songlist, shuffle=False, repeat=False, override=False):
         """ Play a range of songs, exit cleanly on keyboard interrupt. """
         self.songlist = songlist
@@ -122,6 +112,7 @@ class Player(metaclass=ABCMeta):
 
     def stop(self):
         self.terminate_process()
+        self.song_no = len(self.songlist)
 
     def seek(self):
         pass

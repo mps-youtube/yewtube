@@ -95,6 +95,8 @@ def play(pre, choice, post=""):
             def check_player(player):
                 if player == 'mpv':
                     from ..players import mpv
+                elif player == 'mplayer':
+                    from ..players import mplayer
 
             if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
                 g.message = "Player not configured! Enter %sset player <player_app> "\

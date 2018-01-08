@@ -16,57 +16,6 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
 class mpv(Player):
-    socket = None
-    fifo = None
-
-    def play_pause(self):
-        print(self.PlaybackStatus)
-        self._sendcommand(["cycle", "pause"])
-
-    def set_position(self, position):
-        self._sendcommand(["seek", position / 10**6, 'absolute'])
-
-    def _sendcommand(self, command):
-        """
-            sends commands to binded player
-        """
-        if self.sockpath:
-            print('D1')
-            if not self.socket:
-                self.socket = socket.socket(socket.AF_UNIX)
-                # wait on socket initialization
-                tries = 0
-                while tries < 10:
-                    time.sleep(.5)
-                    try:
-                        self.socket.connect(self.sockpath)
-                        break
-                    except socket.error:
-                        pass
-                    tries += 1
-                else:
-                    return
-            self.socket.send(json.dumps({"command": command}).encode() + b'\n')
-        elif self.fifopath:
-            print('D2')
-            if not self.fifo:
-                try:
-                    self.fifo = open(self.fifopath, 'w')
-                    self._sendcommand(['get_property', 'volume'])
-                except IOError:
-                    self.fifo = None
-
-            command = command[:]
-            for x, i in enumerate(command):
-                if i is True:
-                    command[x] = 'yes' if self.mpv else 1
-                elif i is False:
-                    command[x] = 'no' if self.mpv else 0
-
-            cmd = " ".join([str(i) for i in command]) + '\n'
-            self.fifo.write(cmd)
-            self.fifo.flush()
-
     def _generate_real_playerargs(self, song, override, stream, isvideo, softrepeat):
         """ Generate args for player command.
 
