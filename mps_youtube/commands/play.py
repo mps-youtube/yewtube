@@ -92,17 +92,12 @@ def play(pre, choice, post=""):
                 streams.preload(g.model[chosen + 1], override=override)
 
         try:
-            def check_player(player):
-                if player == 'mpv':
-                    from ..players import mpv
-                elif player == 'mplayer':
-                    from ..players import mplayer
-
             if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
                 g.message = "Player not configured! Enter %sset player <player_app> "\
                             "%s to set a player" % (c.g, c.w)
+                return
             else:
-                check_player(config.PLAYER.get)
+                util.assign_player(config.PLAYER.get)
             g.PLAYER_OBJ.play(songlist, shuffle, repeat, override)
 
         except KeyboardInterrupt:

@@ -296,6 +296,3 @@ def _get_input_file():
                                      delete=False) as tmpfile:
         tmpfile.write(conf)
         return tmpfile.name
-
-
-g.PLAYER_OBJ = mpv()

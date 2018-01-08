@@ -289,7 +289,7 @@ class _Config:
             ConfigItem("encoder", 0, minval=0, check_fn=check_encoder),
             ConfigItem("notifier", ""),
             ConfigItem("checkupdate", True),
-            ConfigItem("show_mplayer_keys", True, require_known_player=True),
+            ConfigItem("show_player_keys", True, require_known_player=True),
             ConfigItem("fullscreen", False, require_known_player=True),
             ConfigItem("show_status", True),
             ConfigItem("columns", ""),

@@ -475,18 +475,19 @@ def _get_mplayer_version(exename):
 
     return ver
 
-def _get_metadata(song_title) :
+
+def _get_metadata(song_title):
     ''' Get metadata from a song title '''
     t = re.sub("[\(\[].*?[\)\]]", "", song_title.lower())
     t = t.split('-')
 
-    if len(t) != 2 : #If len is not 2, no way of properly knowing title for sure
+    if len(t) != 2:  # If len is not 2, no way of properly knowing title for sure
         t = t[0]
         t = t.split(':')
-        if len(t) != 2 :  #Ugly, but to be safe in case all these chars exist, Will improve
+        if len(t) != 2:  # Ugly, but to be safe in case all these chars exist, Will improve
             t = t[0]
             t = t.split('|')
-            if len(t) != 2 :
+            if len(t) != 2:
                 return None
 
     t[0] = re.sub("(ft |ft.|feat |feat.).*.", "", t[0])
@@ -497,17 +498,18 @@ def _get_metadata(song_title) :
 
     metadata = _get_metadata_from_lastfm(t[0], t[1])
 
-    if metadata != None :
+    if metadata is not None:
         return metadata
 
     metadata = _get_metadata_from_lastfm(t[1], t[0])
     return metadata
 
-def _get_metadata_from_lastfm(artist, track) :
+
+def _get_metadata_from_lastfm(artist, track):
     ''' Try to get metadata with a given artist and track '''
     url = 'http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=12dec50313f885d407cf8132697b8712&'
-    url += urllib.parse.urlencode({"artist" :  artist}) + '&'
-    url += urllib.parse.urlencode({"track" :  track}) + '&'
+    url += urllib.parse.urlencode({"artist":  artist}) + '&'
+    url += urllib.parse.urlencode({"track":  track}) + '&'
     url += '&format=json'
 
     resp = urllib.request.urlopen(url)
@@ -516,14 +518,32 @@ def _get_metadata_from_lastfm(artist, track) :
 
     data = json.loads(resp.read())
 
-    if 'track' != list(data.keys())[0] :
+    if 'track' != list(data.keys())[0]:
         return None
-    try :
+    try:
         metadata['track_title'] = data['track']['name']
         metadata['artist'] = data['track']['artist']['name']
         metadata['album'] = data['track']['album']['title']
         metadata['album_art_url'] = data['track']['album']['image'][-1]['#text']
-    except :
+    except:
         return None
 
     return metadata
+
+
+def assign_player(player):
+    if player == 'mpv':
+        from .players import mpv
+        g.PLAYER_OBJ = mpv.mpv()
+
+    elif player == 'mplayer':
+        from .players import mplayer
+        g.PLAYER_OBJ = mplayer.Mplayer()
+
+    elif player == 'vlc':
+        from .players import vlc
+        g.PLAYER_OBJ = vlc.vlc()
+
+    else:
+        from .players import generic_player
+        g.PLAYER_OBJ = generic_player.generic_player()

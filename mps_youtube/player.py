@@ -41,7 +41,7 @@ class Player(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def launch_player(self, cmd):
+    def launch_player(self, cmd, song, songdata):
         pass
 
     @abstractmethod
@@ -212,7 +212,7 @@ class Player(metaclass=ABCMeta):
         out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
         out = out % (c.ul, "Title", "Time", c.w)
         show_key_help = (util.is_known_player(config.PLAYER.get) and
-                         config.SHOW_MPLAYER_KEYS.get)
+                         config.SHOW_PLAYER_KEYS.get)
         multi = len(allsongs) > 1
 
         for n, song in enumerate(allsongs):
