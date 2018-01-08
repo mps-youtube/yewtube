@@ -32,7 +32,6 @@ import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 
-from . import player
 
 IDENTITY = 'mps-youtube'
 
@@ -96,8 +95,12 @@ class Mpris2Controller:
                 data = conn.recv()
                 if isinstance(data, tuple):
                     name, val = data
-                    if name == 'set_player':
-                        player = val
+                    if name == 'socket':
+                        Thread(target=self.mpris.bindmpv, args=(val,)).start()
+                    elif name == 'mplayer-fifo':
+                        self.mpris.bindfifo(val)
+                    elif name == 'mpv-fifo':
+                        self.mpris.bindfifo(val, mpv=True)
                     else:
                         self.mpris.setproperty(name, val)
         except IOError:
@@ -185,8 +188,58 @@ class Mpris2MediaPlayer(dbus.service.Object):
             },
         }
 
-    def bindPlayer(self, player):
-        player = player
+    def bindmpv(self, sockpath):
+        """
+            init JSON IPC for new versions of mpv >= 0.7
+        """
+        self.mpv = True
+        self.socket = socket.socket(socket.AF_UNIX)
+        # wait on socket initialization
+        tries = 0
+        while tries < 10:
+            time.sleep(.5)
+            try:
+                self.socket.connect(sockpath)
+                break
+            except socket.error:
+                pass
+            tries += 1
+        else:
+            return
+
+        try:
+            observe_full = False
+            self._sendcommand(["observe_property", 1, "time-pos"])
+
+            for line in self.socket.makefile():
+                resp = json.loads(line)
+
+                # deals with bug in mpv 0.7 - 0.7.3
+                if resp.get('event') == 'property-change' and not observe_full:
+                    self._sendcommand(["observe_property", 2, "volume"])
+                    self._sendcommand(["observe_property", 3, "pause"])
+                    self._sendcommand(["observe_property", 4, "seeking"])
+                    observe_full = True
+
+                if resp.get('event') == 'property-change':
+                    self.setproperty(resp['name'], resp['data'])
+
+        except socket.error:
+            self.socket = None
+            self.mpv = False
+
+    def bindfifo(self, fifopath, mpv=False):
+        """
+            init command fifo for mplayer and old versions of mpv
+        """
+        time.sleep(1) # give it some time so fifo could be properly created
+        try:
+            self.fifo = open(fifopath, 'w')
+            self._sendcommand(['get_property', 'volume'])
+            self.mpv = mpv
+
+        except IOError:
+            self.fifo = None
 
     def setproperty(self, name, val):
         """
@@ -261,6 +314,23 @@ class Mpris2MediaPlayer(dbus.service.Object):
             if not val:
                 self.Seeked(self.properties[PLAYER_INTERFACE]['read_only']['Position'])
 
+    def _sendcommand(self, command):
+        """
+            sends commands to binded player
+        """
+        if self.socket:
+            self.socket.send(json.dumps({"command": command}).encode() + b'\n')
+        elif self.fifo:
+            command = command[:]
+            for x, i in enumerate(command):
+                if i is True:
+                    command[x] = 'yes' if self.mpv else 1
+                elif i is False:
+                    command[x] = 'no' if self.mpv else 0
+
+            cmd = " ".join([str(i) for i in command]) + '\n'
+            self.fifo.write(cmd)
+            self.fifo.flush()
 
     #
     # implementing org.mpris.MediaPlayer2
@@ -290,16 +360,14 @@ class Mpris2MediaPlayer(dbus.service.Object):
         """
             Skips to the next track in the tracklist.
         """
-        if player:
-            player.next()
+        self._sendcommand(["quit"])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Previous(self):
         """
             Skips to the previous track in the tracklist.
         """
-        if player:
-            player.previous()
+        self._sendcommand(["quit", 42])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Pause(self):
@@ -319,22 +387,28 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Pauses playback.
             If playback is already paused, resumes playback.
         """
-        if player:
-            player.playpause()
+        if self.mpv:
+            self._sendcommand(["cycle", "pause"])
+        else:
+            self._sendcommand(["pause"])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Stop(self):
         """
             Stops playback.
         """
-        player.stop()
+        self._sendcommand(["quit", 43])
 
     @dbus.service.method(PLAYER_INTERFACE)
     def Play(self):
         """
             Starts or resumes playback.
         """
-        pass
+        if self.mpv:
+            self._sendcommand(["set_property", "pause", False])
+        else:
+            if self.properties[PLAYER_INTERFACE]['read_only']['PlaybackStatus'] != 'Playing':
+                self._sendcommand(['pause'])
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='x')
     def Seek(self, offset):
@@ -345,11 +419,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
             Seeks forward in the current track by the specified number
             of microseconds.
         """
-        if player:
-            try:
-                player.seek(offset)
-            except:
-                pass
+        self._sendcommand(["seek", offset / 10**6])
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='ox')
     def SetPosition(self, track_id, position):
@@ -363,8 +433,8 @@ class Mpris2MediaPlayer(dbus.service.Object):
 
             Sets the current track position in microseconds.
         """
-        if player and track_id == self.properties[PLAYER_INTERFACE]['read_only']['Metadata']['mpris:trackid']:
-            player.set_position(position)
+        if track_id == self.properties[PLAYER_INTERFACE]['read_only']['Metadata']['mpris:trackid']:
+            self._sendcommand(["seek", position / 10**6, 'absolute' if self.mpv else 2])
 
     @dbus.service.method(PLAYER_INTERFACE, in_signature='s')
     def OpenUri(self, uri):

@@ -1,27 +1,23 @@
 import os
 import sys
 import random
-import tempfile
 import logging
-import json
-import re
 import math
 import time
 import shlex
+import subprocess
+import socket
 from urllib.error import HTTPError, URLError
+from abc import ABCMeta, abstractmethod
 
-from . import g, screen, c, streams, history, content, paths, config, util
+from . import g, screen, c, streams, history, content, config, util
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
-
-from abc import ABCMeta, abstractmethod
-
 class Player(metaclass=ABCMeta):
-    _playbackStatus="Stopped"
-
+    _playbackStatus = "Paused"
 
     @property
     def PlaybackStatus(self):
@@ -31,9 +27,9 @@ class Player(metaclass=ABCMeta):
     def PlaybackStatus(self, value):
         self._playbackStatus = value
         if value == 'Playing':
-            paused=False
+            paused = False
         else:
-            paused=True
+            paused = True
         g.mprisctl.send(('pause', paused))
 
     @abstractmethod
@@ -62,7 +58,6 @@ class Player(metaclass=ABCMeta):
         """
         pass
 
-
     def play(self, songlist, shuffle=False, repeat=False, override=False):
         """ Play a range of songs, exit cleanly on keyboard interrupt. """
         self.songlist = songlist
@@ -75,7 +70,8 @@ class Player(metaclass=ABCMeta):
         self.song_no = 0
         while 0 <= self.song_no <= len(self.songlist)-1:
             song = self.songlist[self.song_no]
-            g.content = self._playback_progress(self.song_no, self.songlist, repeat=repeat)
+            g.content = self._playback_progress(self.song_no, self.songlist,
+                                                repeat=repeat)
 
             if not g.command_line:
                 screen.update(fill_blank=False)
@@ -83,7 +79,8 @@ class Player(metaclass=ABCMeta):
             hasnext = len(self.songlist) > self.song_no + 1
 
             if hasnext:
-                streams.preload(self.songlist[self.song_no + 1], override=self.override)
+                streams.preload(self.songlist[self.song_no + 1],
+                                override=self.override)
 
             if config.SET_TITLE.get:
                 util.set_window_title(song.title + " - mpsyt")
@@ -92,7 +89,9 @@ class Player(metaclass=ABCMeta):
 
             try:
                 video, stream = stream_details(song, override=self.override, softrepeat=softrepeat)
-                returncode = self._playsong(song, stream, video, override=self.override, softrepeat=softrepeat)
+                self._UPDATED = True
+                self._playsong(song, stream, video,
+                               override=self.override, softrepeat=softrepeat)
 
             except KeyboardInterrupt:
                 logging.info("Keyboard Interrupt")
@@ -112,7 +111,7 @@ class Player(metaclass=ABCMeta):
             elif self.song_no == len(songlist) and repeat:
                 self.song_no = 0
 
-    #TODO
+    # TODO
     def next(self):
         self.terminate_process()
         self.song_no += 1
@@ -127,19 +126,22 @@ class Player(metaclass=ABCMeta):
     def seek(self):
         pass
 
-    #Maybe make these abstract methods
-    #for mpris control
+    # Maybe make these abstract methods
+    # for mpris control
 
-    #TODO^
+    # TODO^
 
     def terminate_process(self):
         self.p.terminate()
-        #If using shell=True or the player
-        #requires some obscure way of killing the process
-        #the child class can define this function
+        # If using shell=True or the player
+        # requires some obscure way of killing the process
+        # the child class can define this function
 
-    def _playsong(self, song, stream, video, failcount=0, override=False, softrepeat=False):
-        """ Play song using config.PLAYER called with args config.PLAYERARGS."""
+    def _playsong(self, song, stream, video, failcount=0,
+                  override=False, softrepeat=False):
+        """ Play song using config.PLAYER called with args config.PLAYERARGS.
+
+        """
         # pylint: disable=R0911,R0912
         if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
             g.message = "Player not configured! Enter %sset player <player_app> "\
@@ -158,7 +160,7 @@ class Player(metaclass=ABCMeta):
         cmd = self._generate_real_playerargs(song, override, stream, video, softrepeat)
         returncode = self._launch_player(song, songdata, cmd)
         failed = returncode not in (0, 42, 43)
-        print(failed)
+
         '''
         if failed and failcount < g.max_retries:
             util.dbg(c.r + "stream failed to open" + c.w)
@@ -183,20 +185,19 @@ class Player(metaclass=ABCMeta):
 
         metadata = util._get_metadata(song.title)
 
-        if metadata == None :
+        if metadata is None:
             arturl = "https://i.ytimg.com/vi/%s/default.jpg" % song.ytid
             metadata = (song.ytid, song.title, song.length, arturl, [''], '')
-        else :
+        else:
             arturl = metadata['album_art_url']
-            metadata = (song.ytid, metadata['track_title'], song.length, arturl, [metadata['artist']], metadata['album'])
+            metadata = (song.ytid, metadata['track_title'], song.length, arturl,
+                        [metadata['artist']], metadata['album'])
 
         try:
             if g.mprisctl:
                 g.mprisctl.send(('metadata', metadata))
-                g.mprisctl.send(('pla', metadata))
-
-            #song used to get songdetails
-            #songdata contains printable song data
+            # song used to get songdetails
+            # songdata contains printable song data
             self.launch_player(cmd, song, songdata)
 
         except OSError:
@@ -220,7 +221,7 @@ class Player(metaclass=ABCMeta):
         out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
         out = out % (c.ul, "Title", "Time", c.w)
         show_key_help = (util.is_known_player(config.PLAYER.get) and
-                config.SHOW_MPLAYER_KEYS.get)
+                         config.SHOW_MPLAYER_KEYS.get)
         multi = len(allsongs) > 1
 
         for n, song in enumerate(allsongs):
@@ -289,9 +290,6 @@ class Player(metaclass=ABCMeta):
         return prefix + status_line + vol_suffix
 
 
-
-
-
 def stream_details(song, failcount=0, override=False, softrepeat=False):
     """Fetch stream details for a song."""
     # don't interrupt preloading:
@@ -349,7 +347,8 @@ def stream_details(song, failcount=0, override=False, softrepeat=False):
         util.dbg("----htterror in stream_details call to gen_real_args %s", str(e))
         if failcount < g.max_retries:
             failcount += 1
-            return stream_details(song, failcount=failcount, override=override, softrepeat=softrepeat)
+            return stream_details(song, failcount=failcount,
+                                  override=override, softrepeat=softrepeat)
         else:
             g.message = str(e)
             return
@@ -361,16 +360,3 @@ def stream_details(song, failcount=0, override=False, softrepeat=False):
         errmsg = e.message if hasattr(e, "message") else str(e)
         g.message = c.r + str(errmsg) + c.w
         return
-
-def check_player(player):
-    if player == 'mpv':
-        from .players.mpv import mpv
-        ref = sys.modules[__name__]
-        sys.modules[__name__] = mpv()
-
-if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
-    g.message = "Player not configured! Enter %sset player <player_app> "\
-                "%s to set a player" % (c.g, c.w)
-
-else:
-    player = check_player(config.PLAYER.get)

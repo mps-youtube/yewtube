@@ -1,31 +1,26 @@
 import os
 import sys
-import random
 import tempfile
 import subprocess
-import logging
 import json
 import re
 import socket
-import math
 import time
-import shlex
-from urllib.error import HTTPError, URLError
 
-from .. import g, screen, c, streams, history, content, paths, config, util
+from .. import g, screen, c, paths, config, util
 
+from ..player import Player
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
-from ..player import Player
-
 class mpv(Player):
     socket = None
     fifo = None
+
     def play_pause(self):
-        print('hi')
+        print(self.PlaybackStatus)
         self._sendcommand(["cycle", "pause"])
 
     def set_position(self, position):
@@ -36,6 +31,7 @@ class mpv(Player):
             sends commands to binded player
         """
         if self.sockpath:
+            print('D1')
             if not self.socket:
                 self.socket = socket.socket(socket.AF_UNIX)
                 # wait on socket initialization
@@ -52,9 +48,10 @@ class mpv(Player):
                     return
             self.socket.send(json.dumps({"command": command}).encode() + b'\n')
         elif self.fifopath:
+            print('D2')
             if not self.fifo:
                 try:
-                    self.fifo = open(fifopath, 'w')
+                    self.fifo = open(self.fifopath, 'w')
                     self._sendcommand(['get_property', 'volume'])
                 except IOError:
                     self.fifo = None
@@ -76,7 +73,6 @@ class mpv(Player):
         Return args.
 
         """
-
 
         args = config.PLAYERARGS.get.strip().split()
 
@@ -156,21 +152,20 @@ class mpv(Player):
             with open(os.devnull, "w") as devnull:
                 self.p = subprocess.Popen(cmd, shell=False, stderr=devnull)
 
+            if g.mprisctl:
+                g.mprisctl.send(('socket', self.sockpath))
         else:
             if g.mprisctl:
                 self.fifopath = tempfile.mktemp('.fifo', 'mpsyt-mpv')
                 os.mkfifo(self.fifopath)
                 cmd.append('--input-file=' + self.fifopath)
-
+                g.mprisctl.send(('mpv-fifo', self.fifopath))
 
             self.p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
-                                 bufsize=1)
+                                      bufsize=1)
 
-        self.PlaybackStatus = "Playing"
-        self.play_pause()
         self._player_status(songdata + "; ", song.length)
         returncode = self.p.wait()
-        self.PlaybackStatus = "Stopped"
 
         if returncode == 42:
             self.previous()
@@ -232,7 +227,7 @@ class mpv(Player):
                         g.volume = volume_level
                     if elapsed_s:
                         line = self._make_status_line(elapsed_s, prefix, songlength,
-                                                volume=volume_level)
+                                                      volume=volume_level)
 
                         if line != last_displayed_line:
                             screen.writestatus(line)
@@ -266,17 +261,17 @@ class mpv(Player):
                         except ValueError:
 
                             try:
-                                elapsed_s = int(match_object.group('elapsed_s') or
-                                                '0')
+                                elapsed_s = int(match_object.group('elapsed_s')
+                                                or '0')
 
                             except ValueError:
                                 continue
 
-
                         if volume_level and volume_level != g.volume:
                             g.volume = volume_level
-                        line = self._make_status_line(elapsed_s, prefix, songlength,
-                                                volume=volume_level)
+                        line = self._make_status_line(elapsed_s, prefix,
+                                                      songlength,
+                                                      volume=volume_level)
 
                         if line != last_displayed_line:
                             screen.writestatus(line)
@@ -300,7 +295,6 @@ class mpv(Player):
     def _help(self, short=True):
         """ Mplayer help.  """
 
-
         volume = "[{0}9{1}] volume [{0}0{1}]      [{0}CTRL-C{1}] return"
         seek = "[{0}\u2190{1}] seek [{0}\u2192{1}]"
         pause = "[{0}\u2193{1}] SEEK [{0}\u2191{1}]       [{0}space{1}] pause"
@@ -318,6 +312,7 @@ class mpv(Player):
         lines = fmt % (seek, volume) + "\n" + fmt % (pause, ret)
         return lines.format(c.g, c.w)
 
+
 def _get_input_file():
     """ Check for existence of custom input file.
 
@@ -325,9 +320,7 @@ def _get_input_file():
     """
     confpath = conf = ''
 
-
     confpath = os.path.join(paths.get_config_dir(), "mpv-input.conf")
-
 
     if os.path.isfile(confpath):
         util.dbg("using %s for input key file", confpath)
@@ -354,3 +347,6 @@ def _get_input_file():
                                      delete=False) as tmpfile:
         tmpfile.write(conf)
         return tmpfile.name
+
+
+g.PLAYER_OBJ = mpv()
