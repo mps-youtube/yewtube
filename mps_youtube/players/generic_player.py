@@ -45,7 +45,7 @@ class generic_player(Player):
 
         ##################################################
 
-        # Donot forget self.stop()
+        # Donot forget self.next()
         self.next()
 
     def _help(self, short=True):

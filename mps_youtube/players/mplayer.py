@@ -35,7 +35,7 @@ class Mplayer(Player):
         known_player = util.is_known_player(config.PLAYER.get)
         if known_player:
             pd = g.playerargs_defaults[known_player]
-            args.extend((pd["title"], song.title))
+            args.extend((pd["title"], '"{0}"'.format(song.title)))
 
             if pd['geo'] not in args:
                 geometry = config.WINDOW_SIZE.get or ""

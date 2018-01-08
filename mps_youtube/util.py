@@ -532,6 +532,7 @@ def _get_metadata_from_lastfm(artist, track):
 
 
 def assign_player(player):
+
     if player == 'mpv':
         from .players import mpv
         g.PLAYER_OBJ = mpv.mpv()
