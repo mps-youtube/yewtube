@@ -15,7 +15,7 @@ mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
-class Mplayer(Player):
+class mplayer(Player):
     def _generate_real_playerargs(self, song, override, stream, isvideo, softrepeat):
         """ Generate args for player command.
 

@@ -10,7 +10,7 @@ from ..player import Player
 #
 # NOTE:
 # If you're defining a new player donot forget
-# to add player to assign_player() function in util.
+# to name both the class and file the same as your player
 #
 
 

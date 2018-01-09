@@ -16,6 +16,8 @@ import pafy
 from . import g, c, terminalsize, description_parser
 from .playlist import Video
 
+from importlib import import_module
+
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
@@ -532,19 +534,11 @@ def _get_metadata_from_lastfm(artist, track):
 
 
 def assign_player(player):
+    try:
+        module = import_module('.{0}'.format(player), 'mps_youtube.players')
+        pl = getattr(module, player)
+        g.PLAYER_OBJ = pl()
 
-    if player == 'mpv':
-        from .players import mpv
-        g.PLAYER_OBJ = mpv.mpv()
-
-    elif player == 'mplayer':
-        from .players import mplayer
-        g.PLAYER_OBJ = mplayer.Mplayer()
-
-    elif player == 'vlc':
-        from .players import vlc
-        g.PLAYER_OBJ = vlc.vlc()
-
-    else:
+    except ImportError:
         from .players import generic_player
         g.PLAYER_OBJ = generic_player.generic_player()
