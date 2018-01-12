@@ -24,4 +24,4 @@ def command(regex):
 
 # Placed at bottom to deal with cyclic imports
 from . import download, search, album_search, spotify_playlist, misc, config, local_playlist
-from . import play, songlist, generate_playlist
+from . import play, songlist, generate_playlist, lastfm

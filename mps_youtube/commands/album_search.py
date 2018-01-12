@@ -286,6 +286,11 @@ def search_album(term):
     if songs:
         util.xprint("\n%s / %s songs matched" % (len(songs), len(mb_tracks)))
         input("Press Enter to continue")
+        if g.lastfm_network:
+            g.artist = artist
+            g.scrobble = True
+            # Fill up queue with all the track names
+            g.scrobble_queue = [t['title'] for t in mb_tracks]
 
     msg = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
         c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)

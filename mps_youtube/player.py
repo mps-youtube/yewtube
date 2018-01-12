@@ -13,6 +13,7 @@ import shlex
 from urllib.error import HTTPError, URLError
 
 from . import g, screen, c, streams, history, content, paths, config, util
+from .commands import lastfm
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
@@ -41,6 +42,9 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
         softrepeat = repeat and len(songlist) == 1
 
+        if g.scrobble:
+            lastfm.set_now_playing(g.artist, g.scrobble_queue[n])
+
         try:
             video, stream = stream_details(song, override=override, softrepeat=softrepeat)
             returncode = _playsong(song, stream, video, override=override, softrepeat=softrepeat)
@@ -56,6 +60,10 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         # skip forbidden, video removed/no longer available, etc. tracks
         except TypeError:
             returncode = 1
+
+		# Don't scrobble if quit prematurely 
+        if g.scrobble and returncode != 43:
+            lastfm.scrobble_track(g.artist, g.scrobble_queue[n])
 
         if config.SET_TITLE.get:
             util.set_window_title("mpsyt")
