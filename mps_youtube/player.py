@@ -61,7 +61,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
         except TypeError:
             returncode = 1
 
-		# Don't scrobble if quit prematurely 
+        # Don't scrobble if quit prematurely
         if g.scrobble and returncode != 43:
             lastfm.scrobble_track(g.artist, g.scrobble_queue[n])
 
