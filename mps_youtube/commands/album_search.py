@@ -288,6 +288,7 @@ def search_album(term):
         input("Press Enter to continue")
         if g.lastfm_network:
             g.artist = artist
+            g.album = title
             g.scrobble = True
             # Fill up queue with all the track names
             g.scrobble_queue = [t['title'] for t in mb_tracks]

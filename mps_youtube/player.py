@@ -63,7 +63,7 @@ def play_range(songlist, shuffle=False, repeat=False, override=False):
 
         # Don't scrobble if quit prematurely
         if g.scrobble and returncode != 43:
-            lastfm.scrobble_track(g.artist, g.scrobble_queue[n])
+            lastfm.scrobble_track(g.artist, g.album, g.scrobble_queue[n])
 
         if config.SET_TITLE.get:
             util.set_window_title("mpsyt")

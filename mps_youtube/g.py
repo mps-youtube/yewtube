@@ -15,6 +15,7 @@ encoders = []
 muxapp = False
 meta = {}
 artist = "" # Mostly used for scrobbling purposes
+album = "" # Mostly used for scrobbling purposes
 scrobble = False
 scrobble_queue = []
 lastfm_network = None

@@ -39,13 +39,13 @@ def init_network(verbose=True):
         if verbose:
             g.message = "Last.fm connection error: %s" % (str(e))
 
-def scrobble_track(artist, track):
+def scrobble_track(artist, album, track):
     """ Scrobble a track to the user's Last.fm account """
     if not g.lastfm_network:
         return
     unix_timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
     try:
-        g.lastfm_network.scrobble(artist=artist, title=track,
+        g.lastfm_network.scrobble(artist=artist, title=track, album=album,
                                   timestamp=unix_timestamp)
     except (pylast.WSError, pylast.MalformedResponseError, pylast.NetworkError):
         return
