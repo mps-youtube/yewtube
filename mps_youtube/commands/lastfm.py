@@ -13,9 +13,10 @@ from . import command
 @command(r'lastfm_connect')
 def init_network(verbose=True):
     """ Initialize the global pylast network variable """
-    if not has_pylast:
-        pylast_url = 'https://github.com/pylast/pylast'
-        g.message = '"pylast" module not found\n see %s' % (pylast_url)
+    if not has_pylast :
+        if verbose:
+            pylast_url = 'https://github.com/pylast/pylast'
+            g.message = '"pylast" module not found\n see %s' % (pylast_url)
         return
 
     # TODO: Add option to read lastfm config from file or env variable
