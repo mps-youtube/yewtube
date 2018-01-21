@@ -7,17 +7,17 @@ from ..player import Player
 
 
 class vlc(Player):
-    def _generate_real_playerargs(self, song, override, stream, isvideo, softrepeat):
+    def _generate_real_playerargs(self):
         args = config.PLAYERARGS.get.strip().split()
 
         util.list_update("--play-and-exit", args)
 
-        return [config.PLAYER.get] + args + [stream['url']]
+        return [config.PLAYER.get] + args + [self.stream['url']]
 
     def clean_up(self):
         pass
 
-    def launch_player(self, cmd, song, songdata):
+    def launch_player(self, cmd):
         with open(os.devnull, "w") as devnull:
             self.p = subprocess.Popen(cmd, shell=False, stderr=devnull)
         returncode = self.p.wait()

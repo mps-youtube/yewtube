@@ -16,7 +16,7 @@ mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
-class Player(metaclass=ABCMeta):
+class Player:
     _playbackStatus = "Paused"
 
     @property
@@ -32,19 +32,15 @@ class Player(metaclass=ABCMeta):
             paused = True
         g.mprisctl.send(('pause', paused))
 
-    @abstractmethod
-    def _generate_real_playerargs(self, song, override, stream, isvideo, softrepeat):
+    def _generate_real_playerargs(self):
         pass
 
-    @abstractmethod
     def clean_up(self):
         pass
 
-    @abstractmethod
-    def launch_player(self, cmd, song, songdata):
+    def launch_player(self, cmd):
         pass
 
-    @abstractmethod
     def _help(self, short=True):
         pass
 
@@ -59,7 +55,7 @@ class Player(metaclass=ABCMeta):
 
         self.song_no = 0
         while 0 <= self.song_no <= len(self.songlist)-1:
-            song = self.songlist[self.song_no]
+            self.song = self.songlist[self.song_no]
             g.content = self._playback_progress(self.song_no, self.songlist,
                                                 repeat=repeat)
 
@@ -73,15 +69,13 @@ class Player(metaclass=ABCMeta):
                                 override=self.override)
 
             if config.SET_TITLE.get:
-                util.set_window_title(song.title + " - mpsyt")
+                util.set_window_title(self.song.title + " - mpsyt")
 
-            softrepeat = repeat and len(self.songlist) == 1
+            self.softrepeat = repeat and len(self.songlist) == 1
 
             try:
-                video, stream = stream_details(song, override=self.override, softrepeat=softrepeat)
-                self._UPDATED = True
-                self._playsong(song, stream, video,
-                               override=self.override, softrepeat=softrepeat)
+                self.video, self.stream = stream_details(self.song, override=self.override, softrepeat=self.softrepeat)
+                self._playsong()
 
             except KeyboardInterrupt:
                 logging.info("Keyboard Interrupt")
@@ -101,7 +95,6 @@ class Player(metaclass=ABCMeta):
             elif self.song_no == len(songlist) and repeat:
                 self.song_no = 0
 
-    # TODO
     def next(self):
         self.terminate_process()
         self.song_no += 1
@@ -128,8 +121,7 @@ class Player(metaclass=ABCMeta):
         # requires some obscure way of killing the process
         # the child class can define this function
 
-    def _playsong(self, song, stream, video, failcount=0,
-                  override=False, softrepeat=False):
+    def _playsong(self, failcount=0, softrepeat=False):
         """ Play song using config.PLAYER called with args config.PLAYERARGS.
 
         """
@@ -140,48 +132,39 @@ class Player(metaclass=ABCMeta):
             return
 
         if config.NOTIFIER.get:
-            subprocess.Popen(shlex.split(config.NOTIFIER.get) + [song.title])
+            subprocess.Popen(shlex.split(config.NOTIFIER.get) + [self.song.title])
 
-        size = streams.get_size(song.ytid, stream['url'])
-        songdata = (song.ytid, stream['ext'] + " " + stream['quality'],
+        size = streams.get_size(self.song.ytid, self.stream['url'])
+        songdata = (self.song.ytid, self.stream['ext'] + " " + self.stream['quality'],
                     int(size / (1024 ** 2)))
-        songdata = "%s; %s; %s Mb" % songdata
-        screen.writestatus(songdata)
+        self.songdata = "%s; %s; %s Mb" % songdata
+        screen.writestatus(self.songdata)
 
-        cmd = self._generate_real_playerargs(song, override, stream, video, softrepeat)
-        returncode = self._launch_player(song, songdata, cmd)
-        failed = returncode not in (0, 42, 43)
+        returncode = self._launch_player()
 
-        '''
-        if failed and failcount < g.max_retries:
-            util.dbg(c.r + "stream failed to open" + c.w)
-            util.dbg("%strying again (attempt %s)%s", c.r, (2 + failcount), c.w)
-            screen.writestatus("error: retrying")
-            time.sleep(1.2)
-            failcount += 1
-            return self._playsong(song, stream, video, failcount=failcount, override=override, softrepeat=softrepeat)
-        '''
-        history.add(song)
+        history.add(self.song)
         return returncode
 
-    def _launch_player(self, song, songdata, cmd):
+    def _launch_player(self):
         """ Launch player application. """
 
-        util.dbg("playing %s", song.title)
+        cmd = self._generate_real_playerargs()
+
+        util.dbg("playing %s", self.song.title)
         util.dbg("calling %s", " ".join(cmd))
 
         # Fix UnicodeEncodeError when title has characters
         # not supported by encoding
         cmd = [util.xenc(i) for i in cmd]
 
-        metadata = util._get_metadata(song.title)
+        metadata = util._get_metadata(self.song.title)
 
         if metadata is None:
-            arturl = "https://i.ytimg.com/vi/%s/default.jpg" % song.ytid
-            metadata = (song.ytid, song.title, song.length, arturl, [''], '')
+            arturl = "https://i.ytimg.com/vi/%s/default.jpg" % self.song.ytid
+            metadata = (self.song.ytid, self.song.title, self.song.length, arturl, [''], '')
         else:
             arturl = metadata['album_art_url']
-            metadata = (song.ytid, metadata['track_title'], song.length, arturl,
+            metadata = (self.song.ytid, metadata['track_title'], self.song.length, arturl,
                         [metadata['artist']], metadata['album'])
 
         try:
@@ -189,7 +172,7 @@ class Player(metaclass=ABCMeta):
                 g.mprisctl.send(('metadata', metadata))
             # song used to get songdetails
             # songdata contains printable song data
-            self.launch_player(cmd, song, songdata)
+            self.launch_player(cmd)
 
         except OSError:
             g.message = util.F('no player') % config.PLAYER.get

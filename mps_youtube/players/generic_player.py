@@ -15,7 +15,7 @@ from ..player import Player
 
 
 class generic_player(Player):
-    def _generate_real_playerargs(self, song, override, stream, isvideo, softrepeat):
+    def _generate_real_playerargs(self):
         '''Generates player arguments to called using Popen
 
         '''
@@ -26,7 +26,7 @@ class generic_player(Player):
 
         ###########################################
 
-        return [config.PLAYER.get] + args + [stream['url']]
+        return [config.PLAYER.get] + args + [self.stream['url']]
 
     def clean_up(self):
         ''' Cleans up temp files after process exits.
@@ -34,7 +34,7 @@ class generic_player(Player):
         '''
         pass
 
-    def launch_player(self, cmd, song, songdata):
+    def launch_player(self, cmd):
 
         ##################################################
         # Change this however you want

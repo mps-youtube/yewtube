@@ -16,7 +16,7 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
 class mpv(Player):
-    def _generate_real_playerargs(self, song, override, stream, isvideo, softrepeat):
+    def _generate_real_playerargs(self):
         """ Generate args for player command.
 
         Return args.
@@ -28,7 +28,7 @@ class mpv(Player):
         known_player = util.is_known_player(config.PLAYER.get)
         if known_player:
             pd = g.playerargs_defaults[known_player]
-            args.extend((pd["title"], '"{0}"'.format(song.title)))
+            args.extend((pd["title"], '"{0}"'.format(self.song.title)))
 
             if pd['geo'] not in args:
                 geometry = config.WINDOW_SIZE.get or ""
@@ -43,15 +43,15 @@ class mpv(Player):
                     args.extend((pd['geo'], geometry))
 
             # handle no audio stream available
-            if override == "a-v":
+            if self.override == "a-v":
                 util.list_update(pd["novid"], args)
 
-            elif ((config.FULLSCREEN.get and override != "window")
-                    or override == "fullscreen"):
+            elif ((config.FULLSCREEN.get and self.override != "window")
+                    or self.override == "fullscreen"):
                 util.list_update(pd["fs"], args)
 
             # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
-            if not isvideo and stream['ext'] == "m4a":
+            if not self.video and self.stream['ext'] == "m4a":
                 util.dbg("%susing ignidx flag%s")
                 util.list_update(pd["ignidx"], args)
 
@@ -73,10 +73,10 @@ class mpv(Player):
 
             if g.volume:
                 util.list_update("--volume=" + str(g.volume), args)
-            if softrepeat:
+            if self.softrepeat:
                 util.list_update("--loop-file", args)
 
-        return [config.PLAYER.get] + args + [stream['url']]
+        return [config.PLAYER.get] + args + [self.stream['url']]
 
     def clean_up(self):
         if self.input_file:
@@ -88,7 +88,7 @@ class mpv(Player):
         if self.fifopath and os.path.exists(self.fifopath):
             os.unlink(self.fifopath)
 
-    def launch_player(self, cmd, song, songdata):
+    def launch_player(self, cmd):
         self.input_file = _get_input_file()
         cmd.append('--input-conf=' + self.input_file)
         self.sockpath = None
@@ -113,7 +113,7 @@ class mpv(Player):
             self.p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                       bufsize=1)
 
-        self._player_status(songdata + "; ", song.length)
+        self._player_status(self.songdata + "; ", self.song.length)
         returncode = self.p.wait()
 
         if returncode == 42:

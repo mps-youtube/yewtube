@@ -2,10 +2,7 @@ import os
 import sys
 import tempfile
 import subprocess
-import json
 import re
-import socket
-import time
 
 from .. import g, screen, c, paths, config, util
 
@@ -16,26 +13,26 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
 class mplayer(Player):
-    def _generate_real_playerargs(self, song, override, stream, isvideo, softrepeat):
+    def _generate_real_playerargs(self):
         """ Generate args for player command.
 
         Return args.
 
         """
 
-        if "uiressl=yes" in stream['url'] and "mplayer" in config.PLAYER.get:
+        if "uiressl=yes" in self.stream['url'] and "mplayer" in config.PLAYER.get:
             ver = g.mplayer_version
             # Mplayer too old to support https
-            if not (ver > (1,1) if isinstance(ver, tuple) else ver >= 37294):
+            if not (ver > (1, 1) if isinstance(ver, tuple) else ver >= 37294):
                 raise IOError("%s : Sorry mplayer doesn't support this stream. "
-                              "Use mpv or update mplayer to a newer version" % song.title)
+                              "Use mpv or update mplayer to a newer version" % self.song.title)
 
         args = config.PLAYERARGS.get.strip().split()
 
         known_player = util.is_known_player(config.PLAYER.get)
         if known_player:
             pd = g.playerargs_defaults[known_player]
-            args.extend((pd["title"], '"{0}"'.format(song.title)))
+            args.extend((pd["title"], '"{0}"'.format(self.song.title)))
 
             if pd['geo'] not in args:
                 geometry = config.WINDOW_SIZE.get or ""
@@ -50,15 +47,15 @@ class mplayer(Player):
                     args.extend((pd['geo'], geometry))
 
             # handle no audio stream available
-            if override == "a-v":
+            if self.override == "a-v":
                 util.list_update(pd["novid"], args)
 
-            elif ((config.FULLSCREEN.get and override != "window")
-                    or override == "fullscreen"):
+            elif ((config.FULLSCREEN.get and self.override != "window")
+                    or self.override == "fullscreen"):
                 util.list_update(pd["fs"], args)
 
             # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
-            if not isvideo and stream['ext'] == "m4a":
+            if not self.video and self.stream['ext'] == "m4a":
                 util.dbg("%susing ignidx flag%s")
                 util.list_update(pd["ignidx"], args)
 
@@ -69,13 +66,13 @@ class mplayer(Player):
             util.list_update("-noquiet", args)
             util.list_update("-prefer-ipv4", args)
 
-        return [config.PLAYER.get] + args + [stream['url']]
+        return [config.PLAYER.get] + args + [self.stream['url']]
 
     def clean_up(self):
         if self.fifopath:
             os.unlink(self.fifopath)
 
-    def launch_player(self, cmd, song, songdata):
+    def launch_player(self, cmd):
         self.input_file = _get_input_file()
         self.sockpath = None
         self.fifopath = None
@@ -97,7 +94,7 @@ class mplayer(Player):
 
         self.p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
                                   stderr=subprocess.STDOUT, bufsize=1)
-        self._player_status(songdata + "; ", song.length)
+        self._player_status(self.songdata + "; ", self.song.length)
         returncode = self.p.wait()
         print(returncode)
 
