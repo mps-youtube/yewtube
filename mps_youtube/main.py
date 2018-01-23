@@ -120,6 +120,11 @@ def main():
     # open history from file
     history.load()
 
+    # setup scrobbling
+    commands.lastfm.init_network(verbose=False)
+    prev_model = []
+    scrobble_funcs = [commands.album_search.search_album]
+
     arg_inp = " ".join(g.argument_commands)
 
     prompt = "> "
@@ -141,6 +146,9 @@ def main():
 
         for i in g.commands:
             if matchfunction(i.function, i.regex, userinput):
+                if prev_model != g.model and not i.function in scrobble_funcs:
+                    g.scrobble = False
+                prev_model = g.model
                 break
 
         else:
