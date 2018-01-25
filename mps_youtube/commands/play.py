@@ -91,6 +91,10 @@ def play(pre, choice, post=""):
             if len(g.model) > chosen + 1:
                 streams.preload(g.model[chosen + 1], override=override)
 
+        if g.scrobble:
+            old_queue = g.scrobble_queue
+            g.scrobble_queue = [g.scrobble_queue[x - 1] for x in selection]
+
         try:
             if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
                 g.message = "Player not configured! Enter %sset player <player_app> "\
@@ -104,6 +108,9 @@ def play(pre, choice, post=""):
             return
         finally:
             g.content = content.generate_songlist_display()
+
+        if g.scrobble:
+            g.scrobble_queue = old_queue
 
         if config.AUTOPLAY.get:
             related(selection.pop())

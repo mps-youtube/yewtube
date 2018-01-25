@@ -7,6 +7,12 @@ from urllib.request import urlopen
 from urllib.error import HTTPError
 from urllib.parse import urlencode
 
+try:
+    import pylast
+    has_pylast = True
+except ImportError:
+    has_pylast = False
+
 import pafy
 
 from . import g, c, paths, util
@@ -269,6 +275,12 @@ def check_player(player):
             msg = "Player application %s%s%s not found" % (c.r, player, c.w)
             return dict(valid=False, message=msg)
 
+def check_lastfm_password(password):
+    if not has_pylast:
+        msg = "pylast not installed"
+        return dict(valid=False, message=msg)
+    password_hash = pylast.md5(password)
+    return dict(valid=True, value=password_hash)
 
 class _Config:
 
@@ -302,6 +314,10 @@ class _Config:
             ConfigItem("window_size", "",
                 check_fn=check_win_size, require_known_player=True),
             ConfigItem("download_command", ''),
+            ConfigItem("lastfm_username", ''),
+            ConfigItem("lastfm_password", '', check_fn=check_lastfm_password),
+            ConfigItem("lastfm_api_key", ''),
+            ConfigItem("lastfm_api_secret", ''),
             ConfigItem("audio_format", "auto",
                 allowed_values="auto webm m4a".split()),
             ConfigItem("video_format", "auto",

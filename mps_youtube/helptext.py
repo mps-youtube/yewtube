@@ -224,6 +224,10 @@ def helptext():
     {2}set overwrite true|false{1} - overwrite existing files (skip if false)
     {2}set player <player app>{1} - use <player app> for playback
     {2}set playerargs <args>{1} - use specified arguments with player
+    {2}set lastfm_username <username>{1} - scrobble to this Last.fm userprofile
+    {2}set lastfm_password <password>{1} - Last.fm password (saved in hash form)
+    {2}set lastfm_api <key>{1} - API key needed for Last.fm mps-yt authorization
+    {2}set lastfm_secret <key>{1} - secret for the Last.fm API key
     {2}set search_music true|false{1} - search only music (all categories if false)
     {2}set show_mplayer_keys true|false{1} - show keyboard help for mplayer and mpv
     {2}set show_status true|false{1} - show status messages and progress
@@ -237,6 +241,23 @@ def helptext():
     """.format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'
                'sults when searching (max 50)'.format(c.y, c.w) if not
                g.detectable_size else '')),
+
+        ("lastfm", "Last.fm configuration", """
+    {0}Configure Last.fm{1}
+
+    pylast needs to be installed for Last.fm support. See https://github.com/pylast/pylast.
+
+    Use {2}set{1} to set your Last.fm login credenditals, e.g. {2}set lastfm_username jane_doe{1}.
+    Similarly, you also have to provide an API key and it's corresponding secret.
+    An API key can be retrieved from https://www.last.fm/api/account/create.
+
+    Your Last.fm configuration is saved and automatically reloaded when mps-youtube starts.
+
+    After having set the required information, a connection can also be established
+    with {2}lastfm_connect{1}. Additionally, {2}lastfm_connect{1} provides verbose error messages.
+
+    For now, Last.fm support only works with the {2}album{1} command.
+    """.format(c.ul, c.w, c.y)),
 
         ("tips", "Advanced Tips", """
     {0}Advanced Tips{1}

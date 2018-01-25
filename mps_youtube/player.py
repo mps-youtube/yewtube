@@ -10,7 +10,10 @@ import socket
 from urllib.error import HTTPError, URLError
 from abc import ABCMeta, abstractmethod
 
-from . import g, screen, c, streams, history, content, config, util
+
+from . import g, screen, c, streams, history, content, paths, config, util
+from .commands import lastfm
+
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
@@ -72,6 +75,9 @@ class Player:
                 util.set_window_title(self.song.title + " - mpsyt")
 
             self.softrepeat = repeat and len(self.songlist) == 1
+            
+            if g.scrobble:
+                lastfm.set_now_playing(g.artist, g.scrobble_queue[self.song_no])
 
             try:
                 self.video, self.stream = stream_details(self.song, override=self.override, softrepeat=self.softrepeat)
@@ -88,6 +94,12 @@ class Player:
             # skip forbidden, video removed/no longer available, etc. tracks
             except TypeError:
                 pass
+              
+            if g.scrobble:
+                lastfm.scrobble_track(g.artist, g.album, g.scrobble_queue[self.song_no])
+            
+            if config.SET_TITLE.get:
+                util.set_window_title("mpsyt")
 
             if self.song_no == -1:
                 self.song_no = len(songlist) - 1 if repeat else 0
@@ -102,6 +114,7 @@ class Player:
     def previous(self):
         self.terminate_process()
         self.song_no -= 1
+
 
     def stop(self):
         self.terminate_process()
