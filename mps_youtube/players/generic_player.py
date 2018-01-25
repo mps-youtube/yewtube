@@ -3,7 +3,7 @@ import subprocess
 
 from .. import config
 
-from ..player import Player
+from ..player import CmdPlayer
 
 #
 # This class can be used as a templete for new players
@@ -14,7 +14,7 @@ from ..player import Player
 #
 
 
-class generic_player(Player):
+class generic_player(CmdPlayer):
     def _generate_real_playerargs(self):
         '''Generates player arguments to called using Popen
 
@@ -41,7 +41,7 @@ class generic_player(Player):
 
         with open(os.devnull, "w") as devnull:
             self.p = subprocess.Popen(cmd, shell=False, stderr=devnull)
-        returncode = self.p.wait()
+        self.p.wait()
 
         ##################################################
 

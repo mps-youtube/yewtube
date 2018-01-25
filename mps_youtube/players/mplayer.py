@@ -6,13 +6,13 @@ import re
 
 from .. import g, screen, c, paths, config, util
 
-from ..player import Player
+from ..player import CmdPlayer
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
-class mplayer(Player):
+class mplayer(CmdPlayer):
     def _generate_real_playerargs(self):
         """ Generate args for player command.
 

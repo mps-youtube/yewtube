@@ -3,10 +3,10 @@ import subprocess
 
 from .. import config, util
 
-from ..player import Player
+from ..player import CmdPlayer
 
 
-class vlc(Player):
+class vlc(CmdPlayer):
     def _generate_real_playerargs(self):
         args = config.PLAYERARGS.get.strip().split()
 
@@ -20,7 +20,7 @@ class vlc(Player):
     def launch_player(self, cmd):
         with open(os.devnull, "w") as devnull:
             self.p = subprocess.Popen(cmd, shell=False, stderr=devnull)
-        returncode = self.p.wait()
+        self.p.wait()
         self.next()
 
     def _help(self, short=True):

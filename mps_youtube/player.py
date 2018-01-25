@@ -11,7 +11,7 @@ from urllib.error import HTTPError, URLError
 from abc import ABCMeta, abstractmethod
 
 
-from . import g, screen, c, streams, history, content, paths, config, util
+from . import g, screen, c, streams, history, content, config, util
 from .commands import lastfm
 
 
@@ -19,7 +19,7 @@ mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
-class Player:
+class BasePlayer:
     _playbackStatus = "Paused"
 
     @property
@@ -34,18 +34,6 @@ class Player:
         else:
             paused = True
         g.mprisctl.send(('pause', paused))
-
-    def _generate_real_playerargs(self):
-        pass
-
-    def clean_up(self):
-        pass
-
-    def launch_player(self, cmd):
-        pass
-
-    def _help(self, short=True):
-        pass
 
     def play(self, songlist, shuffle=False, repeat=False, override=False):
         """ Play a range of songs, exit cleanly on keyboard interrupt. """
@@ -75,12 +63,14 @@ class Player:
                 util.set_window_title(self.song.title + " - mpsyt")
 
             self.softrepeat = repeat and len(self.songlist) == 1
-            
+
             if g.scrobble:
                 lastfm.set_now_playing(g.artist, g.scrobble_queue[self.song_no])
 
             try:
-                self.video, self.stream = stream_details(self.song, override=self.override, softrepeat=self.softrepeat)
+                self.video, self.stream = stream_details(self.song,
+                                                         override=self.override,
+                                                         softrepeat=self.softrepeat)
                 self._playsong()
 
             except KeyboardInterrupt:
@@ -94,10 +84,7 @@ class Player:
             # skip forbidden, video removed/no longer available, etc. tracks
             except TypeError:
                 pass
-              
-            if g.scrobble:
-                lastfm.scrobble_track(g.artist, g.album, g.scrobble_queue[self.song_no])
-            
+
             if config.SET_TITLE.get:
                 util.set_window_title("mpsyt")
 
@@ -107,32 +94,22 @@ class Player:
             elif self.song_no == len(songlist) and repeat:
                 self.song_no = 0
 
+    # To be defined by subclass based on being cmd player or library
+    # When overriding next and previous don't forget to add the following
+    # if g.scrobble:
+    #   lastfm.scrobble_track(g.artist, g.album, g.scrobble_queue[self.song_no])
     def next(self):
-        self.terminate_process()
-        self.song_no += 1
+        pass
 
     def previous(self):
-        self.terminate_process()
-        self.song_no -= 1
-
+        pass
 
     def stop(self):
-        self.terminate_process()
-        self.song_no = len(self.songlist)
+        pass
+    ###############
 
     def seek(self):
         pass
-
-    # Maybe make these abstract methods
-    # for mpris control
-
-    # TODO^
-
-    def terminate_process(self):
-        self.p.terminate()
-        # If using shell=True or the player
-        # requires some obscure way of killing the process
-        # the child class can define this function
 
     def _playsong(self, failcount=0, softrepeat=False):
         """ Play song using config.PLAYER called with args config.PLAYERARGS.
@@ -153,52 +130,28 @@ class Player:
         self.songdata = "%s; %s; %s Mb" % songdata
         screen.writestatus(self.songdata)
 
-        returncode = self._launch_player()
-
+        self._launch_player()
         history.add(self.song)
-        return returncode
 
     def _launch_player(self):
         """ Launch player application. """
+        pass
 
-        cmd = self._generate_real_playerargs()
-
-        util.dbg("playing %s", self.song.title)
-        util.dbg("calling %s", " ".join(cmd))
-
-        # Fix UnicodeEncodeError when title has characters
-        # not supported by encoding
-        cmd = [util.xenc(i) for i in cmd]
-
+    def send_metadata_mpris(self):
         metadata = util._get_metadata(self.song.title)
 
         if metadata is None:
             arturl = "https://i.ytimg.com/vi/%s/default.jpg" % self.song.ytid
-            metadata = (self.song.ytid, self.song.title, self.song.length, arturl, [''], '')
+            metadata = (self.song.ytid, self.song.title, self.song.length,
+                        arturl, [''], '')
         else:
             arturl = metadata['album_art_url']
-            metadata = (self.song.ytid, metadata['track_title'], self.song.length, arturl,
+            metadata = (self.song.ytid, metadata['track_title'],
+                        self.song.length, arturl,
                         [metadata['artist']], metadata['album'])
 
-        try:
-            if g.mprisctl:
-                g.mprisctl.send(('metadata', metadata))
-            # song used to get songdetails
-            # songdata contains printable song data
-            self.launch_player(cmd)
-
-        except OSError:
-            g.message = util.F('no player') % config.PLAYER.get
-            return None
-
-        finally:
-            if g.mprisctl:
-                g.mprisctl.send(('stop', True))
-
-            if self.p and self.p.poll() is None:
-                self.p.terminate()  # make sure to kill mplayer if mpsyt crashes
-
-            self.clean_up()
+        if g.mprisctl:
+            g.mprisctl.send(('metadata', metadata))
 
     def _playback_progress(self, idx, allsongs, repeat=False):
         """ Generate string to show selected tracks, indicate current track. """
@@ -275,6 +228,74 @@ class Player:
         status_line += " [%s]" % ("=" * (progress - 1) +
                                   ">").ljust(prog_bar_size, ' ')
         return prefix + status_line + vol_suffix
+
+
+class CmdPlayer(BasePlayer):
+
+    def next(self):
+        if g.scrobble:
+            lastfm.scrobble_track(g.artist, g.album,
+                                  g.scrobble_queue[self.song_no])
+        self.terminate_process()
+        self.song_no += 1
+
+    def previous(self):
+        if g.scrobble:
+            lastfm.scrobble_track(g.artist, g.album,
+                                  g.scrobble_queue[self.song_no])
+        self.terminate_process()
+        self.song_no -= 1
+
+    def stop(self):
+        self.terminate_process()
+        self.song_no = len(self.songlist)
+
+    def terminate_process(self):
+        self.p.terminate()
+        # If using shell=True or the player
+        # requires some obscure way of killing the process
+        # the child class can define this function
+
+    def _generate_real_playerargs(self):
+        pass
+
+    def clean_up(self):
+        pass
+
+    def launch_player(self, cmd):
+        pass
+
+    def _help(self, short=True):
+        pass
+
+    def _launch_player(self):
+        """ Launch player application. """
+
+        cmd = self._generate_real_playerargs()
+
+        util.dbg("playing %s", self.song.title)
+        util.dbg("calling %s", " ".join(cmd))
+
+        # Fix UnicodeEncodeError when title has characters
+        # not supported by encoding
+        cmd = [util.xenc(i) for i in cmd]
+
+        self.send_metadata_mpris()
+        try:
+            self.launch_player(cmd)
+
+        except OSError:
+            g.message = util.F('no player') % config.PLAYER.get
+            return None
+
+        finally:
+            if g.mprisctl:
+                g.mprisctl.send(('stop', True))
+
+            if self.p and self.p.poll() is None:
+                self.p.terminate()  # make sure to kill mplayer if mpsyt crashes
+
+            self.clean_up()
 
 
 def stream_details(song, failcount=0, override=False, softrepeat=False):
