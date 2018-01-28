@@ -197,12 +197,8 @@ class mpv(CmdPlayer):
                     if(volume_level and volume_level != g.volume):
                         g.volume = volume_level
                     if elapsed_s:
-                        line = self._make_status_line(elapsed_s, prefix, songlength,
-                                                      volume=volume_level)
-
-                        if line != last_displayed_line:
-                            screen.writestatus(line)
-                            last_displayed_line = line
+                        self.make_status_line(elapsed_s, prefix, songlength,
+                                              volume=volume_level)
 
             except socket.error:
                 pass
@@ -240,13 +236,8 @@ class mpv(CmdPlayer):
 
                         if volume_level and volume_level != g.volume:
                             g.volume = volume_level
-                        line = self._make_status_line(elapsed_s, prefix,
-                                                      songlength,
-                                                      volume=volume_level)
-
-                        if line != last_displayed_line:
-                            screen.writestatus(line)
-                            last_displayed_line = line
+                        self.make_status_line(elapsed_s, prefix, songlength,
+                                              volume=volume_level)
 
                     if buff.startswith('ANS_volume='):
                         volume_level = round(float(buff.split('=')[1]))

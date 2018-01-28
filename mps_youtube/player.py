@@ -21,6 +21,7 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 class BasePlayer:
     _playbackStatus = "Paused"
+    _last_displayed_line = None
 
     @property
     def PlaybackStatus(self):
@@ -191,6 +192,14 @@ class BasePlayer:
         out += "%s    %s%s%s %s[%s]%s" % fmt
         out += "    REPEAT MODE" if repeat else ""
         return out
+
+    def make_status_line(self, elapsed_s, prefix, songlength=0, volume=None):
+        self._line = self._make_status_line(elapsed_s, prefix, songlength,
+                                            volume=volume)
+
+        if self._line != self._last_displayed_line:
+            screen.writestatus(self._line)
+            self._last_displayed_line = self._line
 
     def _make_status_line(self, elapsed_s, prefix, songlength=0, volume=None):
         """ Format progress line output.  """

@@ -250,6 +250,7 @@ def check_encoder(option):
 def check_player(player):
     """ Check player exefile exists and get mpv version. """
     if util.has_exefile(player):
+        print(player)
         util.assign_player(player)
         if "mpv" in player:
             version = "%s.%s.%s" % g.mpv_version
