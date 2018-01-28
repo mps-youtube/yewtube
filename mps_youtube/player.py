@@ -160,8 +160,6 @@ class BasePlayer:
         cw = util.getxy().width
         out = "  %s%-XXs%s%s\n".replace("XX", str(cw - 9))
         out = out % (c.ul, "Title", "Time", c.w)
-        show_key_help = (util.is_known_player(config.PLAYER.get) and
-                         config.SHOW_PLAYER_KEYS.get)
         multi = len(allsongs) > 1
 
         for n, song in enumerate(allsongs):
@@ -182,7 +180,7 @@ class BasePlayer:
         keys = self._help(short=(not multi and not repeat))
         out = out if multi else content.generate_songlist_display(song=allsongs[0])
 
-        if show_key_help:
+        if config.SHOW_PLAYER_KEYS.get and keys is not None:
             out += "\n" + keys
 
         else:

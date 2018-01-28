@@ -16,6 +16,30 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
 class mpv(CmdPlayer):
+    DEFAULT_ARGS = {
+        "msglevel": {"<0.4": "--msglevel=all=no:statusline=status",
+                     ">=0.4": "--msg-level=all=no:statusline=status"},
+        "title": "--title",
+        "fs": "--fs",
+        "novid": "--no-video",
+        "ignidx": "--demuxer-lavf-o=fflags=+ignidx",
+        "geo": "--geometry"
+    }
+
+    def __init__(self, player):
+        self.player = player
+        self.mpv_version = _get_mpv_version(player)
+        self.mpv_options = subprocess.check_output(
+                [player, "--list-options"]).decode()
+
+        if not mswin:
+            if "--input-unix-socket" in self.mpv_options:
+                self.mpv_usesock = "--input-unix-socket"
+                util.dbg(c.g + "mpv supports --input-unix-socket" + c.w)
+            elif "--input-ipc-server" in self.mpv_options:
+                self.mpv_usesock = "--input-ipc-server"
+                util.dbg(c.g + "mpv supports --input-ipc-server" + c.w)
+
     def _generate_real_playerargs(self):
         """ Generate args for player command.
 
@@ -25,58 +49,56 @@ class mpv(CmdPlayer):
 
         args = config.PLAYERARGS.get.strip().split()
 
-        known_player = util.is_known_player(config.PLAYER.get)
-        if known_player:
-            pd = g.playerargs_defaults[known_player]
-            args.extend((pd["title"], '"{0}"'.format(self.song.title)))
+        pd = self.DEFAULT_ARGS
+        args.extend((pd["title"], '"{0}"'.format(self.song.title)))
 
-            if pd['geo'] not in args:
-                geometry = config.WINDOW_SIZE.get or ""
+        if pd['geo'] not in args:
+            geometry = config.WINDOW_SIZE.get or ""
 
-                if config.WINDOW_POS.get:
-                    wp = config.WINDOW_POS.get
-                    xx = "+1" if "left" in wp else "-1"
-                    yy = "+1" if "top" in wp else "-1"
-                    geometry += xx + yy
+            if config.WINDOW_POS.get:
+                wp = config.WINDOW_POS.get
+                xx = "+1" if "left" in wp else "-1"
+                yy = "+1" if "top" in wp else "-1"
+                geometry += xx + yy
 
-                if geometry:
-                    args.extend((pd['geo'], geometry))
+            if geometry:
+                args.extend((pd['geo'], geometry))
 
-            # handle no audio stream available
-            if self.override == "a-v":
-                util.list_update(pd["novid"], args)
+        # handle no audio stream available
+        if self.override == "a-v":
+            util.list_update(pd["novid"], args)
 
-            elif ((config.FULLSCREEN.get and self.override != "window")
-                    or self.override == "fullscreen"):
-                util.list_update(pd["fs"], args)
+        elif ((config.FULLSCREEN.get and self.override != "window")
+                or self.override == "fullscreen"):
+            util.list_update(pd["fs"], args)
 
-            # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
-            if not self.video and self.stream['ext'] == "m4a":
-                util.dbg("%susing ignidx flag%s")
-                util.list_update(pd["ignidx"], args)
+        # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
+        if not self.video and self.stream['ext'] == "m4a":
+            util.dbg("%susing ignidx flag%s")
+            util.list_update(pd["ignidx"], args)
 
-            if "--ytdl" in g.mpv_options:
-                util.list_update("--no-ytdl", args)
+        if "--ytdl" in self.mpv_options:
+            util.list_update("--no-ytdl", args)
 
-            msglevel = pd["msglevel"]["<0.4"]
+        msglevel = pd["msglevel"]["<0.4"]
 
-            #  undetected (negative) version number assumed up-to-date
-            if g.mpv_version[0:2] < (0, 0) or g.mpv_version[0:2] >= (0, 4):
-                msglevel = pd["msglevel"][">=0.4"]
+        #  undetected (negative) version number assumed up-to-date
+        if self.mpv_version[0:2] < (0, 0) or self.mpv_version[0:2] >= (0, 4):
+            msglevel = pd["msglevel"][">=0.4"]
 
-            if not g.debug_mode:
-                if g.mpv_usesock:
-                    util.list_update("--really-quiet", args)
-                else:
-                    util.list_update("--really-quiet", args, remove=True)
-                    util.list_update(msglevel, args)
+        if not g.debug_mode:
+            if self.mpv_usesock:
+                util.list_update("--really-quiet", args)
+            else:
+                util.list_update("--really-quiet", args, remove=True)
+                util.list_update(msglevel, args)
 
-            if g.volume:
-                util.list_update("--volume=" + str(g.volume), args)
-            if self.softrepeat:
-                util.list_update("--loop-file", args)
+        if g.volume:
+            util.list_update("--volume=" + str(g.volume), args)
+        if self.softrepeat:
+            util.list_update("--loop-file", args)
 
-        return [config.PLAYER.get] + args + [self.stream['url']]
+        return [self.player] + args + [self.stream['url']]
 
     def clean_up(self):
         if self.input_file:
@@ -94,9 +116,9 @@ class mpv(CmdPlayer):
         self.sockpath = None
         self.fifopath = None
 
-        if g.mpv_usesock:
+        if self.mpv_usesock:
             self.sockpath = tempfile.mktemp('.sock', 'mpsyt-mpv')
-            cmd.append(g.mpv_usesock + '=' + self.sockpath)
+            cmd.append(self.mpv_usesock + '=' + self.sockpath)
 
             with open(os.devnull, "w") as devnull:
                 self.p = subprocess.Popen(cmd, shell=False, stderr=devnull)
@@ -296,3 +318,20 @@ def _get_input_file():
                                      delete=False) as tmpfile:
         tmpfile.write(conf)
         return tmpfile.name
+
+
+def _get_mpv_version(exename):
+    """ Get version of mpv as 3-tuple. """
+    o = subprocess.check_output([exename, "--version"]).decode()
+    re_ver = re.compile(r"mpv (\d+)\.(\d+)\.(\d+)")
+
+    for line in o.split("\n"):
+        m = re_ver.match(line)
+
+        if m:
+            v = tuple(map(int, m.groups()))
+            util.dbg("%s version %s.%s.%s detected", exename, *v)
+            return v
+
+    util.dbg("%sFailed to detect mpv version%s", c.r, c.w)
+    return -1, 0, 0

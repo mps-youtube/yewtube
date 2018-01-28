@@ -14,7 +14,10 @@ from ..player import CmdPlayer
 #
 
 
-class generic_player(CmdPlayer):
+class GenericPlayer(CmdPlayer):
+    def __init__(self, player):
+        self.player = player
+
     def _generate_real_playerargs(self):
         '''Generates player arguments to called using Popen
 
@@ -26,7 +29,7 @@ class generic_player(CmdPlayer):
 
         ###########################################
 
-        return [config.PLAYER.get] + args + [self.stream['url']]
+        return [self.player] + args + [self.stream['url']]
 
     def clean_up(self):
         ''' Cleans up temp files after process exits.

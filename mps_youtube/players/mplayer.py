@@ -13,6 +13,19 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
 class mplayer(CmdPlayer):
+    DEFAULT_ARGS = {
+        "title": "-title",
+        "fs": "-fs",
+        "novid": "-novideo",
+        # "ignidx": "-lavfdopts o=fflags=+ignidx".split()
+        "ignidx": "",
+        "geo": "-geometry"
+    }
+
+    def __init__(self, player):
+        self.player = player
+        self.mplayer_version = _get_mplayer_version(player)
+
     def _generate_real_playerargs(self):
         """ Generate args for player command.
 
@@ -20,8 +33,8 @@ class mplayer(CmdPlayer):
 
         """
 
-        if "uiressl=yes" in self.stream['url'] and "mplayer" in config.PLAYER.get:
-            ver = g.mplayer_version
+        if "uiressl=yes" in self.stream['url']:
+            ver = self.mplayer_version
             # Mplayer too old to support https
             if not (ver > (1, 1) if isinstance(ver, tuple) else ver >= 37294):
                 raise IOError("%s : Sorry mplayer doesn't support this stream. "
@@ -29,44 +42,42 @@ class mplayer(CmdPlayer):
 
         args = config.PLAYERARGS.get.strip().split()
 
-        known_player = util.is_known_player(config.PLAYER.get)
-        if known_player:
-            pd = g.playerargs_defaults[known_player]
-            args.extend((pd["title"], '"{0}"'.format(self.song.title)))
+        pd = self.DEFAULT_ARGS
+        args.extend((pd["title"], '"{0}"'.format(self.song.title)))
 
-            if pd['geo'] not in args:
-                geometry = config.WINDOW_SIZE.get or ""
+        if pd['geo'] not in args:
+            geometry = config.WINDOW_SIZE.get or ""
 
-                if config.WINDOW_POS.get:
-                    wp = config.WINDOW_POS.get
-                    xx = "+1" if "left" in wp else "-1"
-                    yy = "+1" if "top" in wp else "-1"
-                    geometry += xx + yy
+            if config.WINDOW_POS.get:
+                wp = config.WINDOW_POS.get
+                xx = "+1" if "left" in wp else "-1"
+                yy = "+1" if "top" in wp else "-1"
+                geometry += xx + yy
 
-                if geometry:
-                    args.extend((pd['geo'], geometry))
+            if geometry:
+                args.extend((pd['geo'], geometry))
 
-            # handle no audio stream available
-            if self.override == "a-v":
-                util.list_update(pd["novid"], args)
+        # handle no audio stream available
+        if self.override == "a-v":
+            util.list_update(pd["novid"], args)
 
-            elif ((config.FULLSCREEN.get and self.override != "window")
-                    or self.override == "fullscreen"):
-                util.list_update(pd["fs"], args)
+        elif ((config.FULLSCREEN.get and self.override != "window")
+                or self.override == "fullscreen"):
+            util.list_update(pd["fs"], args)
 
-            # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
-            if not self.video and self.stream['ext'] == "m4a":
-                util.dbg("%susing ignidx flag%s")
-                util.list_update(pd["ignidx"], args)
+        # prevent ffmpeg issue (https://github.com/mpv-player/mpv/issues/579)
+        if not self.video and self.stream['ext'] == "m4a":
+            util.dbg("%susing ignidx flag%s")
+            util.list_update(pd["ignidx"], args)
 
-            if g.volume:
-                util.list_update("-volume", args)
-                util.list_update(str(g.volume), args)
-            util.list_update("-really-quiet", args, remove=True)
-            util.list_update("-noquiet", args)
-            util.list_update("-prefer-ipv4", args)
+        if g.volume:
+            util.list_update("-volume", args)
+            util.list_update(str(g.volume), args)
+        util.list_update("-really-quiet", args, remove=True)
+        util.list_update("-noquiet", args)
+        util.list_update("-prefer-ipv4", args)
 
-        return [config.PLAYER.get] + args + [self.stream['url']]
+        return [self.player] + args + [self.stream['url']]
 
     def clean_up(self):
         if self.fifopath:
@@ -225,3 +236,21 @@ def _get_input_file():
                                      delete=False) as tmpfile:
         tmpfile.write(conf)
         return tmpfile.name
+
+
+def _get_mplayer_version(exename):
+    o = subprocess.check_output([exename]).decode()
+    m = re.search('MPlayer SVN[\s-]r([0-9]+)', o, re.MULTILINE | re.IGNORECASE)
+
+    ver = 0
+    if m:
+        ver = int(m.groups()[0])
+    else:
+        m = re.search('MPlayer ([0-9])+.([0-9]+)', o, re.MULTILINE)
+        if m:
+            ver = tuple(int(i) for i in m.groups())
+
+        else:
+            util.dbg("%sFailed to detect mplayer version%s", c.r, c.w)
+
+    return ver

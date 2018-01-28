@@ -423,7 +423,7 @@ def load_player_info(player):
         g.mplayer_version = _get_mplayer_version(player)
 
 
-def fetch_songs(text,title="Unknown"):
+def fetch_songs(text, title="Unknown"):
     return description_parser.parse(text, title)
 
 
@@ -534,11 +534,18 @@ def _get_metadata_from_lastfm(artist, track):
 
 
 def assign_player(player):
+    module_name = player
+
+    if '/' in module_name:
+        module_name = module_name.split('/')[-1]
+    if module_name.endswith('.com') or module_name.endswith('.exe'):
+        module_name = module_name.spit('.')[0]
+
     try:
-        module = import_module('.{0}'.format(player), 'mps_youtube.players')
-        pl = getattr(module, player)
-        g.PLAYER_OBJ = pl()
+        module = import_module('mps_youtube.players.{0}'.format(module_name))
+        pl = getattr(module, module_name)
+        g.PLAYER_OBJ = pl(player)
 
     except ImportError:
-        from .players import generic_player
-        g.PLAYER_OBJ = generic_player.generic_player()
+        from mps_youtube.players import GenericPlayer
+        g.PLAYER_OBJ = GenericPlayer.GenericPlayer(player)

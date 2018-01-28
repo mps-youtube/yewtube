@@ -100,8 +100,6 @@ def play(pre, choice, post=""):
                 g.message = "Player not configured! Enter %sset player <player_app> "\
                             "%s to set a player" % (c.g, c.w)
                 return
-            else:
-                util.assign_player(config.PLAYER.get)
             g.PLAYER_OBJ.play(songlist, shuffle, repeat, override)
 
         except KeyboardInterrupt:
