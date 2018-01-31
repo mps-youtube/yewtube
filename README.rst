@@ -112,6 +112,17 @@ You can install mps-youtube directly from the official repositories:
 
     [sudo] apt install mps-youtube
 
+Fedora
+~~~~~~
+You can install mps-youtube from a `copr <https://copr.fedoraproject.org>`_::
+
+    [sudo] dnf copr enable moosingin3space/mps-youtube
+    [sudo] dnf install python3-mps-youtube
+
+This package comes with mpris2 support via its dependences. It also depends on
+youtube-dl and mpv. Note that the mpv dependency requires that you have `RPM
+Fusion <https://rpmfusion.org>`_ free enabled.
+
 macOS X
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Install mpv (recommended player) with `Homebrew <http://brew.sh>`_::
