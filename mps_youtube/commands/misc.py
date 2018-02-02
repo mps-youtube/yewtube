@@ -304,7 +304,7 @@ def view_history(duplicates=True):
             # List unique elements and preserve order.
             seen = set()
             seen_add = seen.add  # it makes calls to add() faster
-            hist_list = [x for x in hist_list if not (x in seen or seen_add(x))]
+            hist_list = [x for x in hist_list if not (x.ytid in seen or seen_add(x.ytid))]
             message = "Viewing recent played songs"
         paginatesongs(hist_list)
         g.message = message
