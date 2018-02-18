@@ -539,7 +539,7 @@ def assign_player(player):
     if '/' in module_name:
         module_name = module_name.split('/')[-1]
     if module_name.endswith('.com') or module_name.endswith('.exe'):
-        module_name = module_name.spit('.')[0]
+        module_name = module_name.split('.')[0]
 
     try:
         module = import_module('mps_youtube.players.{0}'.format(module_name))
