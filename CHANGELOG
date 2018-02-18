@@ -1,3 +1,53 @@
+Version 0.2.8
+17 February 2018
+
+Features:
+---------
+
+- Lastfm scrobbling (@rien333) (#758)
+- `splaylist` and `suser` commands for Spotify (@ritiek) (#678)
+- Autoplay support (@nikhilweee) (#594)
+- `genpl` command (@nishanthkarthik) (#642)
+- `video_format` configuration setting (@Vrihub) (#656)
+- `live` command for live streams (@Razesdark) (#635)
+- Add time column (@akaWolf) (#582)
+- Add video ID column (@Razesdark) (#627)
+- Allow filtering search by duration (@jas32096) (#548)
+- Allow filtering search by date (@jas32096) (#553)
+- Add `history recent` to display history without duplicates (@srvanrell) (#510)
+- `--no-textart` to disable ascii art (for screenreaders) (@Gongreg) (#517)
+- `set_title` option to disable setting window title (@ardrabczyk) (#498)
+- Add `s` command for getting stream information (@ritiek) (#675)
+- Add option to disable mpris (@hrnr) (#728)
+- Generate playlist from video description (@Razesdark) (#649)
+
+Enhancements:
+-------------
+- Store playlists as m3u files instead of binary (@kraetzin) (#682)
+- Show replies when displaying comments (@paulfertser) (#677)
+- Use https urls for album art (@vszakats) (#574)
+- When using "repeat" with mpv, keep player running (@ritiek) (#660)
+- Display artist/album in mpris using lastfm (@vn-ki) (#739)
+- Use channel.list API for user search (@Razesdark) (#628)
+- Maintain volume across songs with mpv (@Razesdark) (#720)
+- Prevent mpris from crashing the main process (@hrnr) (#728)
+
+Bug fixes:
+----------
+- Fix mpris seeking with recent mpv vesions (@mg6) (#687)
+- Fix removing video from multi-page playlist (@kraetzin) (#695)
+- Skip unavailable tracks (@ritiek) (#734)
+- Correctly display minutes/seconds (@Laxa) (#748)
+- Handle `null` time-pos from mpv (@pritambaral) (#519)
+- Fix da/dv command regex (@Vrihub) (#691)
+- Skip channels in video/playlist searches (@ritiek) (#664)
+- Fix divide by zero error (@ids1024) (#620)
+
+Use `git log v0.2.7.1..0.2.8` to see all changes, including various minor
+fixes, documentation changes, etc. not included here.
+
+-------------------------------------------------------------------------------
+
 Version 0.2.7.1
 6 July 2016
 
