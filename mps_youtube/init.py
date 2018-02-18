@@ -26,7 +26,7 @@ except ImportError:
     has_readline = False
 
 from . import cache, g, __version__, __notes__, screen, c, paths, config
-from .util import has_exefile, dbg, xprint, load_player_info
+from .util import has_exefile, dbg, xprint, load_player_info, assign_player
 from .helptext import helptext
 
 mswin = os.name == "nt"
@@ -53,6 +53,7 @@ def init():
 
     else:
         config.load()
+        assign_player(config.PLAYER.get)  # Player is not assigned when config is loaded
 
     _init_readline()
     cache.load()

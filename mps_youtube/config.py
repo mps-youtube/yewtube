@@ -250,8 +250,8 @@ def check_encoder(option):
 def check_player(player):
     """ Check player exefile exists and get mpv version. """
     if util.has_exefile(player):
-        util.load_player_info(player)
-
+        print(player)
+        util.assign_player(player)
         if "mpv" in player:
             version = "%s.%s.%s" % g.mpv_version
             fmt = c.g, c.w, c.g, c.w, version
@@ -275,12 +275,14 @@ def check_player(player):
             msg = "Player application %s%s%s not found" % (c.r, player, c.w)
             return dict(valid=False, message=msg)
 
+
 def check_lastfm_password(password):
     if not has_pylast:
         msg = "pylast not installed"
         return dict(valid=False, message=msg)
     password_hash = pylast.md5(password)
     return dict(valid=True, value=password_hash)
+
 
 class _Config:
 
@@ -301,7 +303,7 @@ class _Config:
             ConfigItem("encoder", 0, minval=0, check_fn=check_encoder),
             ConfigItem("notifier", ""),
             ConfigItem("checkupdate", True),
-            ConfigItem("show_mplayer_keys", True, require_known_player=True),
+            ConfigItem("show_player_keys", True, require_known_player=True),
             ConfigItem("fullscreen", False, require_known_player=True),
             ConfigItem("show_status", True),
             ConfigItem("columns", ""),

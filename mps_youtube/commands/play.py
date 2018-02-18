@@ -7,7 +7,6 @@ from .. import g, c, streams, util, content, config
 from . import command, WORD, RS
 from .songlist import plist
 from .search import yt_url, related
-from ..player import play_range
 
 
 @command(r'play\s+(%s|\d+)' % WORD)
@@ -97,7 +96,12 @@ def play(pre, choice, post=""):
             g.scrobble_queue = [g.scrobble_queue[x - 1] for x in selection]
 
         try:
-            play_range(songlist, shuffle, repeat, override)
+            if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
+                g.message = "Player not configured! Enter %sset player <player_app> "\
+                            "%s to set a player" % (c.g, c.w)
+                return
+            g.PLAYER_OBJ.play(songlist, shuffle, repeat, override)
+
         except KeyboardInterrupt:
             return
         finally:

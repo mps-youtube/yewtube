@@ -59,6 +59,7 @@ OLDHISTFILE = os.path.join(paths.get_config_dir(), "play_history")
 HISTFILE = os.path.join(paths.get_config_dir(), "play_history.m3u")
 CACHEFILE = os.path.join(paths.get_config_dir(), "cache_py_" + sys.version[0:5])
 READLINE_FILE = None
+PLAYER_OBJ = None
 categories = {
         "film":      1,
         "autos":     2,

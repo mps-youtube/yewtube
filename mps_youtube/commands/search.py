@@ -16,7 +16,7 @@ parser.add_argument('search', nargs='+')
 
 import pafy
 
-from .. import g, c, screen, config, util, content, listview, contentquery, player
+from .. import g, c, screen, config, util, content, listview, contentquery
 from ..playlist import Video, Playlist
 from . import command
 from .songlist import plist, paginatesongs
@@ -275,7 +275,11 @@ def livestream_category_search(term):
 
     def start_stream(returned):
         songs = Playlist("Search Results", [Video(*x) for x in returned])
-        player.play_range(songs, False, False, False)
+        if not config.PLAYER.get or not util.has_exefile(config.PLAYER.get):
+            g.message = "Player not configured! Enter %sset player <player_app> "\
+                        "%s to set a player" % (c.g, c.w)
+            return
+        g.PLAYER_OBJ.play(songs, False, False, False)
 
     g.content = listview.ListView(columns, query_obj, start_stream)
     g.message = "Livestreams in category: '%s'" % term
