@@ -43,7 +43,7 @@ Bug fixes:
 - Skip channels in video/playlist searches (@ritiek) (#664)
 - Fix divide by zero error (@ids1024) (#620)
 
-Use `git log v0.2.7.1..0.2.8` to see all changes, including various minor
+Use `git log v0.2.7.1..v0.2.8` to see all changes, including various minor
 fixes, documentation changes, etc. not included here.
 
 -------------------------------------------------------------------------------
