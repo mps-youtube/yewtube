@@ -26,7 +26,7 @@ options = dict(
     author_email="np1nagev@gmail.com",
     url="https://github.com/mps-youtube/mps-youtube",
     download_url="https://github.com/mps-youtube/mps-youtube/archive/v%s.tar.gz" % VERSION,
-    packages=['mps_youtube', 'mps_youtube.commands', 'mps_youtube.listview'],
+    packages=['mps_youtube', 'mps_youtube.commands', 'mps_youtube.listview', 'mps_youtube.players'],
     entry_points={'console_scripts': ['mpsyt = mps_youtube:main.main']},
     install_requires=['pafy >= 0.3.82, != 0.4.0, != 0.4.1, != 0.4.2'],
     classifiers=[
