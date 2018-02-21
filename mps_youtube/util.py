@@ -520,8 +520,6 @@ def _get_metadata_from_lastfm(artist, track):
 
     data = json.load(resp)
 
-    if 'track' != list(data.keys())[0]:
-        return None
     try:
         metadata['track_title'] = data['track']['name']
         metadata['artist'] = data['track']['artist']['name']
