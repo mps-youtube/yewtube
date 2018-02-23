@@ -90,11 +90,14 @@ Installation
 ------------
 Linux
 ~~~~~
+
+**Note**: ``~/.local/bin`` should be in your ``PATH`` for ``--user`` installs.
+
 Using `pip <http://www.pip-installer.org>`_::
 
     $ pip3 install --user mps-youtube
 
-To install the experimental development version and try the latest features:
+To install the experimental development version and try the latest features::
 
     $ pip3 install --user -U git+https://github.com/mps-youtube/mps-youtube.git
 
