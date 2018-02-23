@@ -518,7 +518,8 @@ def _get_metadata_from_lastfm(artist, track):
 
     metadata = dict()
 
-    data = json.load(resp)
+    # Prior to Python 3.6, json.loads cannot take a bytes object
+    data = json.loads(resp.decode('utf-8'))
 
     try:
         metadata['track_title'] = data['track']['name']
