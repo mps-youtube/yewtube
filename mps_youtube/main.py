@@ -35,6 +35,8 @@ try:
     import readline
     readline.set_history_length(2000)
     has_readline = True
+    readline.parse_and_bind('tab: complete')
+    readline.set_completer(util.complete_command)
 
 except ImportError:
     has_readline = False

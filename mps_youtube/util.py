@@ -24,6 +24,15 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
+COMMANDS = ['play', 'set', 'album', 'all', 'playurl', 'browserplay',
+            'showconfig', 'encoders', 'dv', 'da', 'dl', 'd', 'download',
+            'dapl', 'dvpl', 'daupl', 'dvupl', 'daurl', 'dvurl', 'mkp',
+            'lastfm_connect', 'rmp', 'add', 'mv', 'save', 'open', 'view',
+            'ls', 'vp', 'clearcache', 'help', 'exit', 'history',
+            'history recent', 'history clear', 'channels', 'user', 'live',
+            'pls', 'mix', 'url', 'url_file', 'pl', 'rm', 'undump', 'dump',
+            'sw', 'shuffle', 'reverse', 'repeat', 'suser', 'splaylist']
+
 
 class IterSlicer():
     """ Class that takes an iterable and allows slicing,
@@ -550,3 +559,8 @@ def assign_player(player):
     except ImportError:
         from mps_youtube.players import GenericPlayer
         g.PLAYER_OBJ = GenericPlayer.GenericPlayer(player)
+
+
+def complete_command(text, state):
+    results = [x for x in COMMANDS if x.startswith(text)] + [None]
+    return results[state]
