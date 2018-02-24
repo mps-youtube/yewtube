@@ -37,6 +37,7 @@ try:
     has_readline = True
     readline.parse_and_bind('tab: complete')
     readline.set_completer(util.complete_command)
+    readline.set_completer_delims('')
 
 except ImportError:
     has_readline = False

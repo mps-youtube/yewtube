@@ -33,6 +33,17 @@ COMMANDS = ['play', 'set', 'album', 'all', 'playurl', 'browserplay',
             'pls', 'mix', 'url', 'url_file', 'pl', 'rm', 'undump', 'dump',
             'sw', 'shuffle', 'reverse', 'repeat', 'suser', 'splaylist']
 
+SET_COMMANDS = ['set order', 'set user_order', 'set max_results',
+                'set console_width', 'set max_res', 'set player', 'set playerargs',
+                'set encoder', 'set notifier', 'set notifier', 'set checkupdate',
+                'set show_player_keys', 'set fullscreen', 'set show_status',
+                'set columns' 'set ddir', 'set overwrite', 'set show_video',
+                'set search_music', 'set window_pos', 'set window_size',
+                'set download_command', 'set lastfm_username',
+                'set lastfm_password', 'set lastfm_api_key', 'set lastfm_api_secret',
+                'set audio_format', 'set video_format', 'set api_key',
+                'set autoplay', 'set set_title', 'set mpris']
+
 
 class IterSlicer():
     """ Class that takes an iterable and allows slicing,
@@ -562,5 +573,8 @@ def assign_player(player):
 
 
 def complete_command(text, state):
-    results = [x for x in COMMANDS if x.startswith(text)] + [None]
+    if text.startswith('set'):
+        results = [x for x in SET_COMMANDS if x.startswith(text)] + [None]
+    else:
+        results = [x for x in COMMANDS if x.startswith(text)] + [None]
     return results[state]
