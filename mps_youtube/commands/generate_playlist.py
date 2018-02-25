@@ -55,7 +55,11 @@ def create_playlist(queries, title=None):
     Create playlist with a random name, get the first
     match for each title in queries and append it to the playlist
     """
-    plname = title.replace(" ", "-") or random_plname()
+    plname = None
+    if (title is not None): 
+        plname=title.replace(" ", "-") 
+    else: 
+        plname=random_plname()
     if not g.userpl.get(plname):
         g.userpl[plname] = Playlist(plname)
     for query in queries:
