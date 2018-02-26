@@ -331,6 +331,8 @@ class _Config:
             ConfigItem("mpris", not mswin),
             ]
 
+    _automatic = False
+
     def __getitem__(self, key):
         # TODO: Possibly more efficient algorithm, w/ caching
         for i in self._configitems:
@@ -348,6 +350,9 @@ class _Config:
         return (i.name.upper() for i in self._configitems)
 
     def save(self):
+        if self._automatic:
+            return
+
         """ Save current config to file. """
         config = {setting: self[setting].value for setting in self}
 

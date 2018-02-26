@@ -137,6 +137,9 @@ def main():
         if len(arg_inp):
             next_inp = arg_inp.pop(0).strip()
             next_inp = next_inp.replace("[mpsyt-comma]", ",")
+            config._automatic = True
+        else:
+            config._automatic = False
 
         try:
             userinput = next_inp or input(prompt).strip()
