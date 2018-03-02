@@ -24,26 +24,6 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
-COMMANDS = ['play', 'set', 'album', 'all', 'playurl', 'browserplay',
-            'showconfig', 'encoders', 'dv', 'da', 'dl', 'd', 'download',
-            'dapl', 'dvpl', 'daupl', 'dvupl', 'daurl', 'dvurl', 'mkp',
-            'lastfm_connect', 'rmp', 'add', 'mv', 'save', 'open', 'view',
-            'ls', 'vp', 'clearcache', 'help', 'exit', 'history',
-            'history recent', 'history clear', 'channels', 'user', 'live',
-            'pls', 'mix', 'url', 'url_file', 'pl', 'rm', 'undump', 'dump',
-            'sw', 'shuffle', 'reverse', 'repeat', 'suser', 'splaylist']
-
-SET_COMMANDS = ['set order', 'set user_order', 'set max_results',
-                'set console_width', 'set max_res', 'set player', 'set playerargs',
-                'set encoder', 'set notifier', 'set notifier', 'set checkupdate',
-                'set show_player_keys', 'set fullscreen', 'set show_status',
-                'set columns' 'set ddir', 'set overwrite', 'set show_video',
-                'set search_music', 'set window_pos', 'set window_size',
-                'set download_command', 'set lastfm_username',
-                'set lastfm_password', 'set lastfm_api_key', 'set lastfm_api_secret',
-                'set audio_format', 'set video_format', 'set api_key',
-                'set autoplay', 'set set_title', 'set mpris']
-
 
 class IterSlicer():
     """ Class that takes an iterable and allows slicing,
@@ -572,9 +552,24 @@ def assign_player(player):
         g.PLAYER_OBJ = GenericPlayer.GenericPlayer(player)
 
 
-def complete_command(text, state):
-    if text.startswith('set'):
-        results = [x for x in SET_COMMANDS if x.startswith(text)] + [None]
-    else:
-        results = [x for x in COMMANDS if x.startswith(text)] + [None]
-    return results[state]
+class CommandCompleter:
+
+    COMMANDS = ['play', 'set', 'album', 'all', 'playurl', 'browserplay',
+                'showconfig', 'encoders', 'dv', 'da', 'dl', 'd', 'download',
+                'dapl', 'dvpl', 'daupl', 'dvupl', 'daurl', 'dvurl', 'mkp',
+                'lastfm_connect', 'rmp', 'add', 'mv', 'save', 'open', 'view',
+                'ls', 'vp', 'clearcache', 'help', 'exit', 'history',
+                'history recent', 'history clear', 'channels', 'user', 'live',
+                'pls', 'mix', 'url', 'url_file', 'pl', 'rm', 'undump', 'dump',
+                'sw', 'shuffle', 'reverse', 'repeat', 'suser', 'splaylist']
+
+    def __init__(self):
+        from . import config
+        self.SET_COMMANDS = ['set ' + i.lower() for i in config]
+
+    def complete_command(self, text, state):
+        if text.startswith('set'):
+            results = [x for x in self.SET_COMMANDS if x.startswith(text)] + [None]
+        else:
+            results = [x for x in self.COMMANDS if x.startswith(text)] + [None]
+        return results[state]
