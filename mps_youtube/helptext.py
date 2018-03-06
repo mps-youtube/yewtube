@@ -212,7 +212,7 @@ def helptext():
     {2}set checkupdate true|false{1} - check for updates on exit
     {2}set columns <columns>{1} - select extra displayed fields in search results:
          (valid: views comments rating date time user likes dislikes category ytid)
-    {2}set ddir <download direcory>{1} - set where downloads are saved
+    {2}set ddir <download directory>{1} - set where downloads are saved
     {2}set download_command <command>{1} - type {2}help dl-command{1} for info
     {2}set encoder <number>{1} - set encoding preset for downloaded files
     {2}set fullscreen true|false{1} - output video content in full-screen mode
