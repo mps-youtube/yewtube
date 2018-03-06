@@ -7,8 +7,8 @@ def showconfig():
     """ Dump config data. """
     width = util.getxy().width
     width -= 30
-    s = "  %s%-17s%s : %s\n"
-    out = "  %s%-17s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
+    s = "  %s%-18s%s : %s\n"
+    out = "  %s%-18s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
 
     for setting in config:
         val = config[setting]
@@ -75,3 +75,10 @@ def show_encs():
     g.content = out
     message = "Enter %sset encoder <num>%s to select an encoder"
     g.message = message % (c.g, c.w)
+
+
+@command(r'savesettings')
+def save_settings():
+    config.save(force=True)
+    showconfig()
+    g.message = "Settings saved!"
