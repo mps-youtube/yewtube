@@ -105,6 +105,10 @@ Installing youtube-dl is highly recommended::
 
     $ pip3 install --user youtube-dl
 
+Upgrading youtube-dl could help (especially on distros such as Debian where the package in the repos is old)::
+
+    $ youtube-dl -U
+
 For mpris2 support, install the python bindings for dbus and gobject::
 
     $ pip3 install --user dbus-python pygobject
