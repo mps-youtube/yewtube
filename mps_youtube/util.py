@@ -550,3 +550,26 @@ def assign_player(player):
     except ImportError:
         from mps_youtube.players import GenericPlayer
         g.PLAYER_OBJ = GenericPlayer.GenericPlayer(player)
+
+
+class CommandCompleter:
+
+    COMMANDS = ['play', 'set', 'album', 'all', 'playurl', 'browserplay',
+                'showconfig', 'encoders', 'dv', 'da', 'dl', 'd', 'download',
+                'dapl', 'dvpl', 'daupl', 'dvupl', 'daurl', 'dvurl', 'mkp',
+                'lastfm_connect', 'rmp', 'add', 'mv', 'save', 'open', 'view',
+                'ls', 'vp', 'clearcache', 'help', 'exit', 'history',
+                'history recent', 'history clear', 'channels', 'user', 'live',
+                'pls', 'mix', 'url', 'url_file', 'pl', 'rm', 'undump', 'dump',
+                'sw', 'shuffle', 'reverse', 'repeat', 'suser', 'splaylist']
+
+    def __init__(self):
+        from . import config
+        self.SET_COMMANDS = ['set ' + i.lower() for i in config]
+
+    def complete_command(self, text, state):
+        if text.startswith('set'):
+            results = [x for x in self.SET_COMMANDS if x.startswith(text)] + [None]
+        else:
+            results = [x for x in self.COMMANDS if x.startswith(text)] + [None]
+        return results[state]
