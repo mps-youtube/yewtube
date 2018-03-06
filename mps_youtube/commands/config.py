@@ -6,9 +6,24 @@ from . import command
 def showconfig():
     """ Dump config data. """
     width = util.getxy().width
-    width -= 30
-    s = "  %s%-18s%s : %s\n"
-    out = "  %s%-18s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
+    longest_key = 17
+    longest_val = 0
+    has_temps = False
+
+    for setting in config:
+        val = config[setting]
+        longest_val = max(longest_val, len(str(val.display)))
+        has_temps = has_temps or val.temp_value is not None
+
+    width -= 27
+    s = f"  %s%-{longest_key}s%s : %-{longest_val+1}s"
+
+    if has_temps:
+        width -= longest_val + 5
+        out = (f"  %s%-{longest_key}s   %-{longest_val}s %s%s%s\n") % (
+            c.ul, "Key", "Value", "Temporary", " " * width, c.w)
+    else:
+        out = f"  %s%-{longest_key}s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
 
     for setting in config:
         val = config[setting]
@@ -27,13 +42,23 @@ def showconfig():
 
         out += s % (c.g, setting.lower(), c.w, val.display)
 
+        if has_temps:
+            out += "%s%s" % (c.w, val.display_temp)
+
+        out += "\n"
+
     g.content = out
     g.message = "Enter %sset <key> <value>%s to change\n" % (c.g, c.w)
     g.message += "Enter %sset all default%s to reset all" % (c.g, c.w)
 
 
+@command(r'set\s+-t\s*([-\w]+)\s*(.*)')
+def setconfigtemp(key, val):
+    setconfig(key, val, is_temp=True)
+
+
 @command(r'set\s+([-\w]+)\s*(.*)')
-def setconfig(key, val):
+def setconfig(key, val, is_temp=False):
     """ Set configuration variable. """
     key = key.replace("-", "_")
     if key.upper() == "ALL" and val.upper() == "DEFAULT":
@@ -50,6 +75,7 @@ def setconfig(key, val):
     elif val.upper() == "DEFAULT":
         att = config[key.upper()]
         att.value = att.default
+        att.temp_value = None
         message = "%s%s%s set to %s%s%s (default)"
         dispval = att.display or "None"
         message = message % (c.y, key, c.w, c.y, dispval, c.w)
@@ -57,7 +83,7 @@ def setconfig(key, val):
 
     else:
         # config.save() will be called by config.set() method
-        message = config[key.upper()].set(val)
+        message = config[key.upper()].set(val, is_temp=is_temp)
 
     showconfig()
     g.message = message
@@ -75,10 +101,3 @@ def show_encs():
     g.content = out
     message = "Enter %sset encoder <num>%s to select an encoder"
     g.message = message % (c.g, c.w)
-
-
-@command(r'savesettings')
-def save_settings():
-    config.save(force=True)
-    showconfig()
-    g.message = "Settings saved!"

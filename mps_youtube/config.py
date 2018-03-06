@@ -25,13 +25,14 @@ class ConfigItem:
     """ A configuration item. """
 
     def __init__(self, name, value, minval=None, maxval=None, check_fn=None,
-            require_known_player=False, allowed_values=None, force_save=False):
+            require_known_player=False, allowed_values=None):
         """ If specified, the check_fn should return a dict.
 
         {valid: bool, message: success/fail mesage, value: value to set}
 
         """
         self.default = self.value = value
+        self.temp_value = None
         self.name = name
         self.type = type(value)
         self.maxval, self.minval = maxval, minval
@@ -40,18 +41,26 @@ class ConfigItem:
         self.allowed_values = []
         if allowed_values:
             self.allowed_values = allowed_values
-        self.force_save = force_save
 
     @property
     def get(self):
         """ Return value. """
-        return self.value
+        if self.temp_value is None:
+            return self.value
+        else:
+            return self.temp_value
 
     @property
     def display(self):
         """ Return value in a format suitable for display. """
-        retval = self.value
+        return self.display_helper(self.value)
 
+    @property
+    def display_temp(self):
+        if self.temp_value is None: return ""
+        return self.display_helper(self.temp_value)
+
+    def display_helper(self, retval):
         if self.name == "max_res":
             retval = str(retval) + "p"
 
@@ -60,7 +69,7 @@ class ConfigItem:
 
         return retval
 
-    def set(self, value):
+    def set(self, value, is_temp=False):
         """ Set value with checks. """
         # note: fail_msg should contain %s %s for self.name, value
         #       success_msg should not
@@ -147,18 +156,23 @@ class ConfigItem:
 
             if checked['valid']:
                 value = checked.get("value", value)
-                self.value = value
-                Config.save()
+                set_save(self, value, is_temp)
                 return checked.get("message", success_msg)
 
             else:
                 return checked.get('message', fail_msg)
 
         elif success_msg:
-            self.value = value
-            Config.save(force=self.force_save)
+            set_save(self, value, is_temp)
             return success_msg
 
+def set_save(self, value, is_temp):
+    if not is_temp:
+        self.temp_value = None
+        self.value = value
+        Config.save()
+    else:
+        self.temp_value = value
 
 def check_console_width(val):
     """ Show ruler to check console width. """
@@ -330,8 +344,6 @@ class _Config:
             ConfigItem("autoplay", False),
             ConfigItem("set_title", True),
             ConfigItem("mpris", not mswin),
-            ConfigItem("auto_save_settings", True,
-                force_save=True),
             ]
 
     def __getitem__(self, key):
@@ -350,10 +362,7 @@ class _Config:
     def __iter__(self):
         return (i.name.upper() for i in self._configitems)
 
-    def save(self, force=False):
-        if not (force or self['AUTO_SAVE_SETTINGS'].value):
-            return
-
+    def save(self):
         """ Save current config to file. """
         config = {setting: self[setting].value for setting in self}
 
