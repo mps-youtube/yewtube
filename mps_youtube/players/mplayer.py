@@ -107,7 +107,6 @@ class mplayer(CmdPlayer):
                                   stderr=subprocess.STDOUT, bufsize=1)
         self._player_status(self.songdata + "; ", self.song.length)
         returncode = self.p.wait()
-        print(returncode)
 
         if returncode == 42:
             self.previous()

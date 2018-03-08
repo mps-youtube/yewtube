@@ -251,7 +251,8 @@ class CmdPlayer(BasePlayer):
 
     def stop(self):
         self.terminate_process()
-        self.song_no = len(self.songlist)
+        raise KeyboardInterrupt
+        # self.song_no = len(self.songlist)
 
     def terminate_process(self):
         self.p.terminate()
