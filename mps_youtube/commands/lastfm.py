@@ -1,6 +1,3 @@
-import time
-import datetime
-
 try:
     import pylast
     has_pylast = True
@@ -9,6 +6,7 @@ except ImportError:
 
 from .. import g, util, config
 from . import command
+
 
 @command(r'lastfm_connect')
 def init_network(verbose=True):
@@ -39,23 +37,3 @@ def init_network(verbose=True):
     except (pylast.WSError, pylast.MalformedResponseError, pylast.NetworkError):
         if verbose:
             g.message = "Last.fm connection error: %s" % (str(e))
-
-def scrobble_track(artist, album, track):
-    """ Scrobble a track to the user's Last.fm account """
-    if not g.lastfm_network:
-        return
-    unix_timestamp = int(time.mktime(datetime.datetime.now().timetuple()))
-    try:
-        g.lastfm_network.scrobble(artist=artist, title=track, album=album,
-                                  timestamp=unix_timestamp)
-    except (pylast.WSError, pylast.MalformedResponseError, pylast.NetworkError):
-        return
-
-def set_now_playing(artist, track):
-    """ Set the current track as "now playing" on the user's Last.fm account """
-    if not g.lastfm_network:
-        return
-    try:
-        g.lastfm_network.update_now_playing(artist=artist, title=track)
-    except (pylast.WSError, pylast.MalformedResponseError, pylast.NetworkError):
-        return
