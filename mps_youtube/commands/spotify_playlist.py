@@ -37,25 +37,8 @@ def grab_playlist(spotify, playlist):
 
     username = splits[-3]
     playlist_id = splits[-1]
-    playlists = spotify.user_playlists(username)
-
-    while True:
-        for playlist in playlists['items']:
-            if not playlist['name'] == None:
-                if playlist['id'] == playlist_id:
-                    playlists['next'] = None
-                    break
-        if playlists['next']:
-            playlists = spotify.next(playlists)
-        else:
-            break
-
-    if playlists['total'] == 0:
-        return
-
-    owner_id = playlist['owner']['id']
-    playlist_id = playlist['id']
-    results = spotify.user_playlist(owner_id, playlist_id, fields='tracks,next')
+    results = spotify.user_playlist(username, playlist_id,
+                                    fields='tracks,next,name,owner')
 
     all_tracks = []
     tracks = results['tracks']
@@ -63,7 +46,6 @@ def grab_playlist(spotify, playlist):
         for item in tracks['items']:
             track = item['track']
             try:
-                #util.xprint(track['external_urls']['spotify'])
                 all_tracks.append(track)
             except KeyError:
                 pass
@@ -74,7 +56,7 @@ def grab_playlist(spotify, playlist):
         else:
             break
 
-    return (playlist, all_tracks)
+    return (results, all_tracks)
 
 
 def show_message(message, col=c.r, update=False):
