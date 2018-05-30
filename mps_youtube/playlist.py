@@ -1,6 +1,3 @@
-import time
-
-
 class Playlist:
 
     """ Representation of a playist, has list of songs. """
@@ -28,7 +25,9 @@ class Playlist:
     def duration(self):
         """ Sum duration of the playlist. """
         duration = sum(s.length for s in self.songs)
-        duration = time.strftime('%H:%M:%S', time.gmtime(int(duration)))
+        mins, secs = divmod(duration, 60)
+        hours, mins = divmod(mins, 60)
+        duration = '{H:02}:{M:02}:{S:02}'.format(H=hours, M=mins, S=secs)
         return duration
 
 
