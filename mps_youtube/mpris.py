@@ -90,8 +90,8 @@ class Mpris2Controller:
         """
             Notifies interfaces that player connection changed
         """
-        try:
-            while True:
+        while True:
+            try:
                 data = conn.recv()
                 if isinstance(data, tuple):
                     name, val = data
@@ -103,8 +103,10 @@ class Mpris2Controller:
                         self.mpris.bindfifo(val, mpv=True)
                     else:
                         self.mpris.setproperty(name, val)
-        except IOError:
-            pass
+            except IOError:
+                break
+            except KeyboardInterrupt:
+                pass
 
     def _acquire_bus(self):
         """
