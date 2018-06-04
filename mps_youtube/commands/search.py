@@ -173,6 +173,7 @@ def channelsearch(q_user):
     columns = [
         {"name": "idx", "size": 3, "heading": "Num"},
         {"name": "name", "size": 30, "heading": "Username"},
+        {"name": "id", "size": 24, "heading": "Channel ID"},
         {"name": "description", "size": "remaining", "heading": "Description"},
         ]
 
