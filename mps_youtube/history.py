@@ -36,7 +36,7 @@ def save():
         hf.write('#EXTM3U\n\n')
         if 'history' in g.userhist:
             for song in g.userhist['history'].songs:
-                hf.write('#EXTINF:%d,%s\n' % (song.length, song.title))
+                hf.write('#EXTINF:%d,%s\n' % (song.length, song.title.encode('utf-8')))
                 hf.write('https://www.youtube.com/watch?v=%s\n' % song.ytid)
 
     dbg(c.r + "History saved\n---" + c.w)
