@@ -25,7 +25,7 @@ class ConfigItem:
     """ A configuration item. """
 
     def __init__(self, name, value, minval=None, maxval=None, check_fn=None,
-            require_known_player=False, allowed_values=None):
+            require_known_player=False, allowed_values=None, force_save=False):
         """ If specified, the check_fn should return a dict.
 
         {valid: bool, message: success/fail mesage, value: value to set}
@@ -40,6 +40,7 @@ class ConfigItem:
         self.allowed_values = []
         if allowed_values:
             self.allowed_values = allowed_values
+        self.force_save = force_save
 
     @property
     def get(self):
@@ -155,7 +156,7 @@ class ConfigItem:
 
         elif success_msg:
             self.value = value
-            Config.save()
+            Config.save(force=self.force_save)
             return success_msg
 
 
@@ -329,6 +330,8 @@ class _Config:
             ConfigItem("autoplay", False),
             ConfigItem("set_title", True),
             ConfigItem("mpris", not mswin),
+            ConfigItem("auto_save_settings", True,
+                force_save=True),
             ]
 
     def __getitem__(self, key):
@@ -347,7 +350,10 @@ class _Config:
     def __iter__(self):
         return (i.name.upper() for i in self._configitems)
 
-    def save(self):
+    def save(self, force=False):
+        if not (force or self['AUTO_SAVE_SETTINGS'].value):
+            return
+
         """ Save current config to file. """
         config = {setting: self[setting].value for setting in self}
 
