@@ -33,47 +33,47 @@ Screenshots
 
 Search
 ~~~~~~
-.. image:: http://np1.github.io/mpsyt-images2/std-search.png
+.. image:: http://mps-youtube.github.io/mps-youtube/std-search.png
 
 A standard search is performed by entering ``/`` followed by search terms.
 
 Local Playlists
 ~~~~~~~~~~~~~~~
-.. image:: http://np1.github.io/mpsyt-images2/local-playlists.png
+.. image:: http://mps-youtube.github.io/mps-youtube/local-playlists.png
 
 Search result items can easily be stored in local playlists.
 
 YouTube Playlists
 ~~~~~~~~~~~~~~~~~
-.. image:: http://np1.github.io/mpsyt-images2/playlist-search.png
+.. image:: http://mps-youtube.github.io/mps-youtube/playlist-search.png
 
 YouTube playlists can be searched and played or saved as local playlists.
 
 Download
 ~~~~~~~~
-.. image:: http://np1.github.io/mpsyt-images2/download.png
+.. image:: http://mps-youtube.github.io/mps-youtube/download.png
 
 Content can be downloaded in various formats and resolutions.
 
 Comments
 ~~~~~~~~
-.. image:: http://np1.github.io/mpsyt-images2/comments.png
+.. image:: http://mps-youtube.github.io/mps-youtube/comments.png
 
 A basic comments browser is available to view YouTube user comments.
 
 Music Album Matching
 ~~~~~~~~~~~~~~~~~~~~
 
-.. image:: http://np1.github.io/mpsyt-images2/album-1.png
+.. image:: http://mps-youtube.github.io/mps-youtube/album-1.png
 
-.. image:: http://np1.github.io/mpsyt-images2/album-2.png
+.. image:: http://mps-youtube.github.io/mps-youtube/album-2.png
 
 An album title can be specified and mps-youtube will attempt to find matches for each track of the album, based on title and duration.  Type ``help search`` for more info.
 
 Customisation
 ~~~~~~~~~~~~~
 
-.. image:: http://np1.github.io/mpsyt-images2/customisation2.png
+.. image:: http://mps-youtube.github.io/mps-youtube/customisation2.png
 
 Search results can be customised to display additional fields and ordered by various criteria.
 
