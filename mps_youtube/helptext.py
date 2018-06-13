@@ -239,8 +239,8 @@ def helptext():
     {2}set api_key <key>{1} - use a different API key for accessing the YouTube Data API
     {2}set set_title true|false{1} - change window title
     
-    {2}Additionally, set -t may be used to temporarily change a setting without
-    {2}saving it to disk
+    Additionally, {2}set -t{1} may be used to temporarily change a setting without
+    saving it to disk
     """.format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'
                'sults when searching (max 50)'.format(c.y, c.w) if not
                g.detectable_size else '')),
