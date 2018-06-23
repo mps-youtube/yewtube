@@ -83,7 +83,6 @@ def has_exefile(filename):
 
     return False
 
-
 def dbg(*args):
     """Emit a debug message."""
     # Uses xenc to deal with UnicodeEncodeError when writing to terminal
