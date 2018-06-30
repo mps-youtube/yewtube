@@ -16,14 +16,14 @@ def showconfig():
         has_temps = has_temps or val.temp_value is not None
 
     width -= 27
-    s = f"  %s%-{longest_key}s%s : %-{longest_val+1}s"
+    s = "  %s%-{0}s%s : %-{1}s".format(longest_key, longest_val+1)
 
     if has_temps:
         width -= longest_val + 5
-        out = (f"  %s%-{longest_key}s   %-{longest_val}s %s%s%s\n") % (
+        out = "  %s%-{}s   %-{}s %s%s%s\n".format(longest_key, longest_val) % (
             c.ul, "Key", "Value", "Temporary", " " * width, c.w)
     else:
-        out = f"  %s%-{longest_key}s   %s%s%s\n" % (c.ul, "Key", "Value", " " * width, c.w)
+        out = "  %s%-{}s   %s%s%s\n".format(longest_key) % (c.ul, "Key", "Value", " " * width, c.w)
 
     for setting in config:
         val = config[setting]
