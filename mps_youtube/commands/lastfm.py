@@ -10,7 +10,7 @@ except ImportError:
 from .. import g, util, config
 from . import command
 
-@command(r'lastfm_connect')
+@command(r'lastfm_connect', 'lastfm_connect')
 def init_network(verbose=True):
     """ Initialize the global pylast network variable """
     if not has_pylast :

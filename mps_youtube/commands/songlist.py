@@ -76,7 +76,7 @@ def paginatesongs(func, page=0, splash=True, dumps=False,
         streams.preload(songs[0], delay=0)
 
 
-@command(r'pl\s+%s' % PL)
+@command(r'pl\s+%s' % PL, 'pl')
 def plist(parturl):
     """ Retrieve YouTube playlist. """
 
@@ -96,7 +96,7 @@ def plist(parturl):
     paginatesongs(pl_seg, length=len(ytpl), msg=msg, loadmsg=loadmsg)
 
 
-@command(r'(rm|add)\s*(-?\d[-,\d\s]{,250})')
+@command(r'(rm|add)\s*(-?\d[-,\d\s]{,250})', 'rm', 'add')
 def songlist_rm_add(action, songrange):
     """ Remove or add tracks. works directly on user input. """
     selection = util.parse_multi(songrange)
@@ -131,7 +131,7 @@ def songlist_rm_add(action, songrange):
     g.content = content.generate_songlist_display()
 
 
-@command(r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})')
+@command(r'(mv|sw)\s*(\d{1,4})\s*[\s,]\s*(\d{1,4})', 'mv', 'sw')
 def songlist_mv_sw(action, a, b):
     """ Move a song or swap two songs. """
     i, j = int(a) - 1, int(b) - 1
@@ -187,7 +187,7 @@ def nextprev(np, page=None):
     return good
 
 
-@command(r'(un)?dump')
+@command(r'(un)?dump', 'dump', 'undump')
 def dump(un):
     """ Show entire playlist. """
     func, args = g.last_search_query
@@ -202,7 +202,7 @@ def dump(un):
         g.content = content.generate_songlist_display()
 
 
-@command(r'shuffle')
+@command(r'shuffle', 'shuffle')
 def shuffle_fn():
     """ Shuffle displayed items. """
     random.shuffle(g.model.songs)
@@ -210,7 +210,7 @@ def shuffle_fn():
     g.content = content.generate_songlist_display()
 
 
-@command(r'reverse')
+@command(r'reverse', 'reverse')
 def reverse_songs():
     """ Reverse order of displayed items. """
     g.model.songs = g.model.songs[::-1]
@@ -218,7 +218,7 @@ def reverse_songs():
     g.content = content.generate_songlist_display()
 
 
-@command(r'reverse\s*(\d{1,4})\s*-\s*(\d{1,4})\s*')
+@command(r'reverse\s*(\d{1,4})\s*-\s*(\d{1,4})\s*', 'reverse')
 def reverse_songs_range(lower, upper):
     """ Reverse the songs within a specified range. """
     lower, upper = int(lower), int(upper)
@@ -229,7 +229,7 @@ def reverse_songs_range(lower, upper):
     g.content = content.generate_songlist_display()
     
 
-@command(r'reverse all')
+@command(r'reverse all', 'reverse all')
 def reverse_playlist():
     """ Reverse order of entire loaded playlist. """
     # Prevent crash if no last query

@@ -39,14 +39,14 @@ def clearcache():
     g.message = "cache cleared"
 
 
-@command(r'(?:help|h)(?:\s+([-_a-zA-Z]+))?')
+@command(r'(?:help|h)(?:\s+([-_a-zA-Z]+))?', 'help')
 def show_help(choice):
     """ Print help message. """
 
     g.content = get_help(choice)
 
 
-@command(r'(?:q|quit|exit)')
+@command(r'(?:q|quit|exit)', 'quit', 'exit')
 def quits(showlogo=True):
     """ Exit the program. """
     if has_readline:
@@ -132,7 +132,7 @@ def fetch_comments(item):
     g.content = content.StringContent(commentstext)
 
 
-@command(r'c\s?(\d{1,4})')
+@command(r'c\s?(\d{1,4})', 'c')
 def comments(number):
     """ Receive use request to view comments. """
     if g.browse_mode == "normal":
@@ -144,7 +144,7 @@ def comments(number):
         g.message = "Comments only available for video items"
 
 
-@command(r'x\s*(\d+)')
+@command(r'x\s*(\d+)', 'x')
 def clipcopy_video(num):
     """ Copy video/playlist url to clipboard. """
     if g.browse_mode == "ytpl":
@@ -179,7 +179,7 @@ def clipcopy_video(num):
         g.content = generate_songlist_display()
 
 
-@command(r'X\s*(\d+)')
+@command(r'X\s*(\d+)', 'X')
 def clipcopy_stream(num):
     """ Copy content stream url to clipboard. """
     if g.browse_mode == "normal":
@@ -211,7 +211,7 @@ def clipcopy_stream(num):
         g.content = generate_songlist_display()
 
 
-@command(r'i\s*(\d{1,4})')
+@command(r'i\s*(\d{1,4})', 'i')
 def video_info(num):
     """ Get video information. """
     if g.browse_mode == "ytpl":
@@ -268,7 +268,7 @@ def video_info(num):
         g.content = out
 
 
-@command(r's\s*(\d{1,4})')
+@command(r's\s*(\d{1,4})', 's')
 def stream_info(num):
     """ Get stream information. """
     if g.browse_mode == "normal":
@@ -292,7 +292,7 @@ def stream_info(num):
         g.content = out
 
 
-@command(r'history')
+@command(r'history', 'history')
 def view_history(duplicates=True):
     """ Display the user's play history """
     history = g.userhist.get('history')
@@ -314,13 +314,13 @@ def view_history(duplicates=True):
         g.message = "History empty"
 
 
-@command(r'history recent')
+@command(r'history recent', 'history recent')
 def recent_history():
     """ Display the recent user's played songs """
     view_history(duplicates=False)
 
 
-@command(r'history clear')
+@command(r'history clear', 'history clear')
 def clear_history():
     """ Clears the user's play history """
     g.userhist['history'].songs = []

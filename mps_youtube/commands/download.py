@@ -14,7 +14,7 @@ from .search import yt_url, user_pls
 from .songlist import dump, plist
 
 
-@command(r'(dv|da|d|dl|download)\s*(\d{1,4})')
+@command(r'(dv|da|d|dl|download)\s*(\d{1,4})', 'da', 'dv', 'd', 'dl', 'download')
 def download(dltype, num):
     """ Download a track or playlist by menu item number. """
     # This function needs refactoring!
@@ -124,7 +124,7 @@ def download(dltype, num):
     g.content = content.generate_songlist_display()
 
 
-@command(r'(da|dv)\s+((?:\d+\s\d+|-\d+|\d+-|\d+,)(?:[\d\s,-]*))')
+@command(r'(da|dv)\s+((?:\d+\s\d+|-\d+|\d+-|\d+,)(?:[\d\s,-]*))', 'da', 'dv')
 def down_many(dltype, choice, subdir=None):
     """ Download multiple items. """
     choice = util.parse_multi(choice)
@@ -188,7 +188,7 @@ def down_many(dltype, choice, subdir=None):
         g.content = content.generate_songlist_display()
 
 
-@command(r'(da|dv)pl\s+%s' % PL)
+@command(r'(da|dv)pl\s+%s' % PL, 'dapl', 'dvpl')
 def down_plist(dltype, parturl):
     """ Download YouTube playlist. """
 
@@ -202,7 +202,7 @@ def down_plist(dltype, parturl):
     g.message = msg
 
 
-@command(r'(da|dv)upl\s+(.*)')
+@command(r'(da|dv)upl\s+(.*)', 'daupl', 'dvupl')
 def down_user_pls(dltype, user):
     """ Download all user playlists. """
     user_pls(user)
@@ -537,7 +537,7 @@ def get_dl_data(song, mediatype="any"):
     return dldata, p
 
 
-@command(r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*)')
+@command(r'dlurl\s(.*[-_a-zA-Z0-9]{11}.*)', 'dlurl')
 def dl_url(url):
     """ Open and prompt for download of youtube video url. """
     g.browse_mode = "normal"
@@ -550,7 +550,7 @@ def dl_url(url):
         sys.exit()
 
 
-@command(r'daurl\s(.*[-_a-zA-Z0-9]{11}.*)')
+@command(r'daurl\s(.*[-_a-zA-Z0-9]{11}.*)', 'daurl')
 def da_url(url):
     """ Open and prompt for download of youtube best audio from url. """
     g.browse_mode = "normal"

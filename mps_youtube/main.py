@@ -31,6 +31,7 @@ from . import g, c, commands, screen, history, util
 from . import __version__, playlists, content, listview
 from . import config
 
+completer = None
 try:
     import readline
     readline.set_history_length(2000)

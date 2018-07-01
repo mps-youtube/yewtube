@@ -57,7 +57,7 @@ class BasePlayer:
             hasnext = len(self.songlist) > self.song_no + 1
 
             if hasnext:
-                streams.preload(self.songlist[self.song_no + 1],
+                streams.preload(self.songlist[self.song_no +1],
                                 override=self.override)
 
             if config.SET_TITLE.get:
@@ -73,6 +73,7 @@ class BasePlayer:
                                                          override=self.override,
                                                          softrepeat=self.softrepeat)
                 self._playsong()
+                self.song_no += 1
 
             except KeyboardInterrupt:
                 logging.info("Keyboard Interrupt")
@@ -89,10 +90,10 @@ class BasePlayer:
             if config.SET_TITLE.get:
                 util.set_window_title("mpsyt")
 
+            print("songlistlen " + str(self.song_no) + ":" + str(len(songlist)))
             if self.song_no == -1:
                 self.song_no = len(songlist) - 1 if repeat else 0
-
-            elif self.song_no == len(songlist) and repeat:
+            elif self.song_no == len(self.songlist) and repeat:
                 self.song_no = 0
 
     # To be defined by subclass based on being cmd player or library

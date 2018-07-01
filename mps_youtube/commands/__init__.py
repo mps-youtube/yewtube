@@ -2,7 +2,7 @@ import collections
 import re
 
 from .. import g
-
+from ..main import completer
 
 Command = collections.namedtuple('Command', 'regex category usage function')
 
@@ -12,9 +12,10 @@ RS = r'(?:(?:repeat|shuffle|-[avfw])\s*)'
 PL = r'\S*?((?:RD|PL|LL)[-_0-9a-zA-Z]+)\s*'
 
 
-def command(regex):
+def command(regex, *commands):
     """ Decorator to register an mps-youtube command. """
-
+    for command in commands:
+        completer.add_cmd(command)
     def decorator(function):
         cmd = Command(re.compile(regex), None, None, function)
         g.commands.append(cmd)

@@ -554,14 +554,7 @@ def assign_player(player):
 
 class CommandCompleter:
 
-    COMMANDS = ['play', 'set', 'album', 'all', 'playurl', 'browserplay',
-                'showconfig', 'encoders', 'dv', 'da', 'dl', 'd', 'download',
-                'dapl', 'dvpl', 'daupl', 'dvupl', 'daurl', 'dvurl', 'mkp',
-                'lastfm_connect', 'rmp', 'add', 'mv', 'save', 'open', 'view',
-                'ls', 'vp', 'clearcache', 'help', 'exit', 'history',
-                'history recent', 'history clear', 'channels', 'user', 'live',
-                'pls', 'mix', 'url', 'url_file', 'pl', 'rm', 'undump', 'dump',
-                'sw', 'shuffle', 'reverse', 'repeat', 'suser', 'splaylist']
+    COMMANDS = []
 
     def __init__(self):
         from . import config
@@ -573,3 +566,6 @@ class CommandCompleter:
         else:
             results = [x for x in self.COMMANDS if x.startswith(text)] + [None]
         return results[state]
+    def add_cmd(self, val):
+        if(not val in self.COMMANDS):
+            self.COMMANDS.append(val)

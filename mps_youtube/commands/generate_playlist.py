@@ -11,7 +11,7 @@ from ..playlist import Playlist
 from . import command, search, album_search
 
 
-@command(r'mkp\s*(.{1,100})')
+@command(r'mkp\s*(.{1,100})', 'mkp')
 def generate_playlist(sourcefile):
     """Generate a playlist from video titles in sourcefile"""
 
