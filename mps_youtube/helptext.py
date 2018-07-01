@@ -97,6 +97,7 @@ def helptext():
                   e.g., {2}1-3,5{1} plays items 1, 2, 3 and 5
 
     {2}d <number>{1} - view downloads available for an item.
+    {2}di <number(s)>{1} - download information about item(s).
     {2}da <number(s)>{1} - download best available audio file(s).
     {2}dv <number(s)>{1} - download best available video file(s).
     {2}dapl <url or id>{1} - download YouTube playlist (audio) by url or id.
