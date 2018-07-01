@@ -21,7 +21,6 @@ except ImportError:
     has_readline = False
 
 import pafy
-
 from .. import g, c, __version__, content, screen, cache
 from .. import streams, history, config, util
 from ..helptext import get_help
@@ -104,8 +103,13 @@ def fetch_comments(item):
           'maxResults': 50,
           'part': 'snippet'}
 
-    jsdata = pafy.call_gdata('commentThreads', qs)
-
+    jsdata = None
+    try:
+        jsdata = pafy.call_gdata('commentThreads', qs)
+    except pafy.util.GdataError as e:
+        print(" " * util.getxy()[0] + "\r") # blank the li
+        print(str(e).replace(" identified by the <code><a href=\"/youtube/v3/docs/commentThreads/list#videoId\">videoId</a></code> parameter", ""))
+        return None
     coms = [x.get('snippet', {}) for x in jsdata.get('items', [])]
 
     # skip blanks
