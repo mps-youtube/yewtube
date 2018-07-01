@@ -8,11 +8,9 @@ import shlex
 import subprocess
 import socket
 from urllib.error import HTTPError, URLError
-from abc import ABCMeta, abstractmethod
 
 
 from . import g, screen, c, streams, history, content, config, util
-from .commands import lastfm
 
 
 mswin = os.name == "nt"
@@ -66,7 +64,7 @@ class BasePlayer:
             self.softrepeat = repeat and len(self.songlist) == 1
 
             if g.scrobble:
-                lastfm.set_now_playing(g.artist, g.scrobble_queue[self.song_no])
+                util.lastfm_set_now_playing(g.artist, g.scrobble_queue[self.song_no])
 
             try:
                 self.video, self.stream = stream_details(self.song,
@@ -97,8 +95,6 @@ class BasePlayer:
 
     # To be defined by subclass based on being cmd player or library
     # When overriding next and previous don't forget to add the following
-    # if g.scrobble:
-    #   lastfm.scrobble_track(g.artist, g.album, g.scrobble_queue[self.song_no])
     def next(self):
         pass
 
@@ -241,21 +237,22 @@ class CmdPlayer(BasePlayer):
 
     def next(self):
         if g.scrobble:
-            lastfm.scrobble_track(g.artist, g.album,
-                                  g.scrobble_queue[self.song_no])
+            util.lastfm_scrobble_track(g.artist, g.album,
+                                       g.scrobble_queue[self.song_no])
         self.terminate_process()
         self.song_no += 1
 
     def previous(self):
         if g.scrobble:
-            lastfm.scrobble_track(g.artist, g.album,
-                                  g.scrobble_queue[self.song_no])
+            util.lastfm_scrobble_track(g.artist, g.album,
+                                       g.scrobble_queue[self.song_no])
         self.terminate_process()
         self.song_no -= 1
 
     def stop(self):
         self.terminate_process()
-        self.song_no = len(self.songlist)
+        raise KeyboardInterrupt
+        # self.song_no = len(self.songlist)
 
     def terminate_process(self):
         self.p.terminate()
