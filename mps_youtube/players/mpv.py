@@ -40,6 +40,12 @@ class mpv(CmdPlayer):
                 self.mpv_usesock = "--input-ipc-server"
                 util.dbg(c.g + "mpv supports --input-ipc-server" + c.w)
 
+    def status(self):
+        version = "%s.%s.%s" % self.mpv_version
+        fmt = c.g, c.w, c.g, c.w, version
+        msg = "%splayer%s set to %smpv%s (version %s)" % fmt
+        return dict(valid=True, message=msg, value=self.player)
+
     def _generate_real_playerargs(self):
         """ Generate args for player command.
 

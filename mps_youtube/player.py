@@ -23,6 +23,9 @@ class BasePlayer:
     _playbackStatus = "Paused"
     _last_displayed_line = None
 
+    def __init__(self, player):
+        self.player = player
+
     @property
     def PlaybackStatus(self):
         return self._playbackStatus
@@ -35,6 +38,10 @@ class BasePlayer:
         else:
             paused = True
         g.mprisctl.send(('pause', paused))
+
+    def status(self):
+        msg = "%splayer%s set to %s%s%s" % (c.g, c.w, c.g, self.player, c.w)
+        return dict(valid=True, message=msg, value=self.player)
 
     def play(self, songlist, shuffle=False, repeat=False, override=False):
         """ Play a range of songs, exit cleanly on keyboard interrupt. """

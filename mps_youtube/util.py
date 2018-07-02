@@ -537,6 +537,7 @@ def _get_metadata_from_lastfm(artist, track):
 def assign_player(player):
     module_name = player
 
+    # To support *.exe or *.com in player name
     if '/' in module_name:
         module_name = module_name.split('/')[-1]
     if module_name.endswith('.com') or module_name.endswith('.exe'):
@@ -545,11 +546,15 @@ def assign_player(player):
     try:
         module = import_module('mps_youtube.players.{0}'.format(module_name))
         pl = getattr(module, module_name)
-        g.PLAYER_OBJ = pl(player)
+        player = pl(player)
+        g.PLAYER_OBJ = player
+        return player.status()
 
     except ImportError:
         from mps_youtube.players import GenericPlayer
-        g.PLAYER_OBJ = GenericPlayer.GenericPlayer(player)
+        player = GenericPlayer.GenericPlayer(player)
+        g.PLAYER_OBJ = player
+        return player.status()
 
 
 class CommandCompleter:

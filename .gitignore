@@ -16,3 +16,4 @@ bin
 var
 tags
 .env
+.vscode/

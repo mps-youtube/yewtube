@@ -265,18 +265,7 @@ def check_encoder(option):
 def check_player(player):
     """ Check player exefile exists and get mpv version. """
     if util.has_exefile(player):
-        print(player)
-        util.assign_player(player)
-        if "mpv" in player:
-            version = "%s.%s.%s" % g.mpv_version
-            fmt = c.g, c.w, c.g, c.w, version
-            msg = "%splayer%s set to %smpv%s (version %s)" % fmt
-            return dict(valid=True, message=msg, value=player)
-
-        else:
-            msg = "%splayer%s set to %s%s%s" % (c.g, c.w, c.g, player, c.w)
-            return dict(valid=True, message=msg, value=player)
-
+        return util.assign_player(player)
     else:
         if mswin and not (player.endswith(".exe") or player.endswith(".com")):
             # Using mpv.exe has issues; use mpv.com
