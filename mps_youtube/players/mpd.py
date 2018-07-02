@@ -29,11 +29,12 @@ class mpd(BasePlayer):
     def _launch_player(self):
         try:
             self.add_song()
-        except ConnectionError:
+        except pympd.base.ConnectionError:
             self.connect()
 
     def add_song(self):
-        songid = self.mpdclient.addid(self.stream['url'], self.song_no)
+        songid = self.mpdclient.addid(self.stream['url'],
+                                      len(self.mpdclient.playlist()))
         meta = self.generate_metadata()
         self.mpdclient.addtagid(songid, 'title', meta['title'])
         self.mpdclient.addtagid(songid, 'artist', meta['artists'][0])
