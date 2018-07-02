@@ -13,14 +13,13 @@ PL = r'\S*?((?:RD|PL|LL)[-_0-9a-zA-Z]+)\s*'
 
 ## @command decorator
 ##
-## The @command decorator takes two arguments, one is a regex that
-## is used to match the text command. All following arguments 
-## are strings that match the regex that is going to be added to
-## tab completion. 
+## The @command decorator takes a single regex followed by one or more
+## strings that corresponds to command names that will be added to
+## the tab completion.
 ##
 ## If your command has short-forms, only register the longer
 ## forms.
-## If you use several functions for the same command but different
+## If you use several functions and regexes for the same command but different
 ## arguments, append the completion string on EACH function, not only
 ## the first time you register it.
 def command(regex, *commands):
