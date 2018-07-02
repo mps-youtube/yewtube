@@ -89,7 +89,6 @@ class BasePlayer:
             if config.SET_TITLE.get:
                 util.set_window_title("mpsyt")
 
-            print("songlistlen " + str(self.song_no) + ":" + str(len(songlist)))
             if self.song_no == -1:
                 self.song_no = len(songlist) - 1 if repeat else 0
             elif self.song_no == len(self.songlist) and repeat:
