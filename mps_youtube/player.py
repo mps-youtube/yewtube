@@ -9,6 +9,7 @@ import subprocess
 import socket
 from urllib.error import HTTPError, URLError
 from abc import ABCMeta, abstractmethod
+from collections import OrderedDict
 
 
 from . import g, screen, c, streams, history, content, config, util
@@ -39,7 +40,7 @@ class BasePlayer:
             paused = True
         g.mprisctl.send(('pause', paused))
 
-    def status(self):
+    def init_status(self):
         msg = "%splayer%s set to %s%s%s" % (c.g, c.w, c.g, self.player, c.w)
         return dict(valid=True, message=msg, value=self.player)
 
@@ -107,13 +108,13 @@ class BasePlayer:
     # if g.scrobble:
     #   lastfm.scrobble_track(g.artist, g.album, g.scrobble_queue[self.song_no])
     def next(self):
-        pass
+        self.song_no += 1
 
     def previous(self):
-        pass
+        self.song_no -= 1
 
     def stop(self):
-        pass
+        self.song_no = len(self.songlist)
     ###############
 
     def seek(self):
@@ -145,18 +146,24 @@ class BasePlayer:
         """ Launch player application. """
         pass
 
-    def send_metadata_mpris(self):
+    def generate_metadata(self):
         metadata = util._get_metadata(self.song.title)
 
-        if metadata is None:
-            arturl = "https://i.ytimg.com/vi/%s/default.jpg" % self.song.ytid
-            metadata = (self.song.ytid, self.song.title, self.song.length,
-                        arturl, [''], '')
-        else:
-            arturl = metadata['album_art_url']
-            metadata = (self.song.ytid, metadata['track_title'],
-                        self.song.length, arturl,
-                        [metadata['artist']], metadata['album'])
+        arturl = "https://i.ytimg.com/vi/%s/default.jpg" % self.song.ytid
+        ret_meta = OrderedDict(ytid = self.song.ytid, title=self.song.title,
+                               length=self.song.length, arturl=arturl, artists=[''],
+                               album='')
+
+        if metadata is not None:
+            ret_meta['title'] = metadata['track_title']
+            ret_meta['arturl'] = metadata['album_art_url']
+            ret_meta['artists'] = [metadata['artist']]
+            ret_meta['album'] = metadata['album']
+
+        return ret_meta
+
+    def send_metadata_mpris(self):
+        metadata = tuple((v for k,v in self.generate_metadata().items()))
 
         if g.mprisctl:
             g.mprisctl.send(('metadata', metadata))

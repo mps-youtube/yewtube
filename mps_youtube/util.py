@@ -548,13 +548,13 @@ def assign_player(player):
         pl = getattr(module, module_name)
         player = pl(player)
         g.PLAYER_OBJ = player
-        return player.status()
+        return player.init_status()
 
     except ImportError:
         from mps_youtube.players import GenericPlayer
         player = GenericPlayer.GenericPlayer(player)
         g.PLAYER_OBJ = player
-        return player.status()
+        return player.init_status()
 
 
 class CommandCompleter:
