@@ -34,7 +34,6 @@ def play_pl(name):
 @command(r'(%s{0,3})([-,\d\s\[\]]{1,250})\s*(%s{0,3})$' %
          (RS, RS))
 def play(pre, choice, post=""):
-    print("\r\n\r\nPLAY CALL")
     """ Play choice.  Use repeat/random if appears in pre/post. """
     # pylint: disable=R0914
     # too many local variables
@@ -44,7 +43,6 @@ def play(pre, choice, post=""):
     if isinstance(g.content, content.Content):
         play_call = getattr(g.content, "_play", None)
         if callable(play_call):
-            print("is callable")
             play_call(pre, choice, post)
         return
 
@@ -62,7 +60,6 @@ def play(pre, choice, post=""):
         g.content = g.content or content.generate_songlist_display()
 
     else:
-        print("ELSE")
         shuffle = "shuffle" in pre + post
         repeat = "repeat" in pre + post
         novid = "-a" in pre + post
