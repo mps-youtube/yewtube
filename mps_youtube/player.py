@@ -91,8 +91,7 @@ class BasePlayer:
 
             if self.song_no == -1:
                 self.song_no = len(songlist) - 1 if repeat else 0
-
-            elif self.song_no == len(songlist) and repeat:
+            elif self.song_no == len(self.songlist) and repeat:
                 self.song_no = 0
 
     # To be defined by subclass based on being cmd player or library

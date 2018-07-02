@@ -2,7 +2,7 @@ from .. import g, c, config, util
 from . import command
 
 
-@command(r'set|showconfig')
+@command(r'set|showconfig', 'set', 'showconfig')
 def showconfig():
     """ Dump config data. """
     width = util.getxy().width
@@ -89,7 +89,7 @@ def setconfig(key, val, is_temp=False):
     g.message = message
 
 
-@command(r'encoders?')
+@command(r'encoders?', 'encoder')
 def show_encs():
     """ Display available encoding presets. """
     out = "%sEncoding profiles:%s\n\n" % (c.ul, c.w)

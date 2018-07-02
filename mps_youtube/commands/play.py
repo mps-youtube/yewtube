@@ -9,7 +9,7 @@ from .songlist import plist
 from .search import yt_url, related
 
 
-@command(r'play\s+(%s|\d+)' % WORD)
+@command(r'play\s+(%s|\d+)' % WORD, 'play')
 def play_pl(name):
     """ Play a playlist by name. """
     if name.isdigit():
@@ -34,7 +34,6 @@ def play_pl(name):
 @command(r'(%s{0,3})([-,\d\s\[\]]{1,250})\s*(%s{0,3})$' %
          (RS, RS))
 def play(pre, choice, post=""):
-
     """ Play choice.  Use repeat/random if appears in pre/post. """
     # pylint: disable=R0914
     # too many local variables
@@ -101,7 +100,6 @@ def play(pre, choice, post=""):
                             "%s to set a player" % (c.g, c.w)
                 return
             g.PLAYER_OBJ.play(songlist, shuffle, repeat, override)
-
         except KeyboardInterrupt:
             return
         finally:
@@ -123,7 +121,7 @@ def play_all(pre, choice, post=""):
     play(options, "1-" + str(len(g.model)))
 
 
-@command(r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?')
+@command(r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?', 'playurl')
 def play_url(url, override):
     """ Open and play a youtube video url. """
     override = override if override else "_"
@@ -137,7 +135,7 @@ def play_url(url, override):
         sys.exit()
 
 
-@command(r'browserplay\s(\d{1,50})')
+@command(r'browserplay\s(\d{1,50})', 'browserplay')
 def browser_play(number):
     """Open a previously searched result in the browser."""
     if (len(g.model) == 0):
