@@ -36,7 +36,7 @@ def init_network(verbose=True):
                                                 password_hash=password)
         if verbose:
             g.message = "Last.fm authentication successful!"
-    except (pylast.WSError, pylast.MalformedResponseError, pylast.NetworkError):
+    except (pylast.WSError, pylast.MalformedResponseError, pylast.NetworkError) as e:
         if verbose:
             g.message = "Last.fm connection error: %s" % (str(e))
 
