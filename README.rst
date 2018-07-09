@@ -23,9 +23,9 @@ Features
 - Works with Windows, Linux and Mac OS X
 - Requires mplayer or mpv
 
-This project is based on `mps <https://github.com/np1/mps>`_, a terminal based program to search, stream and download music.  This implementation uses YouTube as a source of content and can play and download video as well as audio.  The `pafy <https://github.com/np1/pafy>`_ library handles interfacing with YouTube.
+This project is based on `mps <https://github.com/np1/mps>`_, a terminal based program to search, stream and download music.  This implementation uses YouTube as a source of content and can play and download video as well as audio.  The `pafy <https://github.com/mps-youtube/pafy>`_ library handles interfacing with YouTube.
 
-`FAQ / Troubleshooting common issues <https://github.com/np1/mps-youtube/wiki/Troubleshooting>`_
+`FAQ / Troubleshooting common issues <https://github.com/mps-youtube/mps-youtube/wiki/Troubleshooting>`_
 
 Screenshots
 -----------
@@ -39,7 +39,7 @@ A standard search is performed by entering ``/`` followed by search terms.
 
 Local Playlists
 ~~~~~~~~~~~~~~~
-.. image:: http://mps-youtube.github.io/mps-youtube/local-playlists.png
+.. image:: http://mps-youtube.github.io/mps-youtube/local-playlist.png
 
 Search result items can easily be stored in local playlists.
 
@@ -132,7 +132,7 @@ Or with `Homebrew <http://brew.sh>`_::
 Additional Windows installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As an alternative to installing with pip, there is a standalone binary available. Go to `Releases <https://github.com/np1/mps-youtube/releases>`_ and download mpsyt-VERSION.exe under downloads for the latest release.
+As an alternative to installing with pip, there is a standalone binary available. Go to `Releases <https://github.com/mps-youtube/mps-youtube/releases>`_ and download mpsyt-VERSION.exe under downloads for the latest release.
 
 Install the python `colorama <https://pypi.python.org/pypi/colorama>`_ module to get colors (optional)::
 
@@ -162,7 +162,7 @@ If you would like to locally build the container you can run the following steps
 
 Check out this repo::
 
-    git clone https://github.com/np1/mps-youtube.git
+    git clone https://github.com/mps-youtube/mps-youtube.git
 
 Enter the directory and run docker build::
 
