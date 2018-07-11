@@ -529,7 +529,8 @@ def _get_metadata_from_lastfm(artist, track):
         return None
     except urllib.error.HTTPError:
         return None
-
+    except urllib.error.URLError:
+        return None
     return metadata
 
 
