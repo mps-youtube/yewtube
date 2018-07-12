@@ -514,23 +514,19 @@ def _get_metadata_from_lastfm(artist, track):
     url += urllib.parse.urlencode({"track":  track}) + '&'
     url += '&format=json'
 
-    resp = urllib.request.urlopen(url)
-
-    metadata = dict()
-
-    # Prior to Python 3.6, json.loads cannot take a bytes object
-    data = json.loads(resp.read().decode('utf-8'))
-
     try:
+        resp = urllib.request.urlopen(url)
+        metadata = dict()
+        # Prior to Python 3.6, json.loads cannot take a bytes object
+        data = json.loads(resp.read().decode('utf-8'))
         metadata['track_title'] = data['track']['name']
         metadata['artist'] = data['track']['artist']['name']
         metadata['album'] = data['track']['album']['title']
         metadata['album_art_url'] = data['track']['album']['image'][-1]['#text']
-    except KeyError:
+    except (KeyError, IndexError):
         return None
-    except IndexError:
+    except (urllib.error.HTTPError, urllib.error.URLError):
         return None
-
     return metadata
 
 
