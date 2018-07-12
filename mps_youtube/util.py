@@ -479,6 +479,12 @@ def _get_mplayer_version(exename):
 
 
 def _get_metadata(song_title):
+
+    # Circular dependency still??
+    from . import config
+    if(config.LOOKUP_METADATA.get == False):
+        return None
+
     ''' Get metadata from a song title '''
     t = re.sub("[\(\[].*?[\)\]]", "", song_title.lower())
     t = t.split('-')
