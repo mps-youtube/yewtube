@@ -138,7 +138,7 @@ class BasePlayer:
         pass
 
     def send_metadata_mpris(self):
-        metadata = util._get_metadata(self.song.title) if config.LOOKUP_METADATA.get == True else None
+        metadata = util._get_metadata(self.song.title) if config.LOOKUP_METADATA.get else None
 
         if metadata is None:
             arturl = "https://i.ytimg.com/vi/%s/default.jpg" % self.song.ytid
