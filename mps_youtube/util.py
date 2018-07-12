@@ -509,7 +509,7 @@ def _get_metadata(song_title):
 
 def _get_metadata_from_lastfm(artist, track):
     ''' Try to get metadata with a given artist and track '''
-    url = 'http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=12dec50313f885d407cf8132697b8712&'
+    url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=12dec50313f885d407cf8132697b8712&'
     url += urllib.parse.urlencode({"artist":  artist}) + '&'
     url += urllib.parse.urlencode({"track":  track}) + '&'
     url += '&format=json'
