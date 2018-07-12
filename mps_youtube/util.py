@@ -523,13 +523,9 @@ def _get_metadata_from_lastfm(artist, track):
         metadata['artist'] = data['track']['artist']['name']
         metadata['album'] = data['track']['album']['title']
         metadata['album_art_url'] = data['track']['album']['image'][-1]['#text']
-    except KeyError:
+    except (KeyError, IndexError):
         return None
-    except IndexError:
-        return None
-    except urllib.error.HTTPError:
-        return None
-    except urllib.error.URLError:
+    except (urllib.error.HTTPError, urllib.error.URLError):
         return None
     return metadata
 
