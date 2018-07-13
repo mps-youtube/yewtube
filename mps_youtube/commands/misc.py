@@ -107,7 +107,6 @@ def fetch_comments(item):
     try:
         jsdata = pafy.call_gdata('commentThreads', qs)
     except pafy.util.GdataError as e:
-        print(" " * util.getxy()[0] + "\r") # blank the li
         raise pafy.util.GdataError(str(e).replace(" identified by the <code><a href=\"/youtube/v3/docs/commentThreads/list#videoId\">videoId</a></code> parameter", ""))
     coms = [x.get('snippet', {}) for x in jsdata.get('items', [])]
 
