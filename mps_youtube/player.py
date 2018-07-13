@@ -18,7 +18,6 @@ from .commands import lastfm
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
-
 class BasePlayer:
     _playbackStatus = "Paused"
     _last_displayed_line = None
@@ -84,6 +83,7 @@ class BasePlayer:
 
             # skip forbidden, video removed/no longer available, etc. tracks
             except TypeError:
+                self.song_no += 1
                 pass
 
             if config.SET_TITLE.get:
@@ -334,6 +334,9 @@ def stream_details(song, failcount=0, override=False, softrepeat=False):
         g.message = util.F('track unresolved')
         util.dbg("----valueerror in stream_details call to streams.get")
         return
+
+    if failcount == g.max_retries:
+        raise TypeError()
 
     try:
         video = ((config.SHOW_VIDEO.get and override != "audio") or
