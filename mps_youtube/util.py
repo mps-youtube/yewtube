@@ -509,28 +509,24 @@ def _get_metadata(song_title):
 
 def _get_metadata_from_lastfm(artist, track):
     ''' Try to get metadata with a given artist and track '''
-    url = 'http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=12dec50313f885d407cf8132697b8712&'
+    url = 'https://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=12dec50313f885d407cf8132697b8712&'
     url += urllib.parse.urlencode({"artist":  artist}) + '&'
     url += urllib.parse.urlencode({"track":  track}) + '&'
     url += '&format=json'
 
-    resp = urllib.request.urlopen(url)
-
-    metadata = dict()
-
-    # Prior to Python 3.6, json.loads cannot take a bytes object
-    data = json.loads(resp.read().decode('utf-8'))
-
     try:
+        resp = urllib.request.urlopen(url)
+        metadata = dict()
+        # Prior to Python 3.6, json.loads cannot take a bytes object
+        data = json.loads(resp.read().decode('utf-8'))
         metadata['track_title'] = data['track']['name']
         metadata['artist'] = data['track']['artist']['name']
         metadata['album'] = data['track']['album']['title']
         metadata['album_art_url'] = data['track']['album']['image'][-1]['#text']
-    except KeyError:
+    except (KeyError, IndexError):
         return None
-    except IndexError:
+    except (urllib.error.HTTPError, urllib.error.URLError):
         return None
-
     return metadata
 
 
@@ -554,14 +550,7 @@ def assign_player(player):
 
 class CommandCompleter:
 
-    COMMANDS = ['play', 'set', 'album', 'all', 'playurl', 'browserplay',
-                'showconfig', 'encoders', 'dv', 'da', 'dl', 'd', 'download',
-                'dapl', 'dvpl', 'daupl', 'dvupl', 'daurl', 'dvurl', 'mkp',
-                'lastfm_connect', 'rmp', 'add', 'mv', 'save', 'open', 'view',
-                'ls', 'vp', 'clearcache', 'help', 'exit', 'history',
-                'history recent', 'history clear', 'channels', 'user', 'live',
-                'pls', 'mix', 'url', 'url_file', 'pl', 'rm', 'undump', 'dump',
-                'sw', 'shuffle', 'reverse', 'repeat', 'suser', 'splaylist']
+    COMMANDS = []
 
     def __init__(self):
         from . import config
@@ -573,3 +562,6 @@ class CommandCompleter:
         else:
             results = [x for x in self.COMMANDS if x.startswith(text)] + [None]
         return results[state]
+    def add_cmd(self, val):
+        if(not val in self.COMMANDS):
+            self.COMMANDS.append(val)

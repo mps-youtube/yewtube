@@ -18,7 +18,6 @@ from .commands import lastfm
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
-
 class BasePlayer:
     _playbackStatus = "Paused"
     _last_displayed_line = None
@@ -84,6 +83,7 @@ class BasePlayer:
 
             # skip forbidden, video removed/no longer available, etc. tracks
             except TypeError:
+                self.song_no += 1
                 pass
 
             if config.SET_TITLE.get:
@@ -91,8 +91,7 @@ class BasePlayer:
 
             if self.song_no == -1:
                 self.song_no = len(songlist) - 1 if repeat else 0
-
-            elif self.song_no == len(songlist) and repeat:
+            elif self.song_no == len(self.songlist) and repeat:
                 self.song_no = 0
 
     # To be defined by subclass based on being cmd player or library
@@ -139,7 +138,7 @@ class BasePlayer:
         pass
 
     def send_metadata_mpris(self):
-        metadata = util._get_metadata(self.song.title)
+        metadata = util._get_metadata(self.song.title) if config.LOOKUP_METADATA.get else None
 
         if metadata is None:
             arturl = "https://i.ytimg.com/vi/%s/default.jpg" % self.song.ytid
@@ -335,6 +334,9 @@ def stream_details(song, failcount=0, override=False, softrepeat=False):
         g.message = util.F('track unresolved')
         util.dbg("----valueerror in stream_details call to streams.get")
         return
+
+    if failcount == g.max_retries:
+        raise TypeError()
 
     try:
         video = ((config.SHOW_VIDEO.get and override != "audio") or

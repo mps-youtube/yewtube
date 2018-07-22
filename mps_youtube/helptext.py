@@ -225,6 +225,7 @@ def helptext():
     {2}set overwrite true|false{1} - overwrite existing files (skip if false)
     {2}set player <player app>{1} - use <player app> for playback
     {2}set playerargs <args>{1} - use specified arguments with player
+    {2}set lookup_metadata true|false{1} - lookup metadata using Last.fm
     {2}set lastfm_username <username>{1} - scrobble to this Last.fm userprofile
     {2}set lastfm_password <password>{1} - Last.fm password (saved in hash form)
     {2}set lastfm_api <key>{1} - API key needed for Last.fm mps-yt authorization

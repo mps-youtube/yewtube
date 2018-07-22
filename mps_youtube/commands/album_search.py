@@ -206,7 +206,7 @@ def _get_mb_album(albumname, **kwa):
     return dict(artist=artist, title=title, aid=aid)
 
 
-@command(r'album\s*(.{0,500})')
+@command(r'album\s*(.{0,500})', 'album')
 def search_album(term):
     """Search for albums. """
     # pylint: disable=R0914,R0912

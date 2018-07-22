@@ -10,7 +10,7 @@ except ImportError:
 from .. import g, util, config
 from . import command
 
-@command(r'lastfm_connect')
+@command(r'lastfm_connect', 'lastfm_connect')
 def init_network(verbose=True):
     """ Initialize the global pylast network variable """
     if not has_pylast :
@@ -36,7 +36,7 @@ def init_network(verbose=True):
                                                 password_hash=password)
         if verbose:
             g.message = "Last.fm authentication successful!"
-    except (pylast.WSError, pylast.MalformedResponseError, pylast.NetworkError):
+    except (pylast.WSError, pylast.MalformedResponseError, pylast.NetworkError) as e:
         if verbose:
             g.message = "Last.fm connection error: %s" % (str(e))
 
