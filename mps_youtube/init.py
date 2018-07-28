@@ -56,7 +56,12 @@ def init():
 
     else:
         config.load()
-        assign_player(config.PLAYER.get)  # Player is not assigned when config is loaded
+        try:
+            assign_player(config.PLAYER.get)  # Player is not assigned when config is loaded
+        except FileNotFoundError:
+            print("Configured player " + config.PLAYER.get + " does not exist.")
+            print("A new one must be specified by the command 'set player <mplayer|mpv|vlc>' within the app")
+            input("Press Enter to continue")
 
     _init_readline()
     cache.load()
