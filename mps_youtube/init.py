@@ -39,12 +39,15 @@ def init():
 
     # set player to mpv or mplayer if found, otherwise unset
     suffix = ".exe" if mswin else ""
-    mplayer, mpv = "mplayer" + suffix, "mpv" + suffix
+    mplayer, mpv, vlc = "mplayer" + suffix, "mpv" + suffix, "vlc" + suffix
 
     if not os.path.exists(g.CFFILE):
 
         if has_exefile(mpv):
             config.PLAYER.set(mpv)
+
+        elif has_exefile(vlc):
+            config.PLAYER.set(vlc)
 
         elif has_exefile(mplayer):
             config.PLAYER.set(mplayer)
