@@ -195,3 +195,7 @@ IRC
 ---
 
 An IRC channel `#mps-youtube` for the project is available on Freenode (chat.freenode.net:6697). You can join directly by clicking `this link <https://webchat.freenode.net/?randomnick=1&channels=%23mps-youtube&uio=d4>`_.
+
+How to Contribute
+-----------------
+Contributions are welcomed! However, please check out the `contributing page <CONTRIBUTING.md>`_ before making a contribution.
