@@ -128,6 +128,11 @@ Alternately, you can install mplayer with `MacPorts <http://www.macports.org>`_:
 Or with `Homebrew <http://brew.sh>`_::
 
     brew install mplayer
+    
+Install mps-youtube using `Homebrew <http://brew.sh>`_::
+
+    brew install mps-youtube
+
 
 Additional Windows installation notes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
