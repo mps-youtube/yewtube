@@ -115,6 +115,12 @@ You can install mps-youtube directly from the official repositories:
 
     [sudo] apt install mps-youtube
 
+Arch Linux
+~~~~~~
+You can install mps-youtube directly from the official repositories:
+
+    [sudo] pacman -S mps-youtube
+
 macOS X
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Install mpv (recommended player) with `Homebrew <http://brew.sh>`_::
