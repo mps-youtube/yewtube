@@ -204,3 +204,35 @@ An IRC channel `#mps-youtube` for the project is available on Freenode (chat.fre
 How to Contribute
 -----------------
 Contributions are welcomed! However, please check out the `contributing page <CONTRIBUTING.md>`_ before making a contribution.
+
+.. image:: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/images/0
+  :target: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/links/0
+  :alt: 0
+  
+.. image:: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/images/1
+  :target: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/links/1
+  :alt: 1
+  
+.. image:: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/images/2
+  :target: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/links/2
+  :alt: 2
+  
+.. image:: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/images/3
+  :target: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/links/3
+  :alt: 3
+  
+.. image:: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/images/4
+  :target: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/links/4
+  :alt: 4
+  
+.. image:: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/images/5
+  :target: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/links/5
+  :alt: 5
+  
+.. image:: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/images/6
+  :target: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/links/6
+  :alt: 6
+  
+.. image:: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/images/7
+  :target: https://sourcerer.io/fame/sergey48k/mps-youtube/mps-youtube/links/7
+  :alt: 7
