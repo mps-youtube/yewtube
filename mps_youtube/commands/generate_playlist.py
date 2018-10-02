@@ -82,6 +82,7 @@ def find_best_match(query):
         res, score = album_search._best_song_match(
             results, query, 0.1, 1.0, 0.0)
         return res
+    return None
 
 
 def random_plname():
