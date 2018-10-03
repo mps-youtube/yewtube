@@ -345,6 +345,7 @@ class _Config:
             ConfigItem("autoplay", False),
             ConfigItem("set_title", True),
             ConfigItem("mpris", not mswin),
+            ConfigItem("show_qrcode", False),
             ]
 
     def __getitem__(self, key):

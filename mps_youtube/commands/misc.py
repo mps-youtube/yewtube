@@ -24,7 +24,7 @@ import pafy
 from .. import g, c, __version__, content, screen, cache
 from .. import streams, history, config, util
 from ..helptext import get_help
-from ..content import generate_songlist_display, logo
+from ..content import generate_songlist_display, logo, qrcode_display
 from . import command
 from .songlist import paginatesongs
 
@@ -266,6 +266,10 @@ def video_info(num):
         out += "\nDislikes   : " + str(p.dislikes)
         out += "\nCategory   : " + str(p.category)
         out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
+        if config.SHOW_QRCODE.get:
+            out += "\n" + qrcode_display(
+                "https://youtube.com/watch?v=%s" % p.videoid)
+
         out += "\n\n%s[%sPress enter to go back%s]%s" % (c.y, c.w, c.y, c.w)
         g.content = out
 

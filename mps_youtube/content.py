@@ -7,6 +7,14 @@ import pafy
 from . import g, c, config
 from .util import getxy, fmt_time, uea_pad, yt_datetime, F
 
+try:
+    import qrcode
+    import io
+    HAS_QRCODE = True
+except ImportError:
+    HAS_QRCODE = False
+
+
 # In the future, this could support more advanced features
 class Content:
     pass
@@ -238,3 +246,14 @@ def playlists_display():
         out += l
 
     return out
+
+
+def qrcode_display(url):
+    if not HAS_QRCODE:
+        return "(Install 'qrcode' to generate them)"
+    qr = qrcode.QRCode()
+    buf = io.StringIO()
+    buf.isatty = lambda: True
+    qr.add_data(url)
+    qr.print_ascii(out=buf)
+    return buf.getvalue()
