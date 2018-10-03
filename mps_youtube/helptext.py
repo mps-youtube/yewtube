@@ -239,6 +239,7 @@ def helptext():
     {2}set video_format <auto|mp4|webm|3gp>{1} - set default music video format
     {2}set api_key <key>{1} - use a different API key for accessing the YouTube Data API
     {2}set set_title true|false{1} - change window title
+    {2}set show_qrcode true|false{1} - show qrcode of the URL in the video information panel
     
     Additionally, {2}set -t{1} may be used to temporarily change a setting without
     saving it to disk
