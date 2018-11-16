@@ -49,17 +49,13 @@ def check_sourcefile(filename):
     return path.isfile(filename) and path.getsize(filename) > 0
 
 
-def create_playlist(queries, title=None):
+def create_playlist(queries, title=''):
     """Add a new playlist
 
     Create playlist with a random name, get the first
     match for each title in queries and append it to the playlist
     """
-    plname = None
-    if (title is not None): 
-        plname=title.replace(" ", "-") 
-    else: 
-        plname=random_plname()
+    plname = title.replace(" ", "-") or random_plname()
     if not g.userpl.get(plname):
         g.userpl[plname] = Playlist(plname)
     for query in queries:
