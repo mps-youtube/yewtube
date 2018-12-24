@@ -186,7 +186,7 @@ def _preload(song, delay, override):
 
         get_size(ytid, stream['url'], preloading=True)
 
-    except (ValueError, AttributeError, IOError) as e:
+    except (ValueError, AttributeError, IOError, TypeError) as e:
         util.dbg(e)  # Fail silently on preload
 
     finally:
