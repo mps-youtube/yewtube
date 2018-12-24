@@ -66,7 +66,7 @@ def download(dltype, num):
             if url_au and ext_au:
                 # downloading video and audio stream for muxing
                 audio = False
-                filename_au = _make_fname(song, ext_au)
+                filename_au = _make_fname(song, ext_au) + "." + "audio"
                 args_au = (song, filename_au, url_au)
 
             else:
