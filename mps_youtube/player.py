@@ -330,6 +330,10 @@ def stream_details(song, failcount=0, override=False, softrepeat=False):
             g.message = str(e) + " - " + song.ytid
             return
 
+        elif "Watch this video on YouTube." in str(e):
+            g.message = util.F('cant get track') % (song.title + " " + str(e))
+            return
+        
     except ValueError:
         g.message = util.F('track unresolved')
         util.dbg("----valueerror in stream_details call to streams.get")
