@@ -54,3 +54,20 @@ def get_config_dir():
     os.makedirs(mps_confdir, exist_ok=True)
 
     return mps_confdir
+
+def get_cache_dir():
+    """ Get user's cache directory."""
+    if mswin:
+        cachedir = os.environ["APPDATA"]
+
+    elif 'XDG_CACHE_HOME' in os.environ:
+        cachedir = os.environ['XDG_CACHE_HOME']
+
+    else:
+        cachedir = os.path.join(os.path.expanduser("~"), '.cache')
+
+    mps_cachedir = os.path.join(cachedir, "mps-youtube")
+
+    os.makedirs(mps_cachedir, exist_ok=True)
+
+    return mps_cachedir
