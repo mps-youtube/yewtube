@@ -20,6 +20,7 @@ def add(song):
 def load():
     """ Open history. Called once on script invocation. """
     _convert_to_m3u()
+    _copy_to_datadir()
     try:
         g.userhist['history'] = read_m3u(g.HISTFILE)
 
@@ -47,10 +48,25 @@ def _convert_to_m3u():
     if os.path.isfile(g.HISTFILE):
         return
 
-    elif not os.path.isfile(g.OLDHISTFILE):
+    elif os.path.isfile(g.OLDHISTFILE_2):
         return
 
-    with open(g.OLDHISTFILE, "rb") as hf:
+    elif not os.path.isfile(g.OLDHISTFILE_1):
+        return
+
+    with open(g.OLDHISTFILE_1, "rb") as hf:
         g.userhist = pickle.load(hf)
 
     save()
+
+def _copy_to_datadir():
+    """ Copy play_history.m3u to data dir"""
+    # Skip if m3u file already exists
+    if os.path.isfile(g.HISTFILE):
+        return
+
+    elif not os.path.isfile(g.OLDHISTFILE_2):
+        return
+
+    import shutil
+    shutil.copyfile(g.OLDHISTFILE_2, g.HISTFILE)
