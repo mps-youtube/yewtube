@@ -306,7 +306,7 @@ def helptext():
 
      - New "reverse" command (kraetzin)
 
-     - New "daurl <url>" command (maricn){2}
+     - New "daurl <url>" command (maricn)
     """.format(c.ul, c.w, c.y))]
 
 
