@@ -180,6 +180,7 @@ def helptext():
         {2}history{1} - displays a list of songs contained in history
         {2}history clear{1} - clears the song history
         {2}history recent{1} - displays a list of recent played songs
+        {2}set history on|off{1} - toggles history recording
     """.format(c.ul, c.w, c.y)),
 
         ("invoke", "Invocation Parameters", """
@@ -240,7 +241,9 @@ def helptext():
     {2}set api_key <key>{1} - use a different API key for accessing the YouTube Data API
     {2}set set_title true|false{1} - change window title
     {2}set show_qrcode true|false{1} - show qrcode of the URL in the video information panel
-    
+    {2}set history true|false{1} - record play history
+    {2}set input_history true|false{1} - record command input history
+ 
     Additionally, {2}set -t{1} may be used to temporarily change a setting without
     saving it to disk
     """.format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'

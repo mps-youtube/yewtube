@@ -131,7 +131,9 @@ class BasePlayer:
         screen.writestatus(self.songdata)
 
         self._launch_player()
-        history.add(self.song)
+        
+        if config.HISTORY.get:
+            history.add(self.song)
 
     def _launch_player(self):
         """ Launch player application. """
