@@ -111,13 +111,13 @@ For mpris2 support, install the python bindings for dbus and gobject::
 
 Ubuntu
 ~~~~~~
-You can install mps-youtube directly from the official repositories:
+You can install mps-youtube directly from the official repositories::
 
     [sudo] apt install mps-youtube
 
 Arch Linux
 ~~~~~~
-You can install mps-youtube directly from the official repositories:
+You can install mps-youtube directly from the official repositories::
 
     [sudo] pacman -S mps-youtube
 
