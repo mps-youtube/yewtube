@@ -293,6 +293,8 @@ def helptext():
 
     Use {2}1{1} and {2}0{1} in place of true and false when using the {2}set{1} \
     command
+
+    Use {2}clearcache{1} command to clear the cache.
     """.format(c.ul, c.w, c.y)),
 
         ("new", "New Features", """
