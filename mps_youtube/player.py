@@ -37,6 +37,10 @@ class BasePlayer:
 
     def play(self, songlist, shuffle=False, repeat=False, override=False):
         """ Play a range of songs, exit cleanly on keyboard interrupt. """
+
+        if config.ALWAYS_REPEAT.get:
+            repeat = True
+
         self.songlist = songlist
         self.shuffle = shuffle
         self.repeat = repeat
