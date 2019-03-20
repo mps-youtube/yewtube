@@ -321,7 +321,7 @@ class _Config:
             ConfigItem("show_player_keys", True, require_known_player=True),
             ConfigItem("fullscreen", False, require_known_player=True),
             ConfigItem("show_status", True),
-            ConfigItem("always_repeat",False),
+            ConfigItem("always_repeat", False),
             ConfigItem("columns", ""),
             ConfigItem("ddir", paths.get_default_ddir(), check_fn=check_ddir),
             ConfigItem("overwrite", True),
