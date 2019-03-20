@@ -216,6 +216,7 @@ def helptext():
     {2}set download_command <command>{1} - type {2}help dl-command{1} for info
     {2}set encoder <number>{1} - set encoding preset for downloaded files
     {2}set fullscreen true|false{1} - output video content in full-screen mode
+    {2}set always_repeat true|false{1} - always in repeat mode without repeat <number>
     {2}set max_res <number>{1} - play / download maximum video resolution height{3}
     {2}set notifier <notifier app>{1} - call <notifier app> with each new song title
     {2}set order <relevance|date|views|rating>{1} search result ordering
