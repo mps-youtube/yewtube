@@ -23,7 +23,7 @@ Features
 - Works with Windows, Linux and Mac OS X
 - Requires mplayer or mpv
 
-This project is based on `mps <https://github.com/np1/mps>`_, a terminal based program to search, stream and download music.  This implementation uses YouTube as a source of content and can play and download video as well as audio.  The `pafy <https://github.com/mps-youtube/pafy>`_ library handles interfacing with YouTube.
+This project is based on `mps <https://web.archive.org/web/20180429034221/https://github.com/np1/mps>`_, a terminal based program to search, stream and download music.  This implementation uses YouTube as a source of content and can play and download video as well as audio.  The `pafy <https://github.com/mps-youtube/pafy>`_ library handles interfacing with YouTube.
 
 `FAQ / Troubleshooting common issues <https://github.com/mps-youtube/mps-youtube/wiki/Troubleshooting>`_
 
