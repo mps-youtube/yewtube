@@ -311,7 +311,7 @@ class _Config:
             ConfigItem("max_results", 19, maxval=50, minval=1),
             ConfigItem("console_width", 80, minval=70,
                 maxval=880, check_fn=check_console_width),
-            ConfigItem("max_res", 2160, minval=192, maxval=2160),
+            ConfigItem("max_res", 2160, minval=360, maxval=2160),
             ConfigItem("player", "mplayer" + ".exe" * mswin,
                 check_fn=check_player),
             ConfigItem("playerargs", ""),
