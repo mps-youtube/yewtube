@@ -212,7 +212,7 @@ Q&A
 
 Youtube Error 403: The request cannot be completed because you have exceeded your quota.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-mps-youtube shares a single youtube api_key for everbody, but as the user base has grown larger, we may exceed the quota for a single api_key, if this happens, you can set your own api_key from the guide below (follow till step 3)
+mps-youtube shares a single youtube api_key for everbody, but as the user base grow larger, we may exceed the quota for a single api_key, if this happens, you can set your own api_key from the guide below (follow till step 3)
 
 `https://elfsight.com/help/how-to-get-youtube-api-key/`
 
