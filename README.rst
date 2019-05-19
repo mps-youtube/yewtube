@@ -207,6 +207,19 @@ IRC
 
 An IRC channel `#mps-youtube` for the project is available on Freenode (chat.freenode.net:6697). You can join directly by clicking `this link <https://webchat.freenode.net/?randomnick=1&channels=%23mps-youtube&uio=d4>`_.
 
+Q&A
+---
+
+Youtube Error 403: The request cannot be completed because you have exceeded your quota.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+mps-youtube shares a single youtube api_key for everbody, but as the user base has grown larger, we may exceed the quota for a single api_key, if this happens, you can set your own api_key from the guide below (follow till step 3)
+
+`https://elfsight.com/help/how-to-get-youtube-api-key/`
+
+then set it in mps-youtube via
+
+    set api_key <key value>
+
 How to Contribute
 -----------------
 Contributions are welcomed! However, please check out the `contributing page <CONTRIBUTING.md>`_ before making a contribution.
