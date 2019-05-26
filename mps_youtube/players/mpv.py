@@ -119,9 +119,9 @@ class mpv(CmdPlayer):
         if self.mpv_usesock:
             self.sockpath = tempfile.mktemp('.sock', 'mpsyt-mpv')
             cmd.append(self.mpv_usesock + '=' + self.sockpath)
+            cmd.append(' &')
 
-            with open(os.devnull, "w") as devnull:
-                self.p = subprocess.Popen(cmd, shell=False, stderr=devnull)
+            self.p = subprocess.Popen(cmd, shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
             if g.mprisctl:
                 g.mprisctl.send(('socket', self.sockpath))
@@ -134,18 +134,6 @@ class mpv(CmdPlayer):
 
             self.p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
                                       bufsize=1)
-
-        self._player_status(self.songdata + "; ", self.song.length)
-        returncode = self.p.wait()
-
-        if returncode == 42:
-            self.previous()
-
-        elif returncode == 43:
-            self.stop()
-
-        else:
-            self.next()
 
     def _player_status(self, prefix, songlength=0):
         """ Capture time progress from player output. Write status line. """
