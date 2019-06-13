@@ -347,6 +347,8 @@ class _Config:
             ConfigItem("set_title", True),
             ConfigItem("mpris", not mswin),
             ConfigItem("show_qrcode", False),
+            ConfigItem("history", True), 
+            ConfigItem("input_history", True)
             ]
 
     def __getitem__(self, key):

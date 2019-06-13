@@ -48,7 +48,7 @@ def show_help(choice):
 @command(r'(?:q|quit|exit)', 'quit', 'exit')
 def quits(showlogo=True):
     """ Exit the program. """
-    if has_readline:
+    if has_readline and config.INPUT_HISTORY.get:
         readline.write_history_file(g.READLINE_FILE)
         util.dbg("Saved history file")
 
@@ -318,6 +318,11 @@ def view_history(duplicates=True):
     except AttributeError:
         g.content = logo(c.r)
         g.message = "History empty"
+
+
+    if not config.HISTORY.get:
+        g.message += "\t{1}History recording is currently off{0}".format(c.w,c.y)
+
 
 
 @command(r'history recent', 'history recent')
