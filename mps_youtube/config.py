@@ -3,6 +3,7 @@ import re
 import sys
 import copy
 import pickle
+import json
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from urllib.parse import urlencode
@@ -371,17 +372,28 @@ class _Config:
         """ Save current config to file. """
         config = {setting: self[setting].value for setting in self}
 
-        with open(g.CFFILE, "wb") as cf:
-            pickle.dump(config, cf, protocol=2)
+        with open(g.CFFILE, "w") as cf:
+            json.dump(config, cf, indent=2)
 
         util.dbg(c.p + "Saved config: " + g.CFFILE + c.w)
+
+    def convert_old_cf_to_json(self):
+        """
+        check if old-style config exists,
+        convert old-style pickled binary config to json and save to disk,
+        delete old-style config
+        """
+        if os.path.exists(g.OLD_CFFILE):
+            with open(g.OLD_CFFILE, "rb") as cf:
+                with open(g.CFFILE, "w") as cfj:
+                    json.dump(pickle.load(cf), cfj, indent=2)
+            os.remove(g.OLD_CFFILE)
 
     def load(self):
         """ Override config if config file exists. """
         if os.path.exists(g.CFFILE):
-
-            with open(g.CFFILE, "rb") as cf:
-                saved_config = pickle.load(cf)
+            with open(g.CFFILE, "r") as cf:
+                saved_config = json.load(cf)
 
             for k, v in saved_config.items():
 
