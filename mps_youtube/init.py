@@ -41,6 +41,9 @@ def init():
     suffix = ".exe" if mswin else ""
     mplayer, mpv = "mplayer" + suffix, "mpv" + suffix
 
+    # check for old pickled binary config and convert to json if so
+    config.convert_old_cf_to_json()
+
     if not os.path.exists(g.CFFILE):
 
         if has_exefile(mpv):
