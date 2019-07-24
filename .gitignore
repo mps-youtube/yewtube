@@ -5,6 +5,7 @@ pafy
 vi.py
 MANIFEST
 .dev
+.vscode
 # Packages
 *.egg
 *.egg-info
