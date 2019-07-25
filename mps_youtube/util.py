@@ -287,7 +287,7 @@ def uea_pad(num, t, direction="<", notrunc=False):
 
     if not notrunc:
         # Truncate to max of num characters
-        t = t[:num]
+        t = correct_truncate(t, num)
 
     if real_len(t) < num:
         spaces = num - real_len(t)
