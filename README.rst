@@ -107,7 +107,7 @@ Installing youtube-dl is highly recommended::
     and to upgrade:
     $ pip3 install --user youtube-dl --upgrade
 
-(youtube-dl version dowloaded directly from youtybe-dl website can't be used by mps-youtube. While the version in the repositories is usually outdated)
+**Note**: The youtube-dl version dowloaded directly from the `youtube-dl website <https://ytdl-org.github.io/youtube-dl/index.html>`_ can't be used by mps-youtube. That version is usually outdated. 
 
 For mpris2 support, install the python bindings for dbus and gobject::
 
