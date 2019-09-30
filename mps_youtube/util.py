@@ -259,6 +259,21 @@ def fmt_time(seconds):
 
     return hms
 
+def correct_truncate(text, max_len):
+    """ Truncate a string taking into account East Asian width chars."""
+    str_len, out = 0, ''
+
+    for c in text:
+        str_len += real_len(c)
+
+        if str_len <= max_len:
+            out += c
+
+        else:
+            break
+
+    return out
+
 
 def uea_pad(num, t, direction="<", notrunc=False):
     """ Right pad with spaces taking into account East Asian width chars. """
@@ -272,7 +287,7 @@ def uea_pad(num, t, direction="<", notrunc=False):
 
     if not notrunc:
         # Truncate to max of num characters
-        t = t[:num]
+        t = correct_truncate(t, num)
 
     if real_len(t) < num:
         spaces = num - real_len(t)

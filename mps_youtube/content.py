@@ -124,15 +124,14 @@ def generate_songlist_display(song=False, zeromsg=None):
         cat = details.get('category') or '-'
         details['category'] = pafy.get_categoryname(cat)
         details['ytid'] = x.ytid
-        data = []
+        line = ''
 
         for z in columns:
-            fieldsize, field = z['size'], z['name']
-            if len(details[field]) > fieldsize:
-                details[field] = details[field][:fieldsize]
-            data.append(details[field])
+            fieldsize, field, direction = z['size'], z['name'], "<" if z['sign'] == "-" else ">"
+            line += uea_pad(fieldsize, details[field], direction)
+            if not columns[-1] == z:
+                line += "  "
 
-        line = fmtrow % tuple(data)
         col = col if not song or song != g.model[n] else c.p
         line = col + line + c.w
         out += line + "\n"

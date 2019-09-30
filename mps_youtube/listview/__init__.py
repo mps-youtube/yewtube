@@ -114,21 +114,26 @@ class ListView(content.PaginatedContent):
 
         for num, obj in enumerate(self.objects[self._page_slice()]):
             col = (c.r if num % 2 == 0 else c.p)
+            idx = num + (self.views_per_page() * self.page) + 1
 
-            data = []
+            line = ''
             for column in self.columns:
                 fieldsize, field = column['size'], column['name']
+                direction = "<" if column['sign'] == "-" else ">"
+
                 if field == "idx":
-                    data.append("%2d" % (num + (self.views_per_page() * self.page) + 1))
+                    field = "%2d" % idx
+
                 else:
                     field = getattr(obj, field)(fieldsize)
                     field = str(field) if field.__class__ != str else field
-                    if len(field) > fieldsize:
-                        field = field[:fieldsize]
-                    else:
-                        field = field + (" " * (fieldsize - len(field)))
-                    data.append(field)
-            line = col + (fmtrow % tuple(data)) + c.w
+
+                line += util.uea_pad(fieldsize, field, direction)
+
+                if column != self.columns[-1]:
+                    line += "  "
+
+            line = col + line + c.w
             out += line + "\n"
         
         return out
