@@ -9,6 +9,7 @@ import collections
 import unicodedata
 import urllib
 import json
+import platform
 from datetime import datetime, timezone
 
 import pafy
@@ -18,6 +19,7 @@ from .playlist import Video
 
 from importlib import import_module
 
+macos = platform.system() == "Darwin"
 
 mswin = os.name == "nt"
 not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
@@ -124,6 +126,18 @@ def mswinfn(filename):
 
     return filename
 
+def sanitize_filename(filename, ignore_slashes=False):
+    """ Sanitize filename """
+    if not ignore_slashes:
+        filename = filename.replace('/', '-')
+    if macos:
+        filename = filename.replace(':', '_')
+    if mswin:
+        filename = utf8_replace(filename) if not_utf8_environment else filename
+        allowed = re.compile(r'[^\\?*$\'"%&:<>|]')
+        filename = "".join(x if allowed.match(x) else "_" for x in filename)
+
+    return filename
 
 def set_window_title(title):
     """ Set terminal window title. """
