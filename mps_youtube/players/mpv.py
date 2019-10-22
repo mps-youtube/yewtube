@@ -22,6 +22,7 @@ class mpv(CmdPlayer):
         self.mpv_options = subprocess.check_output(
                 [player, "--list-options"]).decode()
 
+        self.mpv_usesock = ""
         if not mswin:
             if "--input-unix-socket" in self.mpv_options:
                 self.mpv_usesock = "--input-unix-socket"
