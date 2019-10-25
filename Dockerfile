@@ -16,3 +16,5 @@ RUN DEBIAN_FRONTEND=noninteractive && \
 
 RUN pip install mps-youtube youtube-dl
 RUN pip install pafy --upgrade
+
+ENTRYPOINT ["mpsyt"]
