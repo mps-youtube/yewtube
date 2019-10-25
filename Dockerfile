@@ -15,5 +15,4 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     apt-get clean && apt-get purge
 
 RUN pip install mps-youtube youtube-dl
-
-ENTRYPOINT ["mpsyt"]
+RUN pip install pafy --upgrade
