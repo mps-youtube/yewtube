@@ -86,7 +86,9 @@ playerargs_defaults = {
         "novid": "-novideo",
         # "ignidx": "-lavfdopts o=fflags=+ignidx".split()
         "ignidx": "",
-        "geo": "-geometry"}
+        "geo": "-geometry"},
+    "vlc": {
+        "title": "--meta-title"}
     }
 argument_commands = []
 commands = []
