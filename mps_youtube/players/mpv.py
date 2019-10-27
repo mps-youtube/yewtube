@@ -16,16 +16,6 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
 class mpv(CmdPlayer):
-    DEFAULT_ARGS = {
-        "msglevel": {"<0.4": "--msglevel=all=no:statusline=status",
-                     ">=0.4": "--msg-level=all=no:statusline=status"},
-        "title": "--title",
-        "fs": "--fs",
-        "novid": "--no-video",
-        "ignidx": "--demuxer-lavf-o=fflags=+ignidx",
-        "geo": "--geometry"
-    }
-
     def __init__(self, player):
         self.player = player
         self.mpv_version = _get_mpv_version(player)
@@ -49,7 +39,7 @@ class mpv(CmdPlayer):
 
         args = config.PLAYERARGS.get.strip().split()
 
-        pd = self.DEFAULT_ARGS
+        pd = g.playerargs_defaults['mpv']
         args.extend((pd["title"], '"{0}"'.format(self.song.title)))
 
         if pd['geo'] not in args:

@@ -13,15 +13,6 @@ not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
 class mplayer(CmdPlayer):
-    DEFAULT_ARGS = {
-        "title": "-title",
-        "fs": "-fs",
-        "novid": "-novideo",
-        # "ignidx": "-lavfdopts o=fflags=+ignidx".split()
-        "ignidx": "",
-        "geo": "-geometry"
-    }
-
     def __init__(self, player):
         self.player = player
         self.mplayer_version = _get_mplayer_version(player)
@@ -42,7 +33,7 @@ class mplayer(CmdPlayer):
 
         args = config.PLAYERARGS.get.strip().split()
 
-        pd = self.DEFAULT_ARGS
+        pd = g.playerargs_defaults['mplayer']
         args.extend((pd["title"], '"{0}"'.format(self.song.title)))
 
         if pd['geo'] not in args:
