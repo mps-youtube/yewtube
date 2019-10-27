@@ -75,7 +75,7 @@ playerargs_defaults = {
     "mpv": {
         "msglevel": {"<0.4": "--msglevel=all=no:statusline=status",
                      ">=0.4": "--msg-level=all=no:statusline=status"},
-        "title": "--title",
+        "title": "--force-media-title",
         "fs": "--fs",
         "novid": "--no-video",
         "ignidx": "--demuxer-lavf-o=fflags=+ignidx",
