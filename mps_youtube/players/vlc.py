@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from .. import config, util
+from .. import config, util, g
 
 from ..player import CmdPlayer
 
@@ -12,6 +12,9 @@ class vlc(CmdPlayer):
 
     def _generate_real_playerargs(self):
         args = config.PLAYERARGS.get.strip().split()
+
+        pd = g.playerargs_defaults['vlc']
+        args.extend((pd["title"], '"{0}"'.format(self.song.title)))
 
         util.list_update("--play-and-exit", args)
 
