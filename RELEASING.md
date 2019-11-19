@@ -32,7 +32,7 @@ For mps-youtube, a `.exe` file should be built with `python setup.py py2exe` und
 
 PyPI
 ----
-Push the source, and a wheel build, to PyPI. Be careful that everything is correct at this point; PyPI does allow replacing an uploaded file with a different one of the same name.
+Push the source, and a wheel build, to PyPI. Be careful that everything is correct at this point; PyPI does not allow replacing an uploaded file with a different one of the same name.
 
 GPG Signatures
 --------------
