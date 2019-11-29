@@ -18,10 +18,6 @@ Update `CHANGELOG` with a summary of changes since the last release. `git shortl
 ### mps-youtube
 Also update `New Features` in `helptext.py`. This help section has ended up falling out of date. If it isn't kept up to date, it should probably be removed.
 
-Master branch
--------------
-These changes should be pushed to the `master` branch as well as `develop`, since `master` contains the last released code.
-
 Github Release
 --------------
 Create a release through the Github website, tagging the commit that should be released. The text from the `CHANGELOG` should be coppied to the release.
@@ -40,8 +36,6 @@ The `.tar.gz` signatures for `pafy` and `mps-youtube` also have GPG signatures a
 
 Possible Simplifications to this Process
 ----------------------------------------
-The `master` branch, which just contains the last released code, is probably unnecessary. It's just redundant with the most recent tag.
-
 The New Features help text isn't really important, but it is genuinely nice to have if kept up to date.
 
 Perhaps the `CHANGELOG` file isn't really needed, if Github releases includes that information.
