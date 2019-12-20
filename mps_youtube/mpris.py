@@ -539,7 +539,7 @@ class MprisConnection(object):
                 self.connection.send(obj)
             except BrokenPipeError:
                 self.connection = None
-                print('MPRIS process exited of crashed.')
+                print('MPRIS process exited or crashed.')
 
 
 def main(connection):
