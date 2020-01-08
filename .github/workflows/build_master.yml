@@ -1,0 +1,21 @@
+name: Build latest image
+
+on: 
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build the Docker image
+      run: |
+        docker login --username tommysolsen -p $PASSWORD 
+        docker build . --file Dockerfile --tag mpsyt/mps_youtube:latest
+        docker tag mpsyt/mps_youtube:latest mpsyt/mps_youtube:master
+        docker push mpsyt/mps_youtube:latest
+        docker push mpsyt/mps_youtube:master
+      env:
+        PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
