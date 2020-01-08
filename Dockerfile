@@ -1,4 +1,5 @@
-FROM python:3-stretch
+ARG PYTHON_IMAGE=3
+FROM python:${PYTHON_IMAGE}
 
 LABEL maintainer="Justin Garrison <justinleegarrison@gmail.com>" \
     org.label-schema.schema-version="1.0" \
@@ -14,6 +15,12 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean && apt-get purge
 
-RUN pip install mps-youtube youtube-dl
+RUN pip install pafy youtube-dl
+
+COPY mpsyt /usr/local/bin
+COPY mps_youtube /tmp/mps_youtube
+
+RUN mkdir -p $(python -m site --user-site)
+RUN mv /tmp/mps_youtube $(python -m site --user-site)/mps_youtube
 
 ENTRYPOINT ["mpsyt"]
