@@ -40,7 +40,10 @@ class mpv(CmdPlayer):
         args = config.PLAYERARGS.get.strip().split()
 
         pd = g.playerargs_defaults['mpv']
-        args.extend((pd["title"], '"{0}"'.format(self.song.title)))
+        # Use new mpv syntax
+        # https://github.com/mps-youtube/mps-youtube/issues/1052
+        completetitle = '='.join((pd["title"], '"{0}"'.format(self.song.title)))
+        util.list_update(completetitle, args)
 
         if pd['geo'] not in args:
             geometry = config.WINDOW_SIZE.get or ""
@@ -52,7 +55,10 @@ class mpv(CmdPlayer):
                 geometry += xx + yy
 
             if geometry:
-                args.extend((pd['geo'], geometry))
+                # Use new mpv syntax
+                # See: https://github.com/mps-youtube/mps-youtube/issues/1052
+                newgeometry = '='.join((pd['geo'], geometry))
+                util.list_update(newgeometry, args)
 
         # handle no audio stream available
         if self.override == "a-v":
