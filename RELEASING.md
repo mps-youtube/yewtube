@@ -20,7 +20,7 @@ Also update `New Features` in `helptext.py`. This help section has ended up fall
 
 Github Release
 --------------
-Create a release through the Github website, tagging the commit that should be released. The text from the `CHANGELOG` should be coppied to the release.
+Create a release through the Github website, tagging the commit that should be released. The text from the `CHANGELOG` should be copied to the release.
 
 py2exe
 ------
