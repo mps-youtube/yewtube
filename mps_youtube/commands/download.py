@@ -195,7 +195,8 @@ def down_plist(dltype, parturl):
     plist(parturl)
     dump(False)
     title = g.pafy_pls[parturl][0].title
-    subdir = util.mswinfn(title.replace("/", "-"))
+    # Remove double quotes for convenience
+    subdir = util.sanitize_filename(title.replace('"', ''))
     down_many(dltype, "1-", subdir=subdir)
     msg = g.message
     plist(parturl)
@@ -227,8 +228,9 @@ def _make_fname(song, ext=None, av=None, subdir=None):
 
     # filename = song.title[:59] + "." + ext
     filename = song.title + "." + ext
-    filename = os.path.join(ddir, util.mswinfn(filename.replace("/", "-")))
+    # Remove double quotes for convenience
     filename = filename.replace('"', '')
+    filename = os.path.join(ddir, util.sanitize_filename(filename))
     return filename
 
 
