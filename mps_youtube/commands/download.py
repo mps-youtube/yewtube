@@ -332,7 +332,7 @@ def external_download(song, filename, url):
     util.dbg("Downloading using: %s", " ".join(cmd_list))
     subprocess.call(cmd_list)
 
-def _transcode(song, filename, audio=False, allow_transcode=True):
+def _transcode(song, filename, audio=False):
     """ Transcode filename
 
     Return new filename (transcoded file)
@@ -344,7 +344,7 @@ def _transcode(song, filename, audio=False, allow_transcode=True):
     if audio and g.muxapp:
         remux_audio(filename, song.title)
 
-    if config.ENCODER.get != 0 and valid_ext and allow_transcode:
+    if config.ENCODER.get != 0 and valid_ext:
         filename = transcode(filename, active_encoder)
     return filename
 
