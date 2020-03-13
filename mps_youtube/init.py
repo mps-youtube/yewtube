@@ -121,25 +121,25 @@ DELETE_ORIGINAL: True
 # Encode ogg or m4a to mp3 256k
 name: MP3 256k
 extension: mp3
-valid for: ogg,m4a
+valid for: ogg,m4a,webm
 command: ENCODER_PATH -i IN -codec:a libmp3lame -b:a 256k OUT.EXT
 
 # Encode ogg or m4a to mp3 192k
 name: MP3 192k
 extension: mp3
-valid for: ogg,m4a
+valid for: ogg,m4a,webm
 command: ENCODER_PATH -i IN -codec:a libmp3lame -b:a 192k OUT.EXT
 
 # Encode ogg or m4a to mp3 highest quality vbr
 name: MP3 VBR best
 extension: mp3
-valid for: ogg,m4a
+valid for: ogg,m4a,webm
 command: ENCODER_PATH -i IN -codec:a libmp3lame -q:a 0 OUT.EXT
 
 # Encode ogg or m4a to mp3 high quality vbr
 name: MP3 VBR good
 extension: mp3
-valid for: ogg,m4a
+valid for: ogg,m4a,webm
 command: ENCODER_PATH -i IN -codec:a libmp3lame -q:a 2 OUT.EXT
 
 # Encode m4a to ogg
