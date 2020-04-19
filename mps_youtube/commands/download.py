@@ -230,6 +230,8 @@ def _make_fname(song, ext=None, av=None, subdir=None):
     filename = song.title + "." + ext
     # Remove double quotes for convenience
     filename = filename.replace('"', '')
+    # Strip charectors probably not allowed by file system
+    filename = filename.replace('|', '').replace("#", "")
     filename = os.path.join(ddir, util.sanitize_filename(filename))
     return filename
 
