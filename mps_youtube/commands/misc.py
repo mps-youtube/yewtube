@@ -252,7 +252,7 @@ def video_info(num):
         item = (g.model[int(num) - 1])
         streams.get(item)
         p = util.get_pafy(item)
-        pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%S")
+        pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%SZ")
         pub = util.utc2local(pub)
         screen.writestatus("Fetched")
         out = c.ul + "Video Info" + c.w + "\n\n"
