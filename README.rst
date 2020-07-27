@@ -37,6 +37,8 @@ Search
 
 A standard search is performed by entering ``/`` followed by search terms.
 
+**Note**: You can play all of the search results by giving ``1-`` as input
+
 Local Playlists
 ~~~~~~~~~~~~~~~
 .. image:: http://mps-youtube.github.io/mps-youtube/local-playlist.png
@@ -48,6 +50,8 @@ YouTube Playlists
 .. image:: http://mps-youtube.github.io/mps-youtube/playlist-search.png
 
 YouTube playlists can be searched and played or saved as local playlists.
+
+A playlist search is performed by ``//`` followed by search term.
 
 Download
 ~~~~~~~~
