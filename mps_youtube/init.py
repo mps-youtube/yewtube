@@ -58,6 +58,9 @@ def init():
         config.load()
         assign_player(config.PLAYER.get)  # Player is not assigned when config is loaded
 
+    # Make pafy use the same api key
+    pafy.set_api_key(config.API_KEY.get)
+
     _init_readline()
     cache.load()
     _init_transcode()
@@ -93,9 +96,6 @@ def init():
             t.start()
         except ImportError:
             print("could not load MPRIS interface. missing libraries.")
-
-    # Make pafy use the same api key
-    pafy.set_api_key(config.API_KEY.get)
 
 
 def _init_transcode():
