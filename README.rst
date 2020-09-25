@@ -53,6 +53,8 @@ YouTube playlists can be searched and played or saved as local playlists.
 
 A playlist search is performed by ``//`` followed by search term.
 
+Repeating song/songs can be done with ``1[3]`` or ``4-6[2]``
+
 Download
 ~~~~~~~~
 .. image:: http://mps-youtube.github.io/mps-youtube/download.png
