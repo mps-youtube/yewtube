@@ -37,7 +37,9 @@ Search
 
 A standard search is performed by entering ``/`` followed by search terms.
 
-**Note**: You can play all of the search results by giving ``1-`` as input
+You can play all of the search results by giving ``1-`` as input
+
+Repeating song/songs can be done with ``song_number[loop]``, for example: ``1[3]`` or ``4-6[2]``
 
 Local Playlists
 ~~~~~~~~~~~~~~~
@@ -52,8 +54,6 @@ YouTube Playlists
 YouTube playlists can be searched and played or saved as local playlists.
 
 A playlist search is performed by ``//`` followed by search term.
-
-Repeating song/songs can be done with ``1[3]`` or ``4-6[2]``
 
 Download
 ~~~~~~~~
