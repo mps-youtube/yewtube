@@ -87,8 +87,11 @@ class BasePlayer:
                 break
 
             # skip forbidden, video removed/no longer available, etc. tracks
-            except TypeError:
+            # when receiving an HTTPError, the player should continue
+            except (TypeError, HTTPError) as e:
                 self.song_no += 1
+                if self.song_no == len(songlist):
+                    g.message = util.F('cant get track') % str(e)
                 pass
 
             if config.SET_TITLE.get:
@@ -129,9 +132,8 @@ class BasePlayer:
         if config.NOTIFIER.get:
             subprocess.Popen(shlex.split(config.NOTIFIER.get) + [self.song.title])
 
-        size = streams.get_size(self.song.ytid, self.stream['url'])
         songdata = (self.song.ytid, self.stream['ext'] + " " + self.stream['quality'],
-                    int(size / (1024 ** 2)))
+                    int(self.stream['size'] / (1024 ** 2)))
         self.songdata = "%s; %s; %s Mb" % songdata
         screen.writestatus(self.songdata)
 
@@ -351,10 +353,12 @@ def stream_details(song, failcount=0, override=False, softrepeat=False):
         m4a = "mplayer" not in config.PLAYER.get
         cached = g.streams[song.ytid]
         stream = streams.select(cached, q=failcount, audio=(not video), m4a_ok=m4a)
+        stream['size'] = streams.get_size(song.ytid, stream['url'])
 
         # handle no audio stream available, or m4a with mplayer
         # by switching to video stream and suppressing video output.
-        if (not stream or failcount) and not video:
+        # only do that on the last try of failcount
+        if (not stream and failcount == g.max_retries) and not video:
             util.dbg(c.r + "no audio or mplayer m4a, using video stream" + c.w)
             override = "a-v"
             video = True
