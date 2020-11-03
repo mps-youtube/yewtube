@@ -173,6 +173,7 @@ def channelsearch(q_user):
     columns = [
         {"name": "idx", "size": 3, "heading": "Num"},
         {"name": "name", "size": 30, "heading": "Username"},
+        {"name": "id", "size": 24, "heading": "Channel ID"},
         {"name": "description", "size": "remaining", "heading": "Description"},
         ]
 
@@ -317,19 +318,23 @@ def search(term):
     _search(term, query, msg, failmsg)
 
 
-@command(r'u(?:ser)?pl\s(.*)', 'userpl', 'upl')
-def user_pls(user):
+@command(r'(?:(u(?:ser)?)|(c(?:han)?))pl\s(.*)')
+def user_pls(user_search, channel_search, user):
     """ Retrieve user playlists. """
-    return pl_search(user, is_user=True)
+    return pl_search(user, is_user= user_search!=None, is_channel= channel_search != None)
 
 
-@command(r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)', 'plsearch')
-def pl_search(term, page=0, splash=True, is_user=False):
+@command(r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)')
+def pl_search(term, page=0, splash=True, is_user=False, is_channel=False):
     """ Search for YouTube playlists.
 
     term can be query str or dict indicating user playlist search.
 
     """
+    if(is_channel):
+        channel_id = term
+        prog = "channel: " + term 
+
     if not term or len(term) < 2:
         g.message = c.r + "Not enough input" + c.w
         g.content = content.generate_songlist_display()
@@ -346,7 +351,6 @@ def pl_search(term, page=0, splash=True, is_user=False):
         if not ret: # Error
             return
         user, channel_id = ret
-
     else:
         # playlist search is done with the above url and param type=playlist
         logging.info("playlist search for %s", prog)
@@ -367,7 +371,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
     qs = {'part': 'contentDetails,snippet',
           'maxResults': 50}
 
-    if is_user:
+    if is_user or is_channel:
         if page:
             qs['pageToken'] = token(page)
         qs['channelId'] = channel_id
