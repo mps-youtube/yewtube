@@ -51,8 +51,6 @@ class BasePlayer:
         self.song_no = 0
         while 0 <= self.song_no <= len(self.songlist)-1:
             self.song = self.songlist[self.song_no]
-            g.content = self._playback_progress(self.song_no, self.songlist,
-                                                repeat=repeat)
 
             if not g.command_line:
                 screen.update(fill_blank=False)
@@ -98,6 +96,8 @@ class BasePlayer:
                 self.song_no = len(songlist) - 1 if repeat else 0
             elif self.song_no == len(self.songlist) and repeat:
                 self.song_no = 0
+
+            self.song_no += 1
 
     # To be defined by subclass based on being cmd player or library
     # When overriding next and previous don't forget to add the following
@@ -304,9 +304,6 @@ class CmdPlayer(BasePlayer):
         finally:
             if g.mprisctl:
                 g.mprisctl.send(('stop', True))
-
-            if self.p and self.p.poll() is None:
-                self.p.terminate()  # make sure to kill mplayer if mpsyt crashes
 
             self.clean_up()
 
