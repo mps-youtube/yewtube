@@ -205,7 +205,9 @@ def _init_readline():
         return
 
     if has_readline:
-        g.READLINE_FILE = os.path.join(paths.get_config_dir(), "input_history")
+        g.READLINE_FILE = os.path.join(paths.get_data_dir(), "input_history")
+
+        _copy_old_input_history_to_datadir()
 
         if os.path.exists(g.READLINE_FILE):
             readline.read_history_file(g.READLINE_FILE)
@@ -287,3 +289,15 @@ def _get_version_info():
         out += "\nenv:%-15s: %s" % (env, value) if value else ""
 
     return out
+
+def _copy_old_input_history_to_datadir():
+    """ Copy input_history to data dir"""
+    # Skip if file already exists
+    if os.path.isfile(g.READLINE_FILE):
+        return
+
+    elif not os.path.isfile(g.OLD_READLINE_FILE):
+        return
+
+    import shutil
+    shutil.copyfile(g.OLD_READLINE_FILE, g.READLINE_FILE)

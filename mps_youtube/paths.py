@@ -54,3 +54,20 @@ def get_config_dir():
     os.makedirs(mps_confdir, exist_ok=True)
 
     return mps_confdir
+
+def get_data_dir():
+    """ Get user's data directory."""
+    if mswin:
+        datadir = os.environ["APPDATA"]
+
+    elif 'XDG_DATA_HOME' in os.environ:
+        datadir = os.environ['XDG_DATA_HOME']
+
+    else:
+        datadir = os.path.join(os.path.expanduser("~"), '.local/share')
+
+    mps_datadir = os.path.join(datadir, "mps-youtube")
+
+    os.makedirs(mps_datadir, exist_ok=True)
+
+    return mps_datadir

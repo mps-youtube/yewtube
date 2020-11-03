@@ -21,8 +21,9 @@ def save():
 
 def load():
     """ Open playlists. Called once on script invocation. """
-    _convert_playlist_to_v2()
-    _convert_playlist_to_m3u()
+    _convert_playlist_from_v1()
+    _convert_playlist_from_v2()
+    _copy_old_playlist_folder_to_datadir()
     try:
         # Loop through all files ending in '.m3u'
         for m3u in [m3u for m3u in os.listdir(g.PLFOLDER) if m3u[-4:] == '.m3u']:
@@ -88,10 +89,17 @@ def read_m3u(m3u):
     return Playlist(name, songs)
 
 
-def _convert_playlist_to_v2():
-    """ Convert previous playlist file to v2 playlist. """
+def _convert_playlist_from_v1():
+    """ Convert playlist_v1 file to the m3u format. 
+        This should create a .m3u playlist for each playlist in playlist_v1. """
     # skip if previously done
-    if os.path.isfile(g.PLFILE):
+    if os.path.isdir(g.PLFOLDER):
+        return
+
+    elif os.path.isdir(g.OLDPLFOLDER):
+        return
+
+    elif os.path.isfile(g.PLFILE):
         return
 
     # skip if no playlist files exist
@@ -129,11 +137,14 @@ def _convert_playlist_to_v2():
     save()
 
 
-def _convert_playlist_to_m3u():
+def _convert_playlist_from_v2():
     """ Convert playlist_v2 file to the m3u format. 
         This should create a .m3u playlist for each playlist in playlist_v2. """
     # Skip if playlists folder exists
     if os.path.isdir(g.PLFOLDER):
+        return
+
+    elif os.path.isdir(g.OLDPLFOLDER):
         return
 
     # Skip if no playlist files exist
@@ -177,3 +188,16 @@ def _convert_playlist_to_m3u():
 
     os.mkdir(g.PLFOLDER)
     save()
+
+def _copy_old_playlist_folder_to_datadir():
+    """ Copy playlist folder to data dir"""
+    # Skip if folder already exists
+    if os.path.isdir(g.PLFOLDER):
+        return
+
+    # Skip if no old playlist folder exist
+    elif not os.path.isdir(g.OLDPLFOLDER):
+        return
+
+    import shutil
+    shutil.copytree(g.OLDPLFOLDER, g.PLFOLDER)
