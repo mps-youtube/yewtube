@@ -26,6 +26,7 @@ def helptext():
         {2}r <number>{1} - show videos related to video <number>
         {2}u <number>{1} - show videos uploaded by uploader of video <number>
         {2}x <number>{1} - copy item <number> url to clipboard (requires pyperclip)
+        {2}m <number>{1} - feed item <number> url to mpv player (requires mpv)
 
         {2}q{1}, {2}quit{1} - exit mpsyt
     """.format(c.ul, c.w, c.y)),

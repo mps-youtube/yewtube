@@ -5,6 +5,7 @@ import traceback
 from urllib.request import urlopen
 from urllib.error import HTTPError, URLError
 from .. import player
+import os
 
 try:
     # pylint: disable=F0401
@@ -179,6 +180,29 @@ def clipcopy_video(num):
         g.message = "pyperclip module must be installed for clipboard support\n"
         g.message += "see https://pypi.python.org/pypi/pyperclip/"
         g.content = generate_songlist_display()
+
+
+@command(r'm\s*(\d+)')
+def open_in_mpv(num):
+    """ Feed video/playlist url to mpv. """
+    if g.browse_mode == "ytpl":
+
+        p = g.ytpls[int(num) - 1]
+        link = "https://youtube.com/playlist?list=%s" % p['link']
+
+    elif g.browse_mode == "normal":
+        item = (g.model[int(num) - 1])
+        link = "https://youtube.com/watch?v=%s" % item.ytid
+
+    else:
+        g.message = "mpv open not valid in this mode"
+        g.content = generate_songlist_display()
+        return
+
+    os.system("mpv " + link)
+    g.message = "mpv opened. If not, make sure you have it installed"
+    g.content = generate_songlist_display()
+
 
 
 @command(r'X\s*(\d+)', 'X')
