@@ -147,6 +147,11 @@ def channelfromname(user):
             else:
                 g.message = "User {} not found.".format(c.y + user + c.w)
                 return
+        
+        except KeyError as e:
+            g.message = "Error when when looking for user {}, got empty key {}.".format(user, e)
+            util.dbg('channelfromname: Error when when looking for user {}, got empty key {}.'.format(user, e))
+            return
 
         except pafy.GdataError as e:
             g.message = "Could not retrieve information for user {}\n{}".format(
