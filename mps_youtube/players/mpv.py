@@ -184,12 +184,12 @@ class mpv(CmdPlayer):
                         s.send(json.dumps(cmd).encode() + b'\n')
                         observe_full = True
 
-                    if resp.get('event') == 'property-change' and resp['id'] == 1:
-                        if resp['data'] is not None:
-                            elapsed_s = int(resp['data'])
-
-                    elif resp.get('event') == 'property-change' and resp['id'] == 2:
-                        volume_level = int(resp['data'])
+                    if 'data' in resp:
+                        if resp.get('event') == 'property-change' and resp['id'] == 1:
+                            if resp['data'] is not None:
+                                elapsed_s = int(resp['data'])
+                        elif resp.get('event') == 'property-change' and resp['id'] == 2:
+                            volume_level = int(resp['data'])
 
                     if(volume_level and volume_level != g.volume):
                         g.volume = volume_level
