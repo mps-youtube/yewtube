@@ -95,7 +95,7 @@ class mplayer(CmdPlayer):
             g.mprisctl.send(('mplayer-fifo', self.fifopath))
 
         self.p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
-                                  stderr=subprocess.STDOUT, bufsize=1)
+                                  stderr=subprocess.STDOUT, bufsize=0)
         self._player_status(self.songdata + "; ", self.song.length)
         returncode = self.p.wait()
         print(returncode)

@@ -130,7 +130,7 @@ class mpv(CmdPlayer):
                 g.mprisctl.send(('mpv-fifo', self.fifopath))
 
             self.p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
-                                      bufsize=1)
+                                      bufsize=0)
 
         self._player_status(self.songdata + "; ", self.song.length)
         returncode = self.p.wait()
