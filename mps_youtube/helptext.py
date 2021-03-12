@@ -232,7 +232,7 @@ def helptext():
     {2}set lastfm_api <key>{1} - API key needed for Last.fm mps-yt authorization
     {2}set lastfm_secret <key>{1} - secret for the Last.fm API key
     {2}set search_music true|false{1} - search only music (all categories if false)
-    {2}set show_mplayer_keys true|false{1} - show keyboard help for mplayer and mpv
+    {2}set show_player_keys true|false{1} - show keyboard help for mplayer and mpv
     {2}set show_status true|false{1} - show status messages and progress
     {2}set show_video true|false{1} - show video output (audio only if false)
     {2}set window_pos <top|bottom>-<left|right>{1} - set player window position
