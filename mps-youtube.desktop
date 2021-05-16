@@ -1,10 +1,11 @@
 [Desktop Entry]
 Name=mps-youtube
 GenericName=Music Player
+Comment=Terminal based YouTube player and downloader
 Keywords=Audio;Song;Podcast;Playlist;youtube.com;
 Exec=mpsyt %U
 Terminal=true
-Icon=terminal
+Icon=utilities-terminal
 Type=Application
 Categories=AudioVideo;Audio;Player;
 StartupNotify=true
