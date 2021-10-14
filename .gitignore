@@ -17,3 +17,5 @@ bin
 var
 tags
 .env
+env/
+.idea/

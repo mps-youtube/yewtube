@@ -206,12 +206,16 @@ def _get_user_columns():
 def logo(col=None, version=""):
     """ Return text logo. """
     col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
-    logo_txt = r"""                                             _         _
- _ __ ___  _ __  ___       _   _  ___  _   _| |_ _   _| |__   ___
-| '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \
-| | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
-|_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
-          |_|              |___/"""
+    logo_txt = r"""                      _         _          
+                     | |       | |         
+  _   _  _____      _| |_ _   _| |__   ___ 
+ | | | |/ _ \ \ /\ / / __| | | | '_ \ / _ \
+ | |_| |  __/\ V  V /| |_| |_| | |_) |  __/
+  \__, |\___| \_/\_/  \__|\__,_|_.__/ \___|
+   __/ |                                   
+  |___/                                    
+    """
+
     version = " v" + version if version else ""
     logo_txt = col + logo_txt + c.w + version
     lines = logo_txt.split("\n")

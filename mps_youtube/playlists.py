@@ -160,7 +160,7 @@ def _convert_playlist_to_m3u():
 
         os.mkdir(g.PLFOLDER)
         save()
-        screen.msgexit("Updated playlist file. Please restart mpsyt", 1)
+        screen.msgexit("Updated playlist file. Please restart yewtube", 1)
 
     except EOFError:
         screen.msgexit("Error opening playlists from %s" % g.PLFILE, 1)

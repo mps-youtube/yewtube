@@ -112,7 +112,7 @@ def prompt_for_exit():
 def main():
     """ Main control loop. """
     if config.SET_TITLE.get:
-        util.set_window_title("mpsyt")
+        util.set_window_title("yewtube")
 
     if not g.command_line:
         g.content = content.logo(col=c.g, version=__version__) + "\n\n"

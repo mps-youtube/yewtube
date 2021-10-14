@@ -20,7 +20,7 @@ def load():
             with open(g.CACHEFILE, "rb") as cf:
                 cached = pickle.load(cf)
 
-            # Note: will be none for mpsyt 0.2.5 or earlier
+            # Note: will be none for yewtube 0.2.5 or earlier
             version = cached.get('version')
 
             if 'streams' in cached:

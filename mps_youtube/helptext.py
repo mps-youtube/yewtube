@@ -27,7 +27,7 @@ def helptext():
         {2}u <number>{1} - show videos uploaded by uploader of video <number>
         {2}x <number>{1} - copy item <number> url to clipboard (requires pyperclip)
 
-        {2}q{1}, {2}quit{1} - exit mpsyt
+        {2}q{1}, {2}quit{1} - exit yewtube
     """.format(c.ul, c.w, c.y)),
         ("search", "Searching and Retrieving", """
     {0}Searching and Retrieving{1}
@@ -175,7 +175,7 @@ def helptext():
         ("history", "Accessing Local History", """
     {0}Accessing Local History{1}
 
-    Access songs that have been played within mpsyt
+    Access songs that have been played within yewtube
 
         {2}history{1} - displays a list of songs contained in history
         {2}history clear{1} - clears the song history
@@ -186,20 +186,20 @@ def helptext():
         ("invoke", "Invocation Parameters", """
     {0}Invocation{1}
 
-    All mpsyt commands can be entered from the command line.  For example;
+    All yewtube commands can be entered from the command line.  For example;
 
-      {2}mpsyt dlurl <url or id>{1} to download a YouTube video by url or id
-      {2}mpsyt playurl <url or id>{1} to play a YouTube video by url or id
-      {2}mpsyt /mozart{1} to search
-      {2}mpsyt //best songs of 2010{1} for a playlist search
-      {2}mpsyt play <playlist name or ID>{1} to play a saved playlist
-      {2}mpsyt ls{1} to list saved playlists
+      {2}yt dlurl <url or id>{1} to download a YouTube video by url or id
+      {2}yt playurl <url or id>{1} to play a YouTube video by url or id
+      {2}yt /mozart{1} to search
+      {2}yt //best songs of 2010{1} for a playlist search
+      {2}yt play <playlist name or ID>{1} to play a saved playlist
+      {2}yt ls{1} to list saved playlists
 
     For further automation, a series of commands can be entered separated by
     commas (,).  E.g.,
 
-      {2}mpsyt open 1, 2-4{1} - play items 2-4 of first saved playlist
-      {2}mpsyt //the doors, 1, all -a{1} - open YouTube playlist and play audio
+      {2}yt open 1, 2-4{1} - play items 2-4 of first saved playlist
+      {2}yt //the doors, 1, all -a{1} - open YouTube playlist and play audio
 
     If you need to enter an actual comma on the command line, use {2},,{1} instead.
     """.format(c.ul, c.w, c.y)),
@@ -328,7 +328,7 @@ def get_help(choice):
              "encode": ("encoding transcoding transcode wma mp3 format "
                         "encode encoder".split()),
 
-             "invoke": "command commands mpsyt invocation".split(),
+             "invoke": "command commands yt invocation".split(),
 
              "search": ("user userpl pl pls r n p url album "
                         "editing result results related remove swop mkp --description".split()),

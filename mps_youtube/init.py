@@ -268,7 +268,7 @@ def _get_version_info():
             import youtube_dl
             youtube_dl_version = youtube_dl.version.__version__
 
-    out = "mpsyt version      : " + __version__
+    out = "yewtube version      : " + __version__
     out += "\n   notes           : " + __notes__
     out += "\npafy version       : " + pafy_version
     if youtube_dl_version:

@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-""" setup.py for mps-youtube.
+""" setup.py for yewtube.
 
-https://np1.github.com/mps-youtube
+https://github.com/iamtalhaasghar/yewtube
 
 python setup.py sdist bdist_wheel
 """
@@ -11,23 +11,23 @@ import sys
 import os
 
 if sys.version_info < (3,0):
-    sys.exit("Mps-youtube requires python 3.")
+    sys.exit("yewtube requires python 3.")
 
 from setuptools import setup
 
-VERSION = "0.2.8"
+VERSION = "1.0.0"
 
 options = dict(
-    name="mps-youtube",
+    name="yewtube",
     version=VERSION,
     description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
-    author="np1",
-    author_email="np1nagev@gmail.com",
-    url="https://github.com/mps-youtube/mps-youtube",
-    download_url="https://github.com/mps-youtube/mps-youtube/archive/v%s.tar.gz" % VERSION,
+    author="talha_programmer",
+    author_email="talhaasghar.contact@simplelogin.fr",
+    url="https://github.com/iamtalhaasghar/yewtube",
+    download_url="https://github.com/iamtalhaasghar/yewtube/releases",
     packages=['mps_youtube', 'mps_youtube.commands', 'mps_youtube.listview', 'mps_youtube.players'],
-    entry_points={'console_scripts': ['mpsyt = mps_youtube:main.main']},
+    entry_points={'console_scripts': ['yt = mps_youtube:main.main']},
     install_requires=['pafy >= 0.3.82, != 0.4.0, != 0.4.1, != 0.4.2'],
     classifiers=[
         "Topic :: Utilities",
@@ -62,20 +62,20 @@ options = dict(
             "bundle_files": 1
         }
     },
-    package_data={"": ["LICENSE", "README.rst", "CHANGELOG"]},
-    long_description=open("README.rst").read()
+    package_data={"": ["LICENSE", "README.md", "CHANGELOG"]},
+    long_description=open("README.md").read()
 )
 
 if sys.platform.startswith('linux'):
     # Install desktop file. Required for mpris on Ubuntu
-    options['data_files'] = [('share/applications/', ['mps-youtube.desktop'])]
+    options['data_files'] = [('share/applications/', ['yewtube.desktop'])]
 
 if os.name == "nt":
     try:
         import py2exe
         # Only setting these when py2exe imports successfully prevents warnings
         # in easy_install
-        options['console'] = ['mpsyt']
+        options['console'] = ['yt']
         options['zipfile'] = None
     except ImportError:
         pass

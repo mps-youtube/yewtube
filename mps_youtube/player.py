@@ -64,7 +64,7 @@ class BasePlayer:
                                 override=self.override)
 
             if config.SET_TITLE.get:
-                util.set_window_title(self.song.title + " - mpsyt")
+                util.set_window_title(self.song.title + " - yewtube")
 
             self.softrepeat = repeat and len(self.songlist) == 1
 
@@ -92,7 +92,7 @@ class BasePlayer:
                 pass
 
             if config.SET_TITLE.get:
-                util.set_window_title("mpsyt")
+                util.set_window_title("yewtube")
 
             if self.song_no == -1:
                 self.song_no = len(songlist) - 1 if repeat else 0
@@ -306,7 +306,7 @@ class CmdPlayer(BasePlayer):
                 g.mprisctl.send(('stop', True))
 
             if self.p and self.p.poll() is None:
-                self.p.terminate()  # make sure to kill mplayer if mpsyt crashes
+                self.p.terminate()  # make sure to kill mplayer if yewtube crashes
 
             self.clean_up()
 

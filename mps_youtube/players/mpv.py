@@ -275,7 +275,7 @@ class mpv(CmdPlayer):
 def _get_input_file():
     """ Check for existence of custom input file.
 
-    Return file name of temp input file with mpsyt mappings included
+    Return file name of temp input file with yewtube mappings included
     """
     confpath = conf = ''
 

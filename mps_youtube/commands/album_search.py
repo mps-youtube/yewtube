@@ -24,7 +24,7 @@ def show_message(message, col=c.r, update=False):
 
 
 def _do_query(url, query, err='query failed', report=False):
-    """ Perform http request using mpsyt user agent header.
+    """ Perform http request using yewtube user agent header.
 
     if report is True, return whether response is from memo
 
