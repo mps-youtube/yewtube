@@ -9,6 +9,13 @@ mps-youtube
     :target: http://pythonwheels.com/
     :alt: Wheel Status
 
+Installation
+------------
+1. Uninstall previous versions of ``mps-youtube`` first using pip or whatever package manager you used previously to install it.
+2. Install ``pipx`` using ``pip`` or using your favourite Linux Package Manager. You can find instructions to do so `here. <https://pypa.github.io/pipx/installation/>`_
+3. Install ``mps-youtube`` using ``pipx install git+https://github.com/iamtalhaasghar/mps-youtube.git``
+4. Resolve ``youtube-dl`` dependency using ``pipx inject mps-youtube youtube-dl``
+5. That's it.
 
 Features
 --------
