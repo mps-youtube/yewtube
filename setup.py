@@ -17,7 +17,7 @@ from setuptools import setup
 
 options = dict(
     name="yewtube",
-    version="1.0.1",
+    version="1.0.2",
     description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",

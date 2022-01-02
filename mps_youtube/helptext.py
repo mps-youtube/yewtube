@@ -244,7 +244,8 @@ def helptext():
     {2}set show_qrcode true|false{1} - show qrcode of the URL in the video information panel
     {2}set history true|false{1} - record play history
     {2}set input_history true|false{1} - record command input history
- 
+    {2}set vlc_dummy_interface true|false{1} - whether to hide VLC GUI or not (hides when true)
+    
     Additionally, {2}set -t{1} may be used to temporarily change a setting without
     saving it to disk
     """.format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'
