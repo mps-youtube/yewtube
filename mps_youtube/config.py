@@ -349,7 +349,8 @@ class _Config:
             ConfigItem("mpris", not mswin),
             ConfigItem("show_qrcode", False),
             ConfigItem("history", True), 
-            ConfigItem("input_history", True)
+            ConfigItem("input_history", True),
+            ConfigItem("vlc_dummy_interface", False)
             ]
 
     def __getitem__(self, key):

@@ -19,3 +19,4 @@ tags
 .env
 env/
 .idea/
+venv/

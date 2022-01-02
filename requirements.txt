@@ -1,2 +1,3 @@
 pafy
 youtube_dl
+pyreadline
