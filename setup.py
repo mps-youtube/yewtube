@@ -28,7 +28,7 @@ options = dict(
     download_url="https://github.com/iamtalhaasghar/yewtube/releases",
     packages=['mps_youtube', 'mps_youtube.commands', 'mps_youtube.listview', 'mps_youtube.players'],
     entry_points={'console_scripts': ['yt = mps_youtube:main.main']},
-    install_requires=['git+https://github.com/mps-youtube/pafy','youtube_dl','pyreadline'],
+    install_requires=['pafy','youtube_dl','pyreadline'],
     classifiers=[
         "Topic :: Utilities",
         "Topic :: Internet :: WWW/HTTP",
