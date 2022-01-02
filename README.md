@@ -4,14 +4,15 @@ yewtube
 
 Installation
 ------------
-1. It is recommended that you first Uninstall previous installations of `mps-youtube`
-1.  Install `pipx` using `pip` or using your favorite Linux Package
-    Manager. You can find instructions to do so [here.](https://pypa.github.io/pipx/installation/)
-1.  Install `yewtube` using
-    `pipx install git+https://github.com/iamtalhaasghar/yewtube.git`
-1.  Resolve `youtube-dl` dependency using
-    `pipx inject yewtube youtube-dl`
-1.  That's it.
+1. It is recommended that you first Uninstall previous installations of **_mps-youtube_** .i.e. `pip uninstall mps-youtube`
+2.  Install **_pipx_** using `pip install pipx`
+3.  Install `yewtube` using `pipx install git+https://github.com/iamtalhaasghar/yewtube.git`
+4.  Install latest pafy version using 
+ ```
+pipx runpip yewtube uninstall pafy
+pipx runpip yewtube install git+https://github.com/mps-youtube/pafy 
+```
+5.  Now, type `yt` That's it.
 
 Features
 --------
