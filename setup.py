@@ -15,11 +15,9 @@ if sys.version_info < (3,0):
 
 from setuptools import setup
 
-VERSION = "1.0.0"
-
 options = dict(
     name="yewtube",
-    version=VERSION,
+    version="1.0.1",
     description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",
