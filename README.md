@@ -26,18 +26,20 @@ Features
 -   View video comments
 -   Works with Python 3.x
 -   Works with Windows, Linux and Mac OS X
--   Requires mplayer or mpv
+-   Requires mplayer, mpv or VLC
+-   Run audio in VLC with no GUI
 
 This project is based on [mps-youtube](https://github.com/mps-youtube/mps-youtube) and mps-youtube is based on [mps](https://web.archive.org/web/20180429034221/https://github.com/np1/mps), a terminal based program to search, stream and download music. This
 implementation uses YouTube as a source of content and can play and
 download video as well as audio. The [pafy](https://github.com/mps-youtube/pafy)  library handles interfacing with YouTube.
 
-[FAQ / Troubleshooting common issues](https://github.com/mps-youtube/mps-youtube/wiki/Troubleshooting)
+[mps-youtube wiki](https://github.com/mps-youtube/mps-youtube/wiki/Troubleshooting) <br>
+[yewtube wiki](https://github.com/iamtalhaasghar/yewtube/wiki/FAQ)
 
 Screenshots
 -----------
 
-Search:
+Search:<br>
 ![](http://mps-youtube.github.io/mps-youtube/std-search.png)
 
 A standard search is performed by entering `/` followed by search terms.
@@ -47,12 +49,12 @@ You can play all of the search results by giving `1-` as input
 Repeating song/songs can be done with `song_number[loop]`, for example:
 `1[3]` or `4-6[2]`
 
-Local Playlists:
+Local Playlists:<br>
 ![](http://mps-youtube.github.io/mps-youtube/local-playlist.png)
 
 Search result items can easily be stored in local playlists.
 
-YouTube Playlists:
+YouTube Playlists:<br>
 ![](http://mps-youtube.github.io/mps-youtube/playlist-search.png)
 
 YouTube playlists can be searched and played or saved as local
@@ -60,17 +62,17 @@ playlists.
 
 A playlist search is performed by `//` followed by search term.
 
-Download:
+Download:<br>
 ![](http://mps-youtube.github.io/mps-youtube/download.png)
 
 Content can be downloaded in various formats and resolutions.
 
-Comments:
+Comments:<br>
 ![](http://mps-youtube.github.io/mps-youtube/comments.png)
 
 A basic comments browser is available to view YouTube user comments.
 
-Music Album Matching:
+Music Album Matching:<br>
 
 ![](http://mps-youtube.github.io/mps-youtube/album-1.png)
 
@@ -80,7 +82,7 @@ An album title can be specified and yewtube will attempt to find
 matches for each track of the album, based on title and duration. Type
 `help search` for more info.
 
-Customisation:
+Customisation:<br>
 
 ![](http://mps-youtube.github.io/mps-youtube/customisation2.png)
 
@@ -105,9 +107,9 @@ Upgrade pip installation::
 Usage
 -----
 
-yewtube is run on the command line using the command::
+yewtube is run on the command line using the command:
 
-    `yt`
+   `yt`
 
 Enter `h` from within the program for help.
 
