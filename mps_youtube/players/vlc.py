@@ -19,7 +19,6 @@ class vlc(CmdPlayer):
         if config.VLC_DUMMY_INTERFACE.get:
             print('[VLC DUMMY INTERFACE] Playing "{0}" ...'.format(self.song.title))
             args.extend(('-I', 'dummy')) # vlc without gui
-            util.list_update("--dummy-quiet", args)
 
         util.list_update("--play-and-exit", args)
 
@@ -30,6 +29,7 @@ class vlc(CmdPlayer):
 
     def launch_player(self, cmd):
         with open(os.devnull, "w") as devnull:
+            input(cmd)
             self.p = subprocess.Popen(cmd, shell=False, stderr=devnull)
         self.p.wait()
         self.next()
