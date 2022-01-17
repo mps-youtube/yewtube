@@ -15,9 +15,17 @@ if sys.version_info < (3,0):
 
 from setuptools import setup
 
+def get_version_number():
+    f = open("VERSION")
+    version = None
+    for i in f.readlines():
+        if 'version' in i:
+            version = i.split()[-1].strip()
+    return lines[-1].strip()
+
 options = dict(
     name="yewtube",
-    version="1.0.2",
+    version=get_version_number(),
     description="Terminal based YouTube player and downloader",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",
