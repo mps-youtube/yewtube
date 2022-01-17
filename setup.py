@@ -21,7 +21,7 @@ def get_version_number():
     for i in f.readlines():
         if 'version' in i:
             version = i.split()[-1].strip()
-    return lines[-1].strip()
+    return version
 
 options = dict(
     name="yewtube",
