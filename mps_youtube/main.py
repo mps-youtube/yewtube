@@ -26,10 +26,7 @@ import sys
 import os
 
 import pafy
-
-from . import g, c, commands, screen, history, util
-from . import __version__, playlists, content, listview
-from . import config
+from . import util
 
 completer = None
 try:
@@ -44,6 +41,9 @@ try:
 except ImportError:
     has_readline = False
 
+from . import g, c, commands, screen, history
+from . import __version__, playlists, content, listview
+from . import config
 
 mswin = os.name == "nt"
 
