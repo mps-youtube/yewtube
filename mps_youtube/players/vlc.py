@@ -29,7 +29,6 @@ class vlc(CmdPlayer):
 
     def launch_player(self, cmd):
         with open(os.devnull, "w") as devnull:
-            input(cmd)
             self.p = subprocess.Popen(cmd, shell=False, stderr=devnull)
         self.p.wait()
         self.next()
