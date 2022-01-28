@@ -25,6 +25,6 @@ def get_video_streams(ytid):
         info_dict = ydl.extract_info(ytid, download=False)
         return [i for i in info_dict['formats'] if i.get('format_note') != 'storyboard']
 def video_search(query):
-    videosSearch = VideosSearch(query, limit=10)
+    videosSearch = VideosSearch(query, limit=50)
     wdata = videosSearch.result()['result']
     return wdata
