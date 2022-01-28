@@ -4,19 +4,16 @@ yewtube
 
 Installation
 ------------
-1. It is recommended that you first Uninstall previous installations of **_mps-youtube_** .i.e. `pip uninstall mps-youtube`
-2.  Install **_pipx_** using `pip install pipx`
-3.  Install `yewtube` using `pipx install git+https://github.com/iamtalhaasghar/yewtube.git`
-4.  Install latest pafy version using 
- ```
-pipx runpip yewtube uninstall pafy
-pipx runpip yewtube install git+https://github.com/mps-youtube/pafy 
-```
-5.  Now, type `yt` That's it.
+1.  Install **_pipx_** using `pip install pipx`
+2.  Install `yewtube` using `pipx install git+https://github.com/iamtalhaasghar/yewtube.git`
+3.  Now, type `yt` That's it.
 
-Features
---------
+What's new in yewtube?
+----------------------
+-   **No Youtube API Key required**
+-   **Run audio in VLC with no GUI**
 
+These features are still inherited from [mps-youtube](https://github.com/mps-youtube/mps-youtube)
 -   Search and play audio/video from YouTube
 -   Search tracks of albums by album title
 -   Search and import YouTube playlists
@@ -27,7 +24,6 @@ Features
 -   Works with Python 3.x
 -   Works with Windows, Linux and Mac OS X
 -   Requires mplayer, mpv or VLC
--   Run audio in VLC with no GUI
 
 This project is based on [mps-youtube](https://github.com/mps-youtube/mps-youtube) and mps-youtube is based on [mps](https://web.archive.org/web/20180429034221/https://github.com/np1/mps), a terminal based program to search, stream and download music. This
 implementation uses YouTube as a source of content and can play and
