@@ -224,7 +224,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                     observe_full = True
 
                 if resp.get('event') == 'property-change':
-                    self.setproperty(resp['name'], resp['data'])
+                    self.setproperty(resp['name'], resp.get('data'))
 
         except socket.error:
             self.socket = None

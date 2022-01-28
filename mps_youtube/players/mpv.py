@@ -185,11 +185,11 @@ class mpv(CmdPlayer):
                         observe_full = True
 
                     if resp.get('event') == 'property-change' and resp['id'] == 1:
-                        if resp['data'] is not None:
-                            elapsed_s = int(resp['data'])
+                        if resp and resp.get('data') is not None:
+                            elapsed_s = int(resp.get('data'))
 
                     elif resp.get('event') == 'property-change' and resp['id'] == 2:
-                        volume_level = int(resp['data'])
+                        volume_level = int(resp.get('data'))
 
                     if(volume_level and volume_level != g.volume):
                         g.volume = volume_level
