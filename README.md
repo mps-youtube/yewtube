@@ -1,7 +1,7 @@
 yewtube
 ===========
-![](https://img.shields.io/pypi/v/mps-youtube.svg) ![](https://img.shields.io/pypi/dm/mps-youtube.svg)  ![](https://img.shields.io/pypi/wheel/mps-youtube.svg)
-
+<!--![](https://img.shields.io/pypi/v/mps-youtube.svg) ![](https://img.shields.io/pypi/dm/mps-youtube.svg)  ![](https://img.shields.io/pypi/wheel/mps-youtube.svg)
+-->
 Installation
 ------------
 1.  Install **_pipx_** using `pip install pipx`
