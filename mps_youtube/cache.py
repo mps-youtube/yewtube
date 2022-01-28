@@ -1,7 +1,6 @@
 import os
 import pickle
 
-import pafy
 
 from . import g, c, streams
 from .util import dbg
@@ -31,7 +30,8 @@ def load():
                 g.streams = cached
 
             if 'pafy' in cached:
-                pafy.load_cache(cached['pafy'])
+                pass
+                #pafy.load_cache(cached['pafy'])
 
             dbg(c.g + "%s cached streams imported%s", str(len(g.streams)), c.w)
 
@@ -46,8 +46,9 @@ def save():
     caches = dict(
         version=CACHE_VERSION,
         streams=g.streams,
-        userdata=g.username_query_cache,
-        pafy=pafy.dump_cache())
+        userdata=g.username_query_cache
+        #,pafy=pafy.dump_cache()
+    )
 
     with open(g.CACHEFILE, "wb") as cf:
         pickle.dump(caches, cf, protocol=2)

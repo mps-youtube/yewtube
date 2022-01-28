@@ -1,7 +1,6 @@
 import math
 import random
 
-import pafy
 
 from .. import g, c, screen, streams, content, util
 from ..playlist import Video
@@ -84,7 +83,7 @@ def plist(parturl):
         ytpl, plitems = g.pafy_pls[parturl]
     else:
         util.dbg("%sFetching playlist using pafy%s", c.y, c.w)
-        ytpl = pafy.get_playlist2(parturl)
+        ytpl = None#pafy.get_playlist2(parturl)
         plitems = util.IterSlicer(ytpl)
         g.pafy_pls[parturl] = (ytpl, plitems)
 

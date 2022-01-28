@@ -87,7 +87,9 @@ class BasePlayer:
                 break
 
             # skip forbidden, video removed/no longer available, etc. tracks
-            except TypeError:
+            except TypeError as e:
+                import traceback
+                traceback.print_exception(type(e), e, e.__traceback__)
                 self.song_no += 1
                 pass
 
@@ -130,7 +132,7 @@ class BasePlayer:
             subprocess.Popen(shlex.split(config.NOTIFIER.get) + [self.song.title])
 
         size = streams.get_size(self.song.ytid, self.stream['url'])
-        songdata = (self.song.ytid, self.stream['ext'] + " " + self.stream['quality'],
+        songdata = (self.song.ytid, '' if self.stream.get('ext') is None else self.stream.get('ext') + " " + self.stream['quality'],
                     int(size / (1024 ** 2)))
         self.songdata = "%s; %s; %s Mb" % songdata
         screen.writestatus(self.songdata)

@@ -20,7 +20,6 @@ try:
 except ImportError:
     has_readline = False
 
-import pafy
 from .. import g, c, __version__, content, screen, cache
 from .. import streams, history, config, util
 from ..helptext import get_help
@@ -85,12 +84,12 @@ def _format_comment(snippet, n, qnt, reply=False):
             c.c("y", text.strip()) + '\n\n'
 
 def _fetch_commentreplies(parentid):
-    return pafy.call_gdata('comments', {
-        'parentId': parentid,
-        'part': 'snippet',
-        'textFormat': 'plainText',
-        'maxResults': 50}).get('items', [])
-
+    # return pafy.call_gdata('comments', {
+    #     'parentId': parentid,
+    #     'part': 'snippet',
+    #     'textFormat': 'plainText',
+    #     'maxResults': 50}).get('items', [])
+    return None
 def fetch_comments(item):
     """ Fetch comments for item using gdata. """
     # pylint: disable=R0912

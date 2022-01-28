@@ -11,7 +11,6 @@ try:
 except ImportError:
     has_spotipy = False
 
-import pafy
 
 from .. import c, g, screen, __version__, __url__, content, config, util
 from . import command
@@ -141,7 +140,7 @@ def _match_tracks(tracks):
         util.dbg(query)
 
         # perform fetch
-        wdata = pafy.call_gdata('search', query)
+        wdata = None#pafy.call_gdata('search', query)
         results = get_tracks_from_json(wdata)
 
         if not results:
@@ -170,7 +169,7 @@ def search_user(term):
 
             if not term or len(term) < 2:
                 g.message = c.r + "Not enough input!" + c.w
-                g.content = content.generate_songlist_display()
+                g.content = None#content.generate_songlist_display()
                 return
 
         credentials = generate_credentials()
@@ -223,7 +222,7 @@ def search_playlist(term, spotify=None):
 
             if not term or len(term) < 2:
                 g.message = c.r + "Not enough input!" + c.w
-                g.content = content.generate_songlist_display()
+                g.content = None#content.generate_songlist_display()
                 return
 
         if not spotify:

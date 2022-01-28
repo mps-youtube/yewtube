@@ -12,7 +12,6 @@ import json
 import platform
 from datetime import datetime, timezone
 
-import pafy
 
 from . import g, c, terminalsize, description_parser
 from .playlist import Video
@@ -218,13 +217,13 @@ def get_pafy(item, force=False, callback=None):
     else:
 
         try:
-            p = pafy.new(ytid, callback=callback_fn)
+            p = None#pafy.new(ytid, callback=callback_fn)
 
         except IOError as e:
 
             if "pafy" in str(e):
                 dbg(c.p + "retrying failed pafy get: " + ytid + c.w)
-                p = pafy.new(ytid, callback=callback)
+                p = None#pafy.new(ytid, callback=callback)
 
             else:
                 raise

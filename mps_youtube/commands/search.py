@@ -14,7 +14,6 @@ parser.add_argument('-l', '--live', nargs="?", const=True)
 parser.add_argument('-c', '--category', nargs=1)
 parser.add_argument('search', nargs='+')
 
-import pafy
 
 from .. import g, c, screen, config, util, content, listview, contentquery
 from ..playlist import Video, Playlist
@@ -35,7 +34,10 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
 
     loadmsg = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
 
-    wdata = pafy.call_gdata('search', qs)
+    #wdata = pafy.call_gdata('search', qs)
+    from youtubesearchpython import VideosSearch
+    videosSearch = VideosSearch(qs['q'], limit=10)
+    wdata = videosSearch.result()['result']
 
     def iter_songs():
         wdata2 = wdata
@@ -43,13 +45,13 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
             for song in get_tracks_from_json(wdata2):
                 yield song
 
-            if not wdata2.get('nextPageToken'):
+            if type(wdata2) is list or not wdata2.get('nextPageToken'):
                 break
-            qs['pageToken'] = wdata2['nextPageToken']
-            wdata2 = pafy.call_gdata('search', qs)
+            qs['pageToken'] = None#wdata2['nextPageToken']
+            wdata2 = None#pafy.call_gdata('search', qs)
 
     # The youtube search api returns a maximum of 500 results
-    length = min(wdata['pageInfo']['totalResults'], 500)
+    length = len(wdata)
     slicer = util.IterSlicer(iter_songs(), length)
 
     paginatesongs(slicer, length=length, msg=msg, failmsg=failmsg,
@@ -80,8 +82,8 @@ def generate_search_qs(term, match='term', videoDuration='any', after=None, cate
         'order': aliases.get(config.ORDER.get, config.ORDER.get),
         'part': 'id,snippet',
         'type': 'video',
-        'videoDuration': videoDuration,
-        'key': config.API_KEY.get
+        'videoDuration': videoDuration
+        #,'key': config.API_KEY.get
     }
 
     if after:
@@ -138,7 +140,7 @@ def channelfromname(user):
               'key': config.API_KEY.get}
 
         try:
-            userinfo = pafy.call_gdata('channels', qs)['items']
+            userinfo = None#pafy.call_gdata('channels', qs)['items']
             if len(userinfo) > 0:
                 snippet = userinfo[0].get('snippet', {})
                 channel_id = userinfo[0].get('id', user)
@@ -148,7 +150,9 @@ def channelfromname(user):
                 g.message = "User {} not found.".format(c.y + user + c.w)
                 return
 
-        except pafy.GdataError as e:
+        except Exception as e:#pafy.GdataError as e:
+            import traceback
+            traceback.print_exception(type(e), e, e.__traceback__)
             g.message = "Could not retrieve information for user {}\n{}".format(
                 c.y + user + c.w, e)
             util.dbg('Error during channel request for user {}:\n{}'.format(
@@ -356,7 +360,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
         if 'videoCategoryId' in qs:
             del qs['videoCategoryId'] # Incompatable with type=playlist
 
-        pldata = pafy.call_gdata('search', qs)
+        pldata = None#pafy.call_gdata('search', qs)
 
         id_list = [i.get('id', {}).get('playlistId')
                     for i in pldata.get('items', ())
@@ -374,7 +378,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
     else:
         qs['id'] = ','.join(id_list)
 
-    pldata = pafy.call_gdata('playlists', qs)
+    pldata = None#pafy.call_gdata('playlists', qs)
     playlists = get_pl_from_json(pldata)[:util.getxy().max_results]
 
     if is_user:
@@ -439,50 +443,45 @@ def get_track_id_from_json(item):
 def get_tracks_from_json(jsons):
     """ Get search results from API response """
 
-    items = jsons.get("items")
-    if not items:
+    #items = jsons.get("items")
+    if len(jsons) == 0:
         util.dbg("got unexpected data or no search results")
         return ()
 
     # fetch detailed information about items from videos API
-    id_list = [get_track_id_from_json(i)
-                for i in items
-                if i['id']['kind'] == 'youtube#video']
-
-    qs = {'part':'contentDetails,statistics,snippet',
-          'id': ','.join(id_list)}
-
-    wdata = pafy.call_gdata('videos', qs)
-
-    items_vidinfo = wdata.get('items', [])
-    # enhance search results by adding information from videos API response
-    for searchresult, vidinfoitem in zip(items, items_vidinfo):
-        searchresult.update(vidinfoitem)
+    # id_list = [get_track_id_from_json(i)
+    #             for i in jsons
+    #             if i['id']['kind'] == 'youtube#video']
+    #
+    # qs = {'part':'contentDetails,statistics,snippet',
+    #       'id': ','.join(id_list)}
+    #
+    # wdata = pafy.call_gdata('videos', qs)
+    #
+    # items_vidinfo = wdata.get('items', [])
+    # # enhance search results by adding information from videos API response
+    # for searchresult, vidinfoitem in zip(items, items_vidinfo):
+    #     searchresult.update(vidinfoitem)
 
     # populate list of video objects
     songs = []
-    for item in items:
-
+    for item in jsons:
         try:
-
             ytid = get_track_id_from_json(item)
-            duration = item.get('contentDetails', {}).get('duration')
+            duration = item.get('duration')
 
             if duration:
-                duration = ISO8601_TIMEDUR_EX.findall(duration)
-                if len(duration) > 0:
-                    _, hours, _, minutes, _, seconds = duration[0]
-                    duration = [seconds, minutes, hours]
-                    duration = [int(v) if len(v) > 0 else 0 for v in duration]
-                    duration = sum([60**p*v for p, v in enumerate(duration)])
+                duration_tokens = duration.split(":")
+                if len(duration_tokens) == 2:
+                    duration = int(duration_tokens[0]) * 60 + int(duration_tokens[1])
                 else:
-                    duration = 30
+                    duration = int(duration_tokens[0] * 3600) + int(duration_tokens[1] * 60) + int(duration_tokens[2])
             else:
                 duration = 30
 
             stats = item.get('statistics', {})
             snippet = item.get('snippet', {})
-            title = snippet.get('title', '').strip()
+            title = item.get('title', '').strip()
             # instantiate video representation in local model
             cursong = Video(ytid=ytid, title=title, length=duration)
             likes = int(stats.get('likeCount', 0))
@@ -490,35 +489,35 @@ def get_tracks_from_json(jsons):
             #XXX this is a very poor attempt to calculate a rating value
             rating = 5.*likes/(likes+dislikes) if (likes+dislikes) > 0 else 0
             category = snippet.get('categoryId')
-            publishedlocaldatetime = util.yt_datetime_local(snippet.get('publishedAt', ''))
+            publishedlocaldatetime = None#util.yt_datetime_local(snippet.get('publishedAt', ''))
 
             # cache video information in custom global variable store
             g.meta[ytid] = dict(
                 # tries to get localized title first, fallback to normal title
-                title=snippet.get('localized',
-                                  {'title':snippet.get('title',
-                                                       '[!!!]')}).get('title',
-                                                                      '[!]'),
+                title=title,
                 length=str(util.fmt_time(cursong.length)),
                 rating=str('{}'.format(rating))[:4].ljust(4, "0"),
                 uploader=snippet.get('channelId'),
                 uploaderName=snippet.get('channelTitle'),
                 category=category,
                 aspect="custom", #XXX
-                uploaded=publishedlocaldatetime[1],
-                uploadedTime=publishedlocaldatetime[2],
+                uploaded=publishedlocaldatetime[1] if publishedlocaldatetime is not None else None,
+                uploadedTime=publishedlocaldatetime[2] if publishedlocaldatetime is not None else None,
                 likes=str(num_repr(likes)),
                 dislikes=str(num_repr(dislikes)),
                 commentCount=str(num_repr(int(stats.get('commentCount', 0)))),
                 viewCount=str(num_repr(int(stats.get('viewCount', 0)))))
+            songs.append(cursong)
 
         except Exception as e:
-
+            import traceback
+            traceback.print_exception(type(e), e, e.__traceback__)
+            input('Press any key to continue...')
             util.dbg(json.dumps(item, indent=2))
             util.dbg('Error during metadata extraction/instantiation of ' +
                 'search result {}\n{}'.format(ytid, e))
 
-        songs.append(cursong)
+
 
     # return video objects
     return songs

@@ -6,7 +6,6 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from xml.etree import ElementTree as ET
 
-import pafy
 
 from .. import c, g, screen, __version__, __url__, content, config, util
 from . import command
@@ -125,7 +124,7 @@ def _match_tracks(artist, title, mb_tracks):
         util.dbg(query)
 
         # perform fetch
-        wdata = pafy.call_gdata('search', query)
+        wdata = None#pafy.call_gdata('search', query)
         results = get_tracks_from_json(wdata)
 
         if not results:
@@ -216,7 +215,7 @@ def search_album(term):
 
         if not term or len(term) < 2:
             g.message = c.r + "Not enough input!" + c.w
-            g.content = content.generate_songlist_display()
+            g.content = None#content.generate_songlist_display()
             return
 
     album = _get_mb_album(term)

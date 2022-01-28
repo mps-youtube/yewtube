@@ -25,7 +25,6 @@ import locale
 import sys
 import os
 
-import pafy
 from . import util
 
 completer = None
@@ -84,7 +83,9 @@ def matchfunction(func, regex, userinput):
             g.content = g.content or\
                 content.generate_songlist_display(zeromsg=g.message)
 
-        except pafy.GdataError as e:
+        except Exception as e:#pafy.GdataError as e:
+            import traceback
+            traceback.print_exception(type(e), e, e.__traceback__)
             if g.debug_mode:
                 g.content = ''.join(traceback.format_exception(
                     *sys.exc_info()))

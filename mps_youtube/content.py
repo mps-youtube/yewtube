@@ -2,7 +2,6 @@ import math
 import copy
 import random
 
-import pafy
 
 from . import g, c, config
 from .util import getxy, fmt_time, uea_pad, yt_datetime, F
@@ -122,7 +121,7 @@ def generate_songlist_display(song=False, zeromsg=None):
         details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)
         cat = details.get('category') or '-'
-        details['category'] = pafy.get_categoryname(cat)
+        details['category'] = 'pafy.get_categoryname(cat)'
         details['ytid'] = x.ytid
         line = ''
 

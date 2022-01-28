@@ -7,8 +7,6 @@ import argparse
 import platform
 import multiprocessing
 
-import pafy
-
 try:
     # pylint: disable=F0401
     import colorama
@@ -59,7 +57,7 @@ def init():
         assign_player(config.PLAYER.get)  # Player is not assigned when config is loaded
 
     # Make pafy use the same api key
-    pafy.set_api_key(config.API_KEY.get)
+    # pafy.set_api_key(config.API_KEY.get)
 
     _init_readline()
     cache.load()
@@ -260,17 +258,18 @@ def _process_cl_args():
 
 def _get_version_info():
     """ Return version and platform info. """
-    pafy_version = pafy.__version__
-    youtube_dl_version = None
-    if tuple(map(int, pafy_version.split('.'))) >= (0, 5, 0):
-        pafy_version += " (" + pafy.backend + " backend)"
-        if pafy.backend == "youtube-dl":
-            import youtube_dl
-            youtube_dl_version = youtube_dl.version.__version__
+    # pafy_version = pafy.__version__
+    # youtube_dl_version = None
+    # if tuple(map(int, pafy_version.split('.'))) >= (0, 5, 0):
+    #     pafy_version += " (" + pafy.backend + " backend)"
+    #     if pafy.backend == "youtube-dl":
+
+    import youtube_dl
+    youtube_dl_version = youtube_dl.version.__version__
 
     out = "yewtube version      : " + __version__
     out += "\n   notes           : " + __notes__
-    out += "\npafy version       : " + pafy_version
+    #out += "\npafy version       : " + pafy_version
     if youtube_dl_version:
         out += "\nyoutube-dl version : " + youtube_dl_version
     out += "\nPython version     : " + sys.version

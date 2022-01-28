@@ -1,3 +1,4 @@
-pafy
-youtube_dl
 pyreadline
+yt-dlp
+youtube-search-python
+youtube_dl

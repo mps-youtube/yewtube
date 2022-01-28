@@ -4,7 +4,6 @@
 from os import path
 from random import choice
 import string
-import pafy
 
 from .. import content, g, playlists, screen, util, listview
 from ..playlist import Playlist

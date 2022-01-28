@@ -14,8 +14,6 @@ try:
 except ImportError:
     has_pylast = False
 
-import pafy
-
 from . import g, c, paths, util
 
 
@@ -184,21 +182,21 @@ def check_console_width(val):
     return dict(valid=valid, message=message)
 
 
-def check_api_key(key):
-    """ Validate an API key by calling an API endpoint with no quota cost """
-    url = "https://www.googleapis.com/youtube/v3/i18nLanguages"
-    query = {"part": "snippet", "fields": "items/id", "key": key}
-    try:
-        urlopen(url + "?" + urlencode(query)).read()
-        message = "The key, '" + key + "' will now be used for API requests."
-
-        # Make pafy use the same api key
-        pafy.set_api_key(Config.API_KEY.get)
-
-        return dict(valid=True, message=message)
-    except HTTPError:
-        message = "Invalid key or quota exceeded, '" + key + "'"
-        return dict(valid=False, message=message)
+# def check_api_key(key):
+#     """ Validate an API key by calling an API endpoint with no quota cost """
+#     url = "https://www.googleapis.com/youtube/v3/i18nLanguages"
+#     query = {"part": "snippet", "fields": "items/id", "key": key}
+#     try:
+#         urlopen(url + "?" + urlencode(query)).read()
+#         message = "The key, '" + key + "' will now be used for API requests."
+#
+#         # Make pafy use the same api key
+#         pafy.set_api_key(Config.API_KEY.get)
+#
+#         return dict(valid=True, message=message)
+#     except HTTPError:
+#         message = "Invalid key or quota exceeded, '" + key + "'"
+#         return dict(valid=False, message=message)
 
 
 def check_ddir(d):
@@ -342,8 +340,8 @@ class _Config:
                 allowed_values="auto webm m4a".split()),
             ConfigItem("video_format", "auto",
                 allowed_values="auto webm mp4 3gp".split()),
-            ConfigItem("api_key", "",
-                check_fn=check_api_key),
+            # ConfigItem("api_key", "",
+            #     check_fn=check_api_key),
             ConfigItem("autoplay", False),
             ConfigItem("set_title", True),
             ConfigItem("mpris", not mswin),
@@ -362,7 +360,9 @@ class _Config:
 
     def __getattr__(self, name):
         try:
-            return self[name]
+            # todo: remove this later
+            if name != 'API_KEY':
+                return self[name]
         except KeyError:
             raise AttributeError
 

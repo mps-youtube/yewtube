@@ -5,7 +5,6 @@
     It lets you treat A query as a list of all the results, even though
     data is only queried when requested.
 """
-import pafy
 
 from . import util
 
@@ -60,7 +59,7 @@ class ContentQuery:
 
         # Run query
         util.dbg("CQ.query", qry)
-        data = pafy.call_gdata(self.api, qry)
+        data = None#pafy.call_gdata(self.api, qry)
         
         self.maxresults = int(data.get("pageInfo").get("totalResults"))
         self.nextpagetoken = data.get("nextPageToken")
