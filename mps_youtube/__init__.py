@@ -1,4 +1,4 @@
-__version__ = "1.0.8"
+__version__ = "1.0.9"
 __notes__ = "released on 28 Jan 2022"
 __author__ = "iamtalhaasghar"
 __license__ = "GPLv3"

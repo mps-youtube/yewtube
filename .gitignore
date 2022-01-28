@@ -1,6 +1,5 @@
 *.py[cod]
 otherstuff/
-pafy.py
 pafy
 vi.py
 MANIFEST

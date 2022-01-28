@@ -4,7 +4,7 @@ import math
 import base64
 import logging
 from datetime import datetime, timedelta
-
+from .. import pafy
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
@@ -34,11 +34,7 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
 
     loadmsg = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
 
-    #wdata = pafy.call_gdata('search', qs)
-    from youtubesearchpython import VideosSearch
-    videosSearch = VideosSearch(qs['q'], limit=10)
-    wdata = videosSearch.result()['result']
-
+    wdata = pafy.video_search(qs['q'])
     def iter_songs():
         wdata2 = wdata
         while True:
@@ -475,7 +471,7 @@ def get_tracks_from_json(jsons):
                 if len(duration_tokens) == 2:
                     duration = int(duration_tokens[0]) * 60 + int(duration_tokens[1])
                 else:
-                    duration = int(duration_tokens[0] * 3600) + int(duration_tokens[1] * 60) + int(duration_tokens[2])
+                    duration = int(duration_tokens[0]) * 3600 + int(duration_tokens[1]) * 60 + int(duration_tokens[2])
             else:
                 duration = 30
 

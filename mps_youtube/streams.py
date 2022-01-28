@@ -1,7 +1,7 @@
 import time
 import threading
 from urllib.request import urlopen
-
+from . import pafy
 from . import g, c, screen, config, util
 
 
@@ -51,11 +51,7 @@ def get(vid, force=False, callback=None, threeD=False):
 
     #p = None#util.get_pafy(vid, force=force, callback=callback)
     #ps = p.allstreams if threeD else [x for x in p.allstreams if not x.threed]
-
-    from youtubesearchpython import StreamURLFetcher, Video
-    fetcher = StreamURLFetcher()
-    video = Video.get("https://www.youtube.com/watch?v=%s" % ytid)
-    ps = fetcher.getAll(video)['streams']
+    ps = pafy.get_video_streams(ytid)
 
     try:
         # test urls are valid
@@ -69,11 +65,11 @@ def get(vid, force=False, callback=None, threeD=False):
                                           if not x.threed]
 
     streams = [{"url": s['url'],
-                "ext": s.get('extension','?'),
-                "quality": s['quality'],
-                "rawbitrate": s['bitrate'],
-                "mtype": s['mimeType'],
-                "size": int(s.get('contentLength',-1))} for s in ps]
+                "ext": s['ext'],
+                "quality": s['resolution'],
+                "rawbitrate": s.get('bitrate',-1),
+                "mtype": 'audio' if 'audio' in s['resolution'] else ('video' if s['acodec'] != 'none' else '?'),
+                "size": int(s['filesize'] if s['filesize'] is not None else s['filesize_approx'])} for s in ps]
 
     temp = streams[0]['url'].split('expire=')[1]
     expiry = float(temp[:temp.find('&')])
@@ -101,19 +97,19 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
         return x['rawbitrate']
 
     if audio:
-        streams = [x for x in slist if "audio" in x['mtype']]
+        streams = [x for x in slist if x['mtype'] == "audio"]
         if not m4a_ok:
-            streams = [x for x in streams if not "m4a" in x['mtype']]
+            streams = [x for x in streams if not x['ext'] == "m4a"]
         if not config.AUDIO_FORMAT.get == "auto":
             if m4a_ok and config.AUDIO_FORMAT.get == "m4a":
-                streams = [x for x in streams if "m4a" in x['mtype']]
+                streams = [x for x in streams if x['ext'] == "m4a"]
             if config.AUDIO_FORMAT.get == "webm":
-                streams = [x for x in streams if "webm" in x['mtype']]
+                streams = [x for x in streams if x['ext'] == "webm"]
             if not streams:
-                streams = [x for x in slist if "audio" in x['mtype']]
+                streams = [x for x in slist if x['mtype'] == "audio"]
         streams = sorted(streams, key=getbitrate, reverse=True)
     else:
-        streams = [x for x in slist if "video" in x['mtype'] and okres(x)]
+        streams = [x for x in slist if x['mtype'] == "video" and okres(x)]
         if not config.VIDEO_FORMAT.get == "auto":
             if config.VIDEO_FORMAT.get == "mp4":
                 streams = [x for x in streams if x['ext'] == "mp4"]
@@ -122,7 +118,7 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
             if config.VIDEO_FORMAT.get == "3gp":
                 streams = [x for x in streams if x['ext'] == "3gp"]
             if not streams:
-                streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
+                streams = [x for x in slist if x['mtype'] == "video" and okres(x)]
         streams = sorted(streams, key=getq, reverse=True)
 
     util.dbg("select stream, q: %s, audio: %s, len: %s", q, audio, len(streams))
