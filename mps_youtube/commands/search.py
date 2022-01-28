@@ -439,25 +439,9 @@ def get_track_id_from_json(item):
 def get_tracks_from_json(jsons):
     """ Get search results from API response """
 
-    #items = jsons.get("items")
     if len(jsons) == 0:
         util.dbg("got unexpected data or no search results")
         return ()
-
-    # fetch detailed information about items from videos API
-    # id_list = [get_track_id_from_json(i)
-    #             for i in jsons
-    #             if i['id']['kind'] == 'youtube#video']
-    #
-    # qs = {'part':'contentDetails,statistics,snippet',
-    #       'id': ','.join(id_list)}
-    #
-    # wdata = pafy.call_gdata('videos', qs)
-    #
-    # items_vidinfo = wdata.get('items', [])
-    # # enhance search results by adding information from videos API response
-    # for searchresult, vidinfoitem in zip(items, items_vidinfo):
-    #     searchresult.update(vidinfoitem)
 
     # populate list of video objects
     songs = []
@@ -482,7 +466,7 @@ def get_tracks_from_json(jsons):
             cursong = Video(ytid=ytid, title=title, length=duration)
             likes = int(stats.get('likeCount', 0))
             dislikes = int(stats.get('dislikeCount', 0))
-            #XXX this is a very poor attempt to calculate a rating value
+            # this is a very poor attempt to calculate a rating value
             rating = 5.*likes/(likes+dislikes) if (likes+dislikes) > 0 else 0
             category = snippet.get('categoryId')
             publishedlocaldatetime = None#util.yt_datetime_local(snippet.get('publishedAt', ''))

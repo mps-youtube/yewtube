@@ -69,10 +69,14 @@ def get(vid, force=False, callback=None, threeD=False):
                 "quality": s['resolution'],
                 "rawbitrate": s.get('bitrate',-1),
                 "mtype": 'audio' if 'audio' in s['resolution'] else ('video' if s['acodec'] != 'none' else '?'),
-                "size": int(s['filesize'] if s['filesize'] is not None else s['filesize_approx'])} for s in ps]
+                "size": int(s.get('filesize') if s.get('filesize') is not None else s.get('filesize_approx', -1))} for s in ps]
 
-    temp = streams[0]['url'].split('expire=')[1]
-    expiry = float(temp[:temp.find('&')])
+
+    if 'manifest' in streams[0]['url']:
+        expiry = float(streams[0]['url'].split('/expire/')[1].split('/')[0])
+    else:
+        temp = streams[0]['url'].split('expire=')[1]
+        expiry = float(temp[:temp.find('&')])
 
     g.streams[ytid] = dict(expiry=expiry, meta=streams)
     prune()
