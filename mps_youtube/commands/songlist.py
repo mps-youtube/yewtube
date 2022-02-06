@@ -2,7 +2,7 @@ import math
 import random
 
 
-from .. import g, c, screen, streams, content, util
+from .. import g, c, screen, streams, content, util, pafy
 from ..playlist import Video
 from . import command, PL
 
@@ -83,16 +83,16 @@ def plist(parturl):
         ytpl, plitems = g.pafy_pls[parturl]
     else:
         util.dbg("%sFetching playlist using pafy%s", c.y, c.w)
-        ytpl = None#pafy.get_playlist2(parturl)
-        plitems = util.IterSlicer(ytpl)
+        ytpl = pafy.get_playlist(parturl)
+        plitems = util.IterSlicer(ytpl['videos'])
         g.pafy_pls[parturl] = (ytpl, plitems)
 
     def pl_seg(s, e):
-        return [Video(i.videoid, i.title, i.length) for i in plitems[s:e]]
+        return [Video(i['id'], i['title'], util.parse_video_length(i['duration'])) for i in plitems[s:e]]
 
-    msg = "Showing YouTube playlist %s" % (c.y + ytpl.title + c.w)
+    msg = "Showing YouTube playlist %s" % (c.y + ytpl['info']['title'] + c.w)
     loadmsg = "Retrieving YouTube playlist"
-    paginatesongs(pl_seg, length=len(ytpl), msg=msg, loadmsg=loadmsg)
+    paginatesongs(pl_seg, length=len(ytpl['videos']), msg=msg, loadmsg=loadmsg)
 
 
 @command(r'(rm|add)\s*(-?\d[-,\d\s]{,250})', 'rm', 'add')

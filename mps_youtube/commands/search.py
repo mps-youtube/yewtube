@@ -29,12 +29,12 @@ DAYS = dict(day = 1,
             year = 365)
 
 
-def _search(progtext, qs=None, msg=None, failmsg=None):
+def _search(progtext, query, msg=None, failmsg=None):
     """ Perform memoized url fetch, display progtext. """
 
     loadmsg = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
 
-    wdata = pafy.video_search(qs['q'])
+    wdata = pafy.video_search(query)
     def iter_songs():
         wdata2 = wdata
         while True:
@@ -43,7 +43,7 @@ def _search(progtext, qs=None, msg=None, failmsg=None):
 
             if type(wdata2) is list or not wdata2.get('nextPageToken'):
                 break
-            qs['pageToken'] = None#wdata2['nextPageToken']
+            query = None#wdata2['nextPageToken']
             wdata2 = None#pafy.call_gdata('search', qs)
 
     # The youtube search api returns a maximum of 500 results
@@ -67,40 +67,40 @@ def token(page):
     return b64.strip('=')
 
 
-def generate_search_qs(term, match='term', videoDuration='any', after=None, category=None, is_live=False):
-    """ Return query string. """
-
-    aliases = dict(views='viewCount')
-    qs = {
-        'q': term,
-        'maxResults': 50,
-        'safeSearch': "none",
-        'order': aliases.get(config.ORDER.get, config.ORDER.get),
-        'part': 'id,snippet',
-        'type': 'video',
-        'videoDuration': videoDuration
-        #,'key': config.API_KEY.get
-    }
-
-    if after:
-        after = after.lower()
-        qs['publishedAfter'] = '%sZ' % (datetime.utcnow() - timedelta(days=DAYS[after])).isoformat() \
-                                if after in DAYS.keys() else '%s%s' % (after, 'T00:00:00Z' * (len(after) == 10))
-
-    if match == 'related':
-        qs['relatedToVideoId'] = term
-        del qs['q']
-
-    if config.SEARCH_MUSIC.get:
-        qs['videoCategoryId'] = 10
-
-    if category:
-        qs['videoCategoryId'] = category
-
-    if is_live:
-        qs['eventType'] = "live"
-
-    return qs
+# def generate_search_qs(term, match='term', videoDuration='any', after=None, category=None, is_live=False):
+#     """ Return query string. """
+#
+#     aliases = dict(views='viewCount')
+#     qs = {
+#         'q': term,
+#         'maxResults': 50,
+#         'safeSearch': "none",
+#         'order': aliases.get(config.ORDER.get, config.ORDER.get),
+#         'part': 'id,snippet',
+#         'type': 'video',
+#         'videoDuration': videoDuration
+#         #,'key': config.API_KEY.get
+#     }
+#
+#     if after:
+#         after = after.lower()
+#         qs['publishedAfter'] = '%sZ' % (datetime.utcnow() - timedelta(days=DAYS[after])).isoformat() \
+#                                 if after in DAYS.keys() else '%s%s' % (after, 'T00:00:00Z' * (len(after) == 10))
+#
+#     if match == 'related':
+#         qs['relatedToVideoId'] = term
+#         del qs['q']
+#
+#     if config.SEARCH_MUSIC.get:
+#         qs['videoCategoryId'] = 10
+#
+#     if category:
+#         qs['videoCategoryId'] = category
+#
+#     if is_live:
+#         qs['eventType'] = "live"
+#
+#     return qs
 
 
 def userdata_cached(userterm):
@@ -208,7 +208,7 @@ def usersearch_id(user, channel_id, term):
     for an optional search term with the user (i.e. the channel)
     identified by its ID """
 
-    query = generate_search_qs(term)
+    query = None#generate_search_qs(term)
     aliases = dict(views='viewCount')  # The value of the config item is 'views' not 'viewCount'
     if config.USER_ORDER.get:
         query['order'] = aliases.get(config.USER_ORDER.get,
@@ -230,22 +230,21 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
             failmsg = "User %s not found or has no videos."  % termuser[1]
     msg = str(msg).format(c.w, c.y, c.y, term, user)
 
-    _search(progtext, query, msg, failmsg)
+    _search(progtext, term, msg, failmsg)
 
 
 def related_search(vitem):
-    """ Fetch uploads by a YouTube user. """
-    query = generate_search_qs(vitem.ytid, match='related')
-
-    if query.get('videoCategoryId'):
-        del query['videoCategoryId']
+    """ Fetch videos related to vitem
+    vitem = {'description': str, 'length': int, 'title': str, 'ytid': str}
+    """
 
     t = vitem.title
     ttitle = t[:48].strip() + ".." if len(t) > 49 else t
 
     msg = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
     failmsg = "Related to %s%s%s not found" % (c.y, vitem.ytid, c.w)
-    _search(ttitle, query, msg, failmsg)
+
+    _search(ttitle, vitem.title, msg, failmsg)
 
 
 # Livestream category search
@@ -309,12 +308,11 @@ def search(term):
         return
 
     logging.info("search for %s", term)
-    query = generate_search_qs(term, videoDuration=video_duration, after=after,
-                               category=args.category, is_live=args.live)
+    query = None#generate_search_qs(term, videoDuration=video_duration, after=after, category=args.category, is_live=args.live)
 
     msg = "Search results for %s%s%s" % (c.y, term, c.w)
     failmsg = "Found nothing for %s%s%s" % (c.y, term, c.w)
-    _search(term, query, msg, failmsg)
+    _search(term, term, msg, failmsg)
 
 
 @command(r'u(?:ser)?pl\s(.*)', 'userpl', 'upl')
@@ -350,35 +348,31 @@ def pl_search(term, page=0, splash=True, is_user=False):
     else:
         # playlist search is done with the above url and param type=playlist
         logging.info("playlist search for %s", prog)
-        qs = generate_search_qs(term)
-        qs['pageToken'] = token(page)
-        qs['type'] = 'playlist'
-        if 'videoCategoryId' in qs:
-            del qs['videoCategoryId'] # Incompatable with type=playlist
+        # qs = generate_search_qs(term)
+        # qs['pageToken'] = token(page)
+        # qs['type'] = 'playlist'
+        # if 'videoCategoryId' in qs:
+        #     del qs['videoCategoryId'] # Incompatable with type=playlist
 
-        pldata = None#pafy.call_gdata('search', qs)
+        pldata = pafy.playlist_search(term)
 
-        id_list = [i.get('id', {}).get('playlistId')
-                    for i in pldata.get('items', ())
-                    if i['id']['kind'] == 'youtube#playlist']
+        #id_list = [i.get('id', {}) for i in pldata]
 
-        result_count = min(pldata['pageInfo']['totalResults'], 500)
+        result_count = len(pldata)
 
-    qs = {'part': 'contentDetails,snippet',
-          'maxResults': 50}
-
+    #todo: what is the purpose of this code? #qs = {'part': 'contentDetails,snippet','maxResults': 50}
     if is_user:
         if page:
-            qs['pageToken'] = token(page)
-        qs['channelId'] = channel_id
+            pass #qs['pageToken'] = token(page)
+        pass #qs['channelId'] = channel_id
     else:
-        qs['id'] = ','.join(id_list)
+        pass #qs['id'] = ','.join(id_list)
 
-    pldata = None#pafy.call_gdata('playlists', qs)
+    pldata = pafy.playlist_search(term)
     playlists = get_pl_from_json(pldata)[:util.getxy().max_results]
 
-    if is_user:
-        result_count = pldata['pageInfo']['totalResults']
+    # if is_user:
+    #     result_count = pldata['pageInfo']['totalResults']
 
     if playlists:
         g.last_search_query = (pl_search, {"term": term, "is_user": is_user})
@@ -399,7 +393,7 @@ def get_pl_from_json(pldata):
     """ Process json playlist data. """
 
     try:
-        items = pldata['items']
+        items = pldata
 
     except KeyError:
         items = []
@@ -407,15 +401,14 @@ def get_pl_from_json(pldata):
     results = []
 
     for item in items:
-        snippet = item['snippet']
         results.append(dict(
             link=item["id"],
-            size=item["contentDetails"]["itemCount"],
-            title=snippet["title"],
-            author=snippet["channelTitle"],
-            created=snippet["publishedAt"],
-            updated=snippet['publishedAt'], #XXX Not available in API?
-            description=snippet["description"]))
+            size=item["videoCount"],
+            title=item["title"],
+            author=item['channel']["name"],
+            created=item.get("publishedAt"),
+            updated=item.get('publishedAt'), #XXX Not available in API?
+            description=item.get("description")))
 
     return results
 
@@ -448,17 +441,7 @@ def get_tracks_from_json(jsons):
     for item in jsons:
         try:
             ytid = get_track_id_from_json(item)
-            duration = item.get('duration')
-
-            if duration:
-                duration_tokens = duration.split(":")
-                if len(duration_tokens) == 2:
-                    duration = int(duration_tokens[0]) * 60 + int(duration_tokens[1])
-                else:
-                    duration = int(duration_tokens[0]) * 3600 + int(duration_tokens[1]) * 60 + int(duration_tokens[2])
-            else:
-                duration = 30
-
+            duration = util.parse_video_length(item.get('duration'))
             stats = item.get('statistics', {})
             snippet = item.get('snippet', {})
             title = item.get('title', '').strip()

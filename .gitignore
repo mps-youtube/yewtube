@@ -19,3 +19,4 @@ tags
 env/
 .idea/
 venv/
+test.py

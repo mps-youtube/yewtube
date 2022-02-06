@@ -342,6 +342,8 @@ def real_len(u, alt=False):
 
 def yt_datetime(yt_date_time):
     """ Return a time object, locale formated date string and locale formatted time string. """
+    if yt_date_time is None:
+        return ['Unknown', 'Unknown', 'Unknown']
     time_obj = time.strptime(yt_date_time, "%Y-%m-%dT%H:%M:%SZ")
     locale_date = time.strftime("%x", time_obj)
     locale_time = time.strftime("%X", time_obj)
@@ -593,3 +595,16 @@ class CommandCompleter:
     def add_cmd(self, val):
         if(not val in self.COMMANDS):
             self.COMMANDS.append(val)
+
+def parse_video_length(duration):
+    '''
+    Converts HH:MM:SS to a single integer .i.e. total number of seconds
+    '''
+    if duration:
+        duration_tokens = duration.split(":")
+        if len(duration_tokens) == 2:
+            return int(duration_tokens[0]) * 60 + int(duration_tokens[1])
+        else:
+            return int(duration_tokens[0]) * 3600 + int(duration_tokens[1]) * 60 + int(duration_tokens[2])
+    else:
+        return 10

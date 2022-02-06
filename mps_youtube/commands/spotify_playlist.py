@@ -15,7 +15,7 @@ except ImportError:
 from .. import c, g, screen, __version__, __url__, content, config, util
 from . import command
 from .songlist import paginatesongs
-from .search import generate_search_qs, get_tracks_from_json
+from .search import get_tracks_from_json
 
 
 def generate_credentials():
@@ -136,7 +136,7 @@ def _match_tracks(tracks):
                                                     dtime(length)))
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
-        query = generate_search_qs(w, 0)
+        query = w#generate_search_qs(w, 0)
         util.dbg(query)
 
         # perform fetch

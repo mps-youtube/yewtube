@@ -264,14 +264,10 @@ def _get_version_info():
     #     pafy_version += " (" + pafy.backend + " backend)"
     #     if pafy.backend == "youtube-dl":
 
-    import youtube_dl
-    youtube_dl_version = youtube_dl.version.__version__
+    from yt_dlp.version import __version__ as ytdlp_version
 
-    out = "yewtube version      : " + __version__
-    out += "\n   notes           : " + __notes__
-    #out += "\npafy version       : " + pafy_version
-    if youtube_dl_version:
-        out += "\nyoutube-dl version : " + youtube_dl_version
+    out = "yewtube version    : " + __version__ +" "+ __notes__
+    out += "\nyt_dlp version     : " + ytdlp_version
     out += "\nPython version     : " + sys.version
     out += "\nProcessor          : " + platform.processor()
     out += "\nMachine type       : " + platform.machine()
