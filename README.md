@@ -1,9 +1,14 @@
-yewtube
-===========
-<!--![](https://img.shields.io/pypi/v/mps-youtube.svg) ![](https://img.shields.io/pypi/dm/mps-youtube.svg)  ![](https://img.shields.io/pypi/wheel/mps-youtube.svg)
--->
+
+# yewtube ![](https://img.shields.io/pypi/v/yewtube.svg)  ![](https://img.shields.io/pypi/wheel/yewtube.svg)
+ Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube 
+
 Installation
 ------------
+### Using pip
+1. Installing using `pip install yewtube`
+2. Run using, `yt`. Enjoy! 
+
+### Using pipx
 1.  Install **_pipx_** using `pip install pipx`
 2.  Install `yewtube` using `pipx install git+https://github.com/iamtalhaasghar/yewtube.git`
 3.  Now, type `yt` That's it.
