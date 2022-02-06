@@ -26,7 +26,7 @@ def get_version_number():
 options = dict(
     name="yewtube",
     version=get_version_number(),
-    description="Terminal based YouTube player and downloader",
+    description="A Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",
     author_email="talhaasghar.contact@simplelogin.fr",
