@@ -16,7 +16,7 @@ def prune():
     # prune time expired items
 
     now = time.time()
-    oldpafs = [k for k in g.pafs if g.pafs[k].expiry < now]
+    oldpafs = [k for k in g.pafs if g.pafs[k] is not None and g.pafs[k].expiry < now]
 
     if len(oldpafs):
         util.dbg(c.r + "%s old pafy items pruned%s", len(oldpafs), c.w)
