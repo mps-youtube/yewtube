@@ -1,5 +1,5 @@
 from youtubesearchpython import VideosSearch, ChannelsSearch, PlaylistsSearch, Suggestions, Playlist
-import yt_dlp, random
+import yt_dlp, random, os
 
 class MyLogger:
     def debug(self, msg):
@@ -24,6 +24,15 @@ def get_video_streams(ytid):
     with yt_dlp.YoutubeDL({'logger':MyLogger()}) as ydl:
         info_dict = ydl.extract_info(ytid, download=False)
         return [i for i in info_dict['formats'] if i.get('format_note') != 'storyboard']
+
+def download_video(ytid, folder):
+    ytdl_format_options = {
+        'outtmpl': os.path.join(folder, '%(title)s-%(id)s.%(ext)s')
+    }
+
+    with yt_dlp.YoutubeDL(ytdl_format_options) as ydl:
+        ydl.download('https://www.youtube.com/watch?v=%s' % ytid)
+        return True
 
 def video_search(query):
     videosSearch = VideosSearch(query, limit=50)
