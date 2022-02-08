@@ -1,4 +1,3 @@
 #!/usr/bin/env python3
-import mps_youtube.main, warnings
-warnings.filterwarnings("ignore") # related to https://github.com/mps-youtube/mps-youtube/issues/1154
+import mps_youtube.main
 mps_youtube.main.main()
