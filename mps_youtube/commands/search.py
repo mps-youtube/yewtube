@@ -29,12 +29,11 @@ DAYS = dict(day = 1,
             year = 365)
 
 
-def _search(progtext, query, msg=None, failmsg=None):
+def _display_search_results(progtext, wdata, msg=None, failmsg=None):
     """ Perform memoized url fetch, display progtext. """
 
     loadmsg = "Searching for '%s%s%s'" % (c.y, progtext, c.w)
 
-    wdata = pafy.video_search(query)
     def iter_songs():
         wdata2 = wdata
         while True:
@@ -126,37 +125,22 @@ def channelfromname(user):
 
     cached = userdata_cached(user)
     if cached:
-        user, channel_id = cached
-    else:
-        # if the user is looked for by their display name,
-        # we have to sent an additional request to find their
-        # channel id
-        qs = {'part': 'id,snippet',
-              'forUsername': user,
-              'key': config.API_KEY.get}
+        return cached
 
-        try:
-            userinfo = None#pafy.call_gdata('channels', qs)['items']
-            if len(userinfo) > 0:
-                snippet = userinfo[0].get('snippet', {})
-                channel_id = userinfo[0].get('id', user)
-                username = snippet.get('title', user)
-                user = cache_userdata(user, username, channel_id)[0]
-            else:
-                g.message = "User {} not found.".format(c.y + user + c.w)
-                return
+    try:
+        channel_id, channel_name = pafy.channel_id_from_name(user)
+        return cache_userdata(user, channel_name, channel_id)
 
-        except Exception as e:#pafy.GdataError as e:
-            import traceback
-            traceback.print_exception(type(e), e, e.__traceback__)
-            g.message = "Could not retrieve information for user {}\n{}".format(
-                c.y + user + c.w, e)
-            util.dbg('Error during channel request for user {}:\n{}'.format(
-                user, e))
-            return
+    except Exception as e:
+        import traceback
+        traceback.print_exception(type(e), e, e.__traceback__)
+        g.message = "Could not retrieve information for user {}\n{}".format(
+            c.y + user + c.w, e)
+        util.dbg('Error during channel request for user {}:\n{}'.format(
+            user, e))
 
     # at this point, we know the channel id associated to a user name
-    return (user, channel_id)
+    return None
 
 
 @command(r'channels\s+(.+)')
@@ -208,12 +192,13 @@ def usersearch_id(user, channel_id, term):
     for an optional search term with the user (i.e. the channel)
     identified by its ID """
 
-    query = None#generate_search_qs(term)
+    #query = generate_search_qs(term)
     aliases = dict(views='viewCount')  # The value of the config item is 'views' not 'viewCount'
     if config.USER_ORDER.get:
-        query['order'] = aliases.get(config.USER_ORDER.get,
-                config.USER_ORDER.get)
-    query['channelId'] = channel_id
+        pass
+        #query['order'] = aliases.get(config.USER_ORDER.get,
+        #        config.USER_ORDER.get)
+    #query['channelId'] = channel_id
 
     termuser = tuple([c.y + x + c.w for x in (term, user)])
     if term:
@@ -229,8 +214,8 @@ Use 'set search_music False' to show results not in the Music category.""" % ter
         else:
             failmsg = "User %s not found or has no videos."  % termuser[1]
     msg = str(msg).format(c.w, c.y, c.y, term, user)
-
-    _search(progtext, term, msg, failmsg)
+    results = pafy.all_videos_from_channel(channel_id)
+    _display_search_results(progtext, results, msg, failmsg)
 
 
 def related_search(vitem):
@@ -244,7 +229,8 @@ def related_search(vitem):
     msg = "Videos related to %s%s%s" % (c.y, ttitle, c.w)
     failmsg = "Related to %s%s%s not found" % (c.y, vitem.ytid, c.w)
 
-    _search(ttitle, vitem.title, msg, failmsg)
+    # todo: implement realted search in pafy
+    #_search(ttitle, vitem.title, msg, failmsg)
 
 
 # Livestream category search
@@ -308,17 +294,18 @@ def search(term):
         return
 
     logging.info("search for %s", term)
-    query = None#generate_search_qs(term, videoDuration=video_duration, after=after, category=args.category, is_live=args.live)
+    #query = generate_search_qs(term, videoDuration=video_duration, after=after, category=args.category, is_live=args.live)
 
     msg = "Search results for %s%s%s" % (c.y, term, c.w)
     failmsg = "Found nothing for %s%s%s" % (c.y, term, c.w)
-    _search(term, term, msg, failmsg)
+    wdata = pafy.video_search(term)
+    _display_search_results(term, wdata, msg, failmsg)
 
 
 @command(r'u(?:ser)?pl\s(.*)', 'userpl', 'upl')
 def user_pls(user):
     """ Retrieve user playlists. """
-    return pl_search(user, is_user=True)
+    return usersearch_id(user, pafy.channel_id_from_name(user)[0], '')#pl_search(user, is_user=True)
 
 
 @command(r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)', 'plsearch')

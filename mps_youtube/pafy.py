@@ -1,4 +1,4 @@
-from youtubesearchpython import VideosSearch, ChannelsSearch, PlaylistsSearch, Suggestions, Playlist
+from youtubesearchpython import *
 import yt_dlp, random, os
 
 class MyLogger:
@@ -24,7 +24,7 @@ def get_video_streams(ytid):
 
     '''
     given a youtube video id returns different video / audio stream formats' \
-    ''''
+    '''
 
     with yt_dlp.YoutubeDL({'logger':MyLogger()}) as ydl:
         info_dict = ydl.extract_info(ytid, download=False)
@@ -85,3 +85,17 @@ def get_video_title_suggestions(query):
     suggestions = Suggestions(language = 'en', region = 'US')
     related_searches = suggestions.get(query)['result']
     return related_searches[random.randint(0,len(related_searches))]
+
+def channel_id_from_name(query):
+    channel_info = channel_search(query)[0]
+    channel_id = channel_info['id']
+    channel_name = channel_info['title']
+    return (channel_id, channel_name)
+
+def all_videos_from_channel(channel_id):
+    playlist = Playlist(playlist_from_channel_id(channel_id))
+    return playlist.videos
+
+def search_videos_from_channel(channel_id, query):
+    search = ChannelSearch(query , channel_id)
+    return search.result()
