@@ -25,7 +25,7 @@ def get_version_number():
 
 options = dict(
     name="yewtube",
-    version="1.1.6",
+    version="1.1.8",
     description="A Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",
@@ -34,7 +34,7 @@ options = dict(
     download_url="https://github.com/iamtalhaasghar/yewtube/releases",
     packages=['mps_youtube', 'mps_youtube.commands', 'mps_youtube.listview', 'mps_youtube.players'],
     entry_points={'console_scripts': ['yt = mps_youtube:main.main']},
-    install_requires=open('requirements.txt').readlines(),
+    install_requires=['pyreadline','yt-dlp','youtube-search-python', 'pyperclip'],#open('requirements.txt').readlines(),
     classifiers=[
         "Topic :: Utilities",
         "Topic :: Internet :: WWW/HTTP",
