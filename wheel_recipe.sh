@@ -1,4 +1,4 @@
 rm -rf dist/
 python -m build --sdist
 python -m build --wheel
-twine upload dist/*
+twine upload --verbose dist/*
