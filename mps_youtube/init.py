@@ -23,7 +23,7 @@ try:
 except ImportError:
     has_readline = False
 
-from . import cache, g, __version__, __notes__, screen, c, paths, config
+from . import cache, g, __version__, screen, c, paths, config
 from .util import has_exefile, dbg, xprint, load_player_info, assign_player
 from .helptext import helptext
 
@@ -266,7 +266,7 @@ def _get_version_info():
 
     from yt_dlp.version import __version__ as ytdlp_version
 
-    out = "yewtube version    : " + __version__ +" "+ __notes__
+    out = "yewtube version    : " + __version__
     out += "\nyt_dlp version     : " + ytdlp_version
     out += "\nPython version     : " + sys.version
     out += "\nProcessor          : " + platform.processor()

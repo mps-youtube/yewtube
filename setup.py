@@ -7,21 +7,13 @@ https://github.com/iamtalhaasghar/yewtube
 python setup.py sdist bdist_wheel
 """
 
-import sys
-import os
+import sys, os
+from datetime import datetime
 
 if sys.version_info < (3,0):
     sys.exit("yewtube requires python 3.")
 
 from setuptools import setup
-
-# def get_version_number():
-#     f = open("VERSION")
-#     version = None
-#     for i in f.readlines():
-#         if 'version' in i:
-#             version = i.split()[-1].strip()
-#     return version
 
 # with open("README.md", "r", encoding="utf-8") as fh:
 #     long_description = fh.read()
@@ -32,7 +24,7 @@ from setuptools import setup
     
 options = dict(
     name="yewtube",
-    version="2.0.1",
+    version=datetime.now().strftime('%Y%m%d%H%M'),
     description="A Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",
