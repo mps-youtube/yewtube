@@ -99,3 +99,7 @@ def all_videos_from_channel(channel_id):
 def search_videos_from_channel(channel_id, query):
     search = ChannelSearch(query , channel_id)
     return search.result()
+
+def get_comments(video_id):
+    comments = Comments.get(video_id)
+    return comments['result']
