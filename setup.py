@@ -35,8 +35,9 @@ options = dict(
     entry_points={'console_scripts': ['yt = mps_youtube:main.main']},
     python_requires='>=3.6',
     install_requires=[
+        'pyreadline ; platform_system=="Linux"',
+        'pyreadline3 ; platform_system=="Windows"',
         'pyperclip',
-        'pyreadline',
         'youtube-search-python',
         'yt-dlp',
     ],
