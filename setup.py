@@ -10,8 +10,8 @@ python setup.py sdist bdist_wheel
 import sys, os
 from datetime import datetime
 
-if sys.version_info < (3,0):
-    sys.exit("yewtube requires python 3.")
+if sys.version_info < (3, 6):
+    sys.exit("yewtube requires minimum python 3.6")
 
 from setuptools import setup
 
