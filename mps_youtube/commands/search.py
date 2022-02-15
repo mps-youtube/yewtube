@@ -429,34 +429,35 @@ def get_tracks_from_json(jsons):
         try:
             ytid = get_track_id_from_json(item)
             duration = util.parse_video_length(item.get('duration'))
-            stats = item.get('statistics', {})
-            snippet = item.get('snippet', {})
+            #stats = item.get('statistics', {})
+            #snippet = item.get('snippet', {})
             title = item.get('title', '').strip()
             # instantiate video representation in local model
             cursong = Video(ytid=ytid, title=title, length=duration)
-            likes = int(stats.get('likeCount', 0))
-            dislikes = int(stats.get('dislikeCount', 0))
+            dislike_data = pafy.return_dislikes(ytid)
+            likes = int(dislike_data['likes'])
+            dislikes = int(dislike_data['dislikes'])
             # this is a very poor attempt to calculate a rating value
-            rating = 5.*likes/(likes+dislikes) if (likes+dislikes) > 0 else 0
-            category = snippet.get('categoryId')
-            publishedlocaldatetime = None#util.yt_datetime_local(snippet.get('publishedAt', ''))
+            rating = int(dislike_data['rating'])#5.*likes/(likes+dislikes) if (likes+dislikes) > 0 else 0
+            category = '?'#snippet.get('categoryId')
+            publishedlocaldatetime = item['publishedTime']#util.yt_datetime_local(snippet.get('publishedAt', ''))
 
             # cache video information in custom global variable store
             g.meta[ytid] = dict(
                 # tries to get localized title first, fallback to normal title
                 title=title,
                 length=str(util.fmt_time(cursong.length)),
-                rating=str('{}'.format(rating))[:4].ljust(4, "0"),
-                uploader=snippet.get('channelId'),
-                uploaderName=snippet.get('channelTitle'),
+                rating=rating,#str('{}'.format(rating))[:4].ljust(4, "0"),
+                uploader=item['channel']['id'],
+                uploaderName=item['channel']['name'],
                 category=category,
                 aspect="custom", #XXX
-                uploaded=publishedlocaldatetime[1] if publishedlocaldatetime is not None else None,
-                uploadedTime=publishedlocaldatetime[2] if publishedlocaldatetime is not None else None,
+                uploaded=publishedlocaldatetime,#publishedlocaldatetime[1] if publishedlocaldatetime is not None else None,
+                uploadedTime=publishedlocaldatetime,#,publishedlocaldatetime[2] if publishedlocaldatetime is not None else None,
                 likes=str(num_repr(likes)),
                 dislikes=str(num_repr(dislikes)),
-                commentCount=str(num_repr(int(stats.get('commentCount', 0)))),
-                viewCount=str(num_repr(int(stats.get('viewCount', 0)))))
+                commentCount='?',#str(num_repr(int(stats.get('commentCount', 0)))),
+                viewCount=item['viewCount']['text'])#str(num_repr(int(stats.get('viewCount', 0)))))
             songs.append(cursong)
 
         except Exception as e:

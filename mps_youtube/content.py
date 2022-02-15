@@ -120,8 +120,8 @@ def generate_songlist_display(song=False, zeromsg=None):
         otitle = details['title']
         details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)
-        cat = details.get('category') or '-'
-        details['category'] = 'pafy.get_categoryname(cat)'
+        #cat = details.get('category') or '-'
+        #details['category'] = 'pafy.get_categoryname(cat)'
         details['ytid'] = x.ytid
         line = ''
 

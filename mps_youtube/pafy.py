@@ -105,8 +105,11 @@ def get_comments(video_id):
 
 def get_video_info(video_id):
     videoInfo = Video.getInfo(video_id)
-    response = json.loads(requests.get('https://returnyoutubedislikeapi.com/votes?videoId=' + video_id).text)
+    response = return_dislikes(video_id)
     videoInfo['likes'] = response['likes']
     videoInfo['dislikes'] = response['dislikes']
     videoInfo['averageRating'] = response['rating']
     return videoInfo
+
+def return_dislikes(video_id):
+    return json.loads(requests.get('https://returnyoutubedislikeapi.com/votes?videoId=' + video_id).text)
