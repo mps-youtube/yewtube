@@ -7,10 +7,13 @@
 # documentation.
 
 name: Upload Python Package
-
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
+# on:
+#   release:
+#     types: [published]
 
 jobs:
   deploy:
