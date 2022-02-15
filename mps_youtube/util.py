@@ -290,7 +290,7 @@ def uea_pad(num, t, direction="<", notrunc=False):
     """ Right pad with spaces taking into account East Asian width chars. """
     direction = direction.strip() or "<"
 
-    t = " ".join(t.split("\n") if hasattr(t, "split") else [])
+    t = " ".join(str(t).split("\n"))
 
     # TODO: Find better way of dealing with this?
     if num <= 0:

@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 import socket
 import traceback
 from urllib.request import urlopen
@@ -257,15 +257,20 @@ def video_info(num):
         screen.writestatus("Fetched")
         out = c.ul + "Video Info" + c.w + "\n\n"
         out += p['title'] or ""
-        out += "\n" + str(p.get('description', "")) + "\n"
-        out += "\nAuthor     : " + str(p['channel']['name'])
-        out += "\nPublished  : " + str(p['publishDate'])
-        out += "\nView count : " + str(p['viewCount']['text'])
-        out += "\nRating     : " + str(p['averageRating'])
-        out += "\nLikes      : " + str(p.get('likes', 0))
-        out += "\nDislikes   : " + str(p.get('dislikes', 0))
-        out += "\nCategory   : " + str(p['category'])
-        out += "\nLink       : " + str(p['link'])
+        out += "\n\nDescription:\n\n" + str(p.get('description', "")) + "\n"
+        out += "\nKeywords: " + str(p['keywords']) + "\n"
+        out += "\nIs Live Now    : " + str(p['isLiveNow'])
+        out += "\nDuration       : " + str(timedelta(seconds=int(p['duration']['secondsText'])))
+        out += "\nView count     : " + "{:,}".format(int(p['viewCount']['text']))
+        out += "\nAuthor         : " + str(p['channel']['name'] + ' ~ ' + p['channel']['link'])
+        out += "\nPublished Date : " + str(p['publishDate'])
+        out += "\nUploaded Date  : " + str(p['uploadDate'])
+        out += "\nRating         : " + str(p['averageRating'])
+        out += "\nLikes          : " + "{:,}".format(p.get('likes', 0))
+        out += "\nDislikes       : " + "{:,}".format(p.get('dislikes', 0))
+        out += "\nCategory       : " + str(p['category'])
+        out += "\nFamily Safe    : " + str(p['isFamilySafe'])
+        out += "\nLink           : " + str(p['link'])
         if config.SHOW_QRCODE.get:
             out += "\n" + qrcode_display(
                 "https://youtube.com/watch?v=%s" % p.videoid)
