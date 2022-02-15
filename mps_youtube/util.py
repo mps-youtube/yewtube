@@ -1,20 +1,22 @@
-import collections
-import ctypes
-import json
-import logging
 import os
-import platform
 import re
-import subprocess
 import sys
+import ctypes
+import logging
 import time
+import subprocess
+import collections
 import unicodedata
 import urllib
+import json
+import platform
 from datetime import datetime, timezone
-from importlib import import_module
 
-from . import c, description_parser, g, terminalsize
+
+from . import g, c, terminalsize, description_parser
 from .playlist import Video
+
+from importlib import import_module
 
 macos = platform.system() == "Darwin"
 
@@ -290,7 +292,7 @@ def uea_pad(num, t, direction="<", notrunc=False):
     """ Right pad with spaces taking into account East Asian width chars. """
     direction = direction.strip() or "<"
 
-    t = " ".join(str(t).split("\n"))
+    t = ' '.join(str(t).split('\n'))
 
     # TODO: Find better way of dealing with this?
     if num <= 0:
