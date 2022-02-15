@@ -7,7 +7,8 @@ https://github.com/iamtalhaasghar/yewtube
 python setup.py sdist bdist_wheel
 """
 
-import sys, os
+import os
+import sys
 from datetime import datetime
 
 if sys.version_info < (3, 6):
@@ -17,11 +18,11 @@ from setuptools import setup
 
 # with open("README.md", "r", encoding="utf-8") as fh:
 #     long_description = fh.read()
-    
+
 # with open("requirements.txt", "r", encoding="utf-8") as fh:
 #     requirements = fh.readlines()
-    
-    
+
+
 options = dict(
     name="yewtube",
     version=datetime.utcnow().strftime('%y.%m.%d'),
@@ -37,9 +38,10 @@ options = dict(
     install_requires=[
         'pyreadline ; platform_system=="Linux"',
         'pyreadline3 ; platform_system=="Windows"',
-        'pyperclip',
-        'youtube-search-python',
-        'yt-dlp',
+        "pyperclip",
+        "pytest>=7.0.1",
+        "youtube-search-python",
+        "yt-dlp",
     ],
     classifiers=[
         "Topic :: Utilities",
@@ -86,6 +88,7 @@ if sys.platform.startswith('linux'):
 if os.name == "nt":
     try:
         import py2exe
+
         # Only setting these when py2exe imports successfully prevents warnings
         # in easy_install
         options['console'] = ['yt']
