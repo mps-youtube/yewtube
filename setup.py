@@ -25,7 +25,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 options = dict(
     name="yewtube",
-    version=datetime.now().strftime('%Y.%m.%d'),
+    version=datetime.now().strftime('%y%m.%d.%H'),
     description="A Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",
