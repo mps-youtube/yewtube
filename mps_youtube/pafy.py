@@ -103,3 +103,7 @@ def search_videos_from_channel(channel_id, query):
 def get_comments(video_id):
     comments = Comments.get(video_id)
     return comments['result']
+
+def get_video_info(video_id):
+    videoInfo = Video.getInfo(video_id)
+    return videoInfo

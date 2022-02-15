@@ -251,21 +251,21 @@ def video_info(num):
         screen.writestatus("Fetching video metadata..")
         item = (g.model[int(num) - 1])
         streams.get(item)
-        p = util.get_pafy(item)
-        pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%SZ")
-        pub = util.utc2local(pub)
+        p = pafy.get_video_info(item.ytid)
+        #pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%SZ")
+        #pub = util.utc2local(pub)
         screen.writestatus("Fetched")
         out = c.ul + "Video Info" + c.w + "\n\n"
-        out += p.title or ""
-        out += "\n" + (p.description or "") + "\n"
-        out += "\nAuthor     : " + str(p.author)
-        out += "\nPublished  : " + pub.strftime("%c")
-        out += "\nView count : " + str(p.viewcount)
-        out += "\nRating     : " + str(p.rating)[:4]
-        out += "\nLikes      : " + str(p.likes)
-        out += "\nDislikes   : " + str(p.dislikes)
-        out += "\nCategory   : " + str(p.category)
-        out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
+        out += p['title'] or ""
+        out += "\n" + str(p.get('description', "")) + "\n"
+        out += "\nAuthor     : " + str(p['channel']['name'])
+        out += "\nPublished  : " + str(p['publishDate'])
+        out += "\nView count : " + str(p['viewCount']['text'])
+        out += "\nRating     : " + str(p['averageRating'])
+        out += "\nLikes      : " + str(p.get('likes', 0))
+        out += "\nDislikes   : " + str(p.get('dislikes', 0))
+        out += "\nCategory   : " + str(p['category'])
+        out += "\nLink       : " + str(p['link'])
         if config.SHOW_QRCODE.get:
             out += "\n" + qrcode_display(
                 "https://youtube.com/watch?v=%s" % p.videoid)
