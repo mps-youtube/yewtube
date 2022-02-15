@@ -1,6 +1,5 @@
 from youtubesearchpython import *
-import yt_dlp, random, os
-
+import yt_dlp, random, os, requests, json
 class MyLogger:
     def debug(self, msg):
         # For compatibility with youtube-dl, both debug and info are passed into debug
@@ -106,4 +105,8 @@ def get_comments(video_id):
 
 def get_video_info(video_id):
     videoInfo = Video.getInfo(video_id)
+    response = json.loads(requests.get('https://returnyoutubedislikeapi.com/votes?videoId=' + video_id).text)
+    videoInfo['likes'] = response['likes']
+    videoInfo['dislikes'] = response['dislikes']
+    videoInfo['averageRating'] = response['rating']
     return videoInfo
