@@ -15,8 +15,8 @@ if sys.version_info < (3, 6):
 
 from setuptools import setup
 
-# with open("README.md", "r", encoding="utf-8") as fh:
-#     long_description = fh.read()
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
     
 # with open("requirements.txt", "r", encoding="utf-8") as fh:
 #     requirements = fh.readlines()
@@ -24,7 +24,7 @@ from setuptools import setup
     
 options = dict(
     name="yewtube",
-    version=datetime.utcnow().strftime('%y.%m.%d'),
+    version=datetime.now().strftime('%y.%m.%d'),
     description="A Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",
@@ -75,8 +75,8 @@ options = dict(
         }
     },
     package_data={"": ["LICENSE", "README.md", "CHANGELOG"]},
-    #long_description_content_type='text/markdown',
-    long_description="Will be added soon. Meanwhile check this out https://github.com/iamtalhaasghar/yewtube"
+    long_description_content_type='text/markdown',
+    long_description=long_description
 )
 
 if sys.platform.startswith('linux'):
