@@ -24,7 +24,7 @@ from setuptools import setup
     
 options = dict(
     name="yewtube",
-    version=datetime.utcnow().strftime('%y.%j.%H'),
+    version=datetime.utcnow().strftime('%y.%m.%d'),
     description="A Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",
