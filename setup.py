@@ -36,8 +36,7 @@ options = dict(
     python_requires='>=3.6',
     install_requires=[
         'pyperclip',
-        'pyreadline ; platform_system=="Linux"'
-        'pyreadline3 ; platform_system=="Windows"',
+        'pyreadline',
         'youtube-search-python',
         'yt-dlp',
     ],
