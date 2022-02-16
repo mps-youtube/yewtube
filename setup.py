@@ -16,10 +16,7 @@ from setuptools import setup
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
-    
-# with open("requirements.txt", "r", encoding="utf-8") as fh:
-#     requirements = fh.readlines()
-    
+
 __version__ = "2.6.0"
 
 options = dict(
