@@ -17,7 +17,7 @@ from setuptools import setup
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-__version__ = "2.6.2"
+__version__ = "2.6.3"
 
 options = dict(
     name="yewtube",
