@@ -434,13 +434,13 @@ def get_tracks_from_json(jsons):
             title = item.get('title', '').strip()
             # instantiate video representation in local model
             cursong = Video(ytid=ytid, title=title, length=duration)
-            dislike_data = pafy.return_dislikes(ytid)
+            dislike_data = {'likes': 0, 'dislikes':0, 'rating':0}#pafy.return_dislikes(ytid)
             likes = int(dislike_data['likes'])
             dislikes = int(dislike_data['dislikes'])
             # this is a very poor attempt to calculate a rating value
             rating = int(dislike_data['rating'])#5.*likes/(likes+dislikes) if (likes+dislikes) > 0 else 0
             category = '?'#snippet.get('categoryId')
-            publishedlocaldatetime = item['publishedTime']#util.yt_datetime_local(snippet.get('publishedAt', ''))
+            publishedlocaldatetime = item.get('publishedTime','?')#util.yt_datetime_local(snippet.get('publishedAt', ''))
 
             # cache video information in custom global variable store
             g.meta[ytid] = dict(
@@ -457,7 +457,7 @@ def get_tracks_from_json(jsons):
                 likes=str(num_repr(likes)),
                 dislikes=str(num_repr(dislikes)),
                 commentCount='?',#str(num_repr(int(stats.get('commentCount', 0)))),
-                viewCount=item['viewCount']['text'])#str(num_repr(int(stats.get('viewCount', 0)))))
+                viewCount= item['viewCount']['text'] if 'viewCount' in item.keys() else '?')#str(num_repr(int(stats.get('viewCount', 0)))))
             songs.append(cursong)
 
         except Exception as e:
