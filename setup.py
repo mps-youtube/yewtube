@@ -8,7 +8,6 @@ python setup.py sdist bdist_wheel
 """
 
 import sys, os
-from datetime import datetime
 
 if sys.version_info < (3, 6):
     sys.exit("yewtube requires minimum python 3.6")
@@ -21,10 +20,11 @@ with open("README.md", "r", encoding="utf-8") as fh:
 # with open("requirements.txt", "r", encoding="utf-8") as fh:
 #     requirements = fh.readlines()
     
-    
+__version__ = "2.6.0"
+
 options = dict(
     name="yewtube",
-    version=datetime.now().strftime('%y%m.%d.%H'),
+    version=__version__,
     description="A Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",
