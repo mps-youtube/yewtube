@@ -20,7 +20,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 with open('requirements.txt', 'r') as fh:
     requirements = fh.readlines()
 
-__version__ = "2.6.4"
+__version__ = "2.6.5"
 
 options = dict(
     name="yewtube",

@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v2.6.5 (2022-02-17)
+### Fix
+* Default player priority is vlc > mpv > mplayer on first install fixed #16 ([`35409eb`](https://github.com/iamtalhaasghar/yewtube/commit/35409eb31cc67f03c50589e02cdff2ad08fe4911))
+* **mplayer:** _get_mplayer_version ([`ab21c5d`](https://github.com/iamtalhaasghar/yewtube/commit/ab21c5d1bc872ed482bf482ad37949129c1e4f78))
+* Bring back requirements.txt to life ([`ff6e59d`](https://github.com/iamtalhaasghar/yewtube/commit/ff6e59d75834c61d72ec6bbc92f5eb339cc82607))
+* **util.uea_pad:** Handle AttributeError on t.split ([`1643266`](https://github.com/iamtalhaasghar/yewtube/commit/1643266f21ccf7a99481a1615b4a53c4fbabc878))
+
 ## v2.6.4 (2022-02-16)
 ### Fix
 * Duplicate changelog and readme files ([`0265ef7`](https://github.com/iamtalhaasghar/yewtube/commit/0265ef7507b539791684bdcf40b30ddaafc525e8))
