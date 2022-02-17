@@ -17,6 +17,9 @@ from setuptools import setup
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+with open('requirements.txt', 'r') as fh:
+    requirements = fh.readlines()
+
 __version__ = "2.6.4"
 
 options = dict(
@@ -31,14 +34,7 @@ options = dict(
     packages=['mps_youtube', 'mps_youtube.commands', 'mps_youtube.listview', 'mps_youtube.players'],
     entry_points={'console_scripts': ['yt = mps_youtube:main.main']},
     python_requires='>=3.6',
-    install_requires=[
-        'requests',
-        'pyreadline ; platform_system=="Linux"',
-        'pyreadline3 ; platform_system=="Windows"',
-        'pyperclip',
-        'youtube-search-python',
-        'yt-dlp',
-    ],
+    install_requires=requirements,
     classifiers=[
         "Topic :: Utilities",
         "Topic :: Internet :: WWW/HTTP",

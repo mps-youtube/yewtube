@@ -1,4 +1,6 @@
-pyreadline
-yt-dlp
-youtube-search-python
+requests
+pyreadline ; platform_system=="Linux"
+pyreadline3 ; platform_system=="Windows"
 pyperclip
+youtube-search-python
+yt-dlp
