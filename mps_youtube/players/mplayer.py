@@ -1,11 +1,11 @@
 import os
+import re
+import subprocess
 import sys
 import tempfile
-import subprocess
-import re
+import typing as T
 
-from .. import g, screen, c, paths, config, util
-
+from .. import c, config, g, paths, screen, util
 from ..player import CmdPlayer
 
 mswin = os.name == "nt"
@@ -225,9 +225,27 @@ def _get_input_file():
         return tmpfile.name
 
 
-def _get_mplayer_version(exename):
-    o = subprocess.check_output([exename]).decode()
-    m = re.search('MPlayer SVN[\s-]r([0-9]+)', o, re.MULTILINE | re.IGNORECASE)
+def _get_mplayer_version(exename: str) -> T.Union[int, T.Tuple[int, ...]]:
+    """get mplayer version.
+
+    Args:
+        exename: mplayer executable name.
+
+    Returns:
+       single integer value or tuple of mplayer version. Return `0` if failed
+
+    Raises:
+        OSError: if `exename` is invalid
+        FileNotFoundError: if no mplayer found
+        PermissionError: if user dont have permission to run `exename`
+        TypeError: if `exename` return invalid type
+    """
+    try:
+        o = subprocess.check_output([exename]).decode()
+    except FileNotFoundError as err:
+        util.dbg("%sFailed to detect mplayer version, exename %s,%s", c.r, exename, c.w)
+        raise err
+    m = re.search(r"MPlayer \S*?SVN[\s-]r([0-9]+)", o, re.MULTILINE | re.IGNORECASE)
 
     ver = 0
     if m:
