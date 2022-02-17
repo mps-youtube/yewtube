@@ -242,9 +242,9 @@ def _get_mplayer_version(exename: str) -> T.Union[int, T.Tuple[int, ...]]:
     """
     try:
         o = subprocess.check_output([exename]).decode()
-    except FileNotFoundError as err:
-        util.dbg("%sFailed to detect mplayer version, exename %s,%s", c.r, exename, c.w)
-        raise err
+    except FileNotFoundError:
+        raise
+
     m = re.search(r"MPlayer \S*?SVN[\s-]r([0-9]+)", o, re.MULTILINE | re.IGNORECASE)
 
     ver = 0

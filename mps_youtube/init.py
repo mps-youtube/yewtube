@@ -37,14 +37,17 @@ def init():
 
     # set player to mpv or mplayer if found, otherwise unset
     suffix = ".exe" if mswin else ""
-    mplayer, mpv = "mplayer" + suffix, "mpv" + suffix
+    vlc, mplayer, mpv = "vlc" + suffix, "mplayer" + suffix, "mpv" + suffix
 
     # check for old pickled binary config and convert to json if so
     config.convert_old_cf_to_json()
 
     if not os.path.exists(g.CFFILE):
 
-        if has_exefile(mpv):
+        if has_exefile(vlc):
+            config.PLAYER.set(vlc)
+
+        elif has_exefile(mpv):
             config.PLAYER.set(mpv)
 
         elif has_exefile(mplayer):
@@ -54,7 +57,12 @@ def init():
 
     else:
         config.load()
-        assign_player(config.PLAYER.get)  # Player is not assigned when config is loaded
+        try:
+            assign_player(config.PLAYER.get)  # Player is not assigned when config is loaded
+        except Exception as ex:
+            g.message = "%sFailed to get %s`s version. Probabily it is not installed. Try installing it again or change player using `set player <player_name>` %s" %(c.y, config.PLAYER.get , c.w)
+            screen.update()
+            input("Press Enter to go back to main menu.")
 
     # Make pafy use the same api key
     # pafy.set_api_key(config.API_KEY.get)
