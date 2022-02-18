@@ -3,9 +3,22 @@
  Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube 
 
 Installation
-------------
+-----------
+# Stable Version
+
 ### Using pip
-1. Installing using `pip install yewtube`
+1. Install using `pip install yewtube`
+2. Run using, `yt`. Enjoy! 
+
+### Using pipx (Recommended)
+1.  Install **_pipx_** using `pip install pipx`
+2.  Install `yewtube` using `pipx install yewtube`
+3.  Now, type `yt` That's it.
+
+# Latest Version
+
+### Using pip
+1. Install using `pip install git+https://github.com/iamtalhaasghar/yewtube.git`
 2. Run using, `yt`. Enjoy! 
 
 ### Using pipx
@@ -18,7 +31,9 @@ What's new in yewtube?
 -   **No Youtube API Key required**
 -   **Run audio in VLC with no GUI**
 
-These features are still inherited from [mps-youtube](https://github.com/mps-youtube/mps-youtube)
+See complete and up-to-date changelog [here](https://github.com/iamtalhaasghar/yewtube/blob/master/CHANGELOG.md).
+
+These features are still inherited from [mps-youtube](https://github.com/mps-youtube/mps-youtube).
 -   Search and play audio/video from YouTube
 -   Search tracks of albums by album title
 -   Search and import YouTube playlists
@@ -101,9 +116,13 @@ Type `help config` for help on configuration options
 Upgrading
 ---------
 
-Upgrade pip installation::
+### If installed using pipx
 
-    pipx upgrade yewtube
+` pipx upgrade yewtube `
+
+### If installed using pip
+
+`pip install --upgrade yewtube`
 
 Usage
 -----
