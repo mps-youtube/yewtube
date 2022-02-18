@@ -1,5 +1,6 @@
 from youtubesearchpython import *
-import yt_dlp, random, os, requests, json
+import yt_dlp, random, os, requests, json, re
+from urllib.parse import parse_qs, urlparse
 class MyLogger:
     def debug(self, msg):
         # For compatibility with youtube-dl, both debug and info are passed into debug
@@ -113,3 +114,26 @@ def get_video_info(video_id):
 
 def return_dislikes(video_id):
     return json.loads(requests.get('https://returnyoutubedislikeapi.com/votes?videoId=' + video_id).text)
+
+def extract_video_id(url):
+    """ Extract the video id from a url, return video id as str. """
+    idregx = re.compile(r'[\w-]{11}$')
+    url = str(url).strip()
+
+    if idregx.match(url):
+        return url # ID of video
+
+    if '://' not in url:
+        url = '//' + url
+    parsedurl = urlparse(url)
+    if parsedurl.netloc in ('youtube.com', 'www.youtube.com', 'm.youtube.com', 'gaming.youtube.com'):
+        query = parse_qs(parsedurl.query)
+        if 'v' in query and idregx.match(query['v'][0]):
+            return query['v'][0]
+    elif parsedurl.netloc in ('youtu.be', 'www.youtu.be'):
+        vidid = parsedurl.path.split('/')[-1] if parsedurl.path else ''
+        if idregx.match(vidid):
+            return vidid
+
+    err = "Need 11 character video id or the URL of the video. Got %s"
+    raise ValueError(err % url)

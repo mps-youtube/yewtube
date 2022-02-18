@@ -2,7 +2,7 @@ import os
 import sys
 import pickle
 
-from . import g, c, screen, util
+from . import g, c, screen, util, pafy
 from .playlist import Playlist, Video
 
 
@@ -69,7 +69,7 @@ def read_m3u(m3u):
                     duration, title = line.replace('#EXTINF:', '').strip().split(',', 1)
                     expect_ytid = True
                 elif not line.startswith('\n') and not line.startswith('#') and expect_ytid:
-                    ytid = None#extract_video_id(line).strip()
+                    ytid = pafy.extract_video_id(line).strip()
                     songs.append(Video(ytid, title, int(duration)))
                     expect_ytid = False
 
