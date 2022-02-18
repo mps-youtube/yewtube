@@ -1,12 +1,11 @@
 """ Module for holding globals that are needed throught mps-youtube. """
 
+import collections
 import os
 import sys
-import collections
 
 from . import c, paths
 from .playlist import Playlist
-
 
 volume = None
 transcoder_path = "auto"
@@ -73,8 +72,10 @@ categories = {
 }
 playerargs_defaults = {
     "mpv": {
-        "msglevel": {"<0.4": "--msglevel=all=no:statusline=status",
-                     ">=0.4": "--msg-level=all=no:statusline=status"},
+        "msglevel": {
+            "<0.4": "--msglevel=all=no:statusline=status",
+            ">=0.4": "--msg-level=all=no,statusline=status",
+        },
         "title": "--force-media-title",
         "fs": "--fs",
         "novid": "--no-video",
