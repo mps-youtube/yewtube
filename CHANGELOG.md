@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.6.6 (2022-02-18)
+### Fix
+* Playlists are working again fixed #18 ([`bfceee4`](https://github.com/iamtalhaasghar/yewtube/commit/bfceee493261d099c85bf2c4c9e79e5710e9799f))
+* Buffersize warning ([`d185c3f`](https://github.com/iamtalhaasghar/yewtube/commit/d185c3fdf8d520bcb4595f5e458d6022a7b6d1aa))
+* **g:** Mpv msglevel ([`062b125`](https://github.com/iamtalhaasghar/yewtube/commit/062b12503a8fa15dc720cf3ac91f001b74a5cf10))
+
 ## v2.6.5 (2022-02-17)
 ### Fix
 * Default player priority is vlc > mpv > mplayer on first install fixed #16 ([`35409eb`](https://github.com/iamtalhaasghar/yewtube/commit/35409eb31cc67f03c50589e02cdff2ad08fe4911))
