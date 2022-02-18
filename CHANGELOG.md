@@ -17,6 +17,15 @@
 ### Fix
 * Welcome from semantic release python ([`c237a68`](https://github.com/iamtalhaasghar/yewtube/commit/c237a6808869062036f5196775352c1504eafe06))
 
+# yewtube was forked from mps-youtube
+### Features
+* was made to work without YouTube API v3
+* play music in vlc with no gui
+<br>
+<br>
+<hr>
+<br>
+<br>
 Version 0.2.8
 17 February 2018
 
