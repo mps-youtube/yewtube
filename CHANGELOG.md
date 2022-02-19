@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v2.7.0 (2022-02-19)
+### Feature
+* Use yewtube over tor using torsocks 🔥 ([`1e9c4ce`](https://github.com/iamtalhaasghar/yewtube/commit/1e9c4ce5992528286f552c8b563daef4abf9566a))
+
 ## v2.6.9 (2022-02-19)
 ### Fix
 * #28 show changelog with `help new` command ([`d52b65d`](https://github.com/iamtalhaasghar/yewtube/commit/d52b65d0c0cd8708020a2d6788102d82d8ebeee5))
