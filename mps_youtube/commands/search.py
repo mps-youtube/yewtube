@@ -146,14 +146,14 @@ def channelfromname(user):
 @command(r'channels\s+(.+)')
 def channelsearch(q_user):
 
-    qs = {'part': 'id,snippet',
-          'q': q_user,
-          'maxResults': 50,
-          'type': 'channel',
-          'order': "relevance"
-          }
+    # qs = {'part': 'id,snippet',
+    #       'q': q_user,
+    #       'maxResults': 50,
+    #       'type': 'channel',
+    #       'order': "relevance"
+    #       }
 
-    QueryObj = contentquery.ContentQuery(listview.ListUser, 'search', qs)
+    QueryObj = contentquery.ContentQuery(listview.ListUser, 'search', q_user)
     columns = [
         {"name": "idx", "size": 3, "heading": "Num"},
         {"name": "name", "size": 30, "heading": "Username"},
