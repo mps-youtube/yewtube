@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 from xml.etree import ElementTree as ET
 
 
-from .. import c, g, screen, __version__, __url__, config, util
+from .. import c, g, screen, __version__, __url__, config, util, pafy
 from .. import content as content_py
 from . import command
 from .songlist import paginatesongs
@@ -125,7 +125,7 @@ def _match_tracks(artist, title, mb_tracks):
         util.dbg(query)
 
         # perform fetch
-        wdata = None#pafy.call_gdata('search', query)
+        wdata = pafy.video_search(q)#pafy.call_gdata('search', query)
         results = get_tracks_from_json(wdata)
 
         if not results:
