@@ -1,11 +1,11 @@
 """
     Holds all help text
 """
-from . import c, g, util
+from . import c, g
 from .util import get_near_name, F
 from urllib.request import urlopen
 from urllib.error import HTTPError, URLError
-import socket
+import socket, re
 
 def helptext():
     """ Return a list of help categories, with their contents. """
@@ -306,8 +306,8 @@ def helptext():
 
     Use {2}clearcache{1} command to clear the cache.
     """.format(c.ul, c.w, c.y)),
-
-        ("new", "New Features", """{0}What's New{1}\n{3}""".format(c.ul, c.w, c.y, get_changelog()))]
+    ("new", "New Features", """{0}What's New{1}\n{3}""".format(c.ul, c.w, c.y, get_changelog())),
+    ("tor", "Check Tor Status. NOTE: Use this feature at your own risk. In case of any kind of damage we will not be responsible.", """{0}Tor Status{1}\n{3}""".format(c.ul, c.w, c.y, check_tor()))]
 
 
 def get_help(choice):
@@ -380,7 +380,19 @@ def get_changelog():
     try:
         url = "https://raw.githubusercontent.com/iamtalhaasghar/yewtube/master/CHANGELOG.md"
         v = urlopen(url, timeout=1).read().decode()
-        v = v.split('## v')[1]#re.search(r'__version__\s*=\s*"\s*([\d\.]+)\s*"\s*', v, re.MULTILINE)
+        v = v.split('## v')[1]
         return v
+    except (URLError, HTTPError, socket.timeout):
+        return "read changelog timed out"
+
+def check_tor():
+    try:
+        url = "https://check.torproject.org/?lang=en"
+        v = urlopen(url, timeout=1).read().decode()
+        ip = re.findall('<strong>(.*)</strong>', v)
+        status = re.findall('Congratulations.(.*)', v)
+        if len(status) == 0:
+            status = re.findall('Sorry.(.*)', v)
+        return {'ip' : ip, 'status': status[0]}
     except (URLError, HTTPError, socket.timeout):
         return "read changelog timed out"
