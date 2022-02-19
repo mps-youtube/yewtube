@@ -68,7 +68,7 @@ def quits(showlogo=True):
                 v = v.group(1)
 
                 if v > __version__:
-                    msg += "\n\nA newer version is available (%s)\n" % v
+                    msg += "\n\nA newer version is available (%s). Use `help new` command to check what's changed.\n" % v
 
         except (URLError, HTTPError, socket.timeout):
             util.dbg("check update timed out")

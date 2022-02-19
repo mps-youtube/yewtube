@@ -1,9 +1,11 @@
 """
     Holds all help text
 """
-from . import c, g
+from . import c, g, util
 from .util import get_near_name, F
-
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
+import socket
 
 def helptext():
     """ Return a list of help categories, with their contents. """
@@ -305,19 +307,7 @@ def helptext():
     Use {2}clearcache{1} command to clear the cache.
     """.format(c.ul, c.w, c.y)),
 
-        ("new", "New Features", """
-    {0}New Features in v0.2.7{1}
-
-     - Setting for default audio format (nishanthkarthik)
-
-     - Search history with "history" command (kraetzin)
-
-     - Add syntax for repeating a track several times (ghallak)
-
-     - New "reverse" command (kraetzin)
-
-     - New "daurl <url>" command (maricn)
-    """.format(c.ul, c.w, c.y))]
+        ("new", "New Features", """{0}What's New{1}\n{3}""".format(c.ul, c.w, c.y, get_changelog()))]
 
 
 def get_help(choice):
@@ -385,3 +375,12 @@ def get_help(choice):
     else:
         choice = help_names.index(choice)
         return indent(all_help[choice][2])
+
+def get_changelog():
+    try:
+        url = "https://raw.githubusercontent.com/iamtalhaasghar/yewtube/master/CHANGELOG.md"
+        v = urlopen(url, timeout=1).read().decode()
+        v = v.split('## v')[1]#re.search(r'__version__\s*=\s*"\s*([\d\.]+)\s*"\s*', v, re.MULTILINE)
+        return v
+    except (URLError, HTTPError, socket.timeout):
+        return "read changelog timed out"
