@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v2.6.9 (2022-02-19)
+### Fix
+* #28 show changelog with `help new` command ([`d52b65d`](https://github.com/iamtalhaasghar/yewtube/commit/d52b65d0c0cd8708020a2d6788102d82d8ebeee5))
+
 ## v2.6.8 (2022-02-19)
 ### Fix
 * fixed #26 album search working now without youtube api ([`9c3ae03`](https://github.com/iamtalhaasghar/yewtube/commit/9c3ae03b8c0ae006f1b9a917e4330270fec2f929))
