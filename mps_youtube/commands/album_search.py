@@ -7,7 +7,8 @@ from urllib.parse import urlencode
 from xml.etree import ElementTree as ET
 
 
-from .. import c, g, screen, __version__, __url__, content, config, util
+from .. import c, g, screen, __version__, __url__, config, util
+from .. import content as content_py
 from . import command
 from .songlist import paginatesongs
 from .search import get_tracks_from_json
@@ -15,7 +16,7 @@ from .search import get_tracks_from_json
 
 def show_message(message, col=c.r, update=False):
     """ Show message using col, update screen if required. """
-    g.content = content.generate_songlist_display()
+    g.content = content_py.generate_songlist_display()
     g.message = col + message + c.w
 
     if update:
@@ -42,7 +43,7 @@ def _do_query(url, query, err='query failed', report=False):
 
     except (URLError, HTTPError) as e:
         g.message = "%s: %s (%s)" % (err, e, url)
-        g.content = content.logo(c.r)
+        g.content = content_py.logo(c.r)
         return None if not report else (None, False)
 
     return wdata if not report else (wdata, False)
@@ -215,7 +216,7 @@ def search_album(term):
 
         if not term or len(term) < 2:
             g.message = c.r + "Not enough input!" + c.w
-            g.content = None#content.generate_songlist_display()
+            g.content = content_py.generate_songlist_display()
             return
 
     album = _get_mb_album(term)

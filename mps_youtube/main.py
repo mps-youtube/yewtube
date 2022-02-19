@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import traceback
+import traceback as traceback_py
 import locale
 import sys
 import os
@@ -70,14 +70,14 @@ def matchfunction(func, regex, userinput):
 
         except IndexError:
             if g.debug_mode:
-                g.content = ''.join(traceback.format_exception(
+                g.content = ''.join(traceback_py.format_exception(
                     *sys.exc_info()))
             g.message = util.F('invalid range')
             g.content = g.content or content.generate_songlist_display()
 
         except (ValueError, IOError) as e:
             if g.debug_mode:
-                g.content = ''.join(traceback.format_exception(
+                g.content = ''.join(traceback_py.format_exception(
                     *sys.exc_info()))
             g.message = util.F('cant get track') % str(e)
             g.content = g.content or\
