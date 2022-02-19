@@ -58,8 +58,8 @@ class ContentQuery:
         #     ) if self.nextpagetoken else self.query
 
         # Run query
-        util.dbg("CQ.query", self.queries)
-        data = pafy.channel_search(self.queries)#pafy.call_gdata(self.api, qry)
+        util.dbg("CQ.query", self.query)
+        data = pafy.channel_search(self.query)#pafy.call_gdata(self.api, qry)
         
         self.maxresults = len(data)#int(data.get("pageInfo").get("totalResults"))
         self.nextpagetoken = None#data.get("nextPageToken")
