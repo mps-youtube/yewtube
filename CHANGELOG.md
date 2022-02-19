@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v2.6.7 (2022-02-19)
+### Fix
+* Check for app updates ([`eabfb52`](https://github.com/iamtalhaasghar/yewtube/commit/eabfb5233c7b87c5f300ebc41250a3f52db07411))
+* Don't crash if playlists / history file has invalid youtube id fixed #24 ([`323d5d8`](https://github.com/iamtalhaasghar/yewtube/commit/323d5d822cefc23889665d71cfffe9e40750433b))
+
 ## v2.6.6 (2022-02-18)
 ### Fix
 * Playlists are working again fixed #18 ([`bfceee4`](https://github.com/iamtalhaasghar/yewtube/commit/bfceee493261d099c85bf2c4c9e79e5710e9799f))
