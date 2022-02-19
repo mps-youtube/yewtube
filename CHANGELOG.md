@@ -4,7 +4,7 @@
 
 ## v2.6.8 (2022-02-19)
 ### Fix
-* 26 album search working now without youtube api ([`9c3ae03`](https://github.com/iamtalhaasghar/yewtube/commit/9c3ae03b8c0ae006f1b9a917e4330270fec2f929))
+* fixed #26 album search working now without youtube api ([`9c3ae03`](https://github.com/iamtalhaasghar/yewtube/commit/9c3ae03b8c0ae006f1b9a917e4330270fec2f929))
 
 ## v2.6.7 (2022-02-19)
 ### Fix
