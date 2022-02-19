@@ -69,10 +69,12 @@ def read_m3u(m3u):
                     duration, title = line.replace('#EXTINF:', '').strip().split(',', 1)
                     expect_ytid = True
                 elif not line.startswith('\n') and not line.startswith('#') and expect_ytid:
-                    ytid = pafy.extract_video_id(line).strip()
-                    songs.append(Video(ytid, title, int(duration)))
-                    expect_ytid = False
-
+                    try:
+                        expect_ytid = False
+                        ytid = pafy.extract_video_id(line).strip()
+                        songs.append(Video(ytid, title, int(duration)))
+                    except ValueError as ex:
+                        util.dbg(c.r + str(ex) + c.w)
         # Handles a simple m3u file which should just be a list of urls
         else:
             plf.seek(0)

@@ -28,8 +28,6 @@ def load():
         if not os.path.isfile(g.HISTFILE):
             g.userhist = {}
             save()
-    except ValueError as ex:
-        dbg(c.r + str(ex) + c.w)
 
 
 def save():
