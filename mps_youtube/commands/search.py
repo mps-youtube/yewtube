@@ -561,7 +561,7 @@ def yt_url(url, print_title=0):
 
     for u in url_list:
         try:
-            p = util.get_pafy(u)
+            p = pafy.get_video_info(url.split('?v=')[1])#util.get_pafy(u)
 
         except (IOError, ValueError) as e:
             g.message = c.r + str(e) + c.w
@@ -570,7 +570,7 @@ def yt_url(url, print_title=0):
             return
 
         g.browse_mode = "normal"
-        v = Video(p.videoid, p.title, p.length)
+        v = Video(p['id'], p['title'], int(p['duration']['secondsText']))
         g.model.songs.append(v)
 
     if not g.command_line:
