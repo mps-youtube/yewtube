@@ -4,3 +4,4 @@ pyreadline3 ; platform_system=="Windows"
 pyperclip
 youtube-search-python
 yt-dlp
+colorama ; platform_system=="Windows"
