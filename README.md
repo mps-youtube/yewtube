@@ -1,5 +1,20 @@
 
-# yewtube ![](https://img.shields.io/pypi/v/yewtube.svg)  ![](https://img.shields.io/pypi/wheel/yewtube.svg)
+![](https://img.shields.io/pypi/v/yewtube.svg)  ![](https://img.shields.io/pypi/wheel/yewtube.svg)
+
+<pre>
+                      _         _          
+                     | |       | |         
+  _   _  _____      _| |_ _   _| |__   ___ 
+ | | | |/ _ \ \ /\ / / __| | | | '_ \ / _ \
+ | |_| |  __/\ V  V /| |_| |_| | |_) |  __/
+  \__, |\___| \_/\_/  \__|\__,_|_.__/ \___|
+   __/ |                                   
+  |___/
+
+
+</pre>
+
+
  Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube 
 
 Installation
