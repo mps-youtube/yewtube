@@ -306,8 +306,8 @@ def helptext():
 
     Use {2}clearcache{1} command to clear the cache.
     """.format(c.ul, c.w, c.y)),
-    ("new", "New Features", """{0}What's New{1}\n{3}""".format(c.ul, c.w, c.y, get_changelog())),
-    ("tor", "Check Tor Status. NOTE: Use this feature at your own risk. In case of any kind of damage we will not be responsible.", """{0}Tor Status{1}\n{3}""".format(c.ul, c.w, c.y, check_tor()))]
+    ("new", "Check if new version is available", """{0}What's New{1}\n{3}""".format(c.ul, c.w, c.y, "get_changelog()")),
+    ("tor", "Check Tor Status. NOTE: Use this feature at your own risk. In case of any kind of damage we will not be responsible.", """{0}Tor Status{1}\n{3}""".format(c.ul, c.w, c.y, "check_tor()"))]
 
 
 def get_help(choice):
@@ -373,8 +373,15 @@ def get_help(choice):
         return out
 
     else:
-        choice = help_names.index(choice)
-        return indent(all_help[choice][2])
+        if choice == 'tor':
+            output_text = check_tor()
+        elif choice == 'new':
+            output_text = get_changelog()
+        else:
+            choice = help_names.index(choice)
+            output_text = all_help[choice][2]
+
+        return indent(output_text)
 
 def get_changelog():
     try:
@@ -393,6 +400,6 @@ def check_tor():
         status = re.findall('Congratulations.(.*)', v)
         if len(status) == 0:
             status = re.findall('Sorry.(.*)', v)
-        return {'ip' : ip, 'status': status[0]}
+        return str({'ip' : ip, 'status': status[0]})
     except (URLError, HTTPError, socket.timeout):
-        return "read changelog timed out"
+        return "read check tor status timed out"
