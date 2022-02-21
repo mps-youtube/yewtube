@@ -244,7 +244,6 @@ def helptext():
     {2}set window_size <number>x<number>{1} - set player window width & height
     {2}set audio_format <auto|m4a|webm>{1} - set default music audio format
     {2}set video_format <auto|mp4|webm|3gp>{1} - set default music video format
-    {2}set api_key <key>{1} - use a different API key for accessing the YouTube Data API
     {2}set set_title true|false{1} - change window title
     {2}set show_qrcode true|false{1} - show qrcode of the URL in the video information panel
     {2}set history true|false{1} - record play history
