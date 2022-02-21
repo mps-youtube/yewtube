@@ -7,7 +7,8 @@ https://github.com/iamtalhaasghar/yewtube
 python setup.py sdist bdist_wheel
 """
 
-import sys, os
+import os
+import sys
 
 if sys.version_info < (3, 6):
     sys.exit("yewtube requires minimum python 3.6")
@@ -35,6 +36,12 @@ options = dict(
     entry_points={'console_scripts': ['yt = mps_youtube:main.main']},
     python_requires='>=3.6',
     install_requires=requirements,
+    extras_require={
+        "mpris": [
+            "dbus-python>=1.2.18",
+            "PyGObject>=3.42.0",
+        ],
+    },
     classifiers=[
         "Topic :: Utilities",
         "Topic :: Internet :: WWW/HTTP",
@@ -80,6 +87,7 @@ if sys.platform.startswith('linux'):
 if os.name == "nt":
     try:
         import py2exe
+
         # Only setting these when py2exe imports successfully prevents warnings
         # in easy_install
         options['console'] = ['yt']
