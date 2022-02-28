@@ -40,7 +40,7 @@ try:
 except ImportError:
     has_readline = False
 
-from . import g, c, commands, screen, history
+from . import g, c, commands, screen, history, init
 from . import __version__, playlists, content, listview
 from . import config
 
@@ -111,6 +111,7 @@ def prompt_for_exit():
 
 
 def main():
+    init.init()
     """ Main control loop. """
     if config.SET_TITLE.get:
         util.set_window_title("yewtube")
