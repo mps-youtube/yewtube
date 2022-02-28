@@ -2,6 +2,20 @@
 
 <!--next-version-placeholder-->
 
+## v2.8.0 (2022-02-28)
+### Feature
+* **helptext:** Help changelog ([`0643941`](https://github.com/iamtalhaasghar/yewtube/commit/06439411d7a78fe6701f7313e9b3b0720248a197))
+* **setup:** Extras dependencies for mpris ([`936e890`](https://github.com/iamtalhaasghar/yewtube/commit/936e8909b5212eda3a64e8b93be79d4353e6d646))
+
+### Fix
+* #37 use `set pages` command to config how many search result pages to show ([`2baec5f`](https://github.com/iamtalhaasghar/yewtube/commit/2baec5fd11c0edf88d3543dd81333c5ecf67c918))
+* #44 dont run init when importing mps_youtube ([`a072c22`](https://github.com/iamtalhaasghar/yewtube/commit/a072c22e2781160bca79d0164e46e49f07ac28e1))
+* **mpris:** Handle no data on time-pos ([`8bb29d3`](https://github.com/iamtalhaasghar/yewtube/commit/8bb29d33825ad826e51d9d8eada32a9b7bd10ffd))
+* #39 key error 'data' ([`834ed5b`](https://github.com/iamtalhaasghar/yewtube/commit/834ed5b0af5f92e1233e8ba327327654f67f61a0))
+* #38 improved help menu responsiveness ([`972b4ef`](https://github.com/iamtalhaasghar/yewtube/commit/972b4efdb5fe8f5d3295b1c3fe607d209e7d39b6))
+* #35 remove api key instructions ([`4f1fee3`](https://github.com/iamtalhaasghar/yewtube/commit/4f1fee3b711b2383b2704fba39bdce772894cc75))
+* #24 colorama support for windows ([`9cf2616`](https://github.com/iamtalhaasghar/yewtube/commit/9cf261615a52f6ac64b6fb28390db2a71a7ab470))
+
 ## v2.7.0 (2022-02-19)
 ### Feature
 * Use yewtube over tor using torsocks 🔥 ([`1e9c4ce`](https://github.com/iamtalhaasghar/yewtube/commit/1e9c4ce5992528286f552c8b563daef4abf9566a))
