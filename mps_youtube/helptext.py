@@ -1,11 +1,15 @@
 """
     Holds all help text
 """
-from . import c, g
-from .util import get_near_name, F
-from urllib.request import urlopen
+import pathlib
+import re
+import socket
 from urllib.error import HTTPError, URLError
-import socket, re
+from urllib.request import urlopen
+
+from . import c, g
+from .util import F, get_near_name
+
 
 def helptext():
     """ Return a list of help categories, with their contents. """
@@ -27,8 +31,8 @@ def helptext():
         {2}d <number>{1} - download video <number>
         {2}r <number>{1} - show videos related to video <number>
         {2}u <number>{1} - show videos uploaded by uploader of video <number>
-        {2}x <number>{1} - copy item <number> url to clipboard. (See the note below) 
-        Note: This feature requires `pyperclip` which is installed automatically when you install yewtube but 
+        {2}x <number>{1} - copy item <number> url to clipboard. (See the note below)
+        Note: This feature requires `pyperclip` which is installed automatically when you install yewtube but
         Linux users further need to install `xsel` or `xclip` manually using apt, dnf, pacman, zypper or whatever package manager you use.
         Visit https://pyperclip.readthedocs.io/en/latest/index.html#not-implemented-error for more info.
 
@@ -56,15 +60,15 @@ def helptext():
 
     {2}album <album title>{1} - Search for matching tracks using album title
     {2}channels <Channel name>{1} - Search for channels by channelname
-    {2}live <category>{1} - Search for livestreams from a range of categories. 
+    {2}live <category>{1} - Search for livestreams from a range of categories.
     Categories: {2}{3}{1}
 
     {2}mkp <fullfilepath>{1} - Creates a playlist automatically with video titles from fullfilepath
     <fullfilepath>: Full path of text file with one title per line
-    
+
     {2}mkp -d <search result number>{1} - Create a playlist based on tracks
     listed in that videos description. (Alternatively one can use {2}--description{1})
-    
+
     {2}user <username>{1} - list YouTube uploads by <username>.
     {2}user <username>/<query>{1} - as above, but matches <query>.
     {2}userpl <username>{1} - list YouTube playlists created by <username>.
@@ -249,7 +253,7 @@ def helptext():
     {2}set history true|false{1} - record play history
     {2}set input_history true|false{1} - record command input history
     {2}set vlc_dummy_interface true|false{1} - whether to hide VLC GUI or not (hides when true)
-    
+
     Additionally, {2}set -t{1} may be used to temporarily change a setting without
     saving it to disk
     """.format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'
@@ -304,9 +308,26 @@ def helptext():
     command
 
     Use {2}clearcache{1} command to clear the cache.
-    """.format(c.ul, c.w, c.y)),
-    ("new", "Check if new version is available", """{0}What's New{1}\n{3}""".format(c.ul, c.w, c.y, "get_changelog()")),
-    ("tor", "Check Tor Status. NOTE: Use this feature at your own risk. In case of any kind of damage we will not be responsible.", """{0}Tor Status{1}\n{3}""".format(c.ul, c.w, c.y, "check_tor()"))]
+    """.format(
+                c.ul, c.w, c.y
+            ),
+        ),
+        (
+            "new",
+            "Check if new version is available",
+            """{0}What's New{1}\n{3}""".format(c.ul, c.w, c.y, "get_changelog()"),
+        ),
+        (
+            "changelog",
+            "Check program changelog",
+            """{0}Changelog{1}\n{3}""".format(c.ul, c.w, c.y, "get_changelog_local()"),
+        ),
+        (
+            "tor",
+            "Check Tor Status. NOTE: Use this feature at your own risk. In case of any kind of damage we will not be responsible.",
+            """{0}Tor Status{1}\n{3}""".format(c.ul, c.w, c.y, "check_tor()"),
+        ),
+    ]
 
 
 def get_help(choice):
@@ -376,6 +397,8 @@ def get_help(choice):
             output_text = check_tor()
         elif choice == 'new':
             output_text = get_changelog()
+        elif choice == "changelog":
+            output_text = get_changelog_local()
         else:
             choice = help_names.index(choice)
             output_text = all_help[choice][2]
@@ -390,6 +413,15 @@ def get_changelog():
         return v
     except (URLError, HTTPError, socket.timeout):
         return "read changelog timed out"
+
+
+def get_changelog_local():
+    cl_path = pathlib.Path(__file__).parent.parent / "CHANGELOG.md"
+    if cl_path.is_file():
+        return "\n".join(reversed(cl_path.read_text().splitlines()))
+    else:
+        return "can't find changelog file"
+
 
 def check_tor():
     try:

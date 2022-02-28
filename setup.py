@@ -75,7 +75,7 @@ options = dict(
             "bundle_files": 1
         }
     },
-    package_data={"": ["LICENSE", "README.md", "CHANGELOG"]},
+    package_data={"": ["LICENSE", "README.md", "CHANGELOG.md"]},
     long_description_content_type='text/markdown',
     long_description=long_description
 )
