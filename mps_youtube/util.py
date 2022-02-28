@@ -1,27 +1,27 @@
-import os
-import re
-import sys
-import ctypes
-import logging
-import time
-import subprocess
 import collections
+import ctypes
+import json
+import logging
+import os
+import platform
+import re
+import subprocess
+import sys
+import time
 import unicodedata
 import urllib
-import json
-import platform
 from datetime import datetime, timezone
-
-
-from . import g, c, terminalsize, description_parser
-from .playlist import Video
-
 from importlib import import_module
+
+from . import c, description_parser, g, terminalsize
+from .playlist import Video
 
 macos = platform.system() == "Darwin"
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
+not_utf8_environment = mswin or (
+    "UTF-8" not in sys.stdout.encoding if sys.stdout.encoding else False
+)
 
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 

@@ -1,18 +1,17 @@
-import os
-import sys
-import tempfile
-import subprocess
 import json
+import os
 import re
 import socket
+import subprocess
+import sys
+import tempfile
 import time
 
-from .. import g, screen, c, paths, config, util
-
+from .. import c, config, g, paths, screen, util
 from ..player import CmdPlayer
+from ..util import not_utf8_environment
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
 class mpv(CmdPlayer):

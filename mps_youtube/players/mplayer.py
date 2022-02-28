@@ -7,9 +7,9 @@ import typing as T
 
 from .. import c, config, g, paths, screen, util
 from ..player import CmdPlayer
+from ..util import not_utf8_environment
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
 class mplayer(CmdPlayer):

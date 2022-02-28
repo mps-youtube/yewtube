@@ -22,3 +22,11 @@ is preferred.
 
 * Ensure all functions and classes have a PEP257 compliant docstring and the
 code is PEP8 compliant.
+
+## Documentation
+
+Install required extra docs package to setup mkdocs: `pip install -e ".[docs]"`
+
+To run built-in dev server: `mkdocs serve`
+
+To deploy documentation to github page: `mkdocs gh-deploy`

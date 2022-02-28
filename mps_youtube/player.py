@@ -1,22 +1,20 @@
-import os
-import sys
-import random
 import logging
 import math
-import time
+import os
+import random
 import shlex
-import subprocess
 import socket
-from urllib.error import HTTPError, URLError
+import subprocess
+import sys
+import time
 from abc import ABCMeta, abstractmethod
+from urllib.error import HTTPError, URLError
 
-
-from . import g, screen, c, streams, history, content, config, util
+from . import c, config, content, g, history, screen, streams, util
 from .commands import lastfm
-
+from .util import not_utf8_environment
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 class BasePlayer:
     _playbackStatus = "Paused"
@@ -138,7 +136,7 @@ class BasePlayer:
         screen.writestatus(self.songdata)
 
         self._launch_player()
-        
+
         if config.HISTORY.get:
             history.add(self.song)
 
