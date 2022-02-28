@@ -298,7 +298,7 @@ def search(term):
 
     msg = "Search results for %s%s%s" % (c.y, term, c.w)
     failmsg = "Found nothing for %s%s%s" % (c.y, term, c.w)
-    wdata = pafy.video_search(term)
+    wdata = pafy.search_videos(term, int(config.PAGES.get))
     _display_search_results(term, wdata, msg, failmsg)
 
 

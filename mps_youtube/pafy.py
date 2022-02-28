@@ -44,7 +44,7 @@ def download_video(ytid, folder):
         ydl.download('https://www.youtube.com/watch?v=%s' % ytid)
         return True
 
-def video_search(query):
+def search_videos(query, pages):
 
     '''
     Given a keyword / query this function will return youtube video results against those keywords / query
@@ -52,7 +52,11 @@ def video_search(query):
 
     videosSearch = VideosSearch(query, limit=50)
     wdata = videosSearch.result()['result']
+    for i in range(pages-1):
+        videosSearch.next()
+        wdata.extend(videosSearch.result()['result'])
     return wdata
+
 
 def channel_search(query):
 
