@@ -151,5 +151,5 @@ Enter `h` from within the program for help.
 How to Contribute
 -----------------
 
-Contributions are welcomed! However, please check out the [contribution page](https://github.com/iamtalhaasghar/yewtube/blob/develop/CONTRIBUTING.md) before making a contribution.
+Contributions are welcomed! However, please check out the [contribution page](https://github.com/iamtalhaasghar/yewtube/blob/master/CONTRIBUTING.md) before making a contribution.
 
