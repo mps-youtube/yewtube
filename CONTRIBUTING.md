@@ -1,4 +1,4 @@
-# Contributing for mps-youtube
+# Contributing for yewtube
 
 Contributions are very much appreciated!
 
