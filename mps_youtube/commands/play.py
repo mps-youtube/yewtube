@@ -1,12 +1,13 @@
-import sys
-import webbrowser
 import random
+import sys
+import typing as T
+import webbrowser
 from urllib.error import HTTPError, URLError
 
-from .. import g, c, streams, util, content, config
-from . import command, WORD, RS
+from .. import c, config, content, g, streams, util
+from . import RS, WORD, command
+from .search import related, yt_url
 from .songlist import plist
-from .search import yt_url, related
 
 
 @command(r'play\s+(%s|\d+)' % WORD, 'play')
@@ -122,11 +123,20 @@ def play_all(pre, choice, post=""):
 
 
 @command(r'playurl\s(.*[-_a-zA-Z0-9]{11}[^\s]*)(\s-(?:f|a|w))?', 'playurl')
-def play_url(url, override):
-    """ Open and play a youtube video url. """
+def play_url(url: str, override: T.Any):
+    """Open and play a youtube video url.
+
+    Args:
+        url: url to be played
+        override: override
+
+    Raises:
+        SystemExit: If run from command line
+    """
+    # @fixme check override type hint
     override = override if override else "_"
     g.browse_mode = "normal"
-    yt_url(url, print_title=1)
+    yt_url(url, print_title=True)
 
     if len(g.model) == 1:
         play(override, "1", "_")

@@ -1,6 +1,14 @@
-from youtubesearchpython import *
-import yt_dlp, random, os, requests, json, re
+import json
+import os
+import random
+import re
 from urllib.parse import parse_qs, urlparse
+
+import requests
+import yt_dlp
+from youtubesearchpython import *
+
+
 class MyLogger:
     def debug(self, msg):
         # For compatibility with youtube-dl, both debug and info are passed into debug
@@ -119,8 +127,27 @@ def get_video_info(video_id):
 def return_dislikes(video_id):
     return json.loads(requests.get('https://returnyoutubedislikeapi.com/votes?videoId=' + video_id).text)
 
-def extract_video_id(url):
-    """ Extract the video id from a url, return video id as str. """
+
+def extract_video_id(url: str) -> str:
+    """Extract the video id from a url, return video id as str.
+
+    Args:
+        url: url contain video id
+
+    Returns:
+        video id
+
+    Raises:
+        ValueError: If no video id found
+
+    Examples:
+
+        >>> extract_video_id('http://example.com')
+        >>> extract_video_id('https://www.youtube.com/watch?v=LDU_Txk06tM')
+        LDU_Txk06tM
+        >>> extract_video_id('https://youtu.be/LDU_Txk06tM')
+        LDU_Txk06tM
+    """
     idregx = re.compile(r'[\w-]{11}$')
     url = str(url).strip()
 
