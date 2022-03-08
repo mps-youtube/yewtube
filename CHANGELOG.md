@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v2.8.1 (2022-03-08)
+### Fix
+* #54 play video using youtube short link ([`92d1c77`](https://github.com/iamtalhaasghar/yewtube/commit/92d1c776d4bcc47509becadc5ba9248477dc0dcc))
+* Use mkdocs instead of sphinx docs ([`32a2e9c`](https://github.com/iamtalhaasghar/yewtube/commit/32a2e9cdddac3ebb458d7bdcd793ed83ccc2fdf0))
+
 ## v2.8.0 (2022-02-28)
 ### Feature
 * **helptext:** Help changelog ([`0643941`](https://github.com/iamtalhaasghar/yewtube/commit/06439411d7a78fe6701f7313e9b3b0720248a197))
