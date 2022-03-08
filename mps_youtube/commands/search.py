@@ -556,7 +556,8 @@ def mix(num):
 
 @command(r"url\s(.*[-_a-zA-Z0-9]{11}.*)", "url")
 def yt_url(url: str, print_title: bool = False):
-    """Acess videos by urls.
+    """
+    Acess videos by urls.
 
     If `print_title` is true only last title from unique parsed id will be printed.
 
