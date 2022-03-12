@@ -125,7 +125,7 @@ def _match_tracks(artist, title, mb_tracks):
         util.dbg(query)
 
         # perform fetch
-        wdata = pafy.video_search(q)#pafy.call_gdata('search', query)
+        wdata = pafy.search_videos(query, 1)
         results = get_tracks_from_json(wdata)
 
         if not results:
