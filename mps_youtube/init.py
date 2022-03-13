@@ -1,11 +1,11 @@
+import argparse
+import logging
+import multiprocessing
 import os
+import platform
 import re
 import sys
-import logging
 import tempfile
-import argparse
-import platform
-import multiprocessing
 
 try:
     # pylint: disable=F0401
@@ -23,9 +23,9 @@ try:
 except ImportError:
     has_readline = False
 
-from . import cache, g, __version__, screen, c, paths, config
-from .util import has_exefile, dbg, xprint, load_player_info, assign_player
+from . import __version__, c, cache, config, g, paths, screen
 from .helptext import helptext
+from .util import assign_player, dbg, has_exefile, load_player_info, xprint
 
 mswin = os.name == "nt"
 
@@ -274,6 +274,21 @@ def _get_version_info():
 
     from yt_dlp.version import __version__ as ytdlp_version
 
+    dbus_version = None
+    glib = False
+    try:
+        import dbus
+
+        dbus_version = dbus.__version__
+    except Exception:
+        pass
+    try:
+        from gi.repository import GLib
+
+        glib = True
+    except Exception:
+        pass
+
     out = "yewtube version    : " + __version__
     out += "\nyt_dlp version     : " + ytdlp_version
     out += "\nPython version     : " + sys.version
@@ -284,6 +299,8 @@ def _get_version_info():
     out += "\nsys.stdout.enc     : " + sys.stdout.encoding
     out += "\ndefault enc        : " + sys.getdefaultencoding()
     out += "\nConfig dir         : " + paths.get_config_dir()
+    out += "\ndbus               : " + str(dbus_version)
+    out += "\nglib               : " + str(glib)
 
     for env in "TERM SHELL LANG LANGUAGE".split():
         value = os.environ.get(env)

@@ -148,8 +148,53 @@ yewtube is run on the command line using the command:
 
 Enter `h` from within the program for help.
 
+
+Using yewtube with mpris
+------------------------
+
+1. Install PyGObject, GTK and their dependencies based on this guide https://pygobject.readthedocs.io/en/latest/getting_started.html
+2. Install yewtube with mpris extra
+
+```shell
+> # recommended
+> pipx install 'yewtube[mpris]'
+> # or
+> pip install 'yewtube[mpris]'
+```
+
+3. check yewtube version
+
+```shell
+> yt --version
+yewtube version    : 2.8.2
+yt_dlp version     : 2022.02.04
+Python version     : 3.9.7 (default, Nov  7 2021, 15:17:57)
+[GCC 11.2.0]
+Processor          : x86_64
+Machine type       : x86_64
+Architecture       : 64bit, ELF
+Platform           : Linux-5.13.0-35-generic-x86_64-with-glibc2.34
+sys.stdout.enc     : utf-8
+default enc        : utf-8
+Config dir         : /home/user/.config/mps-youtube
+dbus               : 1.2.18
+glib               : True
+env:TERM           : tmux-256color
+env:SHELL          : /usr/bin/zsh
+env:LANG           : en_US.UTF-8
+```
+
+If everything working correctly, dbug and glib would have similar result as above text
+
+4. run `set mpris true` on yewtube
+5. check with `playerctl`
+
+```shell
+> playerctl -l
+mps-youtube.instance567867
+```
+
 How to Contribute
 -----------------
 
 Contributions are welcomed! However, please check out the [contribution page](https://github.com/iamtalhaasghar/yewtube/blob/master/CONTRIBUTING.md) before making a contribution.
-
