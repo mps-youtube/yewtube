@@ -1,8 +1,7 @@
 import os
 import subprocess
 
-from .. import config, util, g
-
+from .. import config, g, util
 from ..player import CmdPlayer
 
 
@@ -19,6 +18,8 @@ class vlc(CmdPlayer):
         if config.VLC_DUMMY_INTERFACE.get:
             print('[VLC DUMMY INTERFACE] Playing "{0}" ...'.format(self.song.title))
             args.extend(('-I', 'dummy')) # vlc without gui
+        if not config.SHOW_VIDEO.get:
+            args.extend(("--no-video",))
 
         util.list_update("--play-and-exit", args)
 
@@ -37,8 +38,8 @@ class vlc(CmdPlayer):
         pass
 
     def _kill_instance(self):
-        from sys import platform
         import os
+        from sys import platform
         if platform == "linux" or platform == "linux2":
             os.system('pkill -f vlc')
         elif platform == "darwin":
