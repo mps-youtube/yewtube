@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v2.8.2 (2022-03-17)
+### Fix
+* #63 module album search crash ([`3f2fcfb`](https://github.com/iamtalhaasghar/yewtube/commit/3f2fcfb27bb60928282d1a4a68adff22980f5938))
+
 ## v2.8.1 (2022-03-08)
 ### Fix
 * #54 play video using youtube short link ([`92d1c77`](https://github.com/iamtalhaasghar/yewtube/commit/92d1c776d4bcc47509becadc5ba9248477dc0dcc))
