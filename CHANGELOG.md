@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.8.3 (2022-04-25)
+### Fix
+* #45 fetch all videos of a playlist ([`261f468`](https://github.com/iamtalhaasghar/yewtube/commit/261f4687668c6c05415102c66587a27518bbac10))
+* Save full playlists by name and all its videos ([`d69a959`](https://github.com/iamtalhaasghar/yewtube/commit/d69a9594c5824d97201774e81444b75aea93e861))
+* #67  vlc dummy Interface does not work with live channels  ([`2d4637b`](https://github.com/iamtalhaasghar/yewtube/commit/2d4637b04b6f738ab832b3beacab1e490e99a518))
+
 ## v2.8.2 (2022-03-17)
 ### Fix
 * #63 module album search crash ([`3f2fcfb`](https://github.com/iamtalhaasghar/yewtube/commit/3f2fcfb27bb60928282d1a4a68adff22980f5938))
