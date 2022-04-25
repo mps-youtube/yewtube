@@ -343,11 +343,11 @@ def pl_search(term, page=0, splash=True, is_user=False):
         # if 'videoCategoryId' in qs:
         #     del qs['videoCategoryId'] # Incompatable with type=playlist
 
-        pldata = pafy.playlist_search(term)
+        #pldata = pafy.playlist_search(term)
 
         #id_list = [i.get('id', {}) for i in pldata]
 
-        result_count = len(pldata)
+        #result_count = len(pldata)
 
     #todo: what is the purpose of this code? #qs = {'part': 'contentDetails,snippet','maxResults': 50}
     if is_user:
@@ -367,7 +367,7 @@ def pl_search(term, page=0, splash=True, is_user=False):
         g.last_search_query = (pl_search, {"term": term, "is_user": is_user})
         g.browse_mode = "ytpl"
         g.current_page = page
-        g.result_count = result_count
+        g.result_count = len(pldata)
         g.ytpls = playlists
         g.message = "Playlist results for %s" % c.y + prog + c.w
         g.content = content.generate_playlist_display()

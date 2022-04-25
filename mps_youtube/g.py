@@ -47,6 +47,7 @@ userhist = {}
 pafs = collections.OrderedDict()
 streams = collections.OrderedDict()
 pafy_pls = {}  #
+selected_pafy_pls_id = ''
 last_opened = message = content = ""
 suffix = "3" # Python 3
 OLD_CFFILE = os.path.join(paths.get_config_dir(), "config")

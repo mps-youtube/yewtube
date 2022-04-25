@@ -50,7 +50,8 @@ def play(pre, choice, post=""):
     if g.browse_mode == "ytpl":
 
         if choice.isdigit():
-            return plist(g.ytpls[int(choice) - 1]['link'])
+            g.selected_pafy_pls_id = g.ytpls[int(choice)-1]['link']
+            return plist(g.selected_pafy_pls_id)
         else:
             g.message = "Invalid playlist selection: %s" % c.y + choice + c.w
             g.content = content.generate_songlist_display()
