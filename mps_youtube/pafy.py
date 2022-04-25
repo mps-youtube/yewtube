@@ -90,7 +90,9 @@ def get_playlist(playlist_id):
     Get all videos of a playlist identified by playlist_id
     '''
 
-    playlist = Playlist.get('https://www.youtube.com/playlist?list=%s' % playlist_id)
+    playlist = Playlist('https://www.youtube.com/playlist?list=%s' % playlist_id)
+    while playlist.hasMoreVideos:
+        playlist.getNextVideos()
     return playlist
 
 def get_video_title_suggestions(query):
