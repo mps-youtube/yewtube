@@ -307,7 +307,7 @@ def search(term):
 @command(r'u(?:ser)?pl\s(.*)', 'userpl', 'upl')
 def user_pls(user):
     """ Retrieve user playlists. """
-    return usersearch_id(user, pafy.channel_id_from_name(user)[0], '')#pl_search(user, is_user=True)
+    return pl_search(user, is_user=True)
 
 
 @command(r'(?:\.\.|\/\/|pls(?:earch)?\s)\s*(.*)', 'plsearch')
@@ -328,40 +328,17 @@ def pl_search(term, page=0, splash=True, is_user=False):
         g.message = "Searching playlists for %s" % c.y + prog + c.w
         screen.update()
 
+    logging.info("playlist search for %s", prog)
     if is_user:
         ret = channelfromname(term)
-        if not ret: # Error
+        if not ret:
             return
         user, channel_id = ret
-
+        pldata = pafy.all_playlists_from_channel(channel_id)
     else:
-        # playlist search is done with the above url and param type=playlist
-        logging.info("playlist search for %s", prog)
-        # qs = generate_search_qs(term)
-        # qs['pageToken'] = token(page)
-        # qs['type'] = 'playlist'
-        # if 'videoCategoryId' in qs:
-        #     del qs['videoCategoryId'] # Incompatable with type=playlist
+        pldata = pafy.playlist_search(term)
 
-        #pldata = pafy.playlist_search(term)
-
-        #id_list = [i.get('id', {}) for i in pldata]
-
-        #result_count = len(pldata)
-
-    #todo: what is the purpose of this code? #qs = {'part': 'contentDetails,snippet','maxResults': 50}
-    if is_user:
-        if page:
-            pass #qs['pageToken'] = token(page)
-        pass #qs['channelId'] = channel_id
-    else:
-        pass #qs['id'] = ','.join(id_list)
-
-    pldata = pafy.playlist_search(term)
     playlists = get_pl_from_json(pldata)[:util.getxy().max_results]
-
-    # if is_user:
-    #     result_count = pldata['pageInfo']['totalResults']
 
     if playlists:
         g.last_search_query = (pl_search, {"term": term, "is_user": is_user})
@@ -394,7 +371,7 @@ def get_pl_from_json(pldata):
             link=item["id"],
             size=item["videoCount"],
             title=item["title"],
-            author=item['channel']["name"],
+            author= item['channel']["name"] if 'channel' in item.keys()  else None,
             created=item.get("publishedAt"),
             updated=item.get('publishedAt'), #XXX Not available in API?
             description=item.get("description")))

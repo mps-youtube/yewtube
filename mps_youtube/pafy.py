@@ -170,3 +170,11 @@ def extract_video_id(url: str) -> str:
 
     err = "Need 11 character video id or the URL of the video. Got %s"
     raise ValueError(err % url)
+
+def all_playlists_from_channel(channel_id):
+    channel = Channel(channel_id)
+    playlists = channel.result['playlists']
+    while channel.has_more_playlists():
+         channel.next()
+         playlists.extend(channel.result["playlists"])
+    return playlists
