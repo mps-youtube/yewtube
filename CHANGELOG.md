@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v2.8.4 (2022-05-05)
+### Fix
+* #53 viewing playlists uploaded by a user is back ([`f201cb5`](https://github.com/iamtalhaasghar/yewtube/commit/f201cb5f4cd45b9341ced6b549fc35a57e85eb9f))
+
 ## v2.8.3 (2022-04-25)
 ### Fix
 * #45 fetch all videos of a playlist ([`261f468`](https://github.com/iamtalhaasghar/yewtube/commit/261f4687668c6c05415102c66587a27518bbac10))
