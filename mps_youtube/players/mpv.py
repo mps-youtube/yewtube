@@ -292,7 +292,7 @@ def _get_input_file():
     conf = conf.replace("playlist_next", "quit")
     conf = conf.replace("pt_step 1", "quit")
     standard_cmds = ['q quit 43\n', '> quit\n', '< quit 42\n', 'NEXT quit\n',
-                     'PREV quit 42\n', 'ENTER quit\n']
+                     'PREV quit 42\n', 'ENTER quit\n', 'Q quit-watch-later']
     bound_keys = [i.split()[0] for i in conf.splitlines() if i.split()]
 
     for i in standard_cmds:
