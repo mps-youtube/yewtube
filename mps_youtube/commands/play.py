@@ -9,6 +9,11 @@ from . import RS, WORD, command
 from .search import related, yt_url
 from .songlist import plist
 
+@command(r'play all', 'play all')
+def play_loaded():
+    g.model.songs = content.get_last_query()
+    if g.model.songs:
+        play_all("", "", "")
 
 @command(r'play\s+(%s|\d+)' % WORD, 'play')
 def play_pl(name):

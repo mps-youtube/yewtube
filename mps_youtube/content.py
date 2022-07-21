@@ -259,3 +259,19 @@ def qrcode_display(url):
     qr.add_data(url)
     qr.print_ascii(out=buf)
     return buf.getvalue()
+
+def get_last_query():
+    # Prevent crash if no last query
+    if g.last_search_query == (None, None) or \
+            'func' not in g.last_search_query[1]:
+        g.content = logo()
+        g.message = "No playlist loaded"
+        return
+
+    songs_list_or_func = g.last_search_query[1]['func']
+    if callable(songs_list_or_func):
+        songs = songs_list_or_func(0,None)
+    else:
+        songs = songs_list_or_func
+
+    return songs

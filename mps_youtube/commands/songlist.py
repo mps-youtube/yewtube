@@ -208,6 +208,16 @@ def shuffle_fn():
     g.message = c.y + "Items shuffled" + c.w
     g.content = content.generate_songlist_display()
 
+@command(r'shuffle all', 'shuffle all')
+def shuffle_playlist():
+    """ Shuffle entire loaded playlist. """
+    songs = content.get_last_query()
+
+    if songs: 
+        random.shuffle(songs)
+        paginatesongs(list(songs))
+        g.message = c.y + "Shuffled entire playlist" + c.w
+        g.content = content.generate_songlist_display()
 
 @command(r'reverse', 'reverse')
 def reverse_songs():
@@ -231,19 +241,9 @@ def reverse_songs_range(lower, upper):
 @command(r'reverse all', 'reverse all')
 def reverse_playlist():
     """ Reverse order of entire loaded playlist. """
-    # Prevent crash if no last query
-    if g.last_search_query == (None, None) or \
-            'func' not in g.last_search_query[1]:
-        g.content = content.logo()
-        g.message = "No playlist loaded"
-        return
+    songs = content.get_last_query()
 
-    songs_list_or_func = g.last_search_query[1]['func']
-    if callable(songs_list_or_func):
-        songs = reversed(songs_list_or_func(0,None))
-    else:
-        songs = reversed(songs_list_or_func)
-
-    paginatesongs(list(songs))
-    g.message = c.y + "Reversed entire playlist" + c.w
-    g.content = content.generate_songlist_display()
+    if songs:   
+        paginatesongs(list(reversed(songs)))
+        g.message = c.y + "Reversed entire playlist" + c.w
+        g.content = content.generate_songlist_display()
