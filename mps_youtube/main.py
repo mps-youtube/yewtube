@@ -46,7 +46,12 @@ from . import config
 
 mswin = os.name == "nt"
 
-locale.setlocale(locale.LC_ALL, "")  # for date formatting
+try:
+    locale.setlocale(locale.LC_ALL, "")  # for date formatting
+except Exception as err:
+    import warnings
+
+    warnings.warn(f"locale not set: {err}")
 
 
 def matchfunction(func, regex, userinput):
