@@ -20,10 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import traceback as traceback_py
 import locale
-import sys
+import logging
 import os
+import sys
+import traceback as traceback_py
 
 from . import util
 
@@ -49,9 +50,7 @@ mswin = os.name == "nt"
 try:
     locale.setlocale(locale.LC_ALL, "")  # for date formatting
 except Exception as err:
-    import warnings
-
-    warnings.warn(f"locale not set: {err}")
+    logging.debug(f"locale not set: {err}")
 
 
 def matchfunction(func, regex, userinput):
