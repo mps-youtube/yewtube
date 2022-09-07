@@ -2,6 +2,15 @@
 
 <!--next-version-placeholder-->
 
+## v2.8.5 (2022-09-08)
+### Fix
+* #75 program crashes while creating custom playlist and saving it without playing ([`2552eff`](https://github.com/iamtalhaasghar/yewtube/commit/2552eff602683fbd28bc6841768bf6cf585fc960))
+* **main:** Handle error when setting locale ([#86](https://github.com/iamtalhaasghar/yewtube/issues/86)) ([`ecd117c`](https://github.com/iamtalhaasghar/yewtube/commit/ecd117ca1ef753509b78082d6f919c9bc2b1756b))
+* Enable quit-watch-later in mpv #77 ([`079e440`](https://github.com/iamtalhaasghar/yewtube/commit/079e44088260c938dc3ae71cd55146fb51de653e))
+
+### Documentation
+* Added common issues file. ([#91](https://github.com/iamtalhaasghar/yewtube/issues/91)) ([`4b69e5e`](https://github.com/iamtalhaasghar/yewtube/commit/4b69e5ee96ed36efa9a68f6315322ed3d44d1e3d))
+
 ## v2.8.4 (2022-05-05)
 ### Fix
 * #53 viewing playlists uploaded by a user is back ([`f201cb5`](https://github.com/iamtalhaasghar/yewtube/commit/f201cb5f4cd45b9341ced6b549fc35a57e85eb9f))
