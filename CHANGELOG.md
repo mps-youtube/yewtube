@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v2.9.0 (2022-10-20)
+### Feature
+* **mplayer:** Set cache ([#93](https://github.com/iamtalhaasghar/yewtube/issues/93)) ([`16d3a18`](https://github.com/iamtalhaasghar/yewtube/commit/16d3a186fb9feb24530e1f07b211062c44a515a0))
+
+### Fix
+* #76 video pops up ([`eaeff58`](https://github.com/iamtalhaasghar/yewtube/commit/eaeff58f94e2fd89706e42fdab6b8e82ef770941))
+
 ## v2.8.5 (2022-09-08)
 ### Fix
 * #75 program crashes while creating custom playlist and saving it without playing ([`2552eff`](https://github.com/iamtalhaasghar/yewtube/commit/2552eff602683fbd28bc6841768bf6cf585fc960))
