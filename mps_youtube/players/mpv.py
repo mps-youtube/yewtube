@@ -96,6 +96,7 @@ class mpv(CmdPlayer):
 
         if not config.SHOW_VIDEO.get:
             util.list_update('--no-video', args)
+            util.list_update('--vid=no', args)
 
         return [self.player] + args + [self.stream['url']]
 
