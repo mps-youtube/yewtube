@@ -194,7 +194,7 @@ If everything working correctly, dbug and glib would have similar result as abov
 mps-youtube.instance567867
 ```
 
-Check also the [common-issue](common-issues.md) if you having problem with yewtube.
+Check also the [common-issue](https://github.com/iamtalhaasghar/yewtube/wiki/Common-issues) if you are having problem with yewtube.
 
 How to Contribute
 -----------------
