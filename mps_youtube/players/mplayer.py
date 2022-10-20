@@ -67,6 +67,8 @@ class mplayer(CmdPlayer):
         util.list_update("-really-quiet", args, remove=True)
         util.list_update("-noquiet", args)
         util.list_update("-prefer-ipv4", args)
+        util.list_update("-cache", args)
+        util.list_update("4096", args)
 
         return [self.player] + args + [self.stream['url']]
 
