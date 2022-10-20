@@ -94,6 +94,9 @@ class mpv(CmdPlayer):
         if self.softrepeat:
             util.list_update("--loop-file", args)
 
+        if not config.SHOW_VIDEO.get:
+            util.list_update('--no-video', args)
+
         return [self.player] + args + [self.stream['url']]
 
     def clean_up(self):
