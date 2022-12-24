@@ -135,7 +135,7 @@ macOS X
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Install mpv (recommended player) with `Homebrew <http://brew.sh>`_::
 
-    brew cask install mpv
+    brew install --cask mpv
 
 Alternately, you can install mplayer with `MacPorts <http://www.macports.org>`_::
 
