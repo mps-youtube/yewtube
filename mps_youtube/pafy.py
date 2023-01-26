@@ -38,7 +38,7 @@ def get_video_streams(ytid):
         info_dict = ydl.extract_info(ytid, download=False)
         return [i for i in info_dict['formats'] if i.get('format_note') != 'storyboard']
 
-def download_video(ytid, folder):
+def download_video(ytid, folder, audio_only=False):
 
     '''
     Given a youtube video id and target folder, this function will download video to that folder
@@ -47,6 +47,13 @@ def download_video(ytid, folder):
     ytdl_format_options = {
         'outtmpl': os.path.join(folder, '%(title)s-%(id)s.%(ext)s')
     }
+    if audio_only:
+        ytdl_format_options['format'] = 'bestaudio/best'
+        ytdl_format_options['postprocessors'] =[{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }]
 
     with yt_dlp.YoutubeDL(ytdl_format_options) as ydl:
         ydl.download('https://www.youtube.com/watch?v=%s' % ytid)

@@ -88,7 +88,7 @@ def download(dltype, num):
         # perform download(s)
         # dl_filenames = [args[1]]
         # f = _download(*args, **kwargs)
-        success = pafy.download_video(song.ytid, config.DDIR.get)
+        success = pafy.download_video(song.ytid, config.DDIR.get, True if dltype.startswith("da") else False)
         if success:
             g.message = "Saved \'" + song.title + "\' to " + c.g + config.DDIR.get + c.w
 
