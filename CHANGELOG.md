@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v2.9.2 (2023-01-26)
+### Fix
+* Remove pyreadline dependency (#105) ([#107](https://github.com/iamtalhaasghar/yewtube/issues/107)) ([`19e4148`](https://github.com/iamtalhaasghar/yewtube/commit/19e4148242380b543a4825962716550114984f11))
+
 ## v2.9.1 (2023-01-26)
 ### Fix
 * #50 - brought back download audio file ([`b46dab4`](https://github.com/iamtalhaasghar/yewtube/commit/b46dab47e61c68efa0e51836a8cc9141d15d9e87))
