@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v2.9.1 (2023-01-26)
+### Fix
+* #50 - brought back download audio file ([`b46dab4`](https://github.com/iamtalhaasghar/yewtube/commit/b46dab47e61c68efa0e51836a8cc9141d15d9e87))
+
 ## v2.9.0 (2022-10-20)
 ### Feature
 * **mplayer:** Set cache ([#93](https://github.com/iamtalhaasghar/yewtube/issues/93)) ([`16d3a18`](https://github.com/iamtalhaasghar/yewtube/commit/16d3a186fb9feb24530e1f07b211062c44a515a0))
