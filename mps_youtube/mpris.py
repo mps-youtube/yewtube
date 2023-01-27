@@ -20,18 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+import copy
 import json
+import os
+import re
 import socket
 import time
-import copy
-import re
-import os
+import typing as T
 from threading import Thread
 
 import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
-
 
 IDENTITY = 'mps-youtube'
 
@@ -224,7 +224,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
                     observe_full = True
 
                 if resp.get('event') == 'property-change':
-                    self.setproperty(resp['name'], resp['data'])
+                    self.setproperty(resp['name'], resp.get('data'))
 
         except socket.error:
             self.socket = None
@@ -243,7 +243,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
         except IOError:
             self.fifo = None
 
-    def setproperty(self, name, val):
+    def setproperty(self, name: str, val: T.Optional[T.Any]):
         """
             Properly sets properties on player interface
 
@@ -285,7 +285,7 @@ class Mpris2MediaPlayer(dbus.service.Object):
 
         elif name == 'time-pos' and val:
             oldval = self.properties[PLAYER_INTERFACE]['read_only']['Position']
-            newval = dbus.Int64(val * 10**6)
+            newval = dbus.Int64(val * 10**6) if val else dbus.Int64(0)
 
             if newval != oldval:
                 self.properties[PLAYER_INTERFACE]['read_only']['Position'] = newval

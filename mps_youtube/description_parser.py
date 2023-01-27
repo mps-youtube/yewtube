@@ -3,7 +3,6 @@
 """
 import re
 import random
-import pafy
 
 
 def calculate_certainty(line):
@@ -86,7 +85,7 @@ def artist_from_title(title):
     query['maxResults'] = 50
     query['part'] = "snippet"
 
-    results = pafy.call_gdata('search', query)['items']
+    results = None#pafy.call_gdata('search', query)['items']
     titles = [x['snippet']['title'].upper() for x in results]
 
     alts = {}

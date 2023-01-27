@@ -2,7 +2,6 @@ import math
 import copy
 import random
 
-import pafy
 
 from . import g, c, config
 from .util import getxy, fmt_time, uea_pad, yt_datetime, F
@@ -121,8 +120,8 @@ def generate_songlist_display(song=False, zeromsg=None):
         otitle = details['title']
         details['idx'] = "%2d" % (n + 1)
         details['title'] = uea_pad(columns[1]['size'], otitle)
-        cat = details.get('category') or '-'
-        details['category'] = pafy.get_categoryname(cat)
+        #cat = details.get('category') or '-'
+        #details['category'] = 'pafy.get_categoryname(cat)'
         details['ytid'] = x.ytid
         line = ''
 
@@ -206,12 +205,16 @@ def _get_user_columns():
 def logo(col=None, version=""):
     """ Return text logo. """
     col = col if col else random.choice((c.g, c.r, c.y, c.b, c.p, c.w))
-    logo_txt = r"""                                             _         _
- _ __ ___  _ __  ___       _   _  ___  _   _| |_ _   _| |__   ___
-| '_ ` _ \| '_ \/ __|_____| | | |/ _ \| | | | __| | | | '_ \ / _ \
-| | | | | | |_) \__ \_____| |_| | (_) | |_| | |_| |_| | |_) |  __/
-|_| |_| |_| .__/|___/      \__, |\___/ \__,_|\__|\__,_|_.__/ \___|
-          |_|              |___/"""
+    logo_txt = r"""                      _         _          
+                     | |       | |         
+  _   _  _____      _| |_ _   _| |__   ___ 
+ | | | |/ _ \ \ /\ / / __| | | | '_ \ / _ \
+ | |_| |  __/\ V  V /| |_| |_| | |_) |  __/
+  \__, |\___| \_/\_/  \__|\__,_|_.__/ \___|
+   __/ |                                   
+  |___/                                    
+    """
+
     version = " v" + version if version else ""
     logo_txt = col + logo_txt + c.w + version
     lines = logo_txt.split("\n")
@@ -256,3 +259,19 @@ def qrcode_display(url):
     qr.add_data(url)
     qr.print_ascii(out=buf)
     return buf.getvalue()
+
+def get_last_query():
+    # Prevent crash if no last query
+    if g.last_search_query == (None, None) or \
+            'func' not in g.last_search_query[1]:
+        g.content = logo()
+        g.message = "No playlist loaded"
+        return
+
+    songs_list_or_func = g.last_search_query[1]['func']
+    if callable(songs_list_or_func):
+        songs = songs_list_or_func(0,None)
+    else:
+        songs = songs_list_or_func
+
+    return songs

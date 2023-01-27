@@ -1,12 +1,11 @@
 """ Module for holding globals that are needed throught mps-youtube. """
 
+import collections
 import os
 import sys
-import collections
 
 from . import c, paths
 from .playlist import Playlist
-
 
 volume = None
 transcoder_path = "auto"
@@ -48,6 +47,7 @@ userhist = {}
 pafs = collections.OrderedDict()
 streams = collections.OrderedDict()
 pafy_pls = {}  #
+selected_pafy_pls_id = ''
 last_opened = message = content = ""
 suffix = "3" # Python 3
 OLD_CFFILE = os.path.join(paths.get_config_dir(), "config")
@@ -73,8 +73,10 @@ categories = {
 }
 playerargs_defaults = {
     "mpv": {
-        "msglevel": {"<0.4": "--msglevel=all=no:statusline=status",
-                     ">=0.4": "--msg-level=all=no:statusline=status"},
+        "msglevel": {
+            "<0.4": "--msglevel=all=no:statusline=status",
+            ">=0.4": "--msg-level=all=no,statusline=status",
+        },
         "title": "--force-media-title",
         "fs": "--fs",
         "novid": "--no-video",
@@ -94,9 +96,9 @@ argument_commands = []
 commands = []
 
 text = {
-    "exitmsg": ("*mps-youtube - *https://github.com/mps-youtube/mps-youtube*"
+    "exitmsg": ("*yewtube - https://github.com/iamtalhaasghar/yewtube is a fork of\nmps-youtube - *https://github.com/mps-youtube/mps-youtube*"
                 "\nReleased under the GPLv3 license\n"
-                "(c) 2014, 2015 np1 and contributors*\n"""),
+                "(c) 2021 iamtalhaasghar\n(c) 2014, 2015 np1 and contributors*\n"""),
     "exitmsg_": (c.r, c.b, c.r, c.w),
 
     # Error / Warning messages

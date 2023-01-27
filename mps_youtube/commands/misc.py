@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 import socket
 import traceback
 from urllib.request import urlopen
@@ -20,8 +20,7 @@ try:
 except ImportError:
     has_readline = False
 
-import pafy
-from .. import g, c, __version__, content, screen, cache
+from .. import g, c, __version__, content, screen, cache, pafy
 from .. import streams, history, config, util
 from ..helptext import get_help
 from ..content import generate_songlist_display, logo, qrcode_display
@@ -61,36 +60,36 @@ def quits(showlogo=True):
     if config.CHECKUPDATE.get and showlogo:
 
         try:
-            url = "https://raw.githubusercontent.com/mps-youtube/mps-youtube/master/VERSION"
+            url = "https://raw.githubusercontent.com/iamtalhaasghar/yewtube/master/setup.py"
             v = urlopen(url, timeout=1).read().decode()
-            v = re.search(r"^version\s*([\d\.]+)\s*$", v, re.MULTILINE)
+            v = re.search(r'__version__\s*=\s*"\s*([\d\.]+)\s*"\s*', v, re.MULTILINE)
 
             if v:
                 v = v.group(1)
 
                 if v > __version__:
-                    msg += "\n\nA newer version is available (%s)\n" % v
+                    msg += "\n\nA newer version is available (%s). Use `help new` command to check what's changed.\n" % v
 
         except (URLError, HTTPError, socket.timeout):
             util.dbg("check update timed out")
 
     screen.msgexit(msg)
 
-def _format_comment(snippet, n, qnt, reply=False):
-    poster = snippet.get('authorDisplayName')
-    shortdate = util.yt_datetime(snippet.get('publishedAt', ''))[1]
-    text = snippet.get('textDisplay', '')
-    cid = ("%s%s/%s %s" % ('└── ' if reply else '', n, qnt, c.c("g", poster)))
-    return ("%-39s %s\n" % (cid, shortdate)) + \
-            c.c("y", text.strip()) + '\n\n'
+def _format_comment(n, qnt, author_name, published_date, content, reply=False):
+    # poster = snippet.get('authorDisplayName')
+    # shortdate = util.yt_datetime(snippet.get('publishedAt', ''))[1]
+    # text = snippet.get('textDisplay', '')
+    cid = ("%s%s/%s %s" % ('└── ' if reply else '', n, qnt, c.c("g", author_name)))
+    return ("%-39s %s\n" % (cid, published_date)) + \
+            c.c("y", content.strip()) + '\n\n'
 
 def _fetch_commentreplies(parentid):
-    return pafy.call_gdata('comments', {
-        'parentId': parentid,
-        'part': 'snippet',
-        'textFormat': 'plainText',
-        'maxResults': 50}).get('items', [])
-
+    # return pafy.call_gdata('comments', {
+    #     'parentId': parentid,
+    #     'part': 'snippet',
+    #     'textFormat': 'plainText',
+    #     'maxResults': 50}).get('items', [])
+    return None
 def fetch_comments(item):
     """ Fetch comments for item using gdata. """
     # pylint: disable=R0912
@@ -98,37 +97,38 @@ def fetch_comments(item):
     ytid, title = item.ytid, item.title
     util.dbg("Fetching comments for %s", c.c("y", ytid))
     screen.writestatus("Fetching comments for %s" % c.c("y", title[:55]))
-    qs = {'textFormat': 'plainText',
-          'videoId': ytid,
-          'maxResults': 50,
-          'part': 'snippet'}
+    # qs = {'textFormat': 'plainText',
+    #       'videoId': ytid,
+    #       'maxResults': 50,
+    #       'part': 'snippet'}
 
-    jsdata = None
+    # jsdata = None
     try:
-        jsdata = pafy.call_gdata('commentThreads', qs)
-    except pafy.util.GdataError as e:
-        raise pafy.util.GdataError(str(e).replace(" identified by the <code><a href=\"/youtube/v3/docs/commentThreads/list#videoId\">videoId</a></code> parameter", ""))
-    coms = [x.get('snippet', {}) for x in jsdata.get('items', [])]
+        all_comments = pafy.get_comments(ytid)
+    except Exception:
+        raise
+    # coms = [x.get('snippet', {}) for x in jsdata.get('items', [])]
 
     # skip blanks
-    coms = [x for x in coms
-            if len(x.get('topLevelComment', {}).get('snippet', {}).get('textDisplay', '').strip())]
+    # coms = [x for x in coms
+    #         if len(x.get('topLevelComment', {}).get('snippet', {}).get('textDisplay', '').strip())]
 
-    if not len(coms):
+    if not len(all_comments):
         g.message = "No comments for %s" % item.title[:50]
         g.content = generate_songlist_display()
         return
 
     commentstext = ''
 
-    for n, com in enumerate(coms, 1):
-        snippet = com.get('topLevelComment', {}).get('snippet', {})
-        commentstext += _format_comment(snippet, n, len(coms))
-        if com.get('totalReplyCount') > 0:
-            replies = _fetch_commentreplies(com.get('topLevelComment').get('id'))
-            for n, com in enumerate(reversed(replies), 1):
-                commentstext += _format_comment(com.get('snippet', {}),
-                                                n, len(replies), True)
+    for n, com in enumerate(all_comments, 1):
+        # snippet = com.get('topLevelComment', {}).get('snippet', {})
+        commentstext += _format_comment(n, len(all_comments), com['author']['name'], com['published'], com['content'])
+        # todo fetch comment replies
+        # if com.get('replyCount') > 0:
+        #     replies = _fetch_commentreplies(com.get('topLevelComment').get('id'))
+        #     for n, com in enumerate(reversed(replies), 1):
+        #         commentstext += _format_comment(com.get('snippet', {}),
+        #                                         n, len(replies), True)
 
     g.current_page = 0
     g.content = content.StringContent(commentstext)
@@ -251,21 +251,26 @@ def video_info(num):
         screen.writestatus("Fetching video metadata..")
         item = (g.model[int(num) - 1])
         streams.get(item)
-        p = util.get_pafy(item)
-        pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%SZ")
-        pub = util.utc2local(pub)
+        p = pafy.get_video_info(item.ytid)
+        #pub = datetime.strptime(str(p.published), "%Y-%m-%d %H:%M:%SZ")
+        #pub = util.utc2local(pub)
         screen.writestatus("Fetched")
         out = c.ul + "Video Info" + c.w + "\n\n"
-        out += p.title or ""
-        out += "\n" + (p.description or "") + "\n"
-        out += "\nAuthor     : " + str(p.author)
-        out += "\nPublished  : " + pub.strftime("%c")
-        out += "\nView count : " + str(p.viewcount)
-        out += "\nRating     : " + str(p.rating)[:4]
-        out += "\nLikes      : " + str(p.likes)
-        out += "\nDislikes   : " + str(p.dislikes)
-        out += "\nCategory   : " + str(p.category)
-        out += "\nLink       : " + "https://youtube.com/watch?v=%s" % p.videoid
+        out += p['title'] or ""
+        out += "\n\nDescription:\n\n" + str(p.get('description', "")) + "\n"
+        out += "\nKeywords: " + str(p['keywords']) + "\n"
+        out += "\nIs Live Now    : " + str(p['isLiveNow'])
+        out += "\nDuration       : " + str(timedelta(seconds=int(p['duration']['secondsText'])))
+        out += "\nView count     : " + "{:,}".format(int(p['viewCount']['text']))
+        out += "\nAuthor         : " + str(p['channel']['name'] + ' ~ ' + p['channel']['link'])
+        out += "\nPublished Date : " + str(p['publishDate'])
+        out += "\nUploaded Date  : " + str(p['uploadDate'])
+        out += "\nRating         : " + str(p['averageRating'])
+        out += "\nLikes          : " + "{:,}".format(p.get('likes', 0))
+        out += "\nDislikes       : " + "{:,}".format(p.get('dislikes', 0))
+        out += "\nCategory       : " + str(p['category'])
+        out += "\nFamily Safe    : " + str(p['isFamilySafe'])
+        out += "\nLink           : " + str(p['link'])
         if config.SHOW_QRCODE.get:
             out += "\n" + qrcode_display(
                 "https://youtube.com/watch?v=%s" % p.videoid)

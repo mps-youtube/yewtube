@@ -1,6 +1,5 @@
 *.py[cod]
 otherstuff/
-pafy.py
 pafy
 vi.py
 MANIFEST
@@ -17,3 +16,7 @@ bin
 var
 tags
 .env
+env/
+.idea/
+venv/
+test.py

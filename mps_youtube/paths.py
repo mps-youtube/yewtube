@@ -9,7 +9,7 @@ def get_default_ddir():
     join, exists = os.path.join, os.path.exists
 
     if mswin:
-        return join(user_home, "Downloads", "mps")
+        return join(user_home, "Downloads", "yewtube")
 
     USER_DIRS = join(user_home, ".config", "user-dirs.dirs")
     DOWNLOAD_HOME = join(user_home, "Downloads")

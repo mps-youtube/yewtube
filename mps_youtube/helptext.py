@@ -1,8 +1,14 @@
 """
     Holds all help text
 """
+import pathlib
+import re
+import socket
+from urllib.error import HTTPError, URLError
+from urllib.request import urlopen
+
 from . import c, g
-from .util import get_near_name, F
+from .util import F, get_near_name
 
 
 def helptext():
@@ -25,9 +31,12 @@ def helptext():
         {2}d <number>{1} - download video <number>
         {2}r <number>{1} - show videos related to video <number>
         {2}u <number>{1} - show videos uploaded by uploader of video <number>
-        {2}x <number>{1} - copy item <number> url to clipboard (requires pyperclip)
+        {2}x <number>{1} - copy item <number> url to clipboard. (See the note below)
+        Note: This feature requires `pyperclip` which is installed automatically when you install yewtube but
+        Linux users further need to install `xsel` or `xclip` manually using apt, dnf, pacman, zypper or whatever package manager you use.
+        Visit https://pyperclip.readthedocs.io/en/latest/index.html#not-implemented-error for more info.
 
-        {2}q{1}, {2}quit{1} - exit mpsyt
+        {2}q{1}, {2}quit{1} - exit yewtube
     """.format(c.ul, c.w, c.y)),
         ("search", "Searching and Retrieving", """
     {0}Searching and Retrieving{1}
@@ -51,15 +60,15 @@ def helptext():
 
     {2}album <album title>{1} - Search for matching tracks using album title
     {2}channels <Channel name>{1} - Search for channels by channelname
-    {2}live <category>{1} - Search for livestreams from a range of categories. 
+    {2}live <category>{1} - Search for livestreams from a range of categories.
     Categories: {2}{3}{1}
 
     {2}mkp <fullfilepath>{1} - Creates a playlist automatically with video titles from fullfilepath
     <fullfilepath>: Full path of text file with one title per line
-    
+
     {2}mkp -d <search result number>{1} - Create a playlist based on tracks
     listed in that videos description. (Alternatively one can use {2}--description{1})
-    
+
     {2}user <username>{1} - list YouTube uploads by <username>.
     {2}user <username>/<query>{1} - as above, but matches <query>.
     {2}userpl <username>{1} - list YouTube playlists created by <username>.
@@ -84,8 +93,9 @@ def helptext():
     {2}mix <number>{1} - show YouTube mix playlist from item in results.
 
     {2}shuffle{1} - Shuffle the displayed results.
+    {2}shuffle all{1} - Shuffle entire loaded playlist.
     {2}reverse{1} or {2}reverse <number>-<number>{1} - Reverse the displayed items or item range.
-    {2}reverse all{1} - Reverse order of entire loaded playlist
+    {2}reverse all{1} - Reverse order of entire loaded playlist.
     """.format(c.ul, c.w, c.y)),
 
         ("download", "Downloading and Playback", """
@@ -175,7 +185,7 @@ def helptext():
         ("history", "Accessing Local History", """
     {0}Accessing Local History{1}
 
-    Access songs that have been played within mpsyt
+    Access songs that have been played within yewtube
 
         {2}history{1} - displays a list of songs contained in history
         {2}history clear{1} - clears the song history
@@ -186,20 +196,20 @@ def helptext():
         ("invoke", "Invocation Parameters", """
     {0}Invocation{1}
 
-    All mpsyt commands can be entered from the command line.  For example;
+    All yewtube commands can be entered from the command line.  For example;
 
-      {2}mpsyt dlurl <url or id>{1} to download a YouTube video by url or id
-      {2}mpsyt playurl <url or id>{1} to play a YouTube video by url or id
-      {2}mpsyt /mozart{1} to search
-      {2}mpsyt //best songs of 2010{1} for a playlist search
-      {2}mpsyt play <playlist name or ID>{1} to play a saved playlist
-      {2}mpsyt ls{1} to list saved playlists
+      {2}yt dlurl <url or id>{1} to download a YouTube video by url or id
+      {2}yt playurl <url or id>{1} to play a YouTube video by url or id
+      {2}yt /mozart{1} to search
+      {2}yt //best songs of 2010{1} for a playlist search
+      {2}yt play <playlist name or ID>{1} to play a saved playlist
+      {2}yt ls{1} to list saved playlists
 
     For further automation, a series of commands can be entered separated by
     commas (,).  E.g.,
 
-      {2}mpsyt open 1, 2-4{1} - play items 2-4 of first saved playlist
-      {2}mpsyt //the doors, 1, all -a{1} - open YouTube playlist and play audio
+      {2}yt open 1, 2-4{1} - play items 2-4 of first saved playlist
+      {2}yt //the doors, 1, all -a{1} - open YouTube playlist and play audio
 
     If you need to enter an actual comma on the command line, use {2},,{1} instead.
     """.format(c.ul, c.w, c.y)),
@@ -239,12 +249,12 @@ def helptext():
     {2}set window_size <number>x<number>{1} - set player window width & height
     {2}set audio_format <auto|m4a|webm>{1} - set default music audio format
     {2}set video_format <auto|mp4|webm|3gp>{1} - set default music video format
-    {2}set api_key <key>{1} - use a different API key for accessing the YouTube Data API
     {2}set set_title true|false{1} - change window title
     {2}set show_qrcode true|false{1} - show qrcode of the URL in the video information panel
     {2}set history true|false{1} - record play history
     {2}set input_history true|false{1} - record command input history
- 
+    {2}set vlc_dummy_interface true|false{1} - whether to hide VLC GUI or not (hides when true)
+
     Additionally, {2}set -t{1} may be used to temporarily change a setting without
     saving it to disk
     """.format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'
@@ -299,21 +309,26 @@ def helptext():
     command
 
     Use {2}clearcache{1} command to clear the cache.
-    """.format(c.ul, c.w, c.y)),
-
-        ("new", "New Features", """
-    {0}New Features in v0.2.7{1}
-
-     - Setting for default audio format (nishanthkarthik)
-
-     - Search history with "history" command (kraetzin)
-
-     - Add syntax for repeating a track several times (ghallak)
-
-     - New "reverse" command (kraetzin)
-
-     - New "daurl <url>" command (maricn)
-    """.format(c.ul, c.w, c.y))]
+    """.format(
+                c.ul, c.w, c.y
+            ),
+        ),
+        (
+            "new",
+            "Check if new version is available",
+            """{0}What's New{1}\n{3}""".format(c.ul, c.w, c.y, "get_changelog()"),
+        ),
+        (
+            "changelog",
+            "Check program changelog",
+            """{0}Changelog{1}\n{3}""".format(c.ul, c.w, c.y, "get_changelog_local()"),
+        ),
+        (
+            "tor",
+            "Check Tor Status. NOTE: Use this feature at your own risk. In case of any kind of damage we will not be responsible.",
+            """{0}Tor Status{1}\n{3}""".format(c.ul, c.w, c.y, "check_tor()"),
+        ),
+    ]
 
 
 def get_help(choice):
@@ -328,7 +343,7 @@ def get_help(choice):
              "encode": ("encoding transcoding transcode wma mp3 format "
                         "encode encoder".split()),
 
-             "invoke": "command commands mpsyt invocation".split(),
+             "invoke": "command commands yt invocation".split(),
 
              "search": ("user userpl pl pls r n p url album "
                         "editing result results related remove swop mkp --description".split()),
@@ -379,5 +394,44 @@ def get_help(choice):
         return out
 
     else:
-        choice = help_names.index(choice)
-        return indent(all_help[choice][2])
+        if choice == 'tor':
+            output_text = check_tor()
+        elif choice == 'new':
+            output_text = get_changelog()
+        elif choice == "changelog":
+            output_text = get_changelog_local()
+        else:
+            choice = help_names.index(choice)
+            output_text = all_help[choice][2]
+
+        return indent(output_text)
+
+def get_changelog():
+    try:
+        url = "https://raw.githubusercontent.com/iamtalhaasghar/yewtube/master/CHANGELOG.md"
+        v = urlopen(url, timeout=1).read().decode()
+        v = v.split('## v')[1]
+        return v
+    except (URLError, HTTPError, socket.timeout):
+        return "read changelog timed out"
+
+
+def get_changelog_local():
+    cl_path = pathlib.Path(__file__).parent.parent / "CHANGELOG.md"
+    if cl_path.is_file():
+        return "\n".join(reversed(cl_path.read_text().splitlines()))
+    else:
+        return "can't find changelog file"
+
+
+def check_tor():
+    try:
+        url = "https://check.torproject.org/?lang=en"
+        v = urlopen(url, timeout=1).read().decode()
+        ip = re.findall('<strong>(.*)</strong>', v)
+        status = re.findall('Congratulations.(.*)', v)
+        if len(status) == 0:
+            status = re.findall('Sorry.(.*)', v)
+        return str({'ip' : ip, 'status': status[0]})
+    except (URLError, HTTPError, socket.timeout):
+        return "read check tor status timed out"

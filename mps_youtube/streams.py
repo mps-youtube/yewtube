@@ -1,7 +1,7 @@
 import time
 import threading
 from urllib.request import urlopen
-
+from . import pafy
 from . import g, c, screen, config, util
 
 
@@ -16,7 +16,7 @@ def prune():
     # prune time expired items
 
     now = time.time()
-    oldpafs = [k for k in g.pafs if g.pafs[k].expiry < now]
+    oldpafs = [k for k in g.pafs if g.pafs[k] is not None and g.pafs[k].expiry < now]
 
     if len(oldpafs):
         util.dbg(c.r + "%s old pafy items pruned%s", len(oldpafs), c.w)
@@ -24,7 +24,7 @@ def prune():
     for oldpaf in oldpafs:
         g.pafs.pop(oldpaf, 0)
 
-    oldstreams = [k for k in g.streams if g.streams[k]['expiry'] < now]
+    oldstreams = [k for k in g.streams if g.streams[k]['expiry'] is None or g.streams[k]['expiry'] < now]
 
     if len(oldstreams):
         util.dbg(c.r + "%s old stream items pruned%s", len(oldstreams), c.w)
@@ -39,7 +39,7 @@ def get(vid, force=False, callback=None, threeD=False):
     """ Get all streams as a dict.  callback function passed to get_pafy. """
     now = time.time()
     ytid = vid.ytid
-    have_stream = g.streams.get(ytid) and g.streams[ytid]['expiry'] > now
+    have_stream = g.streams.get(ytid) and (g.streams[ytid]['expiry'] > now if g.streams[ytid]['expiry'] is not None else False)
     prfx = "preload: " if not callback else ""
 
     if not force and have_stream:
@@ -48,12 +48,14 @@ def get(vid, force=False, callback=None, threeD=False):
                 c.g, prfx, ss, c.w)
         return g.streams.get(ytid)['meta']
 
-    p = util.get_pafy(vid, force=force, callback=callback)
-    ps = p.allstreams if threeD else [x for x in p.allstreams if not x.threed]
+
+    #p = None#util.get_pafy(vid, force=force, callback=callback)
+    #ps = p.allstreams if threeD else [x for x in p.allstreams if not x.threed]
+    ps = pafy.get_video_streams(ytid)
 
     try:
         # test urls are valid
-        [x.url for x in ps]
+        [x['url'] for x in ps]
 
     except TypeError:
         # refetch if problem
@@ -62,14 +64,21 @@ def get(vid, force=False, callback=None, threeD=False):
         ps = p.allstreams if threeD else [x for x in p.allstreams
                                           if not x.threed]
 
-    streams = [{"url": s.url,
-                "ext": s.extension,
-                "quality": s.quality,
-                "rawbitrate": s.rawbitrate,
-                "mtype": s.mediatype,
-                "size": -1} for s in ps]
+    streams = [{"url": s['url'],
+                "ext": s['ext'],
+                "quality": s['resolution'],
+                "rawbitrate": s.get('bitrate',-1),
+                "mtype": 'audio' if 'audio' in s['resolution'] else ('video' if s['acodec'] != 'none' else '?'),
+                "size": int(s.get('filesize') if s.get('filesize') is not None else s.get('filesize_approx', -1))} for s in ps]
 
-    g.streams[ytid] = dict(expiry=p.expiry, meta=streams)
+
+    if 'manifest' in streams[0]['url']:
+        expiry = float(streams[0]['url'].split('/expire/')[1].split('/')[0])
+    else:
+        temp = streams[0]['url'].split('expire=')[1]
+        expiry = float(temp[:temp.find('&')])
+
+    g.streams[ytid] = dict(expiry=expiry, meta=streams)
     prune()
     return streams
 
@@ -104,7 +113,7 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
                 streams = [x for x in slist if x['mtype'] == "audio"]
         streams = sorted(streams, key=getbitrate, reverse=True)
     else:
-        streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
+        streams = [x for x in slist if x['mtype'] == "video" and okres(x)]
         if not config.VIDEO_FORMAT.get == "auto":
             if config.VIDEO_FORMAT.get == "mp4":
                 streams = [x for x in streams if x['ext'] == "mp4"]
@@ -113,7 +122,7 @@ def select(slist, q=0, audio=False, m4a_ok=True, maxres=None):
             if config.VIDEO_FORMAT.get == "3gp":
                 streams = [x for x in streams if x['ext'] == "3gp"]
             if not streams:
-                streams = [x for x in slist if x['mtype'] == "normal" and okres(x)]
+                streams = [x for x in slist if x['mtype'] == "video" and okres(x)]
         streams = sorted(streams, key=getq, reverse=True)
 
     util.dbg("select stream, q: %s, audio: %s, len: %s", q, audio, len(streams))
@@ -187,6 +196,9 @@ def _preload(song, delay, override):
         get_size(ytid, stream['url'], preloading=True)
 
     except (ValueError, AttributeError, IOError) as e:
+        import traceback
+        traceback.print_exception(type(e), e, e.__traceback__)
+        input("Press any key to continue...")
         util.dbg(e)  # Fail silently on preload
 
     finally:

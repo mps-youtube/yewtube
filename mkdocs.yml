@@ -1,0 +1,49 @@
+site_name: Yewtube
+site_description: Terminal based YouTube player and downloader.
+site_url: https://iamtalhaasghar.github.io/yewtube
+repo_url: https://github.com/iamtalhaasghar/yewtube
+repo_name: iamtalhaasghar/yewtube
+
+nav:
+- Home:
+  - Overview: index.md
+  - Changelog: changelog.md
+  - License: license.md
+- Code Reference: reference/
+- Development:
+  - Contributing: contributing.md
+
+theme:
+  name: material
+  features:
+  - navigation.tabs
+  palette:
+    scheme: slate
+    primary: teal
+    accent: purple
+
+extra_css:
+- css/mkdocstrings.css
+
+markdown_extensions:
+- admonition
+- pymdownx.emoji
+- pymdownx.magiclink
+- pymdownx.snippets:
+    check_paths: true
+- pymdownx.superfences
+- pymdownx.tabbed
+- pymdownx.tasklist
+- toc:
+    permalink: true
+
+plugins:
+- search
+- mkdocstrings:
+    watch:
+    - mps_youtube
+- gen-files:
+    scripts:
+    - docs/gen_ref_nav.py
+- literate-nav:
+    nav_file: SUMMARY.md

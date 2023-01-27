@@ -1,34 +1,55 @@
 #!/usr/bin/python3
 
-""" setup.py for mps-youtube.
+""" setup.py for yewtube.
 
-https://np1.github.com/mps-youtube
+https://github.com/iamtalhaasghar/yewtube
 
 python setup.py sdist bdist_wheel
 """
 
-import sys
 import os
+import sys
 
-if sys.version_info < (3,0):
-    sys.exit("Mps-youtube requires python 3.")
+if sys.version_info < (3, 6):
+    sys.exit("yewtube requires minimum python 3.6")
 
 from setuptools import setup
 
-VERSION = "0.2.8"
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
+with open('requirements.txt', 'r') as fh:
+    requirements = fh.readlines()
+
+__version__ = "2.9.2"
 
 options = dict(
-    name="mps-youtube",
-    version=VERSION,
-    description="Terminal based YouTube player and downloader",
+    name="yewtube",
+    version=__version__,
+    description="A Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
-    author="np1",
-    author_email="np1nagev@gmail.com",
-    url="https://github.com/mps-youtube/mps-youtube",
-    download_url="https://github.com/mps-youtube/mps-youtube/archive/v%s.tar.gz" % VERSION,
+    author="talha_programmer",
+    author_email="talhaasghar.contact@simplelogin.fr",
+    url="https://github.com/iamtalhaasghar/yewtube",
+    download_url="https://github.com/iamtalhaasghar/yewtube/releases",
     packages=['mps_youtube', 'mps_youtube.commands', 'mps_youtube.listview', 'mps_youtube.players'],
-    entry_points={'console_scripts': ['mpsyt = mps_youtube:main.main']},
-    install_requires=['pafy >= 0.3.82, != 0.4.0, != 0.4.1, != 0.4.2'],
+    entry_points={'console_scripts': ['yt = mps_youtube:main.main']},
+    python_requires='>=3.6',
+    install_requires=requirements,
+    extras_require={
+        "mpris": [
+            "dbus-python>=1.2.18",
+            "PyGObject>=3.42.0",
+        ],
+        "docs": [
+            "mkdocs-gen-files>=0.3.4",
+            "mkdocs-literate-nav>=0.4.1",
+            "mkdocs-macros-plugin>=0.6.4",
+            "mkdocs-material>=8.2.1",
+            "mkdocstrings-python-legacy>=0.2.2",
+            "mkdocstrings>=0.18.0",
+        ],
+    },
     classifiers=[
         "Topic :: Utilities",
         "Topic :: Internet :: WWW/HTTP",
@@ -62,20 +83,22 @@ options = dict(
             "bundle_files": 1
         }
     },
-    package_data={"": ["LICENSE", "README.rst", "CHANGELOG"]},
-    long_description=open("README.rst").read()
+    package_data={"": ["LICENSE", "README.md", "CHANGELOG.md"]},
+    long_description_content_type='text/markdown',
+    long_description=long_description
 )
 
 if sys.platform.startswith('linux'):
     # Install desktop file. Required for mpris on Ubuntu
-    options['data_files'] = [('share/applications/', ['mps-youtube.desktop'])]
+    options['data_files'] = [('share/applications/', ['yewtube.desktop'])]
 
 if os.name == "nt":
     try:
         import py2exe
+
         # Only setting these when py2exe imports successfully prevents warnings
         # in easy_install
-        options['console'] = ['mpsyt']
+        options['console'] = ['yt']
         options['zipfile'] = None
     except ImportError:
         pass

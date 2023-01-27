@@ -5,9 +5,8 @@
     It lets you treat A query as a list of all the results, even though
     data is only queried when requested.
 """
-import pafy
 
-from . import util
+from . import util, pafy
 
 
 class ContentQuery:
@@ -19,15 +18,15 @@ class ContentQuery:
     nextpagetoken = None
 
     datatype = None
-    queries = None
+    query = None
     api = None
 
-    def __init__(self, datatype, api, qs):
+    def __init__(self, datatype, api, query):
         # Perform initial API call, setBoundaries
         # call parseData
 
         self.datatype = datatype
-        self.queries = qs
+        self.query = query
         self.api = api
 
         self.pdata = []
@@ -53,17 +52,17 @@ class ContentQuery:
 
     def _perform_api_call(self):
         # Include nextPageToken if it is set
-        qry = dict(
-            pageToken=self.nextpagetoken,
-            **(self.queries)
-            ) if self.nextpagetoken else self.queries
+        # qry = dict(
+        #     pageToken=self.nextpagetoken,
+        #     **(self.query)
+        #     ) if self.nextpagetoken else self.query
 
         # Run query
-        util.dbg("CQ.query", qry)
-        data = pafy.call_gdata(self.api, qry)
+        util.dbg("CQ.query", self.query)
+        data = pafy.channel_search(self.query)#pafy.call_gdata(self.api, qry)
         
-        self.maxresults = int(data.get("pageInfo").get("totalResults"))
-        self.nextpagetoken = data.get("nextPageToken")
+        self.maxresults = len(data)#int(data.get("pageInfo").get("totalResults"))
+        self.nextpagetoken = None#data.get("nextPageToken")
 
-        for obj in data.get("items"):
+        for obj in data:
             self.pdata.append(self.datatype(obj))

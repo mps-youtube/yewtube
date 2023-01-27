@@ -1,9 +1,10 @@
 import re
 
 from .. import g, c, playlists, content, util
-from ..playlist import Playlist
+from ..playlist import Playlist, Video
 from . import command, WORD
 from .songlist import paginatesongs, songlist_rm_add
+from ..util import parse_video_length
 
 
 @command(r'rmp\s*(\d+|%s)' % WORD, 'rmp')
@@ -103,7 +104,10 @@ def save_last():
 
         # save using artist name in postion 1
         if g.model:
-            saveas = g.model[0].title[:18].strip()
+            if g.selected_pafy_pls_id: # if a playlist was selected
+                saveas = g.pafy_pls[g.selected_pafy_pls_id][0].info['info']['title']
+            else: # user didn't selected a playlist
+                saveas = g.model[0].title[:18].strip()
             saveas = re.sub(r"[^-\w]", "-", saveas, flags=re.UNICODE)
 
         # loop to find next available name
@@ -152,7 +156,10 @@ def open_save_view(action, name):
             g.content = content.generate_songlist_display()
 
         else:
-            g.userpl[name] = Playlist(name, list(g.model.songs))
+            if g.selected_pafy_pls_id: # if a playlist was selected by user:
+                g.userpl[name] = Playlist(name, [Video(i['id'], i['title'], parse_video_length(i['duration'])) for i in g.pafy_pls[g.selected_pafy_pls_id][0].videos])
+            else: # user created custom playlist and never opened it and now wants to save it
+                g.userpl[name] = Playlist(name, list(g.model.songs))
             g.message = util.F('pl saved') % name
             playlists.save()
             g.content = content.generate_songlist_display()

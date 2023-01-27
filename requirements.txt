@@ -1,0 +1,6 @@
+requests
+pyreadline3 ; platform_system=="Windows"
+pyperclip
+youtube-search-python>=1.6.5
+yt-dlp
+colorama ; platform_system=="Windows"

@@ -1,28 +1,27 @@
-import os
-import re
-import sys
-import ctypes
-import logging
-import time
-import subprocess
 import collections
+import ctypes
+import json
+import logging
+import os
+import platform
+import re
+import subprocess
+import sys
+import time
 import unicodedata
 import urllib
-import json
-import platform
 from datetime import datetime, timezone
-
-import pafy
-
-from . import g, c, terminalsize, description_parser
-from .playlist import Video
-
 from importlib import import_module
+
+from . import c, description_parser, g, terminalsize
+from .playlist import Video
 
 macos = platform.system() == "Darwin"
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
+not_utf8_environment = mswin or (
+    "UTF-8" not in sys.stdout.encoding if sys.stdout.encoding else False
+)
 
 XYTuple = collections.namedtuple('XYTuple', 'width height max_results')
 
@@ -218,13 +217,13 @@ def get_pafy(item, force=False, callback=None):
     else:
 
         try:
-            p = pafy.new(ytid, callback=callback_fn)
+            p = None#pafy.new(ytid, callback=callback_fn)
 
         except IOError as e:
 
             if "pafy" in str(e):
                 dbg(c.p + "retrying failed pafy get: " + ytid + c.w)
-                p = pafy.new(ytid, callback=callback)
+                p = None#pafy.new(ytid, callback=callback)
 
             else:
                 raise
@@ -293,7 +292,7 @@ def uea_pad(num, t, direction="<", notrunc=False):
     """ Right pad with spaces taking into account East Asian width chars. """
     direction = direction.strip() or "<"
 
-    t = ' '.join(t.split('\n'))
+    t = ' '.join(str(t).split('\n'))
 
     # TODO: Find better way of dealing with this?
     if num <= 0:
@@ -343,6 +342,8 @@ def real_len(u, alt=False):
 
 def yt_datetime(yt_date_time):
     """ Return a time object, locale formated date string and locale formatted time string. """
+    if yt_date_time is None:
+        return ['Unknown', 'Unknown', 'Unknown']
     time_obj = time.strptime(yt_date_time, "%Y-%m-%dT%H:%M:%SZ")
     locale_date = time.strftime("%x", time_obj)
     locale_time = time.strftime("%X", time_obj)
@@ -594,3 +595,16 @@ class CommandCompleter:
     def add_cmd(self, val):
         if(not val in self.COMMANDS):
             self.COMMANDS.append(val)
+
+def parse_video_length(duration):
+    '''
+    Converts HH:MM:SS to a single integer .i.e. total number of seconds
+    '''
+    if duration:
+        duration_tokens = duration.split(":")
+        if len(duration_tokens) == 2:
+            return int(duration_tokens[0]) * 60 + int(duration_tokens[1])
+        else:
+            return int(duration_tokens[0]) * 3600 + int(duration_tokens[1]) * 60 + int(duration_tokens[2])
+    else:
+        return 10

@@ -1,3 +1,111 @@
+# Changelog
+
+<!--next-version-placeholder-->
+
+## v2.9.2 (2023-01-26)
+### Fix
+* Remove pyreadline dependency (#105) ([#107](https://github.com/iamtalhaasghar/yewtube/issues/107)) ([`19e4148`](https://github.com/iamtalhaasghar/yewtube/commit/19e4148242380b543a4825962716550114984f11))
+
+## v2.9.1 (2023-01-26)
+### Fix
+* #50 - brought back download audio file ([`b46dab4`](https://github.com/iamtalhaasghar/yewtube/commit/b46dab47e61c68efa0e51836a8cc9141d15d9e87))
+
+## v2.9.0 (2022-10-20)
+### Feature
+* **mplayer:** Set cache ([#93](https://github.com/iamtalhaasghar/yewtube/issues/93)) ([`16d3a18`](https://github.com/iamtalhaasghar/yewtube/commit/16d3a186fb9feb24530e1f07b211062c44a515a0))
+
+### Fix
+* #76 video pops up ([`eaeff58`](https://github.com/iamtalhaasghar/yewtube/commit/eaeff58f94e2fd89706e42fdab6b8e82ef770941))
+
+## v2.8.5 (2022-09-08)
+### Fix
+* #75 program crashes while creating custom playlist and saving it without playing ([`2552eff`](https://github.com/iamtalhaasghar/yewtube/commit/2552eff602683fbd28bc6841768bf6cf585fc960))
+* **main:** Handle error when setting locale ([#86](https://github.com/iamtalhaasghar/yewtube/issues/86)) ([`ecd117c`](https://github.com/iamtalhaasghar/yewtube/commit/ecd117ca1ef753509b78082d6f919c9bc2b1756b))
+* Enable quit-watch-later in mpv #77 ([`079e440`](https://github.com/iamtalhaasghar/yewtube/commit/079e44088260c938dc3ae71cd55146fb51de653e))
+
+### Documentation
+* Added common issues file. ([#91](https://github.com/iamtalhaasghar/yewtube/issues/91)) ([`4b69e5e`](https://github.com/iamtalhaasghar/yewtube/commit/4b69e5ee96ed36efa9a68f6315322ed3d44d1e3d))
+
+## v2.8.4 (2022-05-05)
+### Fix
+* #53 viewing playlists uploaded by a user is back ([`f201cb5`](https://github.com/iamtalhaasghar/yewtube/commit/f201cb5f4cd45b9341ced6b549fc35a57e85eb9f))
+
+## v2.8.3 (2022-04-25)
+### Fix
+* #45 fetch all videos of a playlist ([`261f468`](https://github.com/iamtalhaasghar/yewtube/commit/261f4687668c6c05415102c66587a27518bbac10))
+* Save full playlists by name and all its videos ([`d69a959`](https://github.com/iamtalhaasghar/yewtube/commit/d69a9594c5824d97201774e81444b75aea93e861))
+* #67  vlc dummy Interface does not work with live channels  ([`2d4637b`](https://github.com/iamtalhaasghar/yewtube/commit/2d4637b04b6f738ab832b3beacab1e490e99a518))
+
+## v2.8.2 (2022-03-17)
+### Fix
+* #63 module album search crash ([`3f2fcfb`](https://github.com/iamtalhaasghar/yewtube/commit/3f2fcfb27bb60928282d1a4a68adff22980f5938))
+
+## v2.8.1 (2022-03-08)
+### Fix
+* #54 play video using youtube short link ([`92d1c77`](https://github.com/iamtalhaasghar/yewtube/commit/92d1c776d4bcc47509becadc5ba9248477dc0dcc))
+* Use mkdocs instead of sphinx docs ([`32a2e9c`](https://github.com/iamtalhaasghar/yewtube/commit/32a2e9cdddac3ebb458d7bdcd793ed83ccc2fdf0))
+
+## v2.8.0 (2022-02-28)
+### Feature
+* **helptext:** Help changelog ([`0643941`](https://github.com/iamtalhaasghar/yewtube/commit/06439411d7a78fe6701f7313e9b3b0720248a197))
+* **setup:** Extras dependencies for mpris ([`936e890`](https://github.com/iamtalhaasghar/yewtube/commit/936e8909b5212eda3a64e8b93be79d4353e6d646))
+
+### Fix
+* #37 use `set pages` command to config how many search result pages to show ([`2baec5f`](https://github.com/iamtalhaasghar/yewtube/commit/2baec5fd11c0edf88d3543dd81333c5ecf67c918))
+* #44 dont run init when importing mps_youtube ([`a072c22`](https://github.com/iamtalhaasghar/yewtube/commit/a072c22e2781160bca79d0164e46e49f07ac28e1))
+* **mpris:** Handle no data on time-pos ([`8bb29d3`](https://github.com/iamtalhaasghar/yewtube/commit/8bb29d33825ad826e51d9d8eada32a9b7bd10ffd))
+* #39 key error 'data' ([`834ed5b`](https://github.com/iamtalhaasghar/yewtube/commit/834ed5b0af5f92e1233e8ba327327654f67f61a0))
+* #38 improved help menu responsiveness ([`972b4ef`](https://github.com/iamtalhaasghar/yewtube/commit/972b4efdb5fe8f5d3295b1c3fe607d209e7d39b6))
+* #35 remove api key instructions ([`4f1fee3`](https://github.com/iamtalhaasghar/yewtube/commit/4f1fee3b711b2383b2704fba39bdce772894cc75))
+* #24 colorama support for windows ([`9cf2616`](https://github.com/iamtalhaasghar/yewtube/commit/9cf261615a52f6ac64b6fb28390db2a71a7ab470))
+
+## v2.7.0 (2022-02-19)
+### Feature
+* Use yewtube over tor using torsocks 🔥 ([`1e9c4ce`](https://github.com/iamtalhaasghar/yewtube/commit/1e9c4ce5992528286f552c8b563daef4abf9566a))
+
+## v2.6.9 (2022-02-19)
+### Fix
+* #28 show changelog with `help new` command ([`d52b65d`](https://github.com/iamtalhaasghar/yewtube/commit/d52b65d0c0cd8708020a2d6788102d82d8ebeee5))
+
+## v2.6.8 (2022-02-19)
+### Fix
+* fixed #26 album search working now without youtube api ([`9c3ae03`](https://github.com/iamtalhaasghar/yewtube/commit/9c3ae03b8c0ae006f1b9a917e4330270fec2f929))
+
+## v2.6.7 (2022-02-19)
+### Fix
+* Check for app updates ([`eabfb52`](https://github.com/iamtalhaasghar/yewtube/commit/eabfb5233c7b87c5f300ebc41250a3f52db07411))
+* Don't crash if playlists / history file has invalid youtube id fixed #24 ([`323d5d8`](https://github.com/iamtalhaasghar/yewtube/commit/323d5d822cefc23889665d71cfffe9e40750433b))
+
+## v2.6.6 (2022-02-18)
+### Fix
+* Playlists are working again fixed #18 ([`bfceee4`](https://github.com/iamtalhaasghar/yewtube/commit/bfceee493261d099c85bf2c4c9e79e5710e9799f))
+* Buffersize warning ([`d185c3f`](https://github.com/iamtalhaasghar/yewtube/commit/d185c3fdf8d520bcb4595f5e458d6022a7b6d1aa))
+* **g:** Mpv msglevel ([`062b125`](https://github.com/iamtalhaasghar/yewtube/commit/062b12503a8fa15dc720cf3ac91f001b74a5cf10))
+
+## v2.6.5 (2022-02-17)
+### Fix
+* Default player priority is vlc > mpv > mplayer on first install fixed #16 ([`35409eb`](https://github.com/iamtalhaasghar/yewtube/commit/35409eb31cc67f03c50589e02cdff2ad08fe4911))
+* **mplayer:** _get_mplayer_version ([`ab21c5d`](https://github.com/iamtalhaasghar/yewtube/commit/ab21c5d1bc872ed482bf482ad37949129c1e4f78))
+* Bring back requirements.txt to life ([`ff6e59d`](https://github.com/iamtalhaasghar/yewtube/commit/ff6e59d75834c61d72ec6bbc92f5eb339cc82607))
+* **util.uea_pad:** Handle AttributeError on t.split ([`1643266`](https://github.com/iamtalhaasghar/yewtube/commit/1643266f21ccf7a99481a1615b4a53c4fbabc878))
+
+## v2.6.4 (2022-02-16)
+### Fix
+* Duplicate changelog and readme files ([`0265ef7`](https://github.com/iamtalhaasghar/yewtube/commit/0265ef7507b539791684bdcf40b30ddaafc525e8))
+
+## v2.6.3 (2022-02-16)
+### Fix
+* Welcome from semantic release python ([`c237a68`](https://github.com/iamtalhaasghar/yewtube/commit/c237a6808869062036f5196775352c1504eafe06))
+
+# yewtube was forked from mps-youtube
+### Features
+* was made to work without YouTube API v3
+* play music in vlc with no gui
+<br>
+<br>
+<hr>
+<br>
+<br>
 Version 0.2.8
 17 February 2018
 
@@ -414,3 +522,4 @@ Feb 13 2014
 
  - Migrate location of config directory to reflect new name
    (~/.config/mps-youtube)
+

@@ -1,15 +1,15 @@
 import os
+import re
+import subprocess
 import sys
 import tempfile
-import subprocess
-import re
+import typing as T
 
-from .. import g, screen, c, paths, config, util
-
+from .. import c, config, g, paths, screen, util
 from ..player import CmdPlayer
+from ..util import not_utf8_environment
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
 class mplayer(CmdPlayer):
@@ -67,6 +67,8 @@ class mplayer(CmdPlayer):
         util.list_update("-really-quiet", args, remove=True)
         util.list_update("-noquiet", args)
         util.list_update("-prefer-ipv4", args)
+        util.list_update("-cache", args)
+        util.list_update("4096", args)
 
         return [self.player] + args + [self.stream['url']]
 
@@ -95,7 +97,7 @@ class mplayer(CmdPlayer):
             g.mprisctl.send(('mplayer-fifo', self.fifopath))
 
         self.p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE,
-                                  stderr=subprocess.STDOUT, bufsize=1)
+                              stderr=subprocess.STDOUT, bufsize=0)
         self._player_status(self.songdata + "; ", self.song.length)
         returncode = self.p.wait()
         print(returncode)
@@ -192,7 +194,7 @@ class mplayer(CmdPlayer):
 def _get_input_file():
     """ Check for existence of custom input file.
 
-    Return file name of temp input file with mpsyt mappings included
+    Return file name of temp input file with yewtube mappings included
     """
     confpath = conf = ''
 
@@ -225,9 +227,27 @@ def _get_input_file():
         return tmpfile.name
 
 
-def _get_mplayer_version(exename):
-    o = subprocess.check_output([exename]).decode()
-    m = re.search('MPlayer SVN[\s-]r([0-9]+)', o, re.MULTILINE | re.IGNORECASE)
+def _get_mplayer_version(exename: str) -> T.Union[int, T.Tuple[int, ...]]:
+    """get mplayer version.
+
+    Args:
+        exename: mplayer executable name.
+
+    Returns:
+       single integer value or tuple of mplayer version. Return `0` if failed
+
+    Raises:
+        OSError: if `exename` is invalid
+        FileNotFoundError: if no mplayer found
+        PermissionError: if user dont have permission to run `exename`
+        TypeError: if `exename` return invalid type
+    """
+    try:
+        o = subprocess.check_output([exename]).decode()
+    except FileNotFoundError:
+        raise
+
+    m = re.search(r"MPlayer \S*?SVN[\s-]r([0-9]+)", o, re.MULTILINE | re.IGNORECASE)
 
     ver = 0
     if m:

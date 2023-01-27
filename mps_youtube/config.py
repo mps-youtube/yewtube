@@ -14,8 +14,6 @@ try:
 except ImportError:
     has_pylast = False
 
-import pafy
-
 from . import g, c, paths, util
 
 
@@ -184,21 +182,21 @@ def check_console_width(val):
     return dict(valid=valid, message=message)
 
 
-def check_api_key(key):
-    """ Validate an API key by calling an API endpoint with no quota cost """
-    url = "https://www.googleapis.com/youtube/v3/i18nLanguages"
-    query = {"part": "snippet", "fields": "items/id", "key": key}
-    try:
-        urlopen(url + "?" + urlencode(query)).read()
-        message = "The key, '" + key + "' will now be used for API requests."
-
-        # Make pafy use the same api key
-        pafy.set_api_key(Config.API_KEY.get)
-
-        return dict(valid=True, message=message)
-    except HTTPError:
-        message = "Invalid key or quota exceeded, '" + key + "'"
-        return dict(valid=False, message=message)
+# def check_api_key(key):
+#     """ Validate an API key by calling an API endpoint with no quota cost """
+#     url = "https://www.googleapis.com/youtube/v3/i18nLanguages"
+#     query = {"part": "snippet", "fields": "items/id", "key": key}
+#     try:
+#         urlopen(url + "?" + urlencode(query)).read()
+#         message = "The key, '" + key + "' will now be used for API requests."
+#
+#         # Make pafy use the same api key
+#         pafy.set_api_key(Config.API_KEY.get)
+#
+#         return dict(valid=True, message=message)
+#     except HTTPError:
+#         message = "Invalid key or quota exceeded, '" + key + "'"
+#         return dict(valid=False, message=message)
 
 
 def check_ddir(d):
@@ -313,7 +311,7 @@ class _Config:
             ConfigItem("console_width", 80, minval=70,
                 maxval=880, check_fn=check_console_width),
             ConfigItem("max_res", 2160, minval=360, maxval=2160),
-            ConfigItem("player", "mplayer" + ".exe" * mswin,
+            ConfigItem("player", "vlc" + ".exe" * mswin,
                 check_fn=check_player),
             ConfigItem("playerargs", ""),
             ConfigItem("encoder", 0, minval=0, check_fn=check_encoder),
@@ -323,11 +321,11 @@ class _Config:
             ConfigItem("fullscreen", False, require_known_player=True),
             ConfigItem("show_status", True),
             ConfigItem("always_repeat", False),
-            ConfigItem("columns", ""),
+            ConfigItem("columns", "date user"),
             ConfigItem("ddir", paths.get_default_ddir(), check_fn=check_ddir),
             ConfigItem("overwrite", True),
-            ConfigItem("show_video", False),
-            ConfigItem("search_music", True),
+            ConfigItem("show_video", True),
+            ConfigItem("search_music", False),
             ConfigItem("window_pos", "", check_fn=check_win_pos,
                 require_known_player=True),
             ConfigItem("window_size", "",
@@ -342,14 +340,14 @@ class _Config:
                 allowed_values="auto webm m4a".split()),
             ConfigItem("video_format", "auto",
                 allowed_values="auto webm mp4 3gp".split()),
-            ConfigItem("api_key", "AIzaSyCIM4EzNqi1in22f4Z3Ru3iYvLaY8tc3bo",
-                check_fn=check_api_key),
+            ConfigItem("pages", 3, minval=1, maxval=100),
             ConfigItem("autoplay", False),
             ConfigItem("set_title", True),
             ConfigItem("mpris", not mswin),
             ConfigItem("show_qrcode", False),
             ConfigItem("history", True), 
-            ConfigItem("input_history", True)
+            ConfigItem("input_history", True),
+            ConfigItem("vlc_dummy_interface", False)
             ]
 
     def __getitem__(self, key):
@@ -361,7 +359,9 @@ class _Config:
 
     def __getattr__(self, name):
         try:
-            return self[name]
+            # todo: remove this later
+            if name != 'API_KEY':
+                return self[name]
         except KeyError:
             raise AttributeError
 

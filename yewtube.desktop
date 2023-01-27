@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=mps-youtube
+Name=yewtube
 GenericName=Music Player
 Keywords=Audio;Song;Podcast;Playlist;youtube.com;
-Exec=mpsyt %U
+Exec=yt %U
 Terminal=true
 Icon=terminal
 Type=Application

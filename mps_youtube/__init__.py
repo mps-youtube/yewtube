@@ -1,9 +1,7 @@
-__version__ = "0.2.8"
-__notes__ = "released 17 February 2018"
-__author__ = "np1"
-__license__ = "GPLv3"
-__url__ = "https://github.com/mps-youtube/mps-youtube"
+from pip._vendor import pkg_resources
 
-from . import init
-init.init()
-from . import main
+__version__ = next((p.version for p in pkg_resources.working_set if p.project_name.lower() == 'yewtube'), "unable to determine")
+__author__ = "iamtalhaasghar"
+__license__ = "GPLv3"
+__url__ = "https://github.com/iamtalhaasghar/yewtube"
+

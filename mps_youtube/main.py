@@ -20,16 +20,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import traceback
 import locale
-import sys
+import logging
 import os
+import sys
+import traceback as traceback_py
 
-import pafy
-
-from . import g, c, commands, screen, history, util
-from . import __version__, playlists, content, listview
-from . import config
+from . import util
 
 completer = None
 try:
@@ -44,10 +41,16 @@ try:
 except ImportError:
     has_readline = False
 
+from . import g, c, commands, screen, history, init
+from . import __version__, playlists, content, listview
+from . import config
 
 mswin = os.name == "nt"
 
-locale.setlocale(locale.LC_ALL, "")  # for date formatting
+try:
+    locale.setlocale(locale.LC_ALL, "")  # for date formatting
+except Exception as err:
+    logging.debug(f"locale not set: {err}")
 
 
 def matchfunction(func, regex, userinput):
@@ -71,20 +74,22 @@ def matchfunction(func, regex, userinput):
 
         except IndexError:
             if g.debug_mode:
-                g.content = ''.join(traceback.format_exception(
+                g.content = ''.join(traceback_py.format_exception(
                     *sys.exc_info()))
             g.message = util.F('invalid range')
             g.content = g.content or content.generate_songlist_display()
 
         except (ValueError, IOError) as e:
             if g.debug_mode:
-                g.content = ''.join(traceback.format_exception(
+                g.content = ''.join(traceback_py.format_exception(
                     *sys.exc_info()))
             g.message = util.F('cant get track') % str(e)
             g.content = g.content or\
                 content.generate_songlist_display(zeromsg=g.message)
 
-        except pafy.GdataError as e:
+        except Exception as e:#pafy.GdataError as e:
+            import traceback
+            traceback.print_exception(type(e), e, e.__traceback__)
             if g.debug_mode:
                 g.content = ''.join(traceback.format_exception(
                     *sys.exc_info()))
@@ -110,9 +115,10 @@ def prompt_for_exit():
 
 
 def main():
+    init.init()
     """ Main control loop. """
     if config.SET_TITLE.get:
-        util.set_window_title("mpsyt")
+        util.set_window_title("yewtube")
 
     if not g.command_line:
         g.content = content.logo(col=c.g, version=__version__) + "\n\n"

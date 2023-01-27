@@ -1,22 +1,20 @@
-import os
-import sys
-import random
 import logging
 import math
-import time
+import os
+import random
 import shlex
-import subprocess
 import socket
-from urllib.error import HTTPError, URLError
+import subprocess
+import sys
+import time
 from abc import ABCMeta, abstractmethod
+from urllib.error import HTTPError, URLError
 
-
-from . import g, screen, c, streams, history, content, config, util
+from . import c, config, content, g, history, screen, streams, util
 from .commands import lastfm
-
+from .util import not_utf8_environment
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 class BasePlayer:
     _playbackStatus = "Paused"
@@ -64,7 +62,7 @@ class BasePlayer:
                                 override=self.override)
 
             if config.SET_TITLE.get:
-                util.set_window_title(self.song.title + " - mpsyt")
+                util.set_window_title(self.song.title + " - yewtube")
 
             self.softrepeat = repeat and len(self.songlist) == 1
 
@@ -87,12 +85,14 @@ class BasePlayer:
                 break
 
             # skip forbidden, video removed/no longer available, etc. tracks
-            except TypeError:
+            except TypeError as e:
+                import traceback
+                traceback.print_exception(type(e), e, e.__traceback__)
                 self.song_no += 1
                 pass
 
             if config.SET_TITLE.get:
-                util.set_window_title("mpsyt")
+                util.set_window_title("yewtube")
 
             if self.song_no == -1:
                 self.song_no = len(songlist) - 1 if repeat else 0
@@ -130,13 +130,13 @@ class BasePlayer:
             subprocess.Popen(shlex.split(config.NOTIFIER.get) + [self.song.title])
 
         size = streams.get_size(self.song.ytid, self.stream['url'])
-        songdata = (self.song.ytid, self.stream['ext'] + " " + self.stream['quality'],
+        songdata = (self.song.ytid, '' if self.stream.get('ext') is None else self.stream.get('ext') + " " + self.stream['quality'],
                     int(size / (1024 ** 2)))
         self.songdata = "%s; %s; %s Mb" % songdata
         screen.writestatus(self.songdata)
 
         self._launch_player()
-        
+
         if config.HISTORY.get:
             history.add(self.song)
 
@@ -306,7 +306,7 @@ class CmdPlayer(BasePlayer):
                 g.mprisctl.send(('stop', True))
 
             if self.p and self.p.poll() is None:
-                self.p.terminate()  # make sure to kill mplayer if mpsyt crashes
+                self.p.terminate()  # make sure to kill mplayer if yewtube crashes
 
             self.clean_up()
 

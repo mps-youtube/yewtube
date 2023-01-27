@@ -1,18 +1,17 @@
-import os
-import sys
-import tempfile
-import subprocess
 import json
+import os
 import re
 import socket
+import subprocess
+import sys
+import tempfile
 import time
 
-from .. import g, screen, c, paths, config, util
-
+from .. import c, config, g, paths, screen, util
 from ..player import CmdPlayer
+from ..util import not_utf8_environment
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or "UTF-8" not in sys.stdout.encoding
 
 
 class mpv(CmdPlayer):
@@ -95,6 +94,10 @@ class mpv(CmdPlayer):
         if self.softrepeat:
             util.list_update("--loop-file", args)
 
+        if not config.SHOW_VIDEO.get:
+            util.list_update('--no-video', args)
+            util.list_update('--vid=no', args)
+
         return [self.player] + args + [self.stream['url']]
 
     def clean_up(self):
@@ -130,7 +133,7 @@ class mpv(CmdPlayer):
                 g.mprisctl.send(('mpv-fifo', self.fifopath))
 
             self.p = subprocess.Popen(cmd, shell=False, stderr=subprocess.PIPE,
-                                      bufsize=1)
+                                      bufsize=0)
 
         self._player_status(self.songdata + "; ", self.song.length)
         returncode = self.p.wait()
@@ -185,7 +188,7 @@ class mpv(CmdPlayer):
                         observe_full = True
 
                     if resp.get('event') == 'property-change' and resp['id'] == 1:
-                        if resp['data'] is not None:
+                        if resp.get('data') is not None:
                             elapsed_s = int(resp['data'])
 
                     elif resp.get('event') == 'property-change' and resp['id'] == 2:
@@ -275,7 +278,7 @@ class mpv(CmdPlayer):
 def _get_input_file():
     """ Check for existence of custom input file.
 
-    Return file name of temp input file with mpsyt mappings included
+    Return file name of temp input file with yewtube mappings included
     """
     confpath = conf = ''
 
@@ -293,7 +296,7 @@ def _get_input_file():
     conf = conf.replace("playlist_next", "quit")
     conf = conf.replace("pt_step 1", "quit")
     standard_cmds = ['q quit 43\n', '> quit\n', '< quit 42\n', 'NEXT quit\n',
-                     'PREV quit 42\n', 'ENTER quit\n']
+                     'PREV quit 42\n', 'ENTER quit\n', 'Q quit-watch-later']
     bound_keys = [i.split()[0] for i in conf.splitlines() if i.split()]
 
     for i in standard_cmds:

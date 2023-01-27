@@ -2,9 +2,8 @@ import os
 import sys
 import pickle
 
-from . import g, c, screen, util
+from . import g, c, screen, util, pafy
 from .playlist import Playlist, Video
-from pafy.backend_shared import extract_video_id
 
 
 def save():
@@ -70,10 +69,12 @@ def read_m3u(m3u):
                     duration, title = line.replace('#EXTINF:', '').strip().split(',', 1)
                     expect_ytid = True
                 elif not line.startswith('\n') and not line.startswith('#') and expect_ytid:
-                    ytid = extract_video_id(line).strip()
-                    songs.append(Video(ytid, title, int(duration)))
-                    expect_ytid = False
-
+                    try:
+                        expect_ytid = False
+                        ytid = pafy.extract_video_id(line).strip()
+                        songs.append(Video(ytid, title, int(duration)))
+                    except ValueError as ex:
+                        util.dbg(c.r + str(ex) + c.w)
         # Handles a simple m3u file which should just be a list of urls
         else:
             plf.seek(0)
@@ -160,7 +161,7 @@ def _convert_playlist_to_m3u():
 
         os.mkdir(g.PLFOLDER)
         save()
-        screen.msgexit("Updated playlist file. Please restart mpsyt", 1)
+        screen.msgexit("Updated playlist file. Please restart yewtube", 1)
 
     except EOFError:
         screen.msgexit("Error opening playlists from %s" % g.PLFILE, 1)
