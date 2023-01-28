@@ -198,4 +198,4 @@ Check also the [common-issue](https://github.com/iamtalhaasghar/yewtube/wiki/Com
 How to Contribute
 -----------------
 
-Contributions are welcomed! However, please check out the [contribution page](https://github.com/iamtalhaasghar/yewtube/blob/master/CONTRIBUTING.md) before making a contribution.
+Contributions are warmly welcomed! However, please check out the [contribution page](https://github.com/iamtalhaasghar/yewtube/blob/master/CONTRIBUTING.md) before making a contribution.
