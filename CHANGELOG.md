@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v2.9.4 (2023-01-28)
+### Fix
+* Semantic release python pypi receipe ([`495629a`](https://github.com/mps-youtube/yewtube/commit/495629ab78534a1a6b36a2adae2bc6c200083706))
+
 ## v2.9.3 (2023-01-28)
 ### Fix
 * Updated readme metioned yewtube as fork of mpsyt ([`385d6a7`](https://github.com/mps-youtube/yewtube/commit/385d6a77708991d1d27371067023b253c2d14770))
