@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v2.9.3 (2023-01-28)
+### Fix
+* Updated readme metioned yewtube as fork of mpsyt ([`385d6a7`](https://github.com/mps-youtube/yewtube/commit/385d6a77708991d1d27371067023b253c2d14770))
+
+### Documentation
+* Fix broken readme links ([`6d2d723`](https://github.com/mps-youtube/yewtube/commit/6d2d723e13d18854ab0a2c8c4364ff5a1c99b5d9))
+
 ## v2.9.2 (2023-01-26)
 ### Fix
 * Remove pyreadline dependency (#105) ([#107](https://github.com/iamtalhaasghar/yewtube/issues/107)) ([`19e4148`](https://github.com/iamtalhaasghar/yewtube/commit/19e4148242380b543a4825962716550114984f11))
