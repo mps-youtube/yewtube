@@ -113,6 +113,9 @@ class mpv(CmdPlayer):
     def launch_player(self, cmd):
         self.input_file = _get_input_file()
         cmd.append('--input-conf=' + self.input_file)
+        self.conf_dir = _get_conf_dir()
+        if self.conf_dir is not None:
+            cmd.append('--config-dir=' + self.conf_dir)
         self.sockpath = None
         self.fifopath = None
 
@@ -309,6 +312,17 @@ def _get_input_file():
                                      delete=False) as tmpfile:
         tmpfile.write(conf)
         return tmpfile.name
+
+def _get_conf_dir():
+    """
+    Check if an mpv configuration directory is present in the
+    main configuration directory, and return its path if so
+    """
+    confpath = os.path.join(paths.get_config_dir(), "mpv")
+    if os.path.isdir(confpath):
+        util.dbg("using %s for configuration directory", confpath)
+        return confpath
+    return None
 
 
 def _get_mpv_version(exename):
