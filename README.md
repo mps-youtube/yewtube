@@ -14,7 +14,8 @@
 
 </pre>
 
-yewtube, forked from mps-youtube , is a Terminal based YouTube player and downloader. No Youtube API key required. 
+yewtube, forked from mps-youtube , is a Terminal based YouTube player and downloader. No Youtube API key required. <br>
+Visit [this](./COLLABORATORS.md) page if you want to support maintainers of this project.
 
 Installation
 -----------
