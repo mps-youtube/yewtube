@@ -19,9 +19,11 @@ You can also find lists of all contributors [in this file](./CONTRIBUTORS) or [i
 * was made [owner of mps-youtube](https://github.com/mps-youtube/yewtube/discussions/1202) organization by [Ian Douglas Scott](https://github.com/orgs/mps-youtube/people/ids1024)
 ## [Jiri Hörner](https://github.com/hrnr) 
 [![gh-sponsor](https://img.shields.io/badge/_-Github-red.svg?logo=github&labelColor=555555&style=for-the-badge)](https://github.com/hrnr)
+* implemented the mpris support which is the most exciting feature
 * Member of mps-youtube organization
 ## [JKatzwinkel](https://github.com/JKatzwinkel)
 [![gh-sponsor](https://img.shields.io/badge/_-Github-red.svg?logo=github&labelColor=555555&style=for-the-badge)](https://github.com/JKatzwinkel)
+* wrote majority of the code for porting mps-youtube to the new youtube API
 * Member of mps-youtube organization
 ## [kraetzin](https://github.com/kraetzin) 
 [![gh-sponsor](https://img.shields.io/badge/_-Github-red.svg?logo=github&labelColor=555555&style=for-the-badge)](https://github.com/kraetzin)
