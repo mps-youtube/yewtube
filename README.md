@@ -14,8 +14,8 @@
 
 </pre>
 
-
- Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube 
+yewtube, forked from mps-youtube , is a Terminal based YouTube player and downloader. No Youtube API key required. <br>
+Visit [this](./COLLABORATORS.md) page if you want to support maintainers of this project.
 
 Installation
 -----------
@@ -71,7 +71,7 @@ Screenshots
 -----------
 
 Search:<br>
-![](http://mps-youtube.github.io/mps-youtube/std-search.png)
+![](http://mps-youtube.github.io/yewtube/std-search.png)
 
 A standard search is performed by entering `/` followed by search terms.
 
@@ -81,12 +81,12 @@ Repeating song/songs can be done with `song_number[loop]`, for example:
 `1[3]` or `4-6[2]`
 
 Local Playlists:<br>
-![](http://mps-youtube.github.io/mps-youtube/local-playlist.png)
+![](http://mps-youtube.github.io/yewtube/local-playlist.png)
 
 Search result items can easily be stored in local playlists.
 
 YouTube Playlists:<br>
-![](http://mps-youtube.github.io/mps-youtube/playlist-search.png)
+![](http://mps-youtube.github.io/yewtube/playlist-search.png)
 
 YouTube playlists can be searched and played or saved as local
 playlists.
@@ -94,20 +94,20 @@ playlists.
 A playlist search is performed by `//` followed by search term.
 
 Download:<br>
-![](http://mps-youtube.github.io/mps-youtube/download.png)
+![](http://mps-youtube.github.io/yewtube/download.png)
 
 Content can be downloaded in various formats and resolutions.
 
 Comments:<br>
-![](http://mps-youtube.github.io/mps-youtube/comments.png)
+![](http://mps-youtube.github.io/yewtube/comments.png)
 
 A basic comments browser is available to view YouTube user comments.
 
 Music Album Matching:<br>
 
-![](http://mps-youtube.github.io/mps-youtube/album-1.png)
+![](http://mps-youtube.github.io/yewtube/album-1.png)
 
-![](http://mps-youtube.github.io/mps-youtube/album-2.png)
+![](http://mps-youtube.github.io/yewtube/album-2.png)
 
 An album title can be specified and yewtube will attempt to find
 matches for each track of the album, based on title and duration. Type
@@ -115,7 +115,7 @@ matches for each track of the album, based on title and duration. Type
 
 Customisation:<br>
 
-![](http://mps-youtube.github.io/mps-youtube/customisation2.png)
+![](http://mps-youtube.github.io/yewtube/customisation2.png)
 
 Search results can be customised to display additional fields and
 ordered by various criteria.
@@ -199,4 +199,4 @@ Check also the [common-issue](https://github.com/iamtalhaasghar/yewtube/wiki/Com
 How to Contribute
 -----------------
 
-Contributions are welcomed! However, please check out the [contribution page](https://github.com/iamtalhaasghar/yewtube/blob/master/CONTRIBUTING.md) before making a contribution.
+Contributions are warmly welcomed! However, please check out the [contribution page](https://github.com/iamtalhaasghar/yewtube/blob/master/CONTRIBUTING.md) before making a contribution.

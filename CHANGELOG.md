@@ -2,6 +2,28 @@
 
 <!--next-version-placeholder-->
 
+## v2.10.1 (2023-03-21)
+### Fix
+* #980 added pylast as dependency in req.txt ([`48cc757`](https://github.com/mps-youtube/yewtube/commit/48cc757a4e89c551d6bcbbe54614f11fedeabbe9))
+
+## v2.10.0 (2023-03-21)
+### Feature
+* Added subtitle suppport for vlc related to #331 ([`96f2efd`](https://github.com/mps-youtube/yewtube/commit/96f2efd8352bf5cd3d3310214af69e0e6db37f5b))
+
+### Documentation
+* Added collaborators and contributors page ([`f258403`](https://github.com/mps-youtube/yewtube/commit/f25840322dea95d80b591732a2d3224047c020fc))
+
+## v2.9.4 (2023-01-28)
+### Fix
+* Semantic release python pypi receipe ([`495629a`](https://github.com/mps-youtube/yewtube/commit/495629ab78534a1a6b36a2adae2bc6c200083706))
+
+## v2.9.3 (2023-01-28)
+### Fix
+* Updated readme metioned yewtube as fork of mpsyt ([`385d6a7`](https://github.com/mps-youtube/yewtube/commit/385d6a77708991d1d27371067023b253c2d14770))
+
+### Documentation
+* Fix broken readme links ([`6d2d723`](https://github.com/mps-youtube/yewtube/commit/6d2d723e13d18854ab0a2c8c4364ff5a1c99b5d9))
+
 ## v2.9.2 (2023-01-26)
 ### Fix
 * Remove pyreadline dependency (#105) ([#107](https://github.com/iamtalhaasghar/yewtube/issues/107)) ([`19e4148`](https://github.com/iamtalhaasghar/yewtube/commit/19e4148242380b543a4825962716550114984f11))

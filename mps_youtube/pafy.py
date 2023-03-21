@@ -1,15 +1,19 @@
 import json
-import os
+import os, glob
 import random
 import re
 from urllib.parse import parse_qs, urlparse
 
 import requests
 import yt_dlp
-from youtubesearchpython import *
+from youtubesearchpython import VideosSearch, ChannelsSearch, PlaylistsSearch, Suggestions, Playlist, playlist_from_channel_id, Comments, Video, Channel, ChannelSearch
 
 
 class MyLogger:
+
+    def __init__(self, print_info=False):
+        self.print_info = print_info
+
     def debug(self, msg):
         # For compatibility with youtube-dl, both debug and info are passed into debug
         # You can distinguish them by the prefix '[debug] '
@@ -19,7 +23,8 @@ class MyLogger:
             self.info(msg)
 
     def info(self, msg):
-        pass
+        if self.print_info:
+            print(msg)
 
     def warning(self, msg):
         pass
@@ -185,3 +190,47 @@ def all_playlists_from_channel(channel_id):
          channel.next()
          playlists.extend(channel.result["playlists"])
     return playlists
+
+def get_subtitles(ytid, output_dir):
+    '''
+    Downloads and saves the .vtt subtitle of give youtube video id under path {output_dir}/subtitles
+    Subtitles are selected as follows:
+    1. Select first user provided subtitle. If none then
+    2. Select auto generated 'en' subtitles
+    '''
+
+    if output_dir.endswith('/'):
+        output_dir = output_dir[:-1]
+    outtmpl = f'{output_dir}/subtitles/{ytid}'
+    # check if subtitles already exist
+    existing_subtitles = glob.glob(os.path.join(outtmpl+'*.vtt'))
+    if existing_subtitles:
+        return existing_subtitles[0]
+
+    url = f'https://www.youtube.com/watch?v={ytid}'
+    ydl_opts = {
+        'skip_download': True,
+        'writesubtitles': True,
+        'writeautomaticsub': True,
+        'subtitlesformat': 'vtt',
+        'outtmpl': outtmpl,
+        'logger': MyLogger(print_info=False),
+    }
+    # Create a YoutubeDL instance with the options
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=False)
+        subtitles = info_dict.get('subtitles', {})
+        available_formats = list(subtitles.keys())
+        if available_formats:
+            lang = available_formats[0] # pick first subtitle from user-uploaded subtitles
+        else:
+            lang = 'en' # otherwise use english auto-generated subtitles
+        ydl.params['subtitleslangs'] = [lang]
+        # Add the new options to the existing ydl_opts dictionary
+        ydl.add_default_info_extractors()
+        # Create a new yt-dlp object with the updated ydl_opts dictionary
+        ydl = yt_dlp.YoutubeDL(ydl_opts)
+        # Download the subtitle
+        ydl.download([url])
+        path = f'{outtmpl}.{lang}.vtt'
+        return path if os.path.isfile(path) else None

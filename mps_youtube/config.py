@@ -347,7 +347,8 @@ class _Config:
             ConfigItem("show_qrcode", False),
             ConfigItem("history", True), 
             ConfigItem("input_history", True),
-            ConfigItem("vlc_dummy_interface", False)
+            ConfigItem("vlc_dummy_interface", False),
+            ConfigItem("show_subtitles", True),
             ]
 
     def __getitem__(self, key):

@@ -13,6 +13,7 @@ from urllib.error import HTTPError, URLError
 from . import c, config, content, g, history, screen, streams, util
 from .commands import lastfm
 from .util import not_utf8_environment
+from . import pafy
 
 mswin = os.name == "nt"
 
@@ -70,6 +71,8 @@ class BasePlayer:
                 lastfm.set_now_playing(g.artist, g.scrobble_queue[self.song_no])
 
             try:
+                if config.SHOW_VIDEO and config.SHOW_SUBTITLES:
+                    self.subtitle_path = pafy.get_subtitles(self.song.ytid, config.DDIR.get)
                 self.video, self.stream, self.override = stream_details(
                                                             self.song,
                                                             override=self.override,
