@@ -131,12 +131,15 @@ def get_comments(video_id):
     return comments['result']
 
 def get_video_info(video_id):
-    videoInfo = Video.getInfo(video_id)
-    response = return_dislikes(video_id)
-    videoInfo['likes'] = response['likes']
-    videoInfo['dislikes'] = response['dislikes']
-    videoInfo['averageRating'] = response['rating']
-    return videoInfo
+    try:
+        videoInfo = Video.getInfo(video_id)
+        response = return_dislikes(video_id)
+        videoInfo['likes'] = response['likes']
+        videoInfo['dislikes'] = response['dislikes']
+        videoInfo['averageRating'] = response['rating']
+        return videoInfo
+    except:
+        raise Exception("Can't get video info. Video is either private or unavailable in your country.")
 
 def return_dislikes(video_id):
     return json.loads(requests.get('https://returnyoutubedislikeapi.com/votes?videoId=' + video_id).text)

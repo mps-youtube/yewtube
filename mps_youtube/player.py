@@ -88,7 +88,7 @@ class BasePlayer:
                 break
 
             # skip forbidden, video removed/no longer available, etc. tracks
-            except TypeError as e:
+            except (TypeError, Exception) as e:
                 import traceback
                 traceback.print_exception(type(e), e, e.__traceback__)
                 self.song_no += 1

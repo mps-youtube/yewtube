@@ -558,7 +558,7 @@ def yt_url(url: str, print_title: bool = False):
             if v_id in v_ids:
                 continue
             p = pafy.get_video_info(v_id)
-        except (IOError, ValueError) as e:
+        except (IOError, ValueError, Exception) as e:
             g.message = c.r + str(e) + c.w
             g.content = g.content or content.generate_songlist_display(
                     zeromsg=g.message)
