@@ -8,12 +8,12 @@ LABEL maintainer="Justin Garrison <justinleegarrison@gmail.com>" \
     org.label-schema.vcs-url="https://github.com/mps-youtube/mps-youtube" \
     org.label-schema.docker.cmd="docker run -v /dev/snd:/dev/snd -it --rm --privileged --name mpsyt mpsyt"
 
-RUN DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && \
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
     apt-get install -y mplayer mpv && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean && apt-get purge
 
-RUN pip install mps-youtube youtube-dl
+RUN pip install --no-cache mps-youtube youtube-dl
 
 ENTRYPOINT ["mpsyt"]

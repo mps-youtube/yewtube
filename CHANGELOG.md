@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v2.10.1 (2023-03-21)
+### Fix
+* #980 added pylast as dependency in req.txt ([`48cc757`](https://github.com/mps-youtube/yewtube/commit/48cc757a4e89c551d6bcbbe54614f11fedeabbe9))
+
+## v2.10.0 (2023-03-21)
+### Feature
+* Added subtitle suppport for vlc related to #331 ([`96f2efd`](https://github.com/mps-youtube/yewtube/commit/96f2efd8352bf5cd3d3310214af69e0e6db37f5b))
+
+### Documentation
+* Added collaborators and contributors page ([`f258403`](https://github.com/mps-youtube/yewtube/commit/f25840322dea95d80b591732a2d3224047c020fc))
+
 ## v2.9.4 (2023-01-28)
 ### Fix
 * Semantic release python pypi receipe ([`495629a`](https://github.com/mps-youtube/yewtube/commit/495629ab78534a1a6b36a2adae2bc6c200083706))
