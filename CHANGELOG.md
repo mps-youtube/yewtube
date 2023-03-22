@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v2.10.2 (2023-03-22)
+### Fix
+* #837 crashes if the video is blocked by the copyright holder ([`c472c7a`](https://github.com/mps-youtube/yewtube/commit/c472c7a7e428122e147422df84a819b58e790455))
+
 ## v2.10.1 (2023-03-21)
 ### Fix
 * #980 added pylast as dependency in req.txt ([`48cc757`](https://github.com/mps-youtube/yewtube/commit/48cc757a4e89c551d6bcbbe54614f11fedeabbe9))
