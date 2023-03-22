@@ -213,9 +213,10 @@ def shuffle_playlist():
     """ Shuffle entire loaded playlist. """
     songs = content.get_last_query()
 
-    if songs: 
-        random.shuffle(songs)
-        paginatesongs(list(songs))
+    if songs:
+        temp_songs = list(songs)
+        random.shuffle(temp_songs)
+        paginatesongs(temp_songs)
         g.message = c.y + "Shuffled entire playlist" + c.w
         g.content = content.generate_songlist_display()
 
