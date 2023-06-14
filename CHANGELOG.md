@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.10.4 (2023-06-14)
+
+### Fix
+
+* #806 - pressing q doesn't stops playback when in repeat mode ([`645617a`](https://github.com/mps-youtube/yewtube/commit/645617accd1fda316b22aa81270917adae9d2712))
+
 ## v2.10.3 (2023-06-14)
 
 ### Fix
