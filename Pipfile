@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+pyreadline3 = "*"
+pyperclip = "*"
+youtube-search-python = ">=1.6.5"
+yt-dlp = "*"
+colorama = "*"
+pylast = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
