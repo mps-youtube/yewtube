@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v2.10.3 (2023-06-14)
+
+### Fix
+
+* Shuffle all throwing error "object does not support item assignment" ([`13fb47b`](https://github.com/mps-youtube/yewtube/commit/13fb47b8113a0ccfc884852065f587a4de94eb0d))
+
 ## v2.10.2 (2023-03-22)
 ### Fix
 * #837 crashes if the video is blocked by the copyright holder ([`c472c7a`](https://github.com/mps-youtube/yewtube/commit/c472c7a7e428122e147422df84a819b58e790455))
