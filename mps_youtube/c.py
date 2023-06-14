@@ -4,12 +4,15 @@ import os
 import re
 import sys
 
-
 if sys.stdout.isatty():
     white = "\x1b[%sm" % 0
-    ul = "\x1b[%sm" * 3 % (2, 4, 33)
+    ul = "\x1b[%sm" * 2 % (2, 4)
+
+    if not os.getenv('NO_COLOR'):
+        ul += "\x1b[%33m"
+
     cols = ["\x1b[%sm" % n for n in range(91, 96)]
-    red, green, yellow, blue, pink = cols
+    red, green, yellow, blue, pink = [""]*5 if os.getenv('NO_COLOR') else cols
 else:
     ul = red = green = yellow = blue = pink = white = ""
 
