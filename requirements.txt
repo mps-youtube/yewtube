@@ -2,6 +2,6 @@ requests
 pyreadline3 ; platform_system=="Windows"
 pyperclip
 youtube-search-python>=1.6.5
-yt-dlp
+yt-dlp>=2023.7.6
 colorama ; platform_system=="Windows"
 pylast
