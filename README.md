@@ -133,11 +133,19 @@ Upgrading
 
 ### If installed using pipx
 
-` pipx upgrade yewtube `
+`pipx upgrade yewtube`
+
+Optionally with upgrading all dependencies:
+
+`pipx runpip yewtube install --upgrade-strategy eager --upgrade yewtube`
 
 ### If installed using pip
 
 `pip install --upgrade yewtube`
+
+Optionally with upgrading all dependencies:
+
+`pip install --upgrade-strategy eager --upgrade yewtube`
 
 Usage
 -----
