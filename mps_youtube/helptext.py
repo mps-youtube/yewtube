@@ -315,7 +315,7 @@ def helptext():
         ),
         (
             "new",
-            "Check if new version is available",
+            "Show online changelog for the latest version",
             """{0}What's New{1}\n{3}""".format(c.ul, c.w, c.y, "get_changelog()"),
         ),
         (
