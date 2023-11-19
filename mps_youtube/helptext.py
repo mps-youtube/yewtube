@@ -408,7 +408,7 @@ def get_help(choice):
 
 def get_changelog():
     try:
-        url = "https://raw.githubusercontent.com/iamtalhaasghar/yewtube/master/CHANGELOG.md"
+        url = "https://raw.githubusercontent.com/mps-youtube/yewtube/master/CHANGELOG.md"
         v = urlopen(url, timeout=1).read().decode()
         v = v.split('## v')[1]
         return v

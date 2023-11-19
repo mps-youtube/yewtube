@@ -2,7 +2,7 @@
 
 """ setup.py for yewtube.
 
-https://github.com/iamtalhaasghar/yewtube
+https://github.com/mps-youtube/yewtube
 
 python setup.py sdist bdist_wheel
 """
@@ -30,8 +30,8 @@ options = dict(
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",
     author_email="talhaasghar.contact@simplelogin.fr",
-    url="https://github.com/iamtalhaasghar/yewtube",
-    download_url="https://github.com/iamtalhaasghar/yewtube/releases",
+    url="https://github.com/mps-youtube/yewtube",
+    download_url="https://github.com/mps-youtube/yewtube/releases",
     packages=['mps_youtube', 'mps_youtube.commands', 'mps_youtube.listview', 'mps_youtube.players'],
     entry_points={'console_scripts': ['yt = mps_youtube:main.main']},
     python_requires='>=3.6',

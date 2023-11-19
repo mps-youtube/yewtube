@@ -33,12 +33,12 @@ Installation
 # Latest Version
 
 ### Using pip
-1. Install using `pip install git+https://github.com/iamtalhaasghar/yewtube.git`
+1. Install using `pip install git+https://github.com/mps-youtube/yewtube.git`
 2. Run using, `yt`. Enjoy! 
 
 ### Using pipx
 1.  Install **_pipx_** using `pip install pipx`
-2.  Install `yewtube` using `pipx install git+https://github.com/iamtalhaasghar/yewtube.git`
+2.  Install `yewtube` using `pipx install git+https://github.com/mps-youtube/yewtube.git`
 3.  Now, type `yt` That's it.
 
 What's new in yewtube?
@@ -46,7 +46,7 @@ What's new in yewtube?
 -   **No Youtube API Key required**
 -   **Run audio in VLC with no GUI**
 
-See complete and up-to-date changelog [here](https://github.com/iamtalhaasghar/yewtube/blob/master/CHANGELOG.md).
+See complete and up-to-date changelog [here](https://github.com/mps-youtube/yewtube/blob/master/CHANGELOG.md).
 
 These features are still inherited from [mps-youtube](https://github.com/mps-youtube/mps-youtube).
 -   Search and play audio/video from YouTube
@@ -65,7 +65,7 @@ implementation uses YouTube as a source of content and can play and
 download video as well as audio. The [pafy](https://github.com/mps-youtube/pafy)  library handles interfacing with YouTube.
 
 [mps-youtube wiki](https://github.com/mps-youtube/mps-youtube/wiki/Troubleshooting) <br>
-[yewtube wiki](https://github.com/iamtalhaasghar/yewtube/wiki/FAQ)
+[yewtube wiki](https://github.com/mps-youtube/yewtube/wiki/FAQ)
 
 Screenshots
 -----------
@@ -202,9 +202,9 @@ If everything working correctly, dbug and glib would have similar result as abov
 mps-youtube.instance567867
 ```
 
-Check also the [common-issue](https://github.com/iamtalhaasghar/yewtube/wiki/Common-issues) if you are having problem with yewtube.
+Check also the [common-issue](https://github.com/mps-youtube/yewtube/wiki/Common-issues) if you are having problem with yewtube.
 
 How to Contribute
 -----------------
 
-Contributions are warmly welcomed! However, please check out the [contribution page](https://github.com/iamtalhaasghar/yewtube/blob/master/CONTRIBUTING.md) before making a contribution.
+Contributions are warmly welcomed! However, please check out the [contribution page](https://github.com/mps-youtube/yewtube/blob/master/CONTRIBUTING.md) before making a contribution.
