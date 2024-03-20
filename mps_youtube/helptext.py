@@ -315,7 +315,7 @@ def helptext():
         ),
         (
             "new",
-            "Check if new version is available",
+            "Show online changelog for the latest version",
             """{0}What's New{1}\n{3}""".format(c.ul, c.w, c.y, "get_changelog()"),
         ),
         (
@@ -408,7 +408,7 @@ def get_help(choice):
 
 def get_changelog():
     try:
-        url = "https://raw.githubusercontent.com/iamtalhaasghar/yewtube/master/CHANGELOG.md"
+        url = "https://raw.githubusercontent.com/mps-youtube/yewtube/master/CHANGELOG.md"
         v = urlopen(url, timeout=1).read().decode()
         v = v.split('## v')[1]
         return v
