@@ -1,10 +1,6 @@
 
 ![](https://img.shields.io/pypi/v/yewtube.svg)  ![](https://img.shields.io/pypi/wheel/yewtube.svg)
 
-## STOP GENOCIDE OF INNOCENT PEOPLE
-
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Flag_of_Palestine.svg/1280px-Flag_of_Palestine.svg.png)
-
 <pre>
                       _         _          
                      | |       | |         
