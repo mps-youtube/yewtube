@@ -343,6 +343,7 @@ class _Config:
             ConfigItem("pages", 3, minval=1, maxval=100),
             ConfigItem("autoplay", False),
             ConfigItem("set_title", True),
+            ConfigItem("pipe_direct_mpv", False),
             ConfigItem("mpris", not mswin),
             ConfigItem("show_qrcode", False),
             ConfigItem("history", True), 
