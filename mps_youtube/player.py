@@ -142,6 +142,7 @@ class BasePlayer:
             songdata = (self.song.ytid, '' if self.stream.get('ext') is None else self.stream.get('ext') + " " + self.stream['quality'],
                             int(size / (1024 ** 2)))
 
+        self.songdata = "%s; %s; %s Mb" % songdata
         screen.writestatus(self.songdata)
 
         self._launch_player()
