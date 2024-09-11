@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v2.11.6 (2024-09-11)
+
+### Chore
+
+* chore: update author email ([`6a5641c`](https://github.com/mps-youtube/yewtube/commit/6a5641cfdf209a9c87783178b61b9ea348aed6b9))
+
+### Fix
+
+* fix: wheel_recipe.sh ([`5005c1a`](https://github.com/mps-youtube/yewtube/commit/5005c1a79e09049a57b8427678062f20cf377a72))
+
 ## v2.11.5 (2024-09-11)
 
 ## v2.11.4 (2024-09-11)
