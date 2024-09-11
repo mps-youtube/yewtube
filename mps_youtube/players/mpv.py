@@ -73,7 +73,7 @@ class mpv(CmdPlayer):
             util.dbg("%susing ignidx flag%s")
             util.list_update(pd["ignidx"], args)
 
-        if "--ytdl" in self.mpv_options:
+        if "--ytdl" in self.mpv_options and not config.PIPE_DIRECT_MPV.get:
             util.list_update("--no-ytdl", args)
 
         msglevel = pd["msglevel"]["<0.4"]
