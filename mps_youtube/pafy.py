@@ -119,7 +119,13 @@ def channel_id_from_name(query):
     return (channel_id, channel_name)
 
 def all_videos_from_channel(channel_id):
+    '''
+    Get all videos of a playlist identified by channel_id
+    '''
+
     playlist = Playlist(playlist_from_channel_id(channel_id))
+    while playlist.hasMoreVideos:
+        playlist.getNextVideos()
     return playlist.videos
 
 def search_videos_from_channel(channel_id, query):
