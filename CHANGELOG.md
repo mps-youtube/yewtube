@@ -1,23 +1,58 @@
 # CHANGELOG
 
+## v2.11.0 (2024-09-11)
 
+### Documentation
+
+* docs: extend upgrade instructions (#1249)
+
+This adds the pip / pipx commands to upgrade all the dependencies. This makes directed actions like https://github.com/mps-youtube/yewtube/issues/1225#issuecomment-1493400886 unnecessary. ([`f62a5fd`](https://github.com/mps-youtube/yewtube/commit/f62a5fd96f97806f35a015df21274e0debf0c8e3))
+
+### Unknown
+
+* Fix Issue #1064 and #1283: User and Channel searches to return all videos including optional filtering of search terms (#1282) (#1288)
+
+* Updated the all_videos_from_channel function to return all videos from a channel, not just the first page of playlist results (previous method only returned up to 100 videos max).
+
+* Updated the usersearch_id function to filter the returned videos by search term in the title or description. This restores the ability to search a user&#39;s videos.
+
+Co-authored-by: Robert Hill &lt;robert.hill@uphillsolutions.tech&gt; ([`a5574cf`](https://github.com/mps-youtube/yewtube/commit/a5574cff5dd28bf39c0f6686d219c743435db5af))
+
+* Update COLLABORATORS.md ([`0c1e39d`](https://github.com/mps-youtube/yewtube/commit/0c1e39d51f5d4c6e1bea25b72c00900aab991e37))
+
+* Update project URL and version maintenance (#1262)
+
+* Update project URL
+
+* Update __version__ in setup.py
+
+This suppresses the update notifications
+
+* help new: more accurate helptext
+
+`help new` doesn&#39;t actually check whether there&#39;s a new version,
+it shows the changelog for the latest release no matter what.
+Update helptext to reflect this. ([`42cfda0`](https://github.com/mps-youtube/yewtube/commit/42cfda07ddc690e5ef1c42aa704a3d221f877b28))
+
+* fix syntax warnings on 3.12 (#1263) ([`f8c1f1d`](https://github.com/mps-youtube/yewtube/commit/f8c1f1d14cb21879ded6fdfba2e919b652692410))
+
+* added a notice ([`e39978a`](https://github.com/mps-youtube/yewtube/commit/e39978a8deeeef371a0466eba701b872cdec7c6e))
 
 ## v2.10.5 (2023-08-29)
 
 ### Fix
 
+* fix: #1243 bumped yt-dlp version ([`9ed4921`](https://github.com/mps-youtube/yewtube/commit/9ed4921693443bb92eaddbafbfadeba8839b4e04))
+
 * fix: #1243 bumped yt-dlp version
 
 Thanks to @galgot ([`4461d0c`](https://github.com/mps-youtube/yewtube/commit/4461d0c8e2b6f47c2919e6ae932eb28c8102e5cd))
-
-* fix: #1243 bumped yt-dlp version ([`9ed4921`](https://github.com/mps-youtube/yewtube/commit/9ed4921693443bb92eaddbafbfadeba8839b4e04))
 
 ### Unknown
 
 * Merge pull request #1244 from mps-youtube/develop
 
 fixed: #1243 bumped yt-dlp version ([`1c05626`](https://github.com/mps-youtube/yewtube/commit/1c0562602ba3c87eb061aeb5c38252c9809eed1f))
-
 
 ## v2.10.4 (2023-06-14)
 
@@ -29,12 +64,7 @@ fixed: #1243 bumped yt-dlp version ([`1c05626`](https://github.com/mps-youtube/y
 
 * fix: #806 - pressing q doesn&#39;t stops playback when in repeat mode ([`645617a`](https://github.com/mps-youtube/yewtube/commit/645617accd1fda316b22aa81270917adae9d2712))
 
-
 ## v2.10.3 (2023-06-14)
-
-### Fix
-
-* fix: shuffle all throwing error &#34;object does not support item assignment&#34; ([`13fb47b`](https://github.com/mps-youtube/yewtube/commit/13fb47b8113a0ccfc884852065f587a4de94eb0d))
 
 ### Unknown
 
@@ -62,12 +92,13 @@ Develop ([`60a526c`](https://github.com/mps-youtube/yewtube/commit/60a526c26089e
 
 merge changes from upstream ([`8ea0b49`](https://github.com/mps-youtube/yewtube/commit/8ea0b49cf08fc52d081c035fdd286044b8342924))
 
-
 ## v2.10.2 (2023-03-22)
 
 ### Fix
 
 * fix: #837 crashes if the video is blocked by the copyright holder ([`c472c7a`](https://github.com/mps-youtube/yewtube/commit/c472c7a7e428122e147422df84a819b58e790455))
+
+* fix: shuffle all throwing error &#34;object does not support item assignment&#34; ([`13fb47b`](https://github.com/mps-youtube/yewtube/commit/13fb47b8113a0ccfc884852065f587a4de94eb0d))
 
 ### Unknown
 
@@ -81,6 +112,9 @@ multiple improvements ([`655acc3`](https://github.com/mps-youtube/yewtube/commit
 
 Dockerfile minor improvements ([`08323c5`](https://github.com/mps-youtube/yewtube/commit/08323c54afaee804894782db8ff413df47ded2df))
 
+* Dockerfile minor improvements:
+- Prevent `pip install` from persisting cache (improves size).
+- Correctly set `DEBIAN_ENVIRONMENT` env variable. ([`0fbede3`](https://github.com/mps-youtube/yewtube/commit/0fbede397bf8ba90eeae720fe3facbb5d195dc1f))
 
 ## v2.10.1 (2023-03-21)
 
@@ -94,24 +128,11 @@ Dockerfile minor improvements ([`08323c5`](https://github.com/mps-youtube/yewtub
 
 * Update COLLABORATORS.md ([`c9a01ab`](https://github.com/mps-youtube/yewtube/commit/c9a01ab8f6f734760ff5dbaf558f478fd34bb3c4))
 
-
 ## v2.10.0 (2023-03-21)
-
-### Documentation
-
-* docs: added collaborators and contributors page ([`f258403`](https://github.com/mps-youtube/yewtube/commit/f25840322dea95d80b591732a2d3224047c020fc))
-
-### Feature
-
-* feat: added subtitle suppport for vlc related to #331 ([`96f2efd`](https://github.com/mps-youtube/yewtube/commit/96f2efd8352bf5cd3d3310214af69e0e6db37f5b))
 
 ### Unknown
 
 * Merge branch &#39;master&#39; of github.com:mps-youtube/yewtube ([`51e7e17`](https://github.com/mps-youtube/yewtube/commit/51e7e1715abd86e65300895a687db6d88d8ac003))
-
-* Dockerfile minor improvements:
-- Prevent `pip install` from persisting cache (improves size).
-- Correctly set `DEBIAN_ENVIRONMENT` env variable. ([`0fbede3`](https://github.com/mps-youtube/yewtube/commit/0fbede397bf8ba90eeae720fe3facbb5d195dc1f))
 
 * Merge pull request #1215 from mps-youtube/develop
 
@@ -123,12 +144,17 @@ fix: check for mpv configuration directory ([`3d4e720`](https://github.com/mps-y
 
 * check for mpv configuration directory ([`f165369`](https://github.com/mps-youtube/yewtube/commit/f165369c9f05ea7a7b6940eb34dd7fe64d48c0bf))
 
-
 ## v2.9.4 (2023-01-28)
 
 ### Documentation
 
+* docs: added collaborators and contributors page ([`f258403`](https://github.com/mps-youtube/yewtube/commit/f25840322dea95d80b591732a2d3224047c020fc))
+
 * docs: fix broken readme links ([`6d2d723`](https://github.com/mps-youtube/yewtube/commit/6d2d723e13d18854ab0a2c8c4364ff5a1c99b5d9))
+
+### Feature
+
+* feat: added subtitle suppport for vlc related to #331 ([`96f2efd`](https://github.com/mps-youtube/yewtube/commit/96f2efd8352bf5cd3d3310214af69e0e6db37f5b))
 
 ### Fix
 
@@ -148,23 +174,15 @@ merge changes ([`65dca2f`](https://github.com/mps-youtube/yewtube/commit/65dca2f
 
 fix: correcting inconsistent return statement ([`496b776`](https://github.com/mps-youtube/yewtube/commit/496b7760e396549a76c782ed00b9170422319065))
 
+* correcting inconsistent return statement ([`3cdb12a`](https://github.com/mps-youtube/yewtube/commit/3cdb12a454ffffa9c409842a117cbcca0e6df9a1))
+
 * Merge pull request #1203 from iamtalhaasghar/master
 
 merge yewtube codebase in mps-youtube ([`42ce836`](https://github.com/mps-youtube/yewtube/commit/42ce83694e7512df4655a0d975b321c51be59254))
 
-
 ## v2.9.2 (2023-01-26)
 
-### Unknown
-
-* Merge branch &#39;master&#39; of github.com:iamtalhaasghar/yewtube ([`ba3502d`](https://github.com/mps-youtube/yewtube/commit/ba3502d921be1e5e267ceebf2e40ae10c1f41c7b))
-
-
-## v2.9.1 (2023-01-26)
-
 ### Fix
-
-* fix: #50 - brought back download audio file ([`b46dab4`](https://github.com/mps-youtube/yewtube/commit/b46dab47e61c68efa0e51836a8cc9141d15d9e87))
 
 * fix: remove pyreadline dependency (#105) (#107)
 
@@ -174,10 +192,19 @@ Co-authored-by: Francesco Gazzetta &lt;fgaz@fgaz.me&gt; ([`19e4148`](https://git
 
 ### Unknown
 
+* Merge branch &#39;master&#39; of github.com:iamtalhaasghar/yewtube ([`ba3502d`](https://github.com/mps-youtube/yewtube/commit/ba3502d921be1e5e267ceebf2e40ae10c1f41c7b))
+
+## v2.9.1 (2023-01-26)
+
+### Fix
+
+* fix: #50 - brought back download audio file ([`b46dab4`](https://github.com/mps-youtube/yewtube/commit/b46dab47e61c68efa0e51836a8cc9141d15d9e87))
+
+### Unknown
+
 * related to #84 ([`b9e69a8`](https://github.com/mps-youtube/yewtube/commit/b9e69a8217d4c6931522efd295da1eb5caf0c635))
 
 * fix typos ([`47e4730`](https://github.com/mps-youtube/yewtube/commit/47e47308c756650718ced9008d8485c948ababd1))
-
 
 ## v2.9.0 (2022-10-20)
 
@@ -193,8 +220,7 @@ Co-authored-by: Francesco Gazzetta &lt;fgaz@fgaz.me&gt; ([`19e4148`](https://git
 
 * moved to wiki section ([`e8ce805`](https://github.com/mps-youtube/yewtube/commit/e8ce8057cf96770139d2355ebefe5f9197eb107a))
 
-
-## v2.8.5 (2022-09-07)
+## v2.8.5 (2022-09-08)
 
 ### Documentation
 
@@ -233,13 +259,11 @@ fix #73: Implement &#39;shuffle all&#39; and &#39;play all&#39; ([`fd1b9ea`](htt
 
 * userpl requires youtube search python version 1.6.5 ([`6d959bd`](https://github.com/mps-youtube/yewtube/commit/6d959bd49c90dcccf7e292a5921b517853d06f00))
 
-
-## v2.8.4 (2022-05-04)
+## v2.8.4 (2022-05-05)
 
 ### Fix
 
 * fix: #53 viewing playlists uploaded by a user is back ([`f201cb5`](https://github.com/mps-youtube/yewtube/commit/f201cb5f4cd45b9341ced6b549fc35a57e85eb9f))
-
 
 ## v2.8.3 (2022-04-25)
 
@@ -250,7 +274,6 @@ fix #73: Implement &#39;shuffle all&#39; and &#39;play all&#39; ([`fd1b9ea`](htt
 * fix: save full playlists by name and all its videos ([`d69a959`](https://github.com/mps-youtube/yewtube/commit/d69a9594c5824d97201774e81444b75aea93e861))
 
 * fix: #67  vlc dummy Interface does not work with live channels ([`2d4637b`](https://github.com/mps-youtube/yewtube/commit/2d4637b04b6f738ab832b3beacab1e490e99a518))
-
 
 ## v2.8.2 (2022-03-17)
 
@@ -266,12 +289,22 @@ fix #73: Implement &#39;shuffle all&#39; and &#39;play all&#39; ([`fd1b9ea`](htt
 
 mpris ([`67e5be7`](https://github.com/mps-youtube/yewtube/commit/67e5be7b5aa02d25f1242fbd105325f6374bef36))
 
-
 ## v2.8.1 (2022-03-08)
 
 ### Build
 
 * build: include changelog ([`18390f5`](https://github.com/mps-youtube/yewtube/commit/18390f5ffa3c812a41b0ec09c5b0f2077304f575))
+
+* build(setup): add requests ([`397eddd`](https://github.com/mps-youtube/yewtube/commit/397eddd0146e04e95e6cc0598741bae8055a3e32))
+
+### Ci
+
+* ci(python-app): workflows based on origin/develop
+
+- only run pytest
+- use matrix for python version and os ([`3d117ad`](https://github.com/mps-youtube/yewtube/commit/3d117ad49ed8630873dd070f474e6641007fd01a))
+
+* ci: python-app ([`f40ca1a`](https://github.com/mps-youtube/yewtube/commit/f40ca1a557974929da3cc0c599d1f9342b4cdfa9))
 
 ### Feature
 
@@ -307,9 +340,9 @@ also isort module
 
 * fix: #44 dont run init when importing mps_youtube ([`a072c22`](https://github.com/mps-youtube/yewtube/commit/a072c22e2781160bca79d0164e46e49f07ac28e1))
 
-* fix(mpris): handle no data on time-pos ([`8bb29d3`](https://github.com/mps-youtube/yewtube/commit/8bb29d33825ad826e51d9d8eada32a9b7bd10ffd))
-
 * fix: #39 key error &#39;data&#39; ([`834ed5b`](https://github.com/mps-youtube/yewtube/commit/834ed5b0af5f92e1233e8ba327327654f67f61a0))
+
+* fix(mpris): handle no data on time-pos ([`8bb29d3`](https://github.com/mps-youtube/yewtube/commit/8bb29d33825ad826e51d9d8eada32a9b7bd10ffd))
 
 * fix: #38 improved help menu responsiveness ([`972b4ef`](https://github.com/mps-youtube/yewtube/commit/972b4efdb5fe8f5d3295b1c3fe607d209e7d39b6))
 
@@ -340,7 +373,15 @@ also isort module
 - function doc
 - return value type hint for func ([`ab21c5d`](https://github.com/mps-youtube/yewtube/commit/ab21c5d1bc872ed482bf482ad37949129c1e4f78))
 
+* fix(util.uea_pad): handle AttributeError on t.split
+
+also isort import ([`1643266`](https://github.com/mps-youtube/yewtube/commit/1643266f21ccf7a99481a1615b4a53c4fbabc878))
+
 * fix: bring back requirements.txt to life ([`ff6e59d`](https://github.com/mps-youtube/yewtube/commit/ff6e59d75834c61d72ec6bbc92f5eb339cc82607))
+
+### Refactor
+
+* refactor: reset to upstream ([`dc4af72`](https://github.com/mps-youtube/yewtube/commit/dc4af721aa90fe79c492f9f1ae1f4a698049a085))
 
 ### Test
 
@@ -351,6 +392,10 @@ also isort module
 * test(mplayer): _get_mplayer_version
 
 use default func behavior when no mplayer found ([`9c2350c`](https://github.com/mps-youtube/yewtube/commit/9c2350c87daed2a52460b4e9ad72ba4b11e7796f))
+
+* test: uea_pad ([`22b4564`](https://github.com/mps-youtube/yewtube/commit/22b4564e618aceb49bad34428e45e9ecf25907e6))
+
+* test(test_main): skip test without attribute after fork ([`35ded20`](https://github.com/mps-youtube/yewtube/commit/35ded20a8ee1392c731bd6a35f1f3a2d10897c92))
 
 ### Unknown
 
@@ -451,12 +496,17 @@ Develop ([`d2384e9`](https://github.com/mps-youtube/yewtube/commit/d2384e9da88a1
 
 fix _get_mplayer_version ([`ba70beb`](https://github.com/mps-youtube/yewtube/commit/ba70beb707c8b300ae2e3ddb6eebb74993fda7d1))
 
-* moved old changelogs CHANGELOG &gt; CHANGELOG.md ([`f845604`](https://github.com/mps-youtube/yewtube/commit/f84560441dac6d8872c9baaffbe35aeab9acb37c))
-
 * Merge pull request #17 from rachmadaniHaryono/bugfix/attribute-error
 
 test uea_pad ([`376ebe1`](https://github.com/mps-youtube/yewtube/commit/376ebe1be5442e84b089a223472a742da1b56008))
 
+* Merge branch &#39;develop&#39; of https://github.com/iamtalhaasghar/yewtube into bugfix/attribute-error ([`ebf62f5`](https://github.com/mps-youtube/yewtube/commit/ebf62f591b4dbb2fb2b240020fffe7ef80c043bf))
+
+* Merge branch &#39;develop&#39; of https://github.com/iamtalhaasghar/yewtube into bugfix/attribute-error ([`ae6bad4`](https://github.com/mps-youtube/yewtube/commit/ae6bad4050ec8186deae94af69bf55257ba0f2a3))
+
+* Merge remote-tracking branch &#39;upstream/develop&#39; into bugfix/attribute-error ([`6078793`](https://github.com/mps-youtube/yewtube/commit/6078793d55edfbf09eb3de415a0b8d43a8dcbac6))
+
+* moved old changelogs CHANGELOG &gt; CHANGELOG.md ([`f845604`](https://github.com/mps-youtube/yewtube/commit/f84560441dac6d8872c9baaffbe35aeab9acb37c))
 
 ## v2.6.4 (2022-02-16)
 
@@ -464,23 +514,11 @@ test uea_pad ([`376ebe1`](https://github.com/mps-youtube/yewtube/commit/376ebe1b
 
 * fix: duplicate changelog and readme files ([`0265ef7`](https://github.com/mps-youtube/yewtube/commit/0265ef7507b539791684bdcf40b30ddaafc525e8))
 
-
 ## v2.6.3 (2022-02-16)
 
 ### Build
 
-* build(setup): add requests ([`397eddd`](https://github.com/mps-youtube/yewtube/commit/397eddd0146e04e95e6cc0598741bae8055a3e32))
-
 * build(setup): fix long_description_content_type ([`db30143`](https://github.com/mps-youtube/yewtube/commit/db30143d8630d848098be4166e4a2c517a7b7772))
-
-### Ci
-
-* ci(python-app): workflows based on origin/develop
-
-- only run pytest
-- use matrix for python version and os ([`3d117ad`](https://github.com/mps-youtube/yewtube/commit/3d117ad49ed8630873dd070f474e6641007fd01a))
-
-* ci: python-app ([`f40ca1a`](https://github.com/mps-youtube/yewtube/commit/f40ca1a557974929da3cc0c599d1f9342b4cdfa9))
 
 ### Feature
 
@@ -494,21 +532,9 @@ test uea_pad ([`376ebe1`](https://github.com/mps-youtube/yewtube/commit/376ebe1b
 
 * fix(setup): use semantic versioning ([`2e100e7`](https://github.com/mps-youtube/yewtube/commit/2e100e761ede07a402bb975d428f1d6837154813))
 
-* fix(util.uea_pad): handle AttributeError on t.split
-
-also isort import ([`1643266`](https://github.com/mps-youtube/yewtube/commit/1643266f21ccf7a99481a1615b4a53c4fbabc878))
-
 ### Refactor
 
-* refactor: reset to upstream ([`dc4af72`](https://github.com/mps-youtube/yewtube/commit/dc4af721aa90fe79c492f9f1ae1f4a698049a085))
-
 * refactor(setup): check for minimum python 3.6 ([`f5b5d73`](https://github.com/mps-youtube/yewtube/commit/f5b5d733f4a8e115f48b335c3950efbb945d375f))
-
-### Test
-
-* test: uea_pad ([`22b4564`](https://github.com/mps-youtube/yewtube/commit/22b4564e618aceb49bad34428e45e9ecf25907e6))
-
-* test(test_main): skip test without attribute after fork ([`35ded20`](https://github.com/mps-youtube/yewtube/commit/35ded20a8ee1392c731bd6a35f1f3a2d10897c92))
 
 ### Unknown
 
@@ -520,10 +546,6 @@ also isort import ([`1643266`](https://github.com/mps-youtube/yewtube/commit/164
 
 * show dislikes using video info command only as its too costly to make multiple requests for each video ([`19e3d8e`](https://github.com/mps-youtube/yewtube/commit/19e3d8e7b25a528def641f6dd69caad1bdebf808))
 
-* Merge branch &#39;develop&#39; of https://github.com/iamtalhaasghar/yewtube into bugfix/attribute-error ([`ebf62f5`](https://github.com/mps-youtube/yewtube/commit/ebf62f591b4dbb2fb2b240020fffe7ef80c043bf))
-
-* Merge branch &#39;develop&#39; of https://github.com/iamtalhaasghar/yewtube into bugfix/attribute-error ([`ae6bad4`](https://github.com/mps-youtube/yewtube/commit/ae6bad4050ec8186deae94af69bf55257ba0f2a3))
-
 * add hour to version number scheme ([`a823e36`](https://github.com/mps-youtube/yewtube/commit/a823e36e7b0eb81e5b272dd87900c24cff7d8a61))
 
 * add requests in dependency ([`5f26359`](https://github.com/mps-youtube/yewtube/commit/5f263592beadb4ba7e530afae17d53d5b6d152f6))
@@ -531,8 +553,6 @@ also isort import ([`1643266`](https://github.com/mps-youtube/yewtube/commit/164
 * wheel upload recipe ([`d1af41a`](https://github.com/mps-youtube/yewtube/commit/d1af41a30a5162365bd634056c35611c79b74ed4))
 
 * Update python-publish.yml ([`3b46e8d`](https://github.com/mps-youtube/yewtube/commit/3b46e8d79cb28a482838afc761e813cba61bcf0f))
-
-* Merge remote-tracking branch &#39;upstream/develop&#39; into bugfix/attribute-error ([`6078793`](https://github.com/mps-youtube/yewtube/commit/6078793d55edfbf09eb3de415a0b8d43a8dcbac6))
 
 * show dislikes by default return youtube dislikes working fine relates to #1180 ([`b15451c`](https://github.com/mps-youtube/yewtube/commit/b15451c151d9fa1043be0465647c773fbee876e1))
 
@@ -550,13 +570,13 @@ also isort import ([`1643266`](https://github.com/mps-youtube/yewtube/commit/164
 
 * Merge branch &#39;develop&#39; of github.com:iamtalhaasghar/yewtube into develop ([`572ca4e`](https://github.com/mps-youtube/yewtube/commit/572ca4e735eaeb993eaf5a3bbfbdacd92f41b71b))
 
-* fixed #14 load video info without youtube api relates to #1191 ([`0ed1eac`](https://github.com/mps-youtube/yewtube/commit/0ed1eac4bf73e92bf0cece3d8792653f1c64a43b))
-
 * Merge pull request #15 from rachmadaniHaryono/feature/setup
 
 update python and package ([`4108987`](https://github.com/mps-youtube/yewtube/commit/41089877e1f781f3d6e24a73310dfe9b1b4ccaa5))
 
 * restricted pyreadline to linux ([`a40ede7`](https://github.com/mps-youtube/yewtube/commit/a40ede737ceba261e5b36a2ad744c4b0030040a0))
+
+* fixed #14 load video info without youtube api relates to #1191 ([`0ed1eac`](https://github.com/mps-youtube/yewtube/commit/0ed1eac4bf73e92bf0cece3d8792653f1c64a43b))
 
 * fixed #13 show comments without youtube api relates to #1191 ([`a1226e6`](https://github.com/mps-youtube/yewtube/commit/a1226e6c194ca445e89e536e61210507401c7f40))
 
@@ -564,9 +584,9 @@ update python and package ([`4108987`](https://github.com/mps-youtube/yewtube/co
 
 * Merge branch &#39;develop&#39; of github.com:iamtalhaasghar/yewtube into develop ([`9bb0fa8`](https://github.com/mps-youtube/yewtube/commit/9bb0fa8d5cab6451f3f01facef308b92f8fa4168))
 
-* use semantic versioning with date ([`8bc6acf`](https://github.com/mps-youtube/yewtube/commit/8bc6acfb346fb82d00080f1d953191ac6c4782bd))
-
 * upload packages to pypi on every tag push ([`5d05f28`](https://github.com/mps-youtube/yewtube/commit/5d05f28ad05e078c2a1f87afca7c6bc9923936b3))
+
+* use semantic versioning with date ([`8bc6acf`](https://github.com/mps-youtube/yewtube/commit/8bc6acfb346fb82d00080f1d953191ac6c4782bd))
 
 * changed version numbering scheme ([`295da12`](https://github.com/mps-youtube/yewtube/commit/295da12aa5f7fa3a7317b8199dcd68c1486b8c2f))
 
@@ -620,9 +640,9 @@ fix long_description_content_type ([`3ebd084`](https://github.com/mps-youtube/ye
 
 * Merge branch &#39;develop&#39; of github.com:iamtalhaasghar/yewtube into develop ([`aab1b0e`](https://github.com/mps-youtube/yewtube/commit/aab1b0ec36a3cf5e959601ea13875e00ac7e6ebd))
 
-* try to fetch upto 50 search results fixed #6 ([`4661a9c`](https://github.com/mps-youtube/yewtube/commit/4661a9c4c8fee3da81088c2e47def7d327e90eb9))
-
 * hide old pypi badges ([`3bcbd66`](https://github.com/mps-youtube/yewtube/commit/3bcbd66e45f6819fccba3f79f789f916d585c600))
+
+* try to fetch upto 50 search results fixed #6 ([`4661a9c`](https://github.com/mps-youtube/yewtube/commit/4661a9c4c8fee3da81088c2e47def7d327e90eb9))
 
 * bump version -&gt; 1.1.0 ([`3985498`](https://github.com/mps-youtube/yewtube/commit/3985498c51d7bad27b2ba8a0d1999578cda352cd))
 
@@ -702,17 +722,36 @@ Adding repeat documentation ([`4c6ee0f`](https://github.com/mps-youtube/yewtube/
 
 Gave mpv_usesock a default value on Windows. ([`7b95b9c`](https://github.com/mps-youtube/yewtube/commit/7b95b9c8cfab164958e9320c686fc0608126e9c7))
 
+* Gave mpv_usesock a default value on Windows. Fixes mps-youtube/mps-youtube#825. ([`5d7956e`](https://github.com/mps-youtube/yewtube/commit/5d7956ebf01141bc28e81356d044152c4762656b))
+
 * Merge pull request #1072 from tchernomax/fix_cache_error
 
 move pafy.set_api_key before cache.load() ([`10ba3ad`](https://github.com/mps-youtube/yewtube/commit/10ba3ad682814d180157fa899eb751f20fb023fc))
+
+* move pafy.set_api_key before cache.load()
+
+else !1070 can happen ([`bb8ae4d`](https://github.com/mps-youtube/yewtube/commit/bb8ae4d53d18f5fb90feed2bd1c920a97fd694c7))
 
 * Merge pull request #1102 from poyenc/bugfix/issue-1101
 
 Fix issue #1101: ValueError raises when view video information ([`2567bc8`](https://github.com/mps-youtube/yewtube/commit/2567bc82415a9588c87dfdd2eb867e9f18815475))
 
+* Fix ValueError raises when view video information
+
+The video_info() employs strptime() to parse date string,
+but it cannot handle the ISO 8601 time zone designator in
+the end of string. For now we assume there is always a &#39;Z&#39;
+time zone designator thus add &#39;Z&#39; in the strptime() format
+string. ([`d8eec0b`](https://github.com/mps-youtube/yewtube/commit/d8eec0b54d4386ab60c48071410513999f72d7cb))
+
 * Merge pull request #1099 from rjshrjndrn/patch-1
 
 Readme Update ([`974c61d`](https://github.com/mps-youtube/yewtube/commit/974c61d9ab11881320f802b636b7dfed0e359a4f))
+
+* Readme Update
+
+1. For playing all search results
+2. How to search for a playlist ([`b098534`](https://github.com/mps-youtube/yewtube/commit/b098534b812d37d0553b96e80201c8c46c51d7e8))
 
 * Merge pull request #1104 from poyenc/bugfix/issue-1103
 
@@ -723,22 +762,11 @@ Fix issue #1103: Make MPRIS process error message more descriptive ([`91f2a06`](
 When MPRIS process exited abnormally, show the exact
 reason if we cannot successfully setup dbus. ([`da82be0`](https://github.com/mps-youtube/yewtube/commit/da82be099328fc32c2f2586938fc282b18fca41d))
 
-* Fix ValueError raises when view video information
-
-The video_info() employs strptime() to parse date string,
-but it cannot handle the ISO 8601 time zone designator in
-the end of string. For now we assume there is always a &#39;Z&#39;
-time zone designator thus add &#39;Z&#39; in the strptime() format
-string. ([`d8eec0b`](https://github.com/mps-youtube/yewtube/commit/d8eec0b54d4386ab60c48071410513999f72d7cb))
-
 * Merge pull request #1088 from francutura/develop
 
 Fixed ValueError: time data does not match format ([`2217c29`](https://github.com/mps-youtube/yewtube/commit/2217c29c0517dffe434ca259e724c53cd97d7de5))
 
-* Readme Update
-
-1. For playing all search results
-2. How to search for a playlist ([`b098534`](https://github.com/mps-youtube/yewtube/commit/b098534b812d37d0553b96e80201c8c46c51d7e8))
+* Fixed ValueError: time data does not match format ([`e9356ac`](https://github.com/mps-youtube/yewtube/commit/e9356ac691c8d930a4867873399821bfcc3ee311))
 
 * Merge pull request #1095 from jose-donato/patch-1
 
@@ -746,23 +774,19 @@ typo (youtybe-dl -&gt; youtube-dl) in README ([`fd83301`](https://github.com/mps
 
 * typo (youtybe-dl -&gt; youtube-dl) in README ([`8102275`](https://github.com/mps-youtube/yewtube/commit/8102275f2f0b8c81e62e84b3730903eefbc38042))
 
-* Fixed ValueError: time data does not match format ([`e9356ac`](https://github.com/mps-youtube/yewtube/commit/e9356ac691c8d930a4867873399821bfcc3ee311))
-
-* move pafy.set_api_key before cache.load()
-
-else !1070 can happen ([`bb8ae4d`](https://github.com/mps-youtube/yewtube/commit/bb8ae4d53d18f5fb90feed2bd1c920a97fd694c7))
-
 * Merge pull request #1065 from Atcold/patch-1
 
 Transcode to mp3 from webm too ([`afab9fb`](https://github.com/mps-youtube/yewtube/commit/afab9fbc9ba61c646e406c6754e589c9c0c15c77))
-
-* Gave mpv_usesock a default value on Windows. Fixes mps-youtube/mps-youtube#825. ([`5d7956e`](https://github.com/mps-youtube/yewtube/commit/5d7956ebf01141bc28e81356d044152c4762656b))
 
 * Transcode to mp3 from webm too ([`166b833`](https://github.com/mps-youtube/yewtube/commit/166b833cfbe9dd3e676c07cd0702f15f5f87717f))
 
 * Merge pull request #1023 from Nojus297/filename_fix
 
 Filename sanitation fix (#1009) ([`160fec9`](https://github.com/mps-youtube/yewtube/commit/160fec9fd3dbf26d2cb3f9dfb00b5e89a3d45082))
+
+* Fix filename and folder sanitizing (#1009) ([`16ac040`](https://github.com/mps-youtube/yewtube/commit/16ac04096afe24c340775123748f3a370f2fc836))
+
+* Add sanitize filename util function ([`68368da`](https://github.com/mps-youtube/yewtube/commit/68368da051bef0b33c773d78b9a26b46b92c492d))
 
 * Merge pull request #1060 from felixonmars/patch-1
 
@@ -810,6 +834,8 @@ Fix in typo &#39;MPRIS process exited of crashed&#39; ([`6b9a83a`](https://githu
 
 README: fix installation command for mpv ([`e083bfa`](https://github.com/mps-youtube/yewtube/commit/e083bfa535a9828ba6416447b8b1b52071f352e8))
 
+* README: fix installation command for mpv ([`c5747c7`](https://github.com/mps-youtube/yewtube/commit/c5747c7839b32ff905a245afd4e02a379e596e91))
+
 * Merge pull request #1029 from Nojus297/player_filenames_fix
 
 Player filenames fix (#990) ([`3bacdfe`](https://github.com/mps-youtube/yewtube/commit/3bacdfe26bd95dc8f301a75cc8f9760654598cde))
@@ -819,12 +845,6 @@ Player filenames fix (#990) ([`3bacdfe`](https://github.com/mps-youtube/yewtube/
 * Show correct video title in mpv ([`bb3ed22`](https://github.com/mps-youtube/yewtube/commit/bb3ed22a7dda12575b44a0e639164b00688cf6f8))
 
 * Use global config file in player classes ([`955deaf`](https://github.com/mps-youtube/yewtube/commit/955deaf23a278d8f238b131c5011403e73472435))
-
-* Fix filename and folder sanitizing (#1009) ([`16ac040`](https://github.com/mps-youtube/yewtube/commit/16ac04096afe24c340775123748f3a370f2fc836))
-
-* Add sanitize filename util function ([`68368da`](https://github.com/mps-youtube/yewtube/commit/68368da051bef0b33c773d78b9a26b46b92c492d))
-
-* README: fix installation command for mpv ([`c5747c7`](https://github.com/mps-youtube/yewtube/commit/c5747c7839b32ff905a245afd4e02a379e596e91))
 
 * Merge pull request #1001 from Nojus297/alignment_fix
 
@@ -844,17 +864,23 @@ Misalignment due to East East Asian chars fix ([`3b479cb`](https://github.com/mp
 
 use json format for config file ([`8ee685a`](https://github.com/mps-youtube/yewtube/commit/8ee685aeea0c6ca1d8579d458e9f91ae0580522b))
 
+* use json format for config file
+
+Signed-off-by: dt-rush &lt;nickp@balena.io&gt; ([`fe44840`](https://github.com/mps-youtube/yewtube/commit/fe4484009f46fe549ddf796cebf9709d68508080))
+
 * Merge pull request #940 from pirate486743186/edit-help
 
 [minor]mention clearcache in help ([`6f9bd32`](https://github.com/mps-youtube/yewtube/commit/6f9bd32a70f3540204e3580942c4e8a6dde17f04))
+
+* mention clearcache in help ([`28c876f`](https://github.com/mps-youtube/yewtube/commit/28c876f70ddee02ee4980619f20faa7221d20b23))
 
 * Merge pull request #968 from pirate486743186/patch-4
 
 [minor]web.archive.org for dead mps link ([`743843e`](https://github.com/mps-youtube/yewtube/commit/743843e7760ddb8f02edd3f3ea08c23e2c11f3e8))
 
-* use json format for config file
+* web.archive.org for dead mps link
 
-Signed-off-by: dt-rush &lt;nickp@balena.io&gt; ([`fe44840`](https://github.com/mps-youtube/yewtube/commit/fe4484009f46fe549ddf796cebf9709d68508080))
+for issue #957 ([`13fa4fc`](https://github.com/mps-youtube/yewtube/commit/13fa4fcfb5be2ec595a3cc251daa5e613084acf0))
 
 * Merge pull request #991 from androidfanatic/patch-1
 
@@ -866,25 +892,31 @@ fix typo ([`05426f7`](https://github.com/mps-youtube/yewtube/commit/05426f75c0f3
 
 Option to turn on and off history recording ([`44fad52`](https://github.com/mps-youtube/yewtube/commit/44fad5215a5a8b3e828efc437ab0083751b19451))
 
+* Added option to toggle play and input history recording ([`0aa6f68`](https://github.com/mps-youtube/yewtube/commit/0aa6f6891cf638a77391d2ae4afc7fac3304bfb3))
+
 * Merge pull request #941 from pirate486743186/edit-readme
 
 [minor]clarifying youtube-dl usage in readme ([`b774b85`](https://github.com/mps-youtube/yewtube/commit/b774b851424d27c81ae432d3217c1afc7fab70f8))
+
+* clarifying youtube-dl usage in readme ([`33df500`](https://github.com/mps-youtube/yewtube/commit/33df50091974084ef498b60e742e54ad97c873a8))
 
 * Merge pull request #943 from vikramkashyap/readme_code_fix
 
 Fix README Linux install instruction formatting ([`906f27f`](https://github.com/mps-youtube/yewtube/commit/906f27f27447c4170c71d09fb744571a79a99c33))
 
+* Fixed linux install instructions formatting ([`41b66d8`](https://github.com/mps-youtube/yewtube/commit/41b66d8e42f6b9808dfb179aa2387562866246b3))
+
 * Merge pull request #954 from pirate486743186/min-resolution
 
 [minor] increasing minimum resolution to 360 from 192 ([`7c36bc9`](https://github.com/mps-youtube/yewtube/commit/7c36bc952ff41dba0a5836760d6e8b97c006ab47))
 
-* web.archive.org for dead mps link
-
-for issue #957 ([`13fa4fc`](https://github.com/mps-youtube/yewtube/commit/13fa4fcfb5be2ec595a3cc251daa5e613084acf0))
+* increasing minimum resolution to 360 ([`9c40cc0`](https://github.com/mps-youtube/yewtube/commit/9c40cc071e47f5fff6957f33a06d1751e3ab6471))
 
 * Merge pull request #931 from vikramkashyap/develop
 
 Fix help text altering the terminal color ([`881dfe7`](https://github.com/mps-youtube/yewtube/commit/881dfe74a67ad6c2c6b3be480557d8894d330973))
+
+* Remove stray color flag in helptext ([`ccab53b`](https://github.com/mps-youtube/yewtube/commit/ccab53b5f0a2779a7d7935bbb81402a3094334a0))
 
 * Merge pull request #963 from lopsided98/playlist-prefixes
 
@@ -900,14 +932,6 @@ always_repeat mode added which is configurable via &#34;set always_repeat true|f
 
 * always_repeat mode added which is configurable via &#34;set always_repeat true|false&#34; ([`bf8e57b`](https://github.com/mps-youtube/yewtube/commit/bf8e57bc5e9a7bee5f13aa96b42b60d344bee161))
 
-* increasing minimum resolution to 360 ([`9c40cc0`](https://github.com/mps-youtube/yewtube/commit/9c40cc071e47f5fff6957f33a06d1751e3ab6471))
-
-* Added option to toggle play and input history recording ([`0aa6f68`](https://github.com/mps-youtube/yewtube/commit/0aa6f6891cf638a77391d2ae4afc7fac3304bfb3))
-
-* clarifying youtube-dl usage in readme ([`33df500`](https://github.com/mps-youtube/yewtube/commit/33df50091974084ef498b60e742e54ad97c873a8))
-
-* mention clearcache in help ([`28c876f`](https://github.com/mps-youtube/yewtube/commit/28c876f70ddee02ee4980619f20faa7221d20b23))
-
 * Handle OLxxx playlists
 
 It appears some playlist IDs may start with OL:
@@ -922,13 +946,11 @@ Dockerfile improvements ([`7be7628`](https://github.com/mps-youtube/yewtube/comm
 2. Add layers for better understanding of container build
 3. Reduce layer use for easier caching. ([`e2d9a22`](https://github.com/mps-youtube/yewtube/commit/e2d9a22c6b19e7dc31551cb3eea3d0c93cd5ee58))
 
-* Fixed linux install instructions formatting ([`41b66d8`](https://github.com/mps-youtube/yewtube/commit/41b66d8e42f6b9808dfb179aa2387562866246b3))
-
-* Remove stray color flag in helptext ([`ccab53b`](https://github.com/mps-youtube/yewtube/commit/ccab53b5f0a2779a7d7935bbb81402a3094334a0))
-
 * Merge pull request #890 from nishanthkarthik/develop
 
 Refactor create_playlist to remove unnecessary branch ([`00f9c9b`](https://github.com/mps-youtube/yewtube/commit/00f9c9be9cd7a6875df90911b096a458d6542a99))
+
+* Refactor create_playlist to remove unnecessary branch ([`8776f64`](https://github.com/mps-youtube/yewtube/commit/8776f64eab8901bdc24d43b00f9488ee3c227411))
 
 * Merge pull request #892 from andreparames/qrcode
 
@@ -938,10 +960,6 @@ Refactor create_playlist to remove unnecessary branch ([`00f9c9b`](https://githu
 
 Uses the qrcode library to print an ASCII qrcode of the URL of
 the video, if the new option `show_qrcode` is enabled. ([`01cd91b`](https://github.com/mps-youtube/yewtube/commit/01cd91b2e3990f7e7e2507471298d5d31ef87948))
-
-* correcting inconsistent return statement ([`3cdb12a`](https://github.com/mps-youtube/yewtube/commit/3cdb12a454ffffa9c409842a117cbcca0e6df9a1))
-
-* Refactor create_playlist to remove unnecessary branch ([`8776f64`](https://github.com/mps-youtube/yewtube/commit/8776f64eab8901bdc24d43b00f9488ee3c227411))
 
 * Merge pull request #882 from hrnr/mpris_yturl
 
@@ -956,13 +974,13 @@ export youtube URL in MPRIS metadata ([`ed812e7`](https://github.com/mps-youtube
 
 Add Arch Linux install instructions ([`eb9e500`](https://github.com/mps-youtube/yewtube/commit/eb9e5004728368a03dfd5a92ae94fb53895360e8))
 
-* Merge pull request #873 from RivkaDedic/patch-1
-
-Extended OSX installation instructions ([`a3882fe`](https://github.com/mps-youtube/yewtube/commit/a3882fed06c4d5c76c9ecfbe99d714732fdfe173))
-
 * Add Arch Linux install instructions
 
 Similar to Ubuntu, add terminal command to install from the Arch Linux official repos. ([`af6adee`](https://github.com/mps-youtube/yewtube/commit/af6adee8bb450d5d1e4d7161f51b2082258773f0))
+
+* Merge pull request #873 from RivkaDedic/patch-1
+
+Extended OSX installation instructions ([`a3882fe`](https://github.com/mps-youtube/yewtube/commit/a3882fed06c4d5c76c9ecfbe99d714732fdfe173))
 
 * Extended OSX installation instructions
 
@@ -983,6 +1001,8 @@ Changed CONTRIBUTING to markdown format to make reading easier. ([`08e7e47`](htt
 * Merge pull request #852 from Laxa/develop
 
 Fix #847 =&gt; Player crash when video is unavailable or forbidden ([`4279caa`](https://github.com/mps-youtube/yewtube/commit/4279caa5f343aa6ad14a2d550d1c65d1d745f4dc))
+
+* Fix #847 ([`79ac6ea`](https://github.com/mps-youtube/yewtube/commit/79ac6ea8521b85788d130cf174c9f6878d2225cd))
 
 * Merge pull request #858 from Razesdark/disabled_comments_fix
 
@@ -1079,9 +1099,9 @@ Better @command definition that can register tab-completion strings ([`5fd76ae`]
 
 * Merge branch &#39;better_commands&#39; of github.com:Razesdark/mps-youtube into better_commands ([`9b878bb`](https://github.com/mps-youtube/yewtube/commit/9b878bb88b0364cd44ceba48a4213038f64d21b4))
 
-* Remove unrelate changes ([`73838c0`](https://github.com/mps-youtube/yewtube/commit/73838c09aecb0435327031ae63a87c87f853033f))
-
 * Remove debug messages ([`f70a352`](https://github.com/mps-youtube/yewtube/commit/f70a352be670a69b63643b133e0cca665d04a001))
+
+* Remove unrelate changes ([`73838c0`](https://github.com/mps-youtube/yewtube/commit/73838c09aecb0435327031ae63a87c87f853033f))
 
 * Add documentation for new @command ([`b68dbb5`](https://github.com/mps-youtube/yewtube/commit/b68dbb54a64e6548f6b67dcd82c3e71e0f38647c))
 
@@ -1097,8 +1117,6 @@ No fstrings allowed ([`ac58452`](https://github.com/mps-youtube/yewtube/commit/a
 
 * No fstrings allowed ([`e0e1c56`](https://github.com/mps-youtube/yewtube/commit/e0e1c568734719387ab327eecaba6a383212bf57))
 
-* Fix #847 ([`79ac6ea`](https://github.com/mps-youtube/yewtube/commit/79ac6ea8521b85788d130cf174c9f6878d2225cd))
-
 * Merge pull request #848 from BlackCapCoder/patch-1
 
 Added `set -t` to the help text ([`9000a1a`](https://github.com/mps-youtube/yewtube/commit/9000a1a79ac9d10e06dd4fff81e24e4efeded563))
@@ -1112,6 +1130,12 @@ I assumed `{1}` and `{2}` was for formatting and only tested it with `mpsty --he
 * Merge pull request #803 from BlackCapCoder/tempset
 
 Implemented temporary settings option `set -t` ([`ad01e66`](https://github.com/mps-youtube/yewtube/commit/ad01e66fdb1bf6f3b15adeb835d05c21260e9fc8))
+
+* implemented set -t ([`319f0ca`](https://github.com/mps-youtube/yewtube/commit/319f0cab904a68992b52dc8ce483f7e124c94d2f))
+
+* implemented auto_save_settings setting ([`d859dba`](https://github.com/mps-youtube/yewtube/commit/d859dba93f9d03491b822348d1094ddcfd200c9c))
+
+* fixed #455 ([`ca5393d`](https://github.com/mps-youtube/yewtube/commit/ca5393dbf62263a37e898d97b2c0748d35a9971e))
 
 * Merge pull request #846 from Razesdark/new-image-mpsyt
 
@@ -1133,21 +1157,19 @@ Fetch private playlists when using direct spotify link ([`18fa860`](https://gith
 
 * Fetch private playlists when using direct spotify link ([`bede09f`](https://github.com/mps-youtube/yewtube/commit/bede09f1def23bbc8584c9f9ae9d333b08b42d10))
 
-* implemented set -t ([`319f0ca`](https://github.com/mps-youtube/yewtube/commit/319f0cab904a68992b52dc8ce483f7e124c94d2f))
-
 * Merge pull request #789 from vn-ki/tab-completion
 
 Add tab completion for in program commands ([`146df59`](https://github.com/mps-youtube/yewtube/commit/146df5970a8968634f904aa3c3f73a847846ed34))
 
-* implemented auto_save_settings setting ([`d859dba`](https://github.com/mps-youtube/yewtube/commit/d859dba93f9d03491b822348d1094ddcfd200c9c))
-
 * Get SET_COMMANDS from config ([`a87e2f8`](https://github.com/mps-youtube/yewtube/commit/a87e2f86b8f20d090e0e7b74917b8f37b531118e))
+
+* Extend autocomplete to set variables ([`32fdf77`](https://github.com/mps-youtube/yewtube/commit/32fdf771263c5115635aeb47b0f6c3813ba98ad7))
+
+* Add tab completion for in program commands ([`5b1c77f`](https://github.com/mps-youtube/yewtube/commit/5b1c77f2f9b3e4992465364c7fdf993065122d1d))
 
 * Merge pull request #791 from dragosprju/patch-1
 
 Fix &#39;mkp&#39; when used with a text file ([`91ccf41`](https://github.com/mps-youtube/yewtube/commit/91ccf41dd5194beaff847beb33ea41ec8c228203))
-
-* fixed #455 ([`ca5393d`](https://github.com/mps-youtube/yewtube/commit/ca5393dbf62263a37e898d97b2c0748d35a9971e))
 
 * Fix &#39;mkp&#39; when used with a text file
 
@@ -1155,19 +1177,15 @@ If we call .replace on `title` and `title` is None from the get-go, as it is def
 
 This code could be made more shorter, but I don&#39;t write Python much. It is also my first ever pull request so bear with my beginner tendencies. ([`fef24ab`](https://github.com/mps-youtube/yewtube/commit/fef24ab6b0cb9030b823ac1fe4691b0b5dcf6869))
 
-* Extend autocomplete to set variables ([`32fdf77`](https://github.com/mps-youtube/yewtube/commit/32fdf771263c5115635aeb47b0f6c3813ba98ad7))
-
-* Add tab completion for in program commands ([`5b1c77f`](https://github.com/mps-youtube/yewtube/commit/5b1c77f2f9b3e4992465364c7fdf993065122d1d))
-
 * resp.read().decode(..), not resp.decode(..) ([`d0a3eee`](https://github.com/mps-youtube/yewtube/commit/d0a3eee3962596dd3ef1f26d7b5f2f2ed812f6a4))
 
 * Add note about --user and PATH ([`43f811e`](https://github.com/mps-youtube/yewtube/commit/43f811eef6322fced13a3437be0849795a3a5016))
 
 * Merge remote-tracking branch &#39;orschiro/patch-2&#39; into develop ([`efc1b14`](https://github.com/mps-youtube/yewtube/commit/efc1b143100d1c29ad8b6a3c525bb0fd66a568fa))
 
-* Prior to Python 3.6, json.loads cannot take a bytes object ([`e215364`](https://github.com/mps-youtube/yewtube/commit/e2153640531c29a515ab17b4073a300f80093f30))
-
 * Add pip3 --user flag and remove sudo ([`2aa8bc1`](https://github.com/mps-youtube/yewtube/commit/2aa8bc1c31c435f5ea6eb9611c6a26e146f3e28d))
+
+* Prior to Python 3.6, json.loads cannot take a bytes object ([`e215364`](https://github.com/mps-youtube/yewtube/commit/e2153640531c29a515ab17b4073a300f80093f30))
 
 * Remove unneeded if condition
 
@@ -1191,19 +1209,6 @@ Change respone.read() to response.read().decode(&#39;utf-8&#39;) ([`aef45ae`](ht
 
 Refactor player.py ([`d1a006f`](https://github.com/mps-youtube/yewtube/commit/d1a006fdb5a73f284e10ee41731b9c418f127156))
 
-
-## v0.2.8 (2018-02-18)
-
-### Unknown
-
-* Version 0.2.8 ([`da798cf`](https://github.com/mps-youtube/yewtube/commit/da798cf4f80513ebb424257e3fed9e9dd72c980b))
-
-* Merge pull request #772 from SanketDG/fix-unique-history
-
-history: Fix recent subcommand hiding duplicates ([`bfe9326`](https://github.com/mps-youtube/yewtube/commit/bfe9326b934d5c9ed4c7ed3f528a8c08e25a1213))
-
-* history: Fix recent subcommand hiding duplicates ([`c7bde20`](https://github.com/mps-youtube/yewtube/commit/c7bde20395955045d29ef485b3d7db663fb2fbae))
-
 * Wrap _make_status_line in another func. ([`824f530`](https://github.com/mps-youtube/yewtube/commit/824f530bb52b95ec834ec58ee6a71a7459dc80a1))
 
 * Make the requested changes
@@ -1217,19 +1222,7 @@ Assign g.PLAYER_OBJ during set player command. ([`ecd80da`](https://github.com/m
 
 * Merge branch &#39;develop&#39; into refactor-player ([`a9d7675`](https://github.com/mps-youtube/yewtube/commit/a9d7675c44de601cd370c5e48f74750db5030ad3))
 
-* Merge pull request #758 from rien333/develop
-
-Added Last.fm support ([`6d9b45c`](https://github.com/mps-youtube/yewtube/commit/6d9b45c218d69fe3c52d00a8e82f2e2965585f18))
-
 * Changes to facilitate use of player library ([`6988874`](https://github.com/mps-youtube/yewtube/commit/6988874dd8a63e71a38bb01f697f17a45266676b))
-
-* Silence an inappropriate warning ([`8eebd0c`](https://github.com/mps-youtube/yewtube/commit/8eebd0c927781912bc20be9eac8c1c6f401dc2f4))
-
-* Scrobble album title information ([`6fe9214`](https://github.com/mps-youtube/yewtube/commit/6fe921497c03e7e041d4e1542b2c92566fc90fbd))
-
-* whitespace correction ([`02969fd`](https://github.com/mps-youtube/yewtube/commit/02969fdbf4b95e2a6631269cbfeba96676545b83))
-
-* Added Last.fm support ([`1137b3c`](https://github.com/mps-youtube/yewtube/commit/1137b3c1f67ff01f408194170f6677cd84ea4eaa))
 
 * Implement dynamic import for players ([`8ee09a7`](https://github.com/mps-youtube/yewtube/commit/8ee09a7fe1162200fbda330e9614649350bd2cd1))
 
@@ -1248,6 +1241,30 @@ Added Last.fm support ([`6d9b45c`](https://github.com/mps-youtube/yewtube/commit
 * Implement interface for mpv player ([`973741d`](https://github.com/mps-youtube/yewtube/commit/973741d2e04c55c561d55809c2d08746756bcd01))
 
 * Primary draft ([`12498b2`](https://github.com/mps-youtube/yewtube/commit/12498b20ff89bd2682a7f0915cbde5911a37e9af))
+
+## v0.2.8 (2018-02-17)
+
+### Unknown
+
+* Version 0.2.8 ([`da798cf`](https://github.com/mps-youtube/yewtube/commit/da798cf4f80513ebb424257e3fed9e9dd72c980b))
+
+* Merge pull request #772 from SanketDG/fix-unique-history
+
+history: Fix recent subcommand hiding duplicates ([`bfe9326`](https://github.com/mps-youtube/yewtube/commit/bfe9326b934d5c9ed4c7ed3f528a8c08e25a1213))
+
+* history: Fix recent subcommand hiding duplicates ([`c7bde20`](https://github.com/mps-youtube/yewtube/commit/c7bde20395955045d29ef485b3d7db663fb2fbae))
+
+* Merge pull request #758 from rien333/develop
+
+Added Last.fm support ([`6d9b45c`](https://github.com/mps-youtube/yewtube/commit/6d9b45c218d69fe3c52d00a8e82f2e2965585f18))
+
+* Silence an inappropriate warning ([`8eebd0c`](https://github.com/mps-youtube/yewtube/commit/8eebd0c927781912bc20be9eac8c1c6f401dc2f4))
+
+* Scrobble album title information ([`6fe9214`](https://github.com/mps-youtube/yewtube/commit/6fe921497c03e7e041d4e1542b2c92566fc90fbd))
+
+* whitespace correction ([`02969fd`](https://github.com/mps-youtube/yewtube/commit/02969fdbf4b95e2a6631269cbfeba96676545b83))
+
+* Added Last.fm support ([`1137b3c`](https://github.com/mps-youtube/yewtube/commit/1137b3c1f67ff01f408194170f6677cd84ea4eaa))
 
 * Revert &#34;Allow more than 500 results for searches&#34;
 
@@ -1282,33 +1299,27 @@ Player_status: minutes are now correctly displayed ([`949f984`](https://github.c
 
 * Merge remote-tracking branch &#39;razesdark/patch-2&#39; into develop ([`8cf7c73`](https://github.com/mps-youtube/yewtube/commit/8cf7c7313b494852b10f0f5cd13fdf5307150a3c))
 
+* Update ISSUE_TEMPLATE.md ([`f50b7e0`](https://github.com/mps-youtube/yewtube/commit/f50b7e068b31a67629ad3ccdb09dea5b78915cc7))
+
+* Update ISSUE_TEMPLATE.md
+
+We seem to be getting predominantly issues where we end up having to ask for the same information; mpsyt version, youtube-dl version etc.
+
+I suggest we add a issue template in an effort to try to raise quality of incoming issues. ([`e2c5923`](https://github.com/mps-youtube/yewtube/commit/e2c59230db32047c43914330578b892727d8d645))
+
 * Merge remote-tracking branch &#39;orschiro/patch-2&#39; into develop ([`9ca0909`](https://github.com/mps-youtube/yewtube/commit/9ca09094ae5257523256ac34f8df63186329d59f))
-
-* Merge remote-tracking branch &#39;ritiek/skip-unavailable&#39; into develop ([`685f298`](https://github.com/mps-youtube/yewtube/commit/685f298f2bc47219772787f024603bc41948b9b7))
-
-* Merge remote-tracking branch &#39;oxij/fix-channel-search&#39; into develop ([`0ed54dd`](https://github.com/mps-youtube/yewtube/commit/0ed54ddaae30cc7e1d610e3bd8d2db684fe3d816))
-
-* Merge remote-tracking branch &#39;razesdark/repeat_volume_fix&#39; into develop ([`192e59f`](https://github.com/mps-youtube/yewtube/commit/192e59fdc9d4098b91802308518e594f9278e116))
-
-* Skip unavailable tracks ([`88e0ecb`](https://github.com/mps-youtube/yewtube/commit/88e0ecb8b82f146e21a26f7172d5e5dc5f14f87f))
 
 * Added IRC link to join directly ([`d2e8fe4`](https://github.com/mps-youtube/yewtube/commit/d2e8fe4e26edac0d6840648c3452ac53ceceadfb))
 
+* Merge remote-tracking branch &#39;ritiek/skip-unavailable&#39; into develop ([`685f298`](https://github.com/mps-youtube/yewtube/commit/685f298f2bc47219772787f024603bc41948b9b7))
+
+* Skip unavailable tracks ([`88e0ecb`](https://github.com/mps-youtube/yewtube/commit/88e0ecb8b82f146e21a26f7172d5e5dc5f14f87f))
+
+* Merge remote-tracking branch &#39;oxij/fix-channel-search&#39; into develop ([`0ed54dd`](https://github.com/mps-youtube/yewtube/commit/0ed54ddaae30cc7e1d610e3bd8d2db684fe3d816))
+
 * fix &#34;channels&#34; command ([`135bba9`](https://github.com/mps-youtube/yewtube/commit/135bba9cbb5612448f076ae511688203b8c258d4))
 
-* Merge pull request #728 from hrnr/mpris_fixes
-
-MPRIS fixes ([`29538b0`](https://github.com/mps-youtube/yewtube/commit/29538b0b0aec3e5a1e2e40d965b4973cf8770061))
-
-* never crash main process when MPRIS process fails
-
-* increased MPRIS failure logging to make it easier to debug for users. If annoying MPRIS can now be disabled with `set mpris 0`
-* fixes #706 ([`14684bd`](https://github.com/mps-youtube/yewtube/commit/14684bd9306056c929e8194c2cfe02d1b7ffa8fa))
-
-* mpris: allow to disable MPRIS interface
-
-* new config option to disable MPRIS process at all
-* fixes #408 ([`0f9b10d`](https://github.com/mps-youtube/yewtube/commit/0f9b10daccfd5b3b474222b042cd46a6dd614fd0))
+* Merge remote-tracking branch &#39;razesdark/repeat_volume_fix&#39; into develop ([`192e59f`](https://github.com/mps-youtube/yewtube/commit/192e59fdc9d4098b91802308518e594f9278e116))
 
 * Remove debug print statement
 
@@ -1324,13 +1335,19 @@ Signed-off-by: Tommy Stigen Olsen &lt;tommysolsen@gmail.com&gt; ([`1b483d2`](htt
 
 Signed-off-by: Tommy Stigen Olsen &lt;tommysolsen@gmail.com&gt; ([`53c90bc`](https://github.com/mps-youtube/yewtube/commit/53c90bcd629647199f5046ff9fcadd6302d7d47d))
 
-* Update ISSUE_TEMPLATE.md ([`f50b7e0`](https://github.com/mps-youtube/yewtube/commit/f50b7e068b31a67629ad3ccdb09dea5b78915cc7))
+* Merge pull request #728 from hrnr/mpris_fixes
 
-* Update ISSUE_TEMPLATE.md
+MPRIS fixes ([`29538b0`](https://github.com/mps-youtube/yewtube/commit/29538b0b0aec3e5a1e2e40d965b4973cf8770061))
 
-We seem to be getting predominantly issues where we end up having to ask for the same information; mpsyt version, youtube-dl version etc.
+* never crash main process when MPRIS process fails
 
-I suggest we add a issue template in an effort to try to raise quality of incoming issues. ([`e2c5923`](https://github.com/mps-youtube/yewtube/commit/e2c59230db32047c43914330578b892727d8d645))
+* increased MPRIS failure logging to make it easier to debug for users. If annoying MPRIS can now be disabled with `set mpris 0`
+* fixes #706 ([`14684bd`](https://github.com/mps-youtube/yewtube/commit/14684bd9306056c929e8194c2cfe02d1b7ffa8fa))
+
+* mpris: allow to disable MPRIS interface
+
+* new config option to disable MPRIS process at all
+* fixes #408 ([`0f9b10d`](https://github.com/mps-youtube/yewtube/commit/0f9b10daccfd5b3b474222b042cd46a6dd614fd0))
 
 * Merge pull request #717 from orschiro/patch-3
 
@@ -1443,13 +1460,13 @@ Use m3u files for playlists ([`3768fa9`](https://github.com/mps-youtube/yewtube/
 
 * Show playlist tracks ([`1bd6f32`](https://github.com/mps-youtube/yewtube/commit/1bd6f32faa341cf3e72149869e418a0de3f34066))
 
-* Merge pull request #675 from ritiek/develop
-
-Show stream details in video information ([`531e6b9`](https://github.com/mps-youtube/yewtube/commit/531e6b96b35d0d625ff72a5e123226046b5cd3d0))
-
 * Fetch spotify track info ([`8d6ef40`](https://github.com/mps-youtube/yewtube/commit/8d6ef40a2f8d926601e82c343fed071e850054a9))
 
 * Add splaylist command to fetch Spotify playlist ([`25886a4`](https://github.com/mps-youtube/yewtube/commit/25886a41f429b0c6447bdb062093bbf69ae2a6a3))
+
+* Merge pull request #675 from ritiek/develop
+
+Show stream details in video information ([`531e6b9`](https://github.com/mps-youtube/yewtube/commit/531e6b96b35d0d625ff72a5e123226046b5cd3d0))
 
 * Test for player only when actually playing ([`fd7c858`](https://github.com/mps-youtube/yewtube/commit/fd7c8582433b0af9379b9eddc49142d1d6828104))
 
@@ -1459,13 +1476,17 @@ Show stream details in video information ([`531e6b9`](https://github.com/mps-you
 
 * Add X command to copy stream link ([`ccdb148`](https://github.com/mps-youtube/yewtube/commit/ccdb148fd73f9f2dc5ad4cbc78c5f1535216d59c))
 
-* Merge pull request #677 from paulfertser/comment-replies
-
-misc: retrieve and show comment replies ([`3fa3fb2`](https://github.com/mps-youtube/yewtube/commit/3fa3fb285ed7ec2c65658ea20b7ec580c4e3ec0a))
-
 * Fix down_many syntax parsing by copying regex from parse_multi() (#1)
 
 TODO: figure out if this can be simplified ([`c186d0e`](https://github.com/mps-youtube/yewtube/commit/c186d0e22ef4bcd0b6f3875212c7b7a4d9d79839))
+
+* Show stream details under stream info section ([`99da435`](https://github.com/mps-youtube/yewtube/commit/99da4358ff92012239db6fdaa53f22d90da49b28))
+
+* Show stream details in video information ([`8180ced`](https://github.com/mps-youtube/yewtube/commit/8180cedc717b9698a37b5f763183b23c6cfa2f26))
+
+* Merge pull request #677 from paulfertser/comment-replies
+
+misc: retrieve and show comment replies ([`3fa3fb2`](https://github.com/mps-youtube/yewtube/commit/3fa3fb285ed7ec2c65658ea20b7ec580c4e3ec0a))
 
 * misc: retrieve and show comment replies
 
@@ -1474,10 +1495,6 @@ Signed-off-by: Paul Fertser &lt;fercerpav@gmail.com&gt; ([`6fb1265`](https://git
 * Fix down_many syntax parsing by copying regex from parse_multi()
 
 TODO: figure out if this can be simplified ([`1176566`](https://github.com/mps-youtube/yewtube/commit/11765660293f356878bc7fb8fbbc5f88582a4d20))
-
-* Show stream details under stream info section ([`99da435`](https://github.com/mps-youtube/yewtube/commit/99da4358ff92012239db6fdaa53f22d90da49b28))
-
-* Show stream details in video information ([`8180ced`](https://github.com/mps-youtube/yewtube/commit/8180cedc717b9698a37b5f763183b23c6cfa2f26))
 
 * Merge pull request #664 from ritiek/develop
 
@@ -1670,11 +1687,13 @@ Closes #606 ([`523775d`](https://github.com/mps-youtube/yewtube/commit/523775d26
 
 Fixed wrong dbus python package ([`8d815b4`](https://github.com/mps-youtube/yewtube/commit/8d815b4e2840fde58b930c28537a8087ea2620af))
 
-* Correct package name in README ([`d4ea9cc`](https://github.com/mps-youtube/yewtube/commit/d4ea9ccb9e26e6664528a192004c48e99e99e0e9))
-
 * Fixed wrong dbus python package ([`369cb83`](https://github.com/mps-youtube/yewtube/commit/369cb832debf54aa6d9905fa3a274ae52ef8ebae))
 
+* Correct package name in README ([`d4ea9cc`](https://github.com/mps-youtube/yewtube/commit/d4ea9ccb9e26e6664528a192004c48e99e99e0e9))
+
 * Merge remote-tracking branch &#39;ardrabczyk/title-mod-merge&#39; into develop ([`f096f91`](https://github.com/mps-youtube/yewtube/commit/f096f91f0546e93fcb5f5a9444f7fd60c2747f23))
+
+* Add set_title config option ([`a63c376`](https://github.com/mps-youtube/yewtube/commit/a63c37653a2c262b0b423e1ec8b9f8cf2df49008))
 
 * Make autoplay default to off ([`f682cb7`](https://github.com/mps-youtube/yewtube/commit/f682cb779dcd669f90324aa277d31005262239c5))
 
@@ -1744,9 +1763,15 @@ Add mpv as a recommended player in mac installation section ([`603f6bc`](https:/
 
 * Merge remote-tracking branch &#39;Ofloo/develop&#39; into develop ([`d525bf7`](https://github.com/mps-youtube/yewtube/commit/d525bf7faeb76fa373b5f0225f3e2d8537133cdb))
 
+* Fixed zero devider
+
+dvpl PLTmR6HsT7005r9J50_HCOGkyGc8dDYu7J ([`491c257`](https://github.com/mps-youtube/yewtube/commit/491c2579a1f80ddeac0141257c52c248aa53f145))
+
 * Merge pull request #517 from Gongreg/develop
 
 Added command --no-textart to disable textart, so users with screen reader wouldn&#39;t get confused by it ([`ab87e07`](https://github.com/mps-youtube/yewtube/commit/ab87e07dcfc4447b6d844973b704cb14467af119))
+
+* Added command to disable text-art, so users with screen reader wouldn&#39;t get confused by it ([`79f9b87`](https://github.com/mps-youtube/yewtube/commit/79f9b876795b180c81c632373e1a82ce1077edae))
 
 * Merge pull request #519 from pritambaral/patch-1
 
@@ -1756,19 +1781,13 @@ Handle mpv sending bad `time-pos` data ([`2e0a353`](https://github.com/mps-youtu
 
 mpv sometimes sends `{&#34;event&#34;:&#34;property-change&#34;,&#34;id&#34;:1,&#34;name&#34;:&#34;time-pos&#34;,&#34;data&#34;:null}` on the socket; for example when the user has configured mpv (say, via `mpv.conf`) to loop over, then mpv sends this malformed event upon a new iteration of playback ([`f1f38a4`](https://github.com/mps-youtube/yewtube/commit/f1f38a458ca1041ba7fb68e3812a2291a4cdf6c7))
 
-* Added command to disable text-art, so users with screen reader wouldn&#39;t get confused by it ([`79f9b87`](https://github.com/mps-youtube/yewtube/commit/79f9b876795b180c81c632373e1a82ce1077edae))
-
-* Fixed zero devider
-
-dvpl PLTmR6HsT7005r9J50_HCOGkyGc8dDYu7J ([`491c257`](https://github.com/mps-youtube/yewtube/commit/491c2579a1f80ddeac0141257c52c248aa53f145))
-
 * Merge remote-tracking branch &#39;srvanrell/develop&#39; ([`8508c46`](https://github.com/mps-youtube/yewtube/commit/8508c46dae26ee04ea0f7ddcbb1bc0feb69add2a))
-
-* Make regex handle liked videos playlists ([`5aba18a`](https://github.com/mps-youtube/yewtube/commit/5aba18ae7c7fd0cc46ed853f180f504b48fec2df))
 
 * Add help of history recent ([`e5627d8`](https://github.com/mps-youtube/yewtube/commit/e5627d833d326cee437db6cce8f812a7d6a70cfa))
 
 * Add recent to history command ([`a84c96a`](https://github.com/mps-youtube/yewtube/commit/a84c96afab1f96df2e38a85e9244dd2908b00e38))
+
+* Make regex handle liked videos playlists ([`5aba18a`](https://github.com/mps-youtube/yewtube/commit/5aba18ae7c7fd0cc46ed853f180f504b48fec2df))
 
 * Version 0.2.7.1 ([`a9541cb`](https://github.com/mps-youtube/yewtube/commit/a9541cbff9b949bd273d3e8e54a6e53715589819))
 
@@ -1776,8 +1795,7 @@ dvpl PLTmR6HsT7005r9J50_HCOGkyGc8dDYu7J ([`491c257`](https://github.com/mps-yout
 
 * Hopefully fix pickle error ([`401539e`](https://github.com/mps-youtube/yewtube/commit/401539e3e62e761a8b237fda76d008f3c430745a))
 
-
-## v0.2.7 (2016-06-28)
+## v0.2.7 (2016-06-27)
 
 ### Unknown
 
@@ -1787,7 +1805,11 @@ dvpl PLTmR6HsT7005r9J50_HCOGkyGc8dDYu7J ([`491c257`](https://github.com/mps-yout
 
 add youtube_dl as a dependency to the Dockerfile ([`4f80b67`](https://github.com/mps-youtube/yewtube/commit/4f80b678d0d17bd18a123c388363c3ff74fd31c4))
 
-* Add set_title config option ([`a63c376`](https://github.com/mps-youtube/yewtube/commit/a63c37653a2c262b0b423e1ec8b9f8cf2df49008))
+* add youtube_dl as a dependency to the Dockerfile
+
+*without this it will run into
+https://github.com/mps-youtube/mps-youtube/issues/475 whenever trying to run mps
+inside the docker container. ([`37f24ea`](https://github.com/mps-youtube/yewtube/commit/37f24ea95dd9672cdfcef9fe1ff3dc61680e569c))
 
 * Correct PL regex ([`e6cd6dc`](https://github.com/mps-youtube/yewtube/commit/e6cd6dc2753bd89c95ae2698726d5f13eb1181e1))
 
@@ -1808,12 +1830,6 @@ Vlc is not supported, but this may help for those using it nevertheless. ([`e730
 * Update documentation ([`f61c0d0`](https://github.com/mps-youtube/yewtube/commit/f61c0d0a51cfbaa3eeeb998b32c14a61959a2b21))
 
 * Make user_more work after url command ([`e3b1c9c`](https://github.com/mps-youtube/yewtube/commit/e3b1c9c665aa691dda482457ec146278aaf92176))
-
-* add youtube_dl as a dependency to the Dockerfile
-
-*without this it will run into
-https://github.com/mps-youtube/mps-youtube/issues/475 whenever trying to run mps
-inside the docker container. ([`37f24ea`](https://github.com/mps-youtube/yewtube/commit/37f24ea95dd9672cdfcef9fe1ff3dc61680e569c))
 
 * Call _generate_real_playerargs() in _playsong() not _launch_player() ([`62df61b`](https://github.com/mps-youtube/yewtube/commit/62df61b37c75d5db9d7788ed6866e5c794b97d51))
 
@@ -2095,8 +2111,7 @@ Added option &#39;daurl &lt;url&gt;&#39; for downloading best audio by YouTube u
 
 * Include LICENSE README and CHANGELOG in source distribution ([`ca69fb6`](https://github.com/mps-youtube/yewtube/commit/ca69fb61aca8346140c0392c65ffdd10dfe65437))
 
-
-## v0.2.6 (2016-01-02)
+## v0.2.6 (2016-01-01)
 
 ### Unknown
 
@@ -2227,13 +2242,6 @@ I thought I already reverted this change... ([`cd5b3c4`](https://github.com/mps-
 
 * Load videos from playlist only as needed ([`82d0a34`](https://github.com/mps-youtube/yewtube/commit/82d0a3406f660e606e7b3c1efe4f7587d6133a44))
 
-* Correctly display extension when asking to mux audio ([`4c6ea97`](https://github.com/mps-youtube/yewtube/commit/4c6ea97b70c09501d13b55eaa9c7113a576337c1))
-
-* Test for muxing based on mediatype, not extension
-
-Fixes the feature, since the youtube_dl change in pafy changed the m4v
-extension to the (more correct) mp4 ([`e526133`](https://github.com/mps-youtube/yewtube/commit/e526133268310106450a850168efe31d31e5e058))
-
 * Update get_playlist2() calls for change in API ([`b6065d5`](https://github.com/mps-youtube/yewtube/commit/b6065d5412e6ec84adbaa54f4f9a7460271ebf06))
 
 * Import call_gdata and GdataError from pafy ([`73028df`](https://github.com/mps-youtube/yewtube/commit/73028dfbe8d87ce4318c73cc202ab18a607575c7))
@@ -2241,6 +2249,13 @@ extension to the (more correct) mp4 ([`e526133`](https://github.com/mps-youtube/
 * Update for change to get_playlist2() to namedtuple ([`056111b`](https://github.com/mps-youtube/yewtube/commit/056111ba75477c44ed24f29f20831b2baf2be59a))
 
 * Use pafy.get_playlist2() ([`ec2f2e3`](https://github.com/mps-youtube/yewtube/commit/ec2f2e37d471bce820873253e0decfc22da60969))
+
+* Correctly display extension when asking to mux audio ([`4c6ea97`](https://github.com/mps-youtube/yewtube/commit/4c6ea97b70c09501d13b55eaa9c7113a576337c1))
+
+* Test for muxing based on mediatype, not extension
+
+Fixes the feature, since the youtube_dl change in pafy changed the m4v
+extension to the (more correct) mp4 ([`e526133`](https://github.com/mps-youtube/yewtube/commit/e526133268310106450a850168efe31d31e5e058))
 
 * Merge pull request #394 from Wildefyr/develop
 
@@ -2273,9 +2288,13 @@ to the end of the regex. ([`a9bd45d`](https://github.com/mps-youtube/yewtube/com
 
 * Remove browsersearch functionality ([`ca40d17`](https://github.com/mps-youtube/yewtube/commit/ca40d177fa6f9902703b4de5c16f0c257efcd2cc))
 
-* A couple regex simplifications ([`fbc574f`](https://github.com/mps-youtube/yewtube/commit/fbc574fe9693047d4aee582c4b1b00287bee4693))
-
 * Update browserplay to use previous searches ([`9e011d8`](https://github.com/mps-youtube/yewtube/commit/9e011d842c137789ce2bd6b768adbfae07d89cc2))
+
+* Searching for terms on YouTube in default browser ([`f689fda`](https://github.com/mps-youtube/yewtube/commit/f689fdad1780cf76a4ce45c23f3549c6e400ecce))
+
+* Open YouTube URL in default browser ([`4035657`](https://github.com/mps-youtube/yewtube/commit/40356579179b6af506ebb73b5fb2432d01d343f7))
+
+* A couple regex simplifications ([`fbc574f`](https://github.com/mps-youtube/yewtube/commit/fbc574fe9693047d4aee582c4b1b00287bee4693))
 
 * Remove \s* from start and end of some command regexs
 
@@ -2316,21 +2335,9 @@ are supported ([`aa245b1`](https://github.com/mps-youtube/yewtube/commit/aa245b1
 
 * Import videos from a list of url, from console or text file ([`236472a`](https://github.com/mps-youtube/yewtube/commit/236472a3d75c0480013cc26087af6202cc6e621c))
 
-* Searching for terms on YouTube in default browser ([`f689fda`](https://github.com/mps-youtube/yewtube/commit/f689fdad1780cf76a4ce45c23f3549c6e400ecce))
-
-* Open YouTube URL in default browser ([`4035657`](https://github.com/mps-youtube/yewtube/commit/40356579179b6af506ebb73b5fb2432d01d343f7))
-
 * Merge pull request #385 from JKatzwinkel/develop
 
 Fix right-aligned status line prompt when using colors. ([`885c351`](https://github.com/mps-youtube/yewtube/commit/885c351b9a3afb8b0ea34377d18c956fe5e33ea9))
-
-* Merge pull request #386 from oparkadiusz/patch-1
-
-Added mpv player to Dockerfile ([`5d0d387`](https://github.com/mps-youtube/yewtube/commit/5d0d387e79e3c236af2d5502d3ab32e27d73e30d))
-
-* Added mpv player to Dockerfile
-
-For better support :) ([`4ffab40`](https://github.com/mps-youtube/yewtube/commit/4ffab40f581501dd24e9f118909d892894b597c1))
 
 * Drop local reassignment of builtin function.
 
@@ -2341,6 +2348,14 @@ Because apparently, that&#39;s considered bad practice. ([`59195a9`](https://git
 In color module `c`. ([`78a5544`](https://github.com/mps-youtube/yewtube/commit/78a5544eef1b3f359963d1b4cddf89255da826e9))
 
 * Fix right-aligned status line prompt when using colors. ([`06dd919`](https://github.com/mps-youtube/yewtube/commit/06dd919d689ff00c9ca9eaa79ebea314f70d1e8e))
+
+* Merge pull request #386 from oparkadiusz/patch-1
+
+Added mpv player to Dockerfile ([`5d0d387`](https://github.com/mps-youtube/yewtube/commit/5d0d387e79e3c236af2d5502d3ab32e27d73e30d))
+
+* Added mpv player to Dockerfile
+
+For better support :) ([`4ffab40`](https://github.com/mps-youtube/yewtube/commit/4ffab40f581501dd24e9f118909d892894b597c1))
 
 * Display warning when adding duplicate tracks to playlist ([`e63e2a9`](https://github.com/mps-youtube/yewtube/commit/e63e2a90fc20ab4f6b3bf55dbd0f33ab7532c1c9))
 
@@ -2608,6 +2623,12 @@ It is part of the shell, not a binary ([`4d621a2`](https://github.com/mps-youtub
 
 * Merge remote-tracking branch &#39;rothgar/docker_container&#39; into develop ([`dd8170c`](https://github.com/mps-youtube/yewtube/commit/dd8170ceadc00beab497de38dde77d0cdb26c684))
 
+* comma :sob: ([`4398a31`](https://github.com/mps-youtube/yewtube/commit/4398a31099357371e230b7a3b5c45d9685e2de18))
+
+* updated rst formatting ([`c1feabb`](https://github.com/mps-youtube/yewtube/commit/c1feabbc946cc1cf5e6a13ac03d0da8ba4c2c699))
+
+* Added a Dockerfile and information to README ([`2c64e06`](https://github.com/mps-youtube/yewtube/commit/2c64e0651a33e0fb59d3283a409f6274eeee71f7))
+
 * Add pafy to .gitignore ([`43eaeed`](https://github.com/mps-youtube/yewtube/commit/43eaeedc0006d820ca3cb04c910332d8ff882be2))
 
 * setup.py: Only try to import py2exe on Windows ([`e528531`](https://github.com/mps-youtube/yewtube/commit/e528531018569adb3d269869002700bbd861e673))
@@ -2662,8 +2683,7 @@ debian revision updates ([`bfa7cd2`](https://github.com/mps-youtube/yewtube/comm
 
 * Add note about standalone binary to README.rst ([`5258f27`](https://github.com/mps-youtube/yewtube/commit/5258f27ccd0579746e59f2c3628f326eeaf6af5f))
 
-
-## v0.2.5 (2015-06-02)
+## v0.2.5 (2015-06-01)
 
 ### Unknown
 
@@ -2716,13 +2736,13 @@ sure) but it should by possible to do without them now. ([`8376db0`](https://git
 
 Reworked desktop file install ([`5ecddbd`](https://github.com/mps-youtube/yewtube/commit/5ecddbdd54819fffb9e54113a25aa07b184c36c9))
 
-* Remove setup.cfg setting to universal wheel
-
-Now py3 only ([`99736ae`](https://github.com/mps-youtube/yewtube/commit/99736ae1cab1d3c37aa5d7d481f66213e41c5f16))
-
 * revert installing desktop file at runtime ([`ceaaa9c`](https://github.com/mps-youtube/yewtube/commit/ceaaa9cc62db6189c6ca8ddbd7703a9957253e24))
 
 * install desktop file via setup.py ([`2df485a`](https://github.com/mps-youtube/yewtube/commit/2df485adaa56351746ed0cafb16ec9f06790c2d6))
+
+* Remove setup.cfg setting to universal wheel
+
+Now py3 only ([`99736ae`](https://github.com/mps-youtube/yewtube/commit/99736ae1cab1d3c37aa5d7d481f66213e41c5f16))
 
 * Fix g.more_pages value; remove redundant generate_songlist_display() ([`ea2e41a`](https://github.com/mps-youtube/yewtube/commit/ea2e41a6cb67058781d1507ff3fd7a3881e70950))
 
@@ -2734,17 +2754,13 @@ Now py3 only ([`99736ae`](https://github.com/mps-youtube/yewtube/commit/99736ae1
 
 * Fix page count bug, update page/result number assumption in plist. ([`7a6a9d8`](https://github.com/mps-youtube/yewtube/commit/7a6a9d811bee400fdda1294b3718e4aeb4d7e2b6))
 
-* Merge remote-tracking branch &#39;jkatzwinkel/pagination&#39; into develop ([`aa30c6f`](https://github.com/mps-youtube/yewtube/commit/aa30c6ffc9a9e23d4594c7b7d38a7faf59db5819))
-
 * fix another error due to unassigned variable ([`effd117`](https://github.com/mps-youtube/yewtube/commit/effd1179e50e1d868d0053ab609fccc4c5c5bdce))
+
+* Merge remote-tracking branch &#39;jkatzwinkel/pagination&#39; into develop ([`aa30c6f`](https://github.com/mps-youtube/yewtube/commit/aa30c6ffc9a9e23d4594c7b7d38a7faf59db5819))
 
 * Fix error with uninitialized g member ([`d1e0357`](https://github.com/mps-youtube/yewtube/commit/d1e0357b35bb4ae02183af46e95b995b352dd5d3))
 
 * Fix type error in page status msg ([`030f4ae`](https://github.com/mps-youtube/yewtube/commit/030f4ae2ada60a801b08654cd26c67e2b1d7114f))
-
-* Do not call pafy.set_categories(); generic caching code already exists ([`8828bf5`](https://github.com/mps-youtube/yewtube/commit/8828bf5f5f1df8b42b80d0d7900457f043d39f40))
-
-* Merge branch &#39;develop&#39; of https://github.com/JKatzwinkel/mps-youtube into develop ([`403cfc7`](https://github.com/mps-youtube/yewtube/commit/403cfc7d1497ef430a349df89d655135b2d3283a))
 
 * Fixed bug in album search caused by pagination fix. ([`b045feb`](https://github.com/mps-youtube/yewtube/commit/b045feb06a06c99288408c541841ae5dca87065a))
 
@@ -2775,11 +2791,6 @@ how many pages of search results can be made available to the user
 Note: New API limits the number of search result items it provides to the
 first 500. ([`744f4c3`](https://github.com/mps-youtube/yewtube/commit/744f4c3c832663f80dbdbee0f85ea55516662462))
 
-* Remove / adjust code to work with upcoming Pafy release
-
-Pafy will henceforth handle category name resolution, so this doesn&#39;t need
-to be implemented in mpsyt anymore. ([`661f08d`](https://github.com/mps-youtube/yewtube/commit/661f08d21efdcf10e46cad86d8e432a65744e485))
-
 * Fix, standardize pagination, make independent from token list.
 
 Pagination is finally consistent throughout mpsyt search methods/
@@ -2789,6 +2800,15 @@ API versions. Should be more robust and more flexible.
 	* Go back to numeric page parameter for all search methods; potential
 	  for optional page parameter in mpsyt search commands
 	* Page counter now starts at 0, easier to handle ([`ab57955`](https://github.com/mps-youtube/yewtube/commit/ab57955e925553ba152e10cec408842ba2ac686d))
+
+* Do not call pafy.set_categories(); generic caching code already exists ([`8828bf5`](https://github.com/mps-youtube/yewtube/commit/8828bf5f5f1df8b42b80d0d7900457f043d39f40))
+
+* Merge branch &#39;develop&#39; of https://github.com/JKatzwinkel/mps-youtube into develop ([`403cfc7`](https://github.com/mps-youtube/yewtube/commit/403cfc7d1497ef430a349df89d655135b2d3283a))
+
+* Remove / adjust code to work with upcoming Pafy release
+
+Pafy will henceforth handle category name resolution, so this doesn&#39;t need
+to be implemented in mpsyt anymore. ([`661f08d`](https://github.com/mps-youtube/yewtube/commit/661f08d21efdcf10e46cad86d8e432a65744e485))
 
 * Save and load pafy cache ([`7bf43b5`](https://github.com/mps-youtube/yewtube/commit/7bf43b56618088df177a782c5f7d3cf2cf42ba51))
 
@@ -2804,6 +2824,10 @@ Testing for Ubuntu specifically is a hack, while the file does not harm
 on other systems and could be of use there too. ([`8c9254e`](https://github.com/mps-youtube/yewtube/commit/8c9254e9bfecc1102628563163d0788812250af0))
 
 * Merge remote-tracking branch &#39;origin/ubuntu-desktop-file&#39; into develop ([`8ee8444`](https://github.com/mps-youtube/yewtube/commit/8ee844479744380cff2f21a56bb93ee04a16bcf1))
+
+* correction to docstring comment ([`752a0fd`](https://github.com/mps-youtube/yewtube/commit/752a0fd73c5d9c48dbe1d895efe17ef37f2ffabb))
+
+* Install desktop file on first run on Ubuntu systems ([`def138c`](https://github.com/mps-youtube/yewtube/commit/def138c3571b2417604a97e2caf272ec7ed68a11))
 
 * Fix slight inconsistency in code style ([`17b6e9d`](https://github.com/mps-youtube/yewtube/commit/17b6e9d3c85944cd4bfc5dc7b465583cfe643751))
 
@@ -2834,8 +2858,6 @@ This reverts commit a9c67d4d22217590dcb5027cdbc06d332b354605. ([`ad07b67`](https
 
 * Merge branch &#39;develop&#39; of https://github.com/JKatzwinkel/mps-youtube into develop ([`8b509d9`](https://github.com/mps-youtube/yewtube/commit/8b509d9d102ecafe80a4826e4b70929a24c31529))
 
-* Fix distutils support ([`4ef23ef`](https://github.com/mps-youtube/yewtube/commit/4ef23efbc09504e975ee0e2ac058c418e112f436))
-
 * fix bugs in result displays and satisfy isse #244 ([`9ea2ee7`](https://github.com/mps-youtube/yewtube/commit/9ea2ee74a73efd7ad20be799f723c76ee05de835))
 
 * Fix result page change bug.
@@ -2855,6 +2877,8 @@ evaluated an API call for. ([`743a18f`](https://github.com/mps-youtube/yewtube/c
 
 * remove line breaks in display list item titles ([`c4682e0`](https://github.com/mps-youtube/yewtube/commit/c4682e0b4a218be48f52fe6059a582627ee794ad))
 
+* Fix distutils support ([`4ef23ef`](https://github.com/mps-youtube/yewtube/commit/4ef23efbc09504e975ee0e2ac058c418e112f436))
+
 * Fix issue with // and search_music (#282) ([`5549e80`](https://github.com/mps-youtube/yewtube/commit/5549e80bdfb9c3f0eace71e8d539c2c0a15e94e0))
 
 * Fix indentation ([`02a5df8`](https://github.com/mps-youtube/yewtube/commit/02a5df882f6dd5e4305cbb681f3d92b76d9d37f0))
@@ -2865,15 +2889,17 @@ evaluated an API call for. ([`743a18f`](https://github.com/mps-youtube/yewtube/c
 
 * Merge branch &#39;develop&#39; of github.com:np1/mps-youtube into develop ([`7def56a`](https://github.com/mps-youtube/yewtube/commit/7def56a92b8afe83045ddf8053f973c79d9b518b))
 
-* Add YouTube mix command ([`2ef61ca`](https://github.com/mps-youtube/yewtube/commit/2ef61ca6f76c07d3c906ced386a28b43e1e9da77))
-
 * Merge pull request #281 from hrnr/landscape_fix
 
 fix landscape bot ([`e67f40e`](https://github.com/mps-youtube/yewtube/commit/e67f40e69476916d883df8cd911a5adeb7c95f9e))
 
+* fix landscape, be python2 friendly ([`2c74185`](https://github.com/mps-youtube/yewtube/commit/2c7418551072d9dd1fa311f80be54772c1e0cfa2))
+
 * Merge category fixes from &#39;np1/develop&#39; ([`9c8457a`](https://github.com/mps-youtube/yewtube/commit/9c8457a9a0481acc0347b634fe429455ee1e9e2c))
 
-* fix landscape, be python2 friendly ([`2c74185`](https://github.com/mps-youtube/yewtube/commit/2c7418551072d9dd1fa311f80be54772c1e0cfa2))
+* Extend time after which category cache expires to two days. ([`d3fc734`](https://github.com/mps-youtube/yewtube/commit/d3fc734735b5401f73b0854b83898614bf9621a2))
+
+* Add YouTube mix command ([`2ef61ca`](https://github.com/mps-youtube/yewtube/commit/2ef61ca6f76c07d3c906ced386a28b43e1e9da77))
 
 * Use shields.io pypi badge ([`113be2a`](https://github.com/mps-youtube/yewtube/commit/113be2afb2223f8c4556d821c1dd80ffc8f2e2f1))
 
@@ -2892,8 +2918,6 @@ Now working with python3 ([`9e6657c`](https://github.com/mps-youtube/yewtube/com
 
 * py2exe without warnings ([`b1a5b71`](https://github.com/mps-youtube/yewtube/commit/b1a5b71e2578fdccd623e1fb8738b85a1d9eca10))
 
-* Extend time after which category cache expires to two days. ([`d3fc734`](https://github.com/mps-youtube/yewtube/commit/d3fc734735b5401f73b0854b83898614bf9621a2))
-
 * Fix writeline() on windows ([`67f2326`](https://github.com/mps-youtube/yewtube/commit/67f232645f95fd45e8e728fc1d65b090f7c1b4e0))
 
 * Revert &#34;Fix terminal size on Windows #215 #223&#34;
@@ -2910,16 +2934,6 @@ This reverts commit 8e139d9b1f6841f66fd729620236002927133ba3. ([`fbd028e`](https
 	* call API on any unknown category coming in with json search results
 	* save category list to cache file and load on startup ([`f55abd6`](https://github.com/mps-youtube/yewtube/commit/f55abd6157f1a8091a87ff4abca0e3a4c738ee60))
 
-* Do not check mpv version if not installed ([`08c3798`](https://github.com/mps-youtube/yewtube/commit/08c37986023bd7f12f2d789b8fb8e5de541177cb))
-
-* Merge pull request #277 from lol768/develop
-
-Separate search order for user uploads ([`622c21b`](https://github.com/mps-youtube/yewtube/commit/622c21b08dd570ed670c6af1ac86916a394ac02a))
-
-* Set pafy api_key ([`17d847e`](https://github.com/mps-youtube/yewtube/commit/17d847ec7c0816bae3aac74d806f56395248d7a3))
-
-* Separate search order for user uploads ([`6db1ce5`](https://github.com/mps-youtube/yewtube/commit/6db1ce5f70e6a79fa3b0a960fadec70da3bb7d80))
-
 * Fix error in video duration extraction from json
 
 Regex had to be fixed to match ISO8601-formatted durations
@@ -2927,21 +2941,46 @@ that drop seconds field because of whole hour/minute. ([`fd3662f`](https://githu
 
 * Fix tiny issue with video categories ([`3ab04c5`](https://github.com/mps-youtube/yewtube/commit/3ab04c5e53c2a3fec8ee5217922b0a1b90bed8e4))
 
-* Fix UnicodeEncodeError with logging to ascii console ([`f2305f9`](https://github.com/mps-youtube/yewtube/commit/f2305f93850e7d949b09eba237855a60a694b776))
-
 * Merge remote-tracking branch &#39;np1/develop&#39; into develop ([`e0b7112`](https://github.com/mps-youtube/yewtube/commit/e0b711213b71de997358dbe97303e9ae7d9631c6))
 
-* Use xenc in set_window_title ([`0b5be5d`](https://github.com/mps-youtube/yewtube/commit/0b5be5d7604bad239ee802659fdaba2819c7a1ce))
-
 * Merge remote-tracking branch &#39;np1/develop&#39; into develop ([`20e033d`](https://github.com/mps-youtube/yewtube/commit/20e033d89cbbec4a634e5a10757b55f2a9a20d79))
+
+* Merge remote-tracking branch &#39;np1/develop&#39; into develop ([`a34d631`](https://github.com/mps-youtube/yewtube/commit/a34d631c2d4d476ae0b736bae142f3a2d0981fa6))
+
+* Merge v0.2.4 from branch &#39;np1/develop&#39; into develop
+
+And fix keyerror in search result display generation on playlist search
+related to changes in video category retrieval. ([`0f17b5c`](https://github.com/mps-youtube/yewtube/commit/0f17b5cecce7b2486877ecd65fc97d6b9b9f80a8))
+
+* Merge playlist search changes from &#39;ids1024/gdata3wip&#39; ([`aa34d75`](https://github.com/mps-youtube/yewtube/commit/aa34d751407c4aca3a7f66e4f48c78bf69642236))
+
+* remove fixme in album search method ([`4dbc1e2`](https://github.com/mps-youtube/yewtube/commit/4dbc1e22b6b5e7709ed69e062a718c13f4d09278))
+
+* fix some code style concerns linter had ([`2ba7e82`](https://github.com/mps-youtube/yewtube/commit/2ba7e82fec396dc06dc3cdb33e672ce0570f060b))
+
+* make &#39;u &lt;num&gt;&#39; command invoke fitting method ([`1c5cb62`](https://github.com/mps-youtube/yewtube/commit/1c5cb629f282b9c72bff41e341c9a4366252a52d))
+
+* Map video category names to Ids ([`77baf14`](https://github.com/mps-youtube/yewtube/commit/77baf141df24b9b674c357eae325c2ecc6e63aeb))
+
+* Do not check mpv version if not installed ([`08c3798`](https://github.com/mps-youtube/yewtube/commit/08c37986023bd7f12f2d789b8fb8e5de541177cb))
+
+* Merge pull request #277 from lol768/develop
+
+Separate search order for user uploads ([`622c21b`](https://github.com/mps-youtube/yewtube/commit/622c21b08dd570ed670c6af1ac86916a394ac02a))
+
+* Separate search order for user uploads ([`6db1ce5`](https://github.com/mps-youtube/yewtube/commit/6db1ce5f70e6a79fa3b0a960fadec70da3bb7d80))
+
+* Set pafy api_key ([`17d847e`](https://github.com/mps-youtube/yewtube/commit/17d847ec7c0816bae3aac74d806f56395248d7a3))
+
+* Fix UnicodeEncodeError with logging to ascii console ([`f2305f9`](https://github.com/mps-youtube/yewtube/commit/f2305f93850e7d949b09eba237855a60a694b776))
+
+* Use xenc in set_window_title ([`0b5be5d`](https://github.com/mps-youtube/yewtube/commit/0b5be5d7604bad239ee802659fdaba2819c7a1ce))
 
 * Fix playlist parsing ([`2eef024`](https://github.com/mps-youtube/yewtube/commit/2eef024bc7730e678670d0e7359e4e8b104eff4a))
 
 * Do not use py2 compatabile u&#34;&#34;
 
 Does not work in earlier py3 versions; unneeded ([`0ffd79f`](https://github.com/mps-youtube/yewtube/commit/0ffd79faf3cd5b11687861e3d75c9b513a0e7ab1))
-
-* Merge remote-tracking branch &#39;np1/develop&#39; into develop ([`a34d631`](https://github.com/mps-youtube/yewtube/commit/a34d631c2d4d476ae0b736bae142f3a2d0981fa6))
 
 * Merge pull request #272 from lol768/patch-1
 
@@ -2954,6 +2993,11 @@ Add mention of IRC channel to README ([`d339780`](https://github.com/mps-youtube
 Debian directory (with changelog) ([`faaf12d`](https://github.com/mps-youtube/yewtube/commit/faaf12d4e9d1f8e6cbe96ab1fc8f30c3173a31e9))
 
 * remove changelog from gitignore ([`d073eed`](https://github.com/mps-youtube/yewtube/commit/d073eed41b8a1558d25d718933a09679110be04f))
+
+* Merge remote-tracking branch &#39;upstream/develop&#39; into develop
+Incorporating latest upstream changes so I can prepare fresh Debian package ([`39a1619`](https://github.com/mps-youtube/yewtube/commit/39a16199faaa4c1f7023d00a39407d4bdddc93a8))
+
+* Debian directory ([`172d1fc`](https://github.com/mps-youtube/yewtube/commit/172d1fcc8acc280bff118fd231ba2ad20974f7f9))
 
 * Update README for python 3 only ([`3f7c992`](https://github.com/mps-youtube/yewtube/commit/3f7c9928d98625c2c98234d707f866e2df49450b))
 
@@ -2973,9 +3017,20 @@ Don&#39;t know if the +1 was there for a reason... ([`8e139d9`](https://github.c
 
 Remove double-quotes from filename if any. ([`c06f3da`](https://github.com/mps-youtube/yewtube/commit/c06f3daf176fae8e56518adaad01cf5ddf2cb39b))
 
+* Remove double-quotes from filename if any.
+
+Having double-quotes in filename makes it difficult to play(manually) in
+terminal using cli players like &#39;mplayer&#39;. Better remove the quotes
+before saving the file. ([`21a5e56`](https://github.com/mps-youtube/yewtube/commit/21a5e567cf67302371772787f4d8a85889d3cb0b))
+
 * Merge pull request #252 from punchagan/init-set-mpv-version
 
 Check mpv_version on startup. ([`8e01fef`](https://github.com/mps-youtube/yewtube/commit/8e01fef59a6b14d05b06bdca1b713a6a9b59a6b7))
+
+* Check mpv_version on startup.
+
+`mpv_version` is not saved to config, and not set correctly when mpsyt
+is restarted after setting player to `mpv`. ([`7e15de8`](https://github.com/mps-youtube/yewtube/commit/7e15de83cbe8f44305b22d2a1d56fa8a3569a603))
 
 * Update version to 0.2.5-dev ([`cc1b775`](https://github.com/mps-youtube/yewtube/commit/cc1b775ee42eaaf8b31ceb857b2a2478d6393028))
 
@@ -2983,18 +3038,7 @@ Check mpv_version on startup. ([`8e01fef`](https://github.com/mps-youtube/yewtub
 
 * Drop python2 support ([`8575efa`](https://github.com/mps-youtube/yewtube/commit/8575efa0e71b04a3a43b79f88b3dfd104efe251b))
 
-* Merge v0.2.4 from branch &#39;np1/develop&#39; into develop
-
-And fix keyerror in search result display generation on playlist search
-related to changes in video category retrieval. ([`0f17b5c`](https://github.com/mps-youtube/yewtube/commit/0f17b5cecce7b2486877ecd65fc97d6b9b9f80a8))
-
-* Merge playlist search changes from &#39;ids1024/gdata3wip&#39; ([`aa34d75`](https://github.com/mps-youtube/yewtube/commit/aa34d751407c4aca3a7f66e4f48c78bf69642236))
-
-* Merge remote-tracking branch &#39;upstream/develop&#39; into develop
-Incorporating latest upstream changes so I can prepare fresh Debian package ([`39a1619`](https://github.com/mps-youtube/yewtube/commit/39a16199faaa4c1f7023d00a39407d4bdddc93a8))
-
-
-## v0.2.4 (2015-05-14)
+## v0.2.4 (2015-05-13)
 
 ### Unknown
 
@@ -3005,14 +3049,6 @@ Incorporating latest upstream changes so I can prepare fresh Debian package ([`3
 * Change default api key ([`032cca9`](https://github.com/mps-youtube/yewtube/commit/032cca94bc6fc30f9a1130e3112fcb4ad2782d42))
 
 * Use gdata3 for playlist searches ([`ce06ed8`](https://github.com/mps-youtube/yewtube/commit/ce06ed8cbd08af02962fa2c0ed30652346fa4d80))
-
-* remove fixme in album search method ([`4dbc1e2`](https://github.com/mps-youtube/yewtube/commit/4dbc1e22b6b5e7709ed69e062a718c13f4d09278))
-
-* fix some code style concerns linter had ([`2ba7e82`](https://github.com/mps-youtube/yewtube/commit/2ba7e82fec396dc06dc3cdb33e672ce0570f060b))
-
-* make &#39;u &lt;num&gt;&#39; command invoke fitting method ([`1c5cb62`](https://github.com/mps-youtube/yewtube/commit/1c5cb629f282b9c72bff41e341c9a4366252a52d))
-
-* Map video category names to Ids ([`77baf14`](https://github.com/mps-youtube/yewtube/commit/77baf141df24b9b674c357eae325c2ecc6e63aeb))
 
 * limit username search term cache size, as done with streams cache ([`22c4b22`](https://github.com/mps-youtube/yewtube/commit/22c4b227e9d62e200d588f2850a60bf876f35135))
 
@@ -3045,9 +3081,9 @@ matching search string so that we get nicer status messages. ([`c279fc2`](https:
 
 * Merge pagination fix changes from &#39;lol768/gdata3wip&#39; ([`88b84a4`](https://github.com/mps-youtube/yewtube/commit/88b84a48a5e04cac00f052ae42f42312376bc06b))
 
-* Working on video search result pagination ([`a7db186`](https://github.com/mps-youtube/yewtube/commit/a7db186a9d0fda9fda2accdf947fff936c93cc4e))
-
 * Try and fix pagination for user searches. ([`e92af1d`](https://github.com/mps-youtube/yewtube/commit/e92af1d8773e8f309875b3ea7b3ad376741bd345))
+
+* Working on video search result pagination ([`a7db186`](https://github.com/mps-youtube/yewtube/commit/a7db186a9d0fda9fda2accdf947fff936c93cc4e))
 
 * Fix usersearch failmsg ([`ef445ee`](https://github.com/mps-youtube/yewtube/commit/ef445ee3a1cc0870a6aff3d88b420d85f4a7f4e7))
 
@@ -3071,6 +3107,10 @@ The purpose of this is to ensure users can use their own key if the main key cea
 
 * Merge remote-tracking branch &#39;ids1024/gdata3wip&#39; into develop ([`f580fe7`](https://github.com/mps-youtube/yewtube/commit/f580fe710228908d177a9fd3cf028748282b6196))
 
+* Disable safe search, like in the gdata2 version ([`e70bc9f`](https://github.com/mps-youtube/yewtube/commit/e70bc9f76f665355abd10de747687c2982754c08))
+
+* Fix album search gdata3 ([`38e2ebc`](https://github.com/mps-youtube/yewtube/commit/38e2ebc892e02186b90c16fe22ad3a70d5c3cb29))
+
 * Ignore Exuberant ctags tag file ([`4a17a41`](https://github.com/mps-youtube/yewtube/commit/4a17a4164de31a9e40e7870a727e810e72eeb143))
 
 * Fix some output errors I accidentally created ([`624ad3e`](https://github.com/mps-youtube/yewtube/commit/624ad3e4982a01171a8abd2dc87d530ebe5e28ee))
@@ -3083,10 +3123,6 @@ Reenables the commands `user &lt;username&gt;`, `user &lt;username&gt;/&lt;query
 `usersearch` method has a new optional parameter `identify` by which
 it can be specified whether a user is to be looked up by their channel
 id or by their screen name. ([`ba4b474`](https://github.com/mps-youtube/yewtube/commit/ba4b47457fe47103a1cb82b0b41165d9409a4edb))
-
-* Disable safe search, like in the gdata2 version ([`e70bc9f`](https://github.com/mps-youtube/yewtube/commit/e70bc9f76f665355abd10de747687c2982754c08))
-
-* Fix album search gdata3 ([`38e2ebc`](https://github.com/mps-youtube/yewtube/commit/38e2ebc892e02186b90c16fe22ad3a70d5c3cb29))
 
 * Hopefully fixed bug in videoId extraction ([`e3fa018`](https://github.com/mps-youtube/yewtube/commit/e3fa018fc0fa875168677b5277f5bbf1da35b2ba))
 
@@ -3104,17 +3140,6 @@ This fixes normal search. Few things to note:
 API v3 requires API key and grants limited quota. Insert API key in line 119 in main.py.
 New API does not provide all the expected information without using a second request.
 So for each search, there is now an additional API call, potentially slowing stuff down. ([`42bc063`](https://github.com/mps-youtube/yewtube/commit/42bc06374488c645f7ca23e6757f73eb33a965f6))
-
-* Check mpv_version on startup.
-
-`mpv_version` is not saved to config, and not set correctly when mpsyt
-is restarted after setting player to `mpv`. ([`7e15de8`](https://github.com/mps-youtube/yewtube/commit/7e15de83cbe8f44305b22d2a1d56fa8a3569a603))
-
-* Remove double-quotes from filename if any.
-
-Having double-quotes in filename makes it difficult to play(manually) in
-terminal using cli players like &#39;mplayer&#39;. Better remove the quotes
-before saving the file. ([`21a5e56`](https://github.com/mps-youtube/yewtube/commit/21a5e567cf67302371772787f4d8a85889d3cb0b))
 
 * Merge pull request #247 from punchagan/fix-dumb-term-size
 
@@ -3139,12 +3164,6 @@ Set window title ([`6e3176a`](https://github.com/mps-youtube/yewtube/commit/6e31
 
 * Set window title ([`c6c2b6b`](https://github.com/mps-youtube/yewtube/commit/c6c2b6b5caaf125313d0b749a3676a0145ca9c7f))
 
-* comma :sob: ([`4398a31`](https://github.com/mps-youtube/yewtube/commit/4398a31099357371e230b7a3b5c45d9685e2de18))
-
-* updated rst formatting ([`c1feabb`](https://github.com/mps-youtube/yewtube/commit/c1feabbc946cc1cf5e6a13ac03d0da8ba4c2c699))
-
-* Added a Dockerfile and information to README ([`2c64e06`](https://github.com/mps-youtube/yewtube/commit/2c64e0651a33e0fb59d3283a409f6274eeee71f7))
-
 * Merge pull request #224 from ids1024/develop
 
 Do not test mpv version during initialization ([`2471d24`](https://github.com/mps-youtube/yewtube/commit/2471d24e6b9dc5c4e8d84a4e69f704968b9bd236))
@@ -3153,13 +3172,7 @@ Do not test mpv version during initialization ([`2471d24`](https://github.com/mp
 
 * Do not test mpv version on initialization ([`c018ca5`](https://github.com/mps-youtube/yewtube/commit/c018ca5219275e15e1d8e565cdcae44402d99dcb))
 
-* Debian directory ([`172d1fc`](https://github.com/mps-youtube/yewtube/commit/172d1fcc8acc280bff118fd231ba2ad20974f7f9))
-
 * Replace generic text in instructions ([`0abcaf0`](https://github.com/mps-youtube/yewtube/commit/0abcaf0141f303400673b10f4ae60af7cc618f5d))
-
-* correction to docstring comment ([`752a0fd`](https://github.com/mps-youtube/yewtube/commit/752a0fd73c5d9c48dbe1d895efe17ef37f2ffabb))
-
-* Install desktop file on first run on Ubuntu systems ([`def138c`](https://github.com/mps-youtube/yewtube/commit/def138c3571b2417604a97e2caf272ec7ed68a11))
 
 * remove list() ([`5865999`](https://github.com/mps-youtube/yewtube/commit/5865999ca8db2672df85b502140565b1b4672b42))
 
@@ -3169,13 +3182,13 @@ Do not test mpv version during initialization ([`2471d24`](https://github.com/mp
 
 Some Minor Cleanup ([`4e0f0ed`](https://github.com/mps-youtube/yewtube/commit/4e0f0ed41110a3d0e4054c25036749d28aac25b7))
 
-* update version number for dev ([`42559f7`](https://github.com/mps-youtube/yewtube/commit/42559f7291d21b39aac2aafc55b407ce85f8559d))
-
 * Fix typo in docstring ([`3f096f9`](https://github.com/mps-youtube/yewtube/commit/3f096f9708faaa4c6f5c11ad4c289272c18df18f))
 
 * Simplify a line ([`727707a`](https://github.com/mps-youtube/yewtube/commit/727707a2cfd6e6b81a79fa212c78599dbc8ab7b3))
 
 * Use list.extend instead of while loop ([`14e2e88`](https://github.com/mps-youtube/yewtube/commit/14e2e885913a104628bfef88a2e0a85e9be5388e))
+
+* update version number for dev ([`42559f7`](https://github.com/mps-youtube/yewtube/commit/42559f7291d21b39aac2aafc55b407ce85f8559d))
 
 * fix typo ([`d1ec28f`](https://github.com/mps-youtube/yewtube/commit/d1ec28fb0d53566210194ded8c9ee2a14575eb9d))
 
@@ -3190,13 +3203,6 @@ Some Minor Cleanup ([`4e0f0ed`](https://github.com/mps-youtube/yewtube/commit/4e
 * Don&#39;t print too many spaces #215 ([`8e42764`](https://github.com/mps-youtube/yewtube/commit/8e427642770a7e54c5deaf6d5e784b8e1e04cb5c))
 
 * Merge branch &#39;mpris&#39; into develop ([`ff89a40`](https://github.com/mps-youtube/yewtube/commit/ff89a4028f86bfd812544e9713bfdbc64cdf560d))
-
-* Merge branch &#39;hrnr-mpris&#39; into develop ([`f7c8c61`](https://github.com/mps-youtube/yewtube/commit/f7c8c617de5203b4bfa1b38f8d04d017f668ad3d))
-
-* Merge branch &#39;mpris&#39; of https://github.com/hrnr/mps-youtube into hrnr-mpris
-
-Conflicts:
-	mps_youtube/main.py ([`59a44a5`](https://github.com/mps-youtube/yewtube/commit/59a44a57570b77c9853f2f6a7ff1519846637872))
 
 * revert unneeded changes #210 ([`810c507`](https://github.com/mps-youtube/yewtube/commit/810c507524554c6b4073e05c5d7130770add2720))
 
@@ -3213,68 +3219,12 @@ Conflicts:
 Conflicts:
 	mps_youtube/main.py ([`25d956b`](https://github.com/mps-youtube/yewtube/commit/25d956ba2842d45927777d306737be0525a4093d))
 
-* tidyup ([`ba812b3`](https://github.com/mps-youtube/yewtube/commit/ba812b3935f7714568458a00d80b98b032e4c961))
+* Merge branch &#39;hrnr-mpris&#39; into develop ([`f7c8c61`](https://github.com/mps-youtube/yewtube/commit/f7c8c617de5203b4bfa1b38f8d04d017f668ad3d))
 
+* Merge branch &#39;mpris&#39; of https://github.com/hrnr/mps-youtube into hrnr-mpris
 
-## v0.2.3 (2015-02-16)
-
-### Unknown
-
-* set version to 0.2.3 ([`69fa71c`](https://github.com/mps-youtube/yewtube/commit/69fa71c79e617fff663fcb80d41c12ec4a408f72))
-
-* Update changes for v0.2.3 ([`0387e15`](https://github.com/mps-youtube/yewtube/commit/0387e15c566851a66ff0dedcf839154959cddb7e))
-
-* open and repair old playlist file #214 ([`f20a523`](https://github.com/mps-youtube/yewtube/commit/f20a523b7025d062f81536a5a5106161f6bad24b))
-
-* Implement rudimentary support for tagging audio files (#209)
-
-This requires ffmpeg/avconv and implements tagging for downloaded audio files
-when not using an external downloader application
-
-This is quite basic, if a video is titled &#34;one two - three four&#34;, the artist is
-assumed to be &#34;one two&#34; and the title &#34;three four&#34;
-
-Otherwise the entire YouTube title is set as the title tag and no artist tag is
-set ([`a96393c`](https://github.com/mps-youtube/yewtube/commit/a96393c1a5ab49a5e7019722c1b976407e305f0f))
-
-* Fix typo in set config pattern match
-
-set command currently ignores &#34;s&#34;&#39;s at end of command! ([`b8fe1a9`](https://github.com/mps-youtube/yewtube/commit/b8fe1a9edf294d0fc06207f2ac436680e2d7c707))
-
-* Allow -v in place of -w for windowed mode (#213)
--v may be more intuitive ([`febe1ba`](https://github.com/mps-youtube/yewtube/commit/febe1ba083fac438fcbfa5f393251392e0925894))
-
-* lowercase pafy ([`99273a8`](https://github.com/mps-youtube/yewtube/commit/99273a8e818ee8b69cdf69a9a74f72875e157f4c))
-
-* Update version number ([`2b6ba3b`](https://github.com/mps-youtube/yewtube/commit/2b6ba3bfaa9ffc82347d9f7b2b83ed201db84e28))
-
-
-## v0.2.2 (2015-02-13)
-
-### Unknown
-
-* Updated changes ([`3e684f9`](https://github.com/mps-youtube/yewtube/commit/3e684f9859b4bfb48f396771a25ed6561a61b099))
-
-* Update version number ([`8aaf71f`](https://github.com/mps-youtube/yewtube/commit/8aaf71fcd66bbf76c38f7f88e5b38aca51c67caf))
-
-* Update version number ([`3149b06`](https://github.com/mps-youtube/yewtube/commit/3149b061bff4fd539df027ca59662b8a1a87f901))
-
-* Add release date ([`3f1f5f5`](https://github.com/mps-youtube/yewtube/commit/3f1f5f5397f91527fe0940f69eb5cae1e9165c0f))
-
-* Update changes ([`5746e67`](https://github.com/mps-youtube/yewtube/commit/5746e67dcef683d3246abbe80dfba835ec1f99fa))
-
-* Enable audio remux when using &#34;d&#34; command
-previously it only worked with &#34;da&#34; command
-
-This fixes issues with opening m4a audio files in iTunes and certain
-other players. ([`5145267`](https://github.com/mps-youtube/yewtube/commit/5145267173aeb834df7a20e53c739fd019eb0938))
-
-* Update changes ([`daed8bf`](https://github.com/mps-youtube/yewtube/commit/daed8bf6e2c3a2ce1c96e5b5301d3957a7da1db1))
-
-* Remove file, to be added to separate branch ([`1351550`](https://github.com/mps-youtube/yewtube/commit/1351550426aed623d8bb942f25a0abb4ed338d9d))
-
-* Add 2015 to copyright text
-change nagev to np1 ([`9275a8c`](https://github.com/mps-youtube/yewtube/commit/9275a8c12162843306e82c87a187694042aaa0cd))
+Conflicts:
+	mps_youtube/main.py ([`59a44a5`](https://github.com/mps-youtube/yewtube/commit/59a44a57570b77c9853f2f6a7ff1519846637872))
 
 * improve seeking
 
@@ -3285,24 +3235,6 @@ ensure that time-pos will be synchronized properly (works only with mpv &gt;0.7)
 * keep identity user-friendly
 
 + protect bus name from collisions (as required by specs) ([`ac17719`](https://github.com/mps-youtube/yewtube/commit/ac1771974b950641d951057c6762fbecb509a51f))
-
-* remove newlines ([`72cf1d8`](https://github.com/mps-youtube/yewtube/commit/72cf1d82d54cf25e8117edfbbeae4180c29eabca))
-
-* Document download_command option ([`838cc47`](https://github.com/mps-youtube/yewtube/commit/838cc477c6f23d248193ef4b234c9603df79b525))
-
-* Improve download_command
-
-%u will be replaced with the remote media content url
-%d will be replaced with the download directory (as set by DDIR in mpsyt config)
-%f will be replaced with the filename of the item being downloaded
-%F will be replaced with the full file path (%d/%f)
-
-for example, to download using aria2c:
-
-`set download_command aria2c --dir=%d --out=%f %u`
-
-Note that using a custom download command does not support transcoding the
-downloaded file to another format with mps-youtube. ([`025bee5`](https://github.com/mps-youtube/yewtube/commit/025bee5351a03deb78c88f9990a063e1f79b7794))
 
 * changed licence
 MIT is wrong as the project uses GPL
@@ -3397,6 +3329,85 @@ Other functionality not yet implemented ([`96af1e5`](https://github.com/mps-yout
 * xdotool
 * glib ([`1405d48`](https://github.com/mps-youtube/yewtube/commit/1405d48b93d3b5d901aae3312f784fda14a1cc87))
 
+* tidyup ([`ba812b3`](https://github.com/mps-youtube/yewtube/commit/ba812b3935f7714568458a00d80b98b032e4c961))
+
+## v0.2.3 (2015-02-17)
+
+### Unknown
+
+* set version to 0.2.3 ([`69fa71c`](https://github.com/mps-youtube/yewtube/commit/69fa71c79e617fff663fcb80d41c12ec4a408f72))
+
+* Update changes for v0.2.3 ([`0387e15`](https://github.com/mps-youtube/yewtube/commit/0387e15c566851a66ff0dedcf839154959cddb7e))
+
+* open and repair old playlist file #214 ([`f20a523`](https://github.com/mps-youtube/yewtube/commit/f20a523b7025d062f81536a5a5106161f6bad24b))
+
+* Implement rudimentary support for tagging audio files (#209)
+
+This requires ffmpeg/avconv and implements tagging for downloaded audio files
+when not using an external downloader application
+
+This is quite basic, if a video is titled &#34;one two - three four&#34;, the artist is
+assumed to be &#34;one two&#34; and the title &#34;three four&#34;
+
+Otherwise the entire YouTube title is set as the title tag and no artist tag is
+set ([`a96393c`](https://github.com/mps-youtube/yewtube/commit/a96393c1a5ab49a5e7019722c1b976407e305f0f))
+
+* Fix typo in set config pattern match
+
+set command currently ignores &#34;s&#34;&#39;s at end of command! ([`b8fe1a9`](https://github.com/mps-youtube/yewtube/commit/b8fe1a9edf294d0fc06207f2ac436680e2d7c707))
+
+* Allow -v in place of -w for windowed mode (#213)
+-v may be more intuitive ([`febe1ba`](https://github.com/mps-youtube/yewtube/commit/febe1ba083fac438fcbfa5f393251392e0925894))
+
+* lowercase pafy ([`99273a8`](https://github.com/mps-youtube/yewtube/commit/99273a8e818ee8b69cdf69a9a74f72875e157f4c))
+
+* Update version number ([`2b6ba3b`](https://github.com/mps-youtube/yewtube/commit/2b6ba3bfaa9ffc82347d9f7b2b83ed201db84e28))
+
+## v0.2.2 (2015-02-14)
+
+### Unknown
+
+* Updated changes ([`3e684f9`](https://github.com/mps-youtube/yewtube/commit/3e684f9859b4bfb48f396771a25ed6561a61b099))
+
+* Update version number ([`8aaf71f`](https://github.com/mps-youtube/yewtube/commit/8aaf71fcd66bbf76c38f7f88e5b38aca51c67caf))
+
+* Update version number ([`3149b06`](https://github.com/mps-youtube/yewtube/commit/3149b061bff4fd539df027ca59662b8a1a87f901))
+
+* Add release date ([`3f1f5f5`](https://github.com/mps-youtube/yewtube/commit/3f1f5f5397f91527fe0940f69eb5cae1e9165c0f))
+
+* Update changes ([`5746e67`](https://github.com/mps-youtube/yewtube/commit/5746e67dcef683d3246abbe80dfba835ec1f99fa))
+
+* Enable audio remux when using &#34;d&#34; command
+previously it only worked with &#34;da&#34; command
+
+This fixes issues with opening m4a audio files in iTunes and certain
+other players. ([`5145267`](https://github.com/mps-youtube/yewtube/commit/5145267173aeb834df7a20e53c739fd019eb0938))
+
+* Update changes ([`daed8bf`](https://github.com/mps-youtube/yewtube/commit/daed8bf6e2c3a2ce1c96e5b5301d3957a7da1db1))
+
+* Remove file, to be added to separate branch ([`1351550`](https://github.com/mps-youtube/yewtube/commit/1351550426aed623d8bb942f25a0abb4ed338d9d))
+
+* Add 2015 to copyright text
+change nagev to np1 ([`9275a8c`](https://github.com/mps-youtube/yewtube/commit/9275a8c12162843306e82c87a187694042aaa0cd))
+
+* remove newlines ([`72cf1d8`](https://github.com/mps-youtube/yewtube/commit/72cf1d82d54cf25e8117edfbbeae4180c29eabca))
+
+* Document download_command option ([`838cc47`](https://github.com/mps-youtube/yewtube/commit/838cc477c6f23d248193ef4b234c9603df79b525))
+
+* Improve download_command
+
+%u will be replaced with the remote media content url
+%d will be replaced with the download directory (as set by DDIR in mpsyt config)
+%f will be replaced with the filename of the item being downloaded
+%F will be replaced with the full file path (%d/%f)
+
+for example, to download using aria2c:
+
+`set download_command aria2c --dir=%d --out=%f %u`
+
+Note that using a custom download command does not support transcoding the
+downloaded file to another format with mps-youtube. ([`025bee5`](https://github.com/mps-youtube/yewtube/commit/025bee5351a03deb78c88f9990a063e1f79b7794))
+
 * Update required pafy version ([`fb4ef3a`](https://github.com/mps-youtube/yewtube/commit/fb4ef3a518fb6cde113e92e9928ad4bfdad36a3f))
 
 * require pafy 0.3.70 or later ([`7fb0b18`](https://github.com/mps-youtube/yewtube/commit/7fb0b1815932d2be21ed4fc8a1b360f5c345b8fd))
@@ -3415,21 +3426,28 @@ Enable if file found in mpsyt config dir ([`8249068`](https://github.com/mps-you
 
 Use separate setup script for py2exe ([`2b308be`](https://github.com/mps-youtube/yewtube/commit/2b308bed9d74b1b0d9224d706b3f6303df1f51f6))
 
-* Merge pull request #206 from ids1024/develop
-
-Show &gt;/&lt; instead of n/p as keys for controlling player ([`c11ab87`](https://github.com/mps-youtube/yewtube/commit/c11ab87dd9131983261b7e3b1b02c14778e0cfe0))
-
 * Always import py2exe in setup_py2exe.py ([`5865954`](https://github.com/mps-youtube/yewtube/commit/5865954fcdc1ebc19b8e92aab84800d0082a631f))
 
 * Use separate setup script for py2exe
 
 The py2exe code in setup.py causes issues for pip ([`2e354d9`](https://github.com/mps-youtube/yewtube/commit/2e354d9f49386a6ca1d45f4edfa1ed57bab29d9c))
 
+* Merge pull request #206 from ids1024/develop
+
+Show &gt;/&lt; instead of n/p as keys for controlling player ([`c11ab87`](https://github.com/mps-youtube/yewtube/commit/c11ab87dd9131983261b7e3b1b02c14778e0cfe0))
+
 * Show &gt;/&lt; instead of n/p as keys for controlling player ([`84d08f8`](https://github.com/mps-youtube/yewtube/commit/84d08f88bc0ba7048ffa5778303828ae722101e4))
 
 * Merge pull request #198 from ids1024/develop
 
 Add download_command option ([`0c1e45b`](https://github.com/mps-youtube/yewtube/commit/0c1e45bcd1107af7909c9c061e192f2c78804be2))
+
+* Add download_command option
+
+To make mpsyt use aria2c to download:
+set download_command aria2c -d / -o &#39;%f&#39; &#39;%u&#39; ([`a1248a7`](https://github.com/mps-youtube/yewtube/commit/a1248a7b3cdcf4bc90be7043effddc6df84ea904))
+
+* Use isinstace instead of type(variable) == Type ([`f1ec26c`](https://github.com/mps-youtube/yewtube/commit/f1ec26c8e79649521ecac7887b84b9dce6e3728d))
 
 * Merge pull request #204 from ids1024/fix-racecondition
 
@@ -3450,13 +3468,6 @@ Make tuple_xy default to None rather than (None, None) ([`f1021ba`](https://gith
 * Make tuple_xy default to None rather than (None, None)
 
 This fixes the comparison of tuple_xy to None ([`fc80c80`](https://github.com/mps-youtube/yewtube/commit/fc80c807c92550c286c00b5cf13c306242f250e3))
-
-* Add download_command option
-
-To make mpsyt use aria2c to download:
-set download_command aria2c -d / -o &#39;%f&#39; &#39;%u&#39; ([`a1248a7`](https://github.com/mps-youtube/yewtube/commit/a1248a7b3cdcf4bc90be7043effddc6df84ea904))
-
-* Use isinstace instead of type(variable) == Type ([`f1ec26c`](https://github.com/mps-youtube/yewtube/commit/f1ec26c8e79649521ecac7887b84b9dce6e3728d))
 
 * Merge pull request #195 from ids1024/develop
 
@@ -3509,10 +3520,6 @@ Also add tests to make the except statement unnecessary ([`fd20f74`](https://git
 Sockpath was not defined for mplayer, causing an error, which went
 unnoticed due to the except statement. ([`2639dd9`](https://github.com/mps-youtube/yewtube/commit/2639dd94433b1793952a94e6ba0888c4c94110d8))
 
-* Make py2exe build binary not require additional dlls ([`846fbc1`](https://github.com/mps-youtube/yewtube/commit/846fbc1143fceb69b86586fd19c585d5df659603))
-
-* Support py2exe ([`5caca6b`](https://github.com/mps-youtube/yewtube/commit/5caca6b8df91b5a7a99d597c8663c100cc2632af))
-
 * Fix returncode handling logic for finishing song ([`37d66fb`](https://github.com/mps-youtube/yewtube/commit/37d66fbbe11e653c0917a096af2ff37950d61d41))
 
 * Fix returncode handling logic and do not redefine builtin &#39;file&#39; ([`d51475c`](https://github.com/mps-youtube/yewtube/commit/d51475c1af651a25e175a51b5b2f5e1506cad8e7))
@@ -3523,6 +3530,10 @@ Allow setting an input.conf to override defaults.  Also makes the
 default keys for next/prev the same as the mpv/mplayer defaults. ([`e1b24a1`](https://github.com/mps-youtube/yewtube/commit/e1b24a1a694890cae569cfb2bcfb8080f060763d))
 
 * Update pafy version ([`2701f2b`](https://github.com/mps-youtube/yewtube/commit/2701f2bd8ef654b4f8b5fb5fe06d127d130bbf25))
+
+* Make py2exe build binary not require additional dlls ([`846fbc1`](https://github.com/mps-youtube/yewtube/commit/846fbc1143fceb69b86586fd19c585d5df659603))
+
+* Support py2exe ([`5caca6b`](https://github.com/mps-youtube/yewtube/commit/5caca6b8df91b5a7a99d597c8663c100cc2632af))
 
 * Merge branch &#39;master&#39; into develop ([`c988503`](https://github.com/mps-youtube/yewtube/commit/c988503ae273b0058fb5d509f73e97bc20d0a91f))
 
@@ -3548,9 +3559,17 @@ default keys for next/prev the same as the mpv/mplayer defaults. ([`e1b24a1`](ht
 
 Always pass exename to get_mpv_version ([`9b980c5`](https://github.com/mps-youtube/yewtube/commit/9b980c50aac5492f1c441557b0be9421868a9db8))
 
+* Improve player name recognition ([`94f4f4d`](https://github.com/mps-youtube/yewtube/commit/94f4f4dbfc54775061ecf0d23b06c3c1aba818c9))
+
+* Always pass exename to get_mpv_version ([`d1a2633`](https://github.com/mps-youtube/yewtube/commit/d1a263335ae2017ea8ecc79e945eb360df96c9af))
+
 * Merge pull request #184 from ids1024/exitcodesuccess
 
 Use return code to determine if player succeeded ([`6a27d83`](https://github.com/mps-youtube/yewtube/commit/6a27d8391d43dff571a13d7c321ab8b29266cd7a))
+
+* Fix returncode handling on OSError ([`ffddb74`](https://github.com/mps-youtube/yewtube/commit/ffddb74dc00162fabd048b68a6244deefaaf487a))
+
+* Use return code to determine if player succeeded ([`e2f9cb7`](https://github.com/mps-youtube/yewtube/commit/e2f9cb71965ec8fe7197ea9773dacb992d187ce6))
 
 * Merge pull request #187 from ids1024/develop
 
@@ -3566,33 +3585,25 @@ Command from mps that does not exist in mps-youtube ([`684bb77`](https://github.
 
 * Remove dead/redundant code ([`59e6d3a`](https://github.com/mps-youtube/yewtube/commit/59e6d3a6a6dbe60661211e9c0ab5b51313fd70c5))
 
-* Fix returncode handling on OSError ([`ffddb74`](https://github.com/mps-youtube/yewtube/commit/ffddb74dc00162fabd048b68a6244deefaaf487a))
-
 * Merge pull request #185 from ids1024/openhyphen
 
 Replace spaces with hyphens in &#39;open&#39; and &#39;view&#39; commands ([`0a7870e`](https://github.com/mps-youtube/yewtube/commit/0a7870e9ae9f05e518747ea1bbb82e179fc9d58e))
+
+* Replace spaces with hyphens in &#39;open&#39; and &#39;view&#39; commands ([`230cebd`](https://github.com/mps-youtube/yewtube/commit/230cebd197cb1a50ffdf5fca23364fdbb7a38cbe))
 
 * Merge pull request #183 from ids1024/issue156
 
 Override quiet option in mplayer ([`46e5064`](https://github.com/mps-youtube/yewtube/commit/46e50648c67248343771187acef6647f1a70352d))
 
-* Merge pull request #180 from ids1024/develop
-
-Fix input_file for mplayer on Windows ([`e51d47f`](https://github.com/mps-youtube/yewtube/commit/e51d47ffac35d6c03d7d064189903416be8b7a7e))
-
-* Replace spaces with hyphens in &#39;open&#39; and &#39;view&#39; commands ([`230cebd`](https://github.com/mps-youtube/yewtube/commit/230cebd197cb1a50ffdf5fca23364fdbb7a38cbe))
-
-* Use return code to determine if player succeeded ([`e2f9cb7`](https://github.com/mps-youtube/yewtube/commit/e2f9cb71965ec8fe7197ea9773dacb992d187ce6))
-
 * Override quiet option in mplayer
 
 In the default config on Windows, interferes with reading status. ([`98f18d1`](https://github.com/mps-youtube/yewtube/commit/98f18d1cbfccdb300ae6c1513c2c7c41d9bee4c7))
 
+* Merge pull request #180 from ids1024/develop
+
+Fix input_file for mplayer on Windows ([`e51d47f`](https://github.com/mps-youtube/yewtube/commit/e51d47ffac35d6c03d7d064189903416be8b7a7e))
+
 * Replace \ with / in input path with Windows mplayer ([`11b16e2`](https://github.com/mps-youtube/yewtube/commit/11b16e26fe8539c8dd1a2bb8dc5b1199cbbe14e7))
-
-* Improve player name recognition ([`94f4f4d`](https://github.com/mps-youtube/yewtube/commit/94f4f4dbfc54775061ecf0d23b06c3c1aba818c9))
-
-* Always pass exename to get_mpv_version ([`d1a2633`](https://github.com/mps-youtube/yewtube/commit/d1a263335ae2017ea8ecc79e945eb360df96c9af))
 
 * Fix input_file for mplayer on Windows ([`8d8aab5`](https://github.com/mps-youtube/yewtube/commit/8d8aab54782492e9c0f043ca7a757f5b7ed9641c))
 
@@ -3620,12 +3631,30 @@ used ([`6c60f50`](https://github.com/mps-youtube/yewtube/commit/6c60f508f46d242f
 
 * Fix invalid syntax for Python 2.7 ([`73f67a4`](https://github.com/mps-youtube/yewtube/commit/73f67a41ea087fd797e6cd1bc7dc3596ee2ffd32))
 
-* Add pylint ignore ([`c9607db`](https://github.com/mps-youtube/yewtube/commit/c9607db36da40a3851619b0c991c52509e65f824))
-
 * Merge remote-tracking branch &#39;origin/pr/175&#39; into prev-track
 
 Conflicts:
 	mps_youtube/main.py ([`5ff107d`](https://github.com/mps-youtube/yewtube/commit/5ff107d5b2d27d65f7a3b241ecf8df45fa986212))
+
+* Catch socket.error in mpv socket code
+
+Before the message &#34;mpv was not found on this system&#34; showed up
+sometimes, apparently when mpv was quit too quickly, before mpsyt could
+connect to the socket. This removes the incorrect error message. ([`793c1f1`](https://github.com/mps-youtube/yewtube/commit/793c1f15acf88cb3e01fd967542bb95ad4322fcf))
+
+* Combine nested while loops into one loop ([`48cf0b9`](https://github.com/mps-youtube/yewtube/commit/48cf0b98d04e477d790dd3bf2a9c2342c643d9ee))
+
+* Unlink temporary files before trying to terminate player ([`ed603b3`](https://github.com/mps-youtube/yewtube/commit/ed603b3fdde8ecab3348ba2e5b197d39572ece00))
+
+* Fix going backwards in playlist with mplayer ([`520e4ec`](https://github.com/mps-youtube/yewtube/commit/520e4eca078f50d86fce3f13b987aee3c1149319))
+
+* Go to last track when going backwards from first track ([`8af673f`](https://github.com/mps-youtube/yewtube/commit/8af673f3269a4822c4f1b7d49019f426ec2064d1))
+
+* Allow going backwards in playlist ([`4386c32`](https://github.com/mps-youtube/yewtube/commit/4386c32ee81c2d861de5eb9a9b3f1c66d5b89e7b))
+
+* Remove redundant code ([`a831549`](https://github.com/mps-youtube/yewtube/commit/a831549249bfee4788cfae3fd7b16e401884ecc5))
+
+* Add pylint ignore ([`c9607db`](https://github.com/mps-youtube/yewtube/commit/c9607db36da40a3851619b0c991c52509e65f824))
 
 * Updated changes ([`5a5c71b`](https://github.com/mps-youtube/yewtube/commit/5a5c71b697a806b4773612c3fc334a0a206a549c))
 
@@ -3640,29 +3669,21 @@ Conflicts:
 
 Before the message &#34;mpv was not found on this system&#34; showed up
 sometimes, apparently when mpv was quit too quickly, before mpsyt could
-connect to the socket. This removes the incorrect error message. ([`793c1f1`](https://github.com/mps-youtube/yewtube/commit/793c1f15acf88cb3e01fd967542bb95ad4322fcf))
-
-* Catch socket.error in mpv socket code
-
-Before the message &#34;mpv was not found on this system&#34; showed up
-sometimes, apparently when mpv was quit too quickly, before mpsyt could
 connect to the socket. This removes the incorrect error message. ([`649a167`](https://github.com/mps-youtube/yewtube/commit/649a167e7d25346a0cacab149db9eb7a47f3a9f7))
-
-* Combine nested while loops into one loop ([`48cf0b9`](https://github.com/mps-youtube/yewtube/commit/48cf0b98d04e477d790dd3bf2a9c2342c643d9ee))
-
-* Unlink temporary files before trying to terminate player ([`ed603b3`](https://github.com/mps-youtube/yewtube/commit/ed603b3fdde8ecab3348ba2e5b197d39572ece00))
-
-* Fix going backwards in playlist with mplayer ([`520e4ec`](https://github.com/mps-youtube/yewtube/commit/520e4eca078f50d86fce3f13b987aee3c1149319))
-
-* Go to last track when going backwards from first track ([`8af673f`](https://github.com/mps-youtube/yewtube/commit/8af673f3269a4822c4f1b7d49019f426ec2064d1))
-
-* Allow going backwards in playlist ([`4386c32`](https://github.com/mps-youtube/yewtube/commit/4386c32ee81c2d861de5eb9a9b3f1c66d5b89e7b))
-
-* Remove redundant code ([`a831549`](https://github.com/mps-youtube/yewtube/commit/a831549249bfee4788cfae3fd7b16e401884ecc5))
 
 * Use --list-options to determine if mpv supports --input-unix-socket ([`30f790a`](https://github.com/mps-youtube/yewtube/commit/30f790a134062d4fba47c3674f669b2209895d54))
 
 * Merge remote-tracking branch &#39;np1/develop&#39; into develop ([`ed237ee`](https://github.com/mps-youtube/yewtube/commit/ed237ee6c6111b722737f92722097f5d75ab542f))
+
+* Use random socket name and unlink after use ([`7b06f71`](https://github.com/mps-youtube/yewtube/commit/7b06f71f9a76f75acca1aa84fd85eba24356202e))
+
+* Iterate over lines in socket properly
+
+The other method was a hack ([`8a0a06a`](https://github.com/mps-youtube/yewtube/commit/8a0a06a11ebc213d7551da733bc3a07b39da946f))
+
+* Keep lines down to 80 characters ([`70832ff`](https://github.com/mps-youtube/yewtube/commit/70832ff25fb931554a0988a4beac17c6c9aa9750))
+
+* Use Json IPC for mpv 0.7+ on unix ([`f7fb052`](https://github.com/mps-youtube/yewtube/commit/f7fb0526e8ea26f906c47ba7ddf80a767ec84609))
 
 * Merge branch &#39;develop&#39; of https://github.com/np1/mps-youtube into develop ([`9b8d839`](https://github.com/mps-youtube/yewtube/commit/9b8d8399836b808dfc0505b62e0ea06da113ad2c))
 
@@ -3682,22 +3703,7 @@ remove streams listing from video info screen ([`473e6bc`](https://github.com/mp
 
 * Merge branch &#39;develop&#39; into HEAD ([`ffe77f2`](https://github.com/mps-youtube/yewtube/commit/ffe77f20a54bd0067c3cb538d75cafa2ad97da73))
 
-* Fixed bug where progress bar would be split over two lines ([`0fd59d3`](https://github.com/mps-youtube/yewtube/commit/0fd59d387450b7a03d33ff21afb3cf2b8bd0101f))
-
-* Additional information displayed ([`79c1532`](https://github.com/mps-youtube/yewtube/commit/79c1532f9ec615c7b8d4daf6b5ffba7e5b44fcb4))
-
 * Fix YT comments overshoot window size ([`9812c8b`](https://github.com/mps-youtube/yewtube/commit/9812c8b9c3f64ed12419ad92ded4de5ef92dbc3b))
-
-* Use random socket name and unlink after use ([`7b06f71`](https://github.com/mps-youtube/yewtube/commit/7b06f71f9a76f75acca1aa84fd85eba24356202e))
-
-* Iterate over lines in socket properly
-
-The other method was a hack ([`8a0a06a`](https://github.com/mps-youtube/yewtube/commit/8a0a06a11ebc213d7551da733bc3a07b39da946f))
-
-* Keep lines down to 80 characters ([`70832ff`](https://github.com/mps-youtube/yewtube/commit/70832ff25fb931554a0988a4beac17c6c9aa9750))
-
-* Use Json IPC for mpv 0.7+ on unix ([`f7fb052`](https://github.com/mps-youtube/yewtube/commit/f7fb0526e8ea26f906c47ba7ddf80a767ec84609))
-
 
 ## v0.2.1 (2014-11-27)
 
@@ -3709,13 +3715,13 @@ The other method was a hack ([`8a0a06a`](https://github.com/mps-youtube/yewtube/
 
 * Merge branch &#39;xprint&#39; into develop ([`c878bb2`](https://github.com/mps-youtube/yewtube/commit/c878bb2203f010da4c93ea6f3dfc13f88c3a0534))
 
+* use xprint more ([`aa0edc0`](https://github.com/mps-youtube/yewtube/commit/aa0edc01670d5682924887e8086818bd4325ad58))
+
 * Don&#39;t attempt to play with invalid player setting ([`d886bf7`](https://github.com/mps-youtube/yewtube/commit/d886bf7f2f8d3044b56e4976b1290bdbb34ef678))
 
 * Add .exe to Windows player check function ([`f7b3907`](https://github.com/mps-youtube/yewtube/commit/f7b3907353fc3e135a909b8722033040a1893268))
 
 * Fix setting default player ([`1e9eccd`](https://github.com/mps-youtube/yewtube/commit/1e9eccd2a58858c78ee0cee12a6f88987fd1d5ec))
-
-* use xprint more ([`aa0edc0`](https://github.com/mps-youtube/yewtube/commit/aa0edc01670d5682924887e8086818bd4325ad58))
 
 * Set player for new installs (#149) ([`56f9237`](https://github.com/mps-youtube/yewtube/commit/56f9237adab5f39433b0414dc345a737086c01ae))
 
@@ -3723,8 +3729,7 @@ The other method was a hack ([`8a0a06a`](https://github.com/mps-youtube/yewtube/
 
 * Update description ([`c36f015`](https://github.com/mps-youtube/yewtube/commit/c36f015fe2a10154893e977665e7b5d1b1f92bd0))
 
-
-## v0.2.0 (2014-11-24)
+## v0.2.0 (2014-11-25)
 
 ### Unknown
 
@@ -3734,13 +3739,13 @@ The other method was a hack ([`8a0a06a`](https://github.com/mps-youtube/yewtube/
 
 * Merge branch &#39;hasb&#39; into develop ([`e3fa5b9`](https://github.com/mps-youtube/yewtube/commit/e3fa5b9f557fa393c1cefa8c623609e73c302dd4))
 
+* bump version number ([`4d4e541`](https://github.com/mps-youtube/yewtube/commit/4d4e541025ecc91be25c0aca3c2f8c7a470179fb))
+
 * tidy logo ([`18a40f0`](https://github.com/mps-youtube/yewtube/commit/18a40f0a841da4156c6da0ad6754b1ba7c335775))
 
 * logo alignment ([`13701cd`](https://github.com/mps-youtube/yewtube/commit/13701cdbaeccdf8c2d47d43fc4ae3b9499a53536))
 
 * fix mplayer m4a handling in windows ([`cf031f1`](https://github.com/mps-youtube/yewtube/commit/cf031f1237343540c5daf2831d0879616934a778))
-
-* bump version number ([`4d4e541`](https://github.com/mps-youtube/yewtube/commit/4d4e541025ecc91be25c0aca3c2f8c7a470179fb))
 
 * Fix windows player filename issue ([`9753ea0`](https://github.com/mps-youtube/yewtube/commit/9753ea093609edf65c0e4280cdc094aa5310b1b2))
 
@@ -3761,6 +3766,10 @@ The other method was a hack ([`8a0a06a`](https://github.com/mps-youtube/yewtube/
 * fix playback display alignment ([`c0994fd`](https://github.com/mps-youtube/yewtube/commit/c0994fddf7eb34eeb608b51f3508735b28aefb70))
 
 * require latest pafy (0.3.66) ([`5a315d6`](https://github.com/mps-youtube/yewtube/commit/5a315d67a94f9e3f90a7119dc588ddbf0cad8f33))
+
+* Fixed bug where progress bar would be split over two lines ([`0fd59d3`](https://github.com/mps-youtube/yewtube/commit/0fd59d387450b7a03d33ff21afb3cf2b8bd0101f))
+
+* Additional information displayed ([`79c1532`](https://github.com/mps-youtube/yewtube/commit/79c1532f9ec615c7b8d4daf6b5ffba7e5b44fcb4))
 
 * PEP8 changes ([`e15c88c`](https://github.com/mps-youtube/yewtube/commit/e15c88c60430f439891b20fdd02505b2741c91cd))
 
@@ -3819,8 +3828,6 @@ Allow setting ddir using ~/path/ ([`41b683e`](https://github.com/mps-youtube/yew
 
 * Allow setting ddir using ~/path/ ([`6edd5b5`](https://github.com/mps-youtube/yewtube/commit/6edd5b56e4dd9d44c34398c54e82fe8ab19ff993))
 
-* Merge branch &#39;develop&#39; into autodetect-terminal-size ([`82cff62`](https://github.com/mps-youtube/yewtube/commit/82cff62952795c87db143ef387da7a6ea6251fa8))
-
 * Merge pull request #131 from vitorgalvao/patch-1
 
 README: how to install mplayer with homebrew ([`c38d2ed`](https://github.com/mps-youtube/yewtube/commit/c38d2ed6c31d8b475ad5157f0f8dfd3d80dc9d3d))
@@ -3828,6 +3835,8 @@ README: how to install mplayer with homebrew ([`c38d2ed`](https://github.com/mps
 * README: how to install mplayer with homebrew
 
 Applies to OS X instructions. ([`5073ac6`](https://github.com/mps-youtube/yewtube/commit/5073ac6441475c232a7a2c7cf9d12e3ed88ff15a))
+
+* Merge branch &#39;develop&#39; into autodetect-terminal-size ([`82cff62`](https://github.com/mps-youtube/yewtube/commit/82cff62952795c87db143ef387da7a6ea6251fa8))
 
 * Merge pull request #125 from YoussF/develop
 
@@ -3871,8 +3880,6 @@ video for all the tracks in all the playlists for a user respectively. ([`2be9b8
 
 Replace invalid characters in subdirectory name ([`04fb863`](https://github.com/mps-youtube/yewtube/commit/04fb863fda35fa537ed1dea10c58b56cd1359d54))
 
-* Update changes ([`fca49a6`](https://github.com/mps-youtube/yewtube/commit/fca49a6d648ecc63b55e1bccfe94fd434ffe08cb))
-
 * Add the ability to download a youtube playlist.
 
 The dapl and dvpl commands take playlist URL or ID as paramters and
@@ -3880,6 +3887,8 @@ download all the audio or video tracks in the playlist respectively. It
 creates a subdirectory in the default download directory named the same
 as the playlist name. It then downloads all the tracks into the
 subdirectory. ([`ad2a70a`](https://github.com/mps-youtube/yewtube/commit/ad2a70a36ce7b11e419502261ae639fbf0d2e051))
+
+* Update changes ([`fca49a6`](https://github.com/mps-youtube/yewtube/commit/fca49a6d648ecc63b55e1bccfe94fd434ffe08cb))
 
 * Merge branch &#39;develop&#39; into autodetect-terminal-size ([`7c50808`](https://github.com/mps-youtube/yewtube/commit/7c50808bf454a4aa3a115c40195487246daa7ec2))
 
@@ -3939,13 +3948,13 @@ This reverts commit 17516867b5b5ee81a159ef4e7d728fe36461096c. ([`b11e2dc`](https
 
 * use subprocess.call for notifier, don&#39;t depend on mplayer ([`8cec8ea`](https://github.com/mps-youtube/yewtube/commit/8cec8ea1ca37bdc7067fb726f340be54a6d0e365))
 
-* Fix order of help set topics ([`ca56e1f`](https://github.com/mps-youtube/yewtube/commit/ca56e1f2e99d08424bdb1cdc4c86800295d894ae))
-
-* Merge remote-tracking branch &#39;origin/pr/93&#39; into develop ([`349a9e9`](https://github.com/mps-youtube/yewtube/commit/349a9e912c1bdea0617ac7373538154da37fcb77))
-
 * removing unnecessary import ([`152109e`](https://github.com/mps-youtube/yewtube/commit/152109e30f9863e1ca2bddeb3e8bfe3410b38dd1))
 
 * adding support for notifiers ([`20b0183`](https://github.com/mps-youtube/yewtube/commit/20b018357f7b9c142cca185e82d6688c7cb158d3))
+
+* Fix order of help set topics ([`ca56e1f`](https://github.com/mps-youtube/yewtube/commit/ca56e1f2e99d08424bdb1cdc4c86800295d894ae))
+
+* Merge remote-tracking branch &#39;origin/pr/93&#39; into develop ([`349a9e9`](https://github.com/mps-youtube/yewtube/commit/349a9e912c1bdea0617ac7373538154da37fcb77))
 
 * Add the overwrite true|false option.
 
@@ -3954,6 +3963,10 @@ but if set to false, will skip downloads for which there are existing
 files in the current download directory. This allows for quickly
 downloading new files in a playlist while ignoring the ones that are
 already downloaded. ([`109fb66`](https://github.com/mps-youtube/yewtube/commit/109fb668339dc827837499be6a171cf7c9ea0dfd))
+
+* Use smaller image link ([`4527918`](https://github.com/mps-youtube/yewtube/commit/452791822160c0ce113c70b0d681f4b1d746c512))
+
+* Added branch to contrib notes ([`0e0a951`](https://github.com/mps-youtube/yewtube/commit/0e0a951060112a0f84e68518eebfc5441f63c60d))
 
 * Merge branch &#39;develop&#39; into autodetect-terminal-size ([`b5a11d0`](https://github.com/mps-youtube/yewtube/commit/b5a11d0ec5a06acbcd10dfdaf5695aa64bcb2fb0))
 
@@ -3972,9 +3985,13 @@ Conflicts:
 
 * log unrecognised config items ([`5c167c6`](https://github.com/mps-youtube/yewtube/commit/5c167c6cb4a1daa15dbc43e730371269456cff3e))
 
-* Added parameter to getxy function ([`c3604a7`](https://github.com/mps-youtube/yewtube/commit/c3604a75f1866aec7de191999d7ed04bf697404e))
-
 * Fix add many to playlist saves file repeatedly ([`7ac8120`](https://github.com/mps-youtube/yewtube/commit/7ac8120454af3285f825291d54cbf0bcec892b1d))
+
+* Ignore unrecognised data in old configs
+
+This handles the case of using a config file from a different version of mpsyt. ([`04d272c`](https://github.com/mps-youtube/yewtube/commit/04d272cc637f4bbcf3500bd88cd1e90c74adb53c))
+
+* Added parameter to getxy function ([`c3604a7`](https://github.com/mps-youtube/yewtube/commit/c3604a75f1866aec7de191999d7ed04bf697404e))
 
 * Remove messy underscore variables
 
@@ -3988,17 +4005,9 @@ fix --autosize not working when --debug or --logging is in use ([`4360ba1`](http
 
 * Added terminal size detection ([`eb5f146`](https://github.com/mps-youtube/yewtube/commit/eb5f14615cdf8b922a270d33259d09d9e64a7944))
 
-* Ignore unrecognised data in old configs
-
-This handles the case of using a config file from a different version of mpsyt. ([`04d272c`](https://github.com/mps-youtube/yewtube/commit/04d272cc637f4bbcf3500bd88cd1e90c74adb53c))
-
 * added terminalsize module ([`f852b8d`](https://github.com/mps-youtube/yewtube/commit/f852b8d9bf3adde01fb2467e438a3c4b160e51a0))
 
 * Use smaller image link ([`c68387e`](https://github.com/mps-youtube/yewtube/commit/c68387ea35f30aa8fa3e71e0a9941f4f43ddc9bc))
-
-* Use smaller image link ([`4527918`](https://github.com/mps-youtube/yewtube/commit/452791822160c0ce113c70b0d681f4b1d746c512))
-
-* Added branch to contrib notes ([`0e0a951`](https://github.com/mps-youtube/yewtube/commit/0e0a951060112a0f84e68518eebfc5441f63c60d))
 
 * Added branch to contrib notes ([`8dba922`](https://github.com/mps-youtube/yewtube/commit/8dba9225d1c57df3837b5d42b8523a76018e64e4))
 
@@ -4147,13 +4156,13 @@ Available format codes are:
 
 * Merge branch &#39;pafy0342&#39; into develop ([`75f8219`](https://github.com/mps-youtube/yewtube/commit/75f82194339f2f19e366a12c9b06f658902cffeb))
 
-* Change has_known_player() to known_player_set() ([`19a8f92`](https://github.com/mps-youtube/yewtube/commit/19a8f92fafea65e75326b9cbee6eef59ea97742b))
-
 * Merge branch &#39;develop&#39; into pafy0342 ([`78c4bc6`](https://github.com/mps-youtube/yewtube/commit/78c4bc68547859e728d3cc1d98e243f2656c0cde))
 
-* Don&#39;t display error message while retrying ([`2dba764`](https://github.com/mps-youtube/yewtube/commit/2dba764c2c55de3fa172a3671376e843a1be7259))
-
 * Added likes/dislikes in video info ([`4406bcb`](https://github.com/mps-youtube/yewtube/commit/4406bcb053d83d78a558e78ab741c0fab68537f3))
+
+* Change has_known_player() to known_player_set() ([`19a8f92`](https://github.com/mps-youtube/yewtube/commit/19a8f92fafea65e75326b9cbee6eef59ea97742b))
+
+* Don&#39;t display error message while retrying ([`2dba764`](https://github.com/mps-youtube/yewtube/commit/2dba764c2c55de3fa172a3671376e843a1be7259))
 
 * Add published date to video info #64 ([`a6d00d2`](https://github.com/mps-youtube/yewtube/commit/a6d00d285f91d37cbb2e2929959e8420d62fef33))
 
@@ -4228,9 +4237,9 @@ Remove redundant player flags from config
 
 * Merge branch &#39;develop&#39; into config ([`7946f11`](https://github.com/mps-youtube/yewtube/commit/7946f110158433df8677eb9ea4a0e72b1bb97a72))
 
-* new config handling ([`28a065c`](https://github.com/mps-youtube/yewtube/commit/28a065c8ff6fbd8498474e89ee0a3a7a3e57f6e9))
-
 * Handle &#39;video not available in your country&#39; in multiple downloads ([`4a104c3`](https://github.com/mps-youtube/yewtube/commit/4a104c3dafeb3fbe0fcb9d356de7b23c58e4b553))
+
+* new config handling ([`28a065c`](https://github.com/mps-youtube/yewtube/commit/28a065c8ff6fbd8498474e89ee0a3a7a3e57f6e9))
 
 * Repositioned help items ([`39982b5`](https://github.com/mps-youtube/yewtube/commit/39982b5e600c48060aefafb8b7c10d2620f04383))
 
@@ -4333,6 +4342,8 @@ This reverts commit 325edff682479569af6c8e21c3bc0154c1bf0fad. ([`d850a49`](https
 
 * Merge branch &#39;develop&#39; into statusbar ([`a97e8bb`](https://github.com/mps-youtube/yewtube/commit/a97e8bb016b3d8d867674c8a5eeca9c31e6c4f21))
 
+* Adjust row width for video list display ([`8d4ebe3`](https://github.com/mps-youtube/yewtube/commit/8d4ebe355b59e88c1f9e73fc32c900d9ef468b25))
+
 * use YT reported video duration for progress indicator ([`d2497ec`](https://github.com/mps-youtube/yewtube/commit/d2497ec039e6113294a5c7e967a8f80bfa589f87))
 
 * Adjust default player args ([`79e9ace`](https://github.com/mps-youtube/yewtube/commit/79e9aceb6b4bd1a89fbb7565734525ddb8220277))
@@ -4340,8 +4351,6 @@ This reverts commit 325edff682479569af6c8e21c3bc0154c1bf0fad. ([`d850a49`](https
 * capture mpv stderr stream got extract status info ([`f57ba98`](https://github.com/mps-youtube/yewtube/commit/f57ba98ea9112bc19eec738e583f7627dc9691ee))
 
 * display progress status for both mplayer and mpv ([`28ef410`](https://github.com/mps-youtube/yewtube/commit/28ef410876dae5355aa0eb2d2051488cffd78d90))
-
-* Adjust row width for video list display ([`8d4ebe3`](https://github.com/mps-youtube/yewtube/commit/8d4ebe355b59e88c1f9e73fc32c900d9ef468b25))
 
 * Merge pull request #46 from thomasleveil/popen-non-slave/unicode_literals
 
@@ -4351,11 +4360,11 @@ import unicode_literals ([`7999cc0`](https://github.com/mps-youtube/yewtube/comm
 
 * Merge branch &#39;pr/45&#39; into popen-non-slave ([`47f8cac`](https://github.com/mps-youtube/yewtube/commit/47f8cac9733653549bd4c73be04edf23085ef3fa))
 
+* draw a progress bar while playing a song ([`1adb2a2`](https://github.com/mps-youtube/yewtube/commit/1adb2a2e3bb19ed2fca0ff82fc2c73080f36b34d))
+
 * Merge branch &#39;develop&#39; into popen-non-slave ([`5c10df3`](https://github.com/mps-youtube/yewtube/commit/5c10df36893c6ce008cbe6b14c1b76e66b25f972))
 
 * minor adjustments to help screens ([`4cdae89`](https://github.com/mps-youtube/yewtube/commit/4cdae895e446a96120ecd168a5e93fc39dd60602))
-
-* draw a progress bar while playing a song ([`1adb2a2`](https://github.com/mps-youtube/yewtube/commit/1adb2a2e3bb19ed2fca0ff82fc2c73080f36b34d))
 
 * Added help topic for configuration ([`32bdff3`](https://github.com/mps-youtube/yewtube/commit/32bdff375ebc007d5d8b72381fc750e242e5e06a))
 
@@ -4498,6 +4507,10 @@ playlist search results now show date (needs refining to correctly display in M-
 
 * Merge branch &#39;master&#39; into develop ([`28532c3`](https://github.com/mps-youtube/yewtube/commit/28532c351285518ceadbb59b860efa49f40e8c26))
 
+* Merge branch &#39;develop&#39; ([`04e23f6`](https://github.com/mps-youtube/yewtube/commit/04e23f639a6faa23c6f85e62aeb473275c1f79cc))
+
+* Added images ([`a4f7da1`](https://github.com/mps-youtube/yewtube/commit/a4f7da13396527a642c0aca4a2d2ec474fb7ebd3))
+
 * Changed version number to 0.01.37 ([`1bdc8bb`](https://github.com/mps-youtube/yewtube/commit/1bdc8bbef7fb5e119292eb94d2bfdaaeabac788f))
 
 * Updated with new changes ([`fc63997`](https://github.com/mps-youtube/yewtube/commit/fc639970e5d7b51cf04fe3c4213bb3fcfc06bddd))
@@ -4514,8 +4527,6 @@ playlist search results now show date (needs refining to correctly display in M-
 
 Paid content cannot be accessed from mpsyt so they should be excluded from
 search results. ([`d2bb004`](https://github.com/mps-youtube/yewtube/commit/d2bb004699a0fad01bd42af1184ce4674ede6eba))
-
-* Merge branch &#39;develop&#39; ([`04e23f6`](https://github.com/mps-youtube/yewtube/commit/04e23f639a6faa23c6f85e62aeb473275c1f79cc))
 
 * Version 0.01.36 ([`8964ada`](https://github.com/mps-youtube/yewtube/commit/8964ada490108100b8f4ac5e4c183601c43649f4))
 
@@ -4534,8 +4545,6 @@ search results. ([`d2bb004`](https://github.com/mps-youtube/yewtube/commit/d2bb0
 This reverts commit 7e6ae2ffbd635f290b078d993b9a8fca9f48d95c. ([`2e1aad4`](https://github.com/mps-youtube/yewtube/commit/2e1aad4161e0e6c0c7aed634d17c73589918dcbe))
 
 * Recognise webm video-only streams, offer mux ([`7e6ae2f`](https://github.com/mps-youtube/yewtube/commit/7e6ae2ffbd635f290b078d993b9a8fca9f48d95c))
-
-* Added images ([`a4f7da1`](https://github.com/mps-youtube/yewtube/commit/a4f7da13396527a642c0aca4a2d2ec474fb7ebd3))
 
 * Repositioned images ([`eb746f9`](https://github.com/mps-youtube/yewtube/commit/eb746f9fb51656b5efc9df5cebda115805a265a9))
 
@@ -4586,14 +4595,14 @@ Removed -nocache from mplayer default args ([`be3d2f4`](https://github.com/mps-y
 
 Multiplex m4v downloads with audio for more useful HD downloads ([`4b33904`](https://github.com/mps-youtube/yewtube/commit/4b33904dfc84665d307c6594165689a8ebb08515))
 
-* Fix title attribute dot notation. ([`0a56e03`](https://github.com/mps-youtube/yewtube/commit/0a56e039e58ddd666a288b61393c9f4a6e99cd8d))
-
 * Handle invalid user input in download dialog
 Catch KeyboardInterrupt during mux ([`c101228`](https://github.com/mps-youtube/yewtube/commit/c1012288ce5d74d74e67ff4e8746a108b0be1b5c))
 
 * Catch KeyboardInterrupt in download dialog ([`cc241e4`](https://github.com/mps-youtube/yewtube/commit/cc241e4f612038abc472e85dd061b6f1445537f7))
 
 * Prompt to multiplex if m4v download selected ([`0f76cce`](https://github.com/mps-youtube/yewtube/commit/0f76cce28f1ef5f099bfdb5f90b32345ea2dc3bc))
+
+* Fix title attribute dot notation. ([`0a56e03`](https://github.com/mps-youtube/yewtube/commit/0a56e039e58ddd666a288b61393c9f4a6e99cd8d))
 
 * Modified debugging output ([`9f6731b`](https://github.com/mps-youtube/yewtube/commit/9f6731bd92992ff77f05cb8c55a87e077675cd1d))
 
@@ -4624,14 +4633,14 @@ updated README files for notes on fullscreen and show_video ([`942e069`](https:/
 
 * Merge branch &#39;master&#39; of https://github.com/np1/pms-youtube into developtest ([`f43aad5`](https://github.com/mps-youtube/yewtube/commit/f43aad5d7531df0cf90cfd205c3a977167956ee0))
 
-* Don&#39;t modify pafy Stream object
-correct rpad item title ([`2b135ed`](https://github.com/mps-youtube/yewtube/commit/2b135ed14e8caedbf5eac6b5a215f3121102c5d4))
-
 * Merge pull request #29 from thomasleveil/fix/showconfig-fail-win32
 
 Fix crash when using the &#39;set&#39; command on Windows ([`849a4e4`](https://github.com/mps-youtube/yewtube/commit/849a4e4dcf2453bcc27a13deee26aa31d5a6c97d))
 
 * Fix crash when using the &#39;set&#39; command on Windows ([`1cf4f2b`](https://github.com/mps-youtube/yewtube/commit/1cf4f2b607bca2fe73859de5b4e127a465b4d093))
+
+* Don&#39;t modify pafy Stream object
+correct rpad item title ([`2b135ed`](https://github.com/mps-youtube/yewtube/commit/2b135ed14e8caedbf5eac6b5a215f3121102c5d4))
 
 * Change debug env var name ([`aae9a5e`](https://github.com/mps-youtube/yewtube/commit/aae9a5e7a53c023cc26898ae7f0db875e15f9f22))
 
@@ -4647,14 +4656,6 @@ Fix crash when using the &#39;set&#39; command on Windows ([`849a4e4`](https://g
 
 * Changes for new name ([`8f82727`](https://github.com/mps-youtube/yewtube/commit/8f827270dcacaebe30c337d97f50121ad1ffd9ce))
 
-* Rebrand to mps-youtube ([`0708a4f`](https://github.com/mps-youtube/yewtube/commit/0708a4f9265dc5087d9836005627cee8d830479d))
-
-* new name ([`ee4e04b`](https://github.com/mps-youtube/yewtube/commit/ee4e04bb98396f20ef013032032e748321e20cd0))
-
-* Renamed main file ([`48ea019`](https://github.com/mps-youtube/yewtube/commit/48ea019313aca6c785aec515f35dfddf8f9c38a9))
-
-* Add note about project rebrand. ([`e2304b0`](https://github.com/mps-youtube/yewtube/commit/e2304b0c3a032d2b3bc8e0375699ad68440f8379))
-
 * Remove logo from readme ([`d644cb9`](https://github.com/mps-youtube/yewtube/commit/d644cb9909ee21a1352e559782adc6159a4763ed))
 
 * Update notes to fit new name ([`aa7d366`](https://github.com/mps-youtube/yewtube/commit/aa7d3663b0978a19c4809a4bdfe52118978815de))
@@ -4662,6 +4663,14 @@ Fix crash when using the &#39;set&#39; command on Windows ([`849a4e4`](https://g
 * Renamed main python file to mpsyt ([`2463a05`](https://github.com/mps-youtube/yewtube/commit/2463a0596f586b267c40f2b2e31af899c6a19ae8))
 
 * More rebranding ([`d0ed349`](https://github.com/mps-youtube/yewtube/commit/d0ed349b9078cf39716b8894bfe7af4afcb2d465))
+
+* Rebrand to mps-youtube ([`0708a4f`](https://github.com/mps-youtube/yewtube/commit/0708a4f9265dc5087d9836005627cee8d830479d))
+
+* new name ([`ee4e04b`](https://github.com/mps-youtube/yewtube/commit/ee4e04bb98396f20ef013032032e748321e20cd0))
+
+* Renamed main file ([`48ea019`](https://github.com/mps-youtube/yewtube/commit/48ea019313aca6c785aec515f35dfddf8f9c38a9))
+
+* Add note about project rebrand. ([`e2304b0`](https://github.com/mps-youtube/yewtube/commit/e2304b0c3a032d2b3bc8e0375699ad68440f8379))
 
 * more rebranding ([`d77b869`](https://github.com/mps-youtube/yewtube/commit/d77b8699bfb427f5e87fc1363a03fe8b893d09ac))
 
@@ -4749,31 +4758,31 @@ don&#39;t use input as a variable name (renamed to inp) ([`a8532b0`](https://git
 
 * Merge branch &#39;master&#39; of https://github.com/ainola/pms-youtube into ainola ([`9cd4205`](https://github.com/mps-youtube/yewtube/commit/9cd4205ed6cedb7fd6348cdf65dc169f78bad36b))
 
-* Use http instead of https ([`56fb684`](https://github.com/mps-youtube/yewtube/commit/56fb684b3411b31d2486cfcb23c3332513d61bab))
-
 * added help section for invocation, fixed spelling ([`0a092cf`](https://github.com/mps-youtube/yewtube/commit/0a092cf5bdecf5916e436f3373869ca928c0fa1f))
 
 * made the help more extensive ([`0b66733`](https://github.com/mps-youtube/yewtube/commit/0b6673365d6bb035cb060702077564808eae4ba9))
 
 * reverse my changes to time display; fixed upstream ([`b5f5c49`](https://github.com/mps-youtube/yewtube/commit/b5f5c4993f2694ded4354b409555d6f030ca5bda))
 
-* Fix Length field alignment ([`2dc741f`](https://github.com/mps-youtube/yewtube/commit/2dc741f2ac6159059534fb24232a194de321e32a))
-
 * proper display for lengths greater than 59:99 ([`7558f6f`](https://github.com/mps-youtube/yewtube/commit/7558f6fe4b0e5ba253064efe237245edae6b29f4))
 
+* Use http instead of https ([`56fb684`](https://github.com/mps-youtube/yewtube/commit/56fb684b3411b31d2486cfcb23c3332513d61bab))
+
+* Fix Length field alignment ([`2dc741f`](https://github.com/mps-youtube/yewtube/commit/2dc741f2ac6159059534fb24232a194de321e32a))
+
 * Merge branch &#39;master&#39; of https://github.com/np1/pms-youtube ([`eef7bdc`](https://github.com/mps-youtube/yewtube/commit/eef7bdc24f214dfed729a6a54f82ae669c8a8b57))
-
-* use env variable for debug logging ([`c8da757`](https://github.com/mps-youtube/yewtube/commit/c8da757348012bf1ae566929dbfe8a1e0b153821))
-
-* Increase retry count ([`ce34c95`](https://github.com/mps-youtube/yewtube/commit/ce34c95c99fda167dd1595769c555a9aee0f7b99))
-
-* Fix display of items longer than one hour. ([`2409eb5`](https://github.com/mps-youtube/yewtube/commit/2409eb5f5993a252fc961e9ab33bac12f98d6dc9))
 
 * Merge pull request #11 from ainola/master
 
 Add help entry for showing info of result. ([`54484e4`](https://github.com/mps-youtube/yewtube/commit/54484e4dc303da0741245c3cb4d4153f85722c90))
 
 * Add help entry for showing info of result. ([`1febfa5`](https://github.com/mps-youtube/yewtube/commit/1febfa526cae3914fa33c5920078ba3728e79f01))
+
+* use env variable for debug logging ([`c8da757`](https://github.com/mps-youtube/yewtube/commit/c8da757348012bf1ae566929dbfe8a1e0b153821))
+
+* Increase retry count ([`ce34c95`](https://github.com/mps-youtube/yewtube/commit/ce34c95c99fda167dd1595769c555a9aee0f7b99))
+
+* Fix display of items longer than one hour. ([`2409eb5`](https://github.com/mps-youtube/yewtube/commit/2409eb5f5993a252fc961e9ab33bac12f98d6dc9))
 
 * v0.01.08 ([`1ed8260`](https://github.com/mps-youtube/yewtube/commit/1ed8260a43adbc7c76c8d26928db3b1d070360ed))
 
@@ -4933,13 +4942,13 @@ This reverts commit a22f512f7ba4a947002f5072ab68dcdfc1ba768a. ([`b912ff4`](https
 Conflicts:
 	pms ([`579d1f1`](https://github.com/mps-youtube/yewtube/commit/579d1f1e4eea18819e12481d46f121ec6a79b96e))
 
+* Show duration of playing song ([`50a928a`](https://github.com/mps-youtube/yewtube/commit/50a928a9677025a95b4bd8ae8c4036a61a12983b))
+
 * tidy config line ([`962c04f`](https://github.com/mps-youtube/yewtube/commit/962c04fa7579615e257b0b99240bc7fc51a6b60f))
 
 * Minor corrections ([`078c5da`](https://github.com/mps-youtube/yewtube/commit/078c5da9c61eb9efbb5a387150c3ecdf545956fe))
 
 * Show duration of playing song ([`ced956d`](https://github.com/mps-youtube/yewtube/commit/ced956d8f06cc408beef478962dd3da62bd8600c))
-
-* Show duration of playing song ([`50a928a`](https://github.com/mps-youtube/yewtube/commit/50a928a9677025a95b4bd8ae8c4036a61a12983b))
 
 * Fix broken setconfig ([`e3130cd`](https://github.com/mps-youtube/yewtube/commit/e3130cd9580979c8d7d7b5a24434635b2e3c3ef1))
 
@@ -4952,9 +4961,9 @@ Conflicts:
 Conflicts:
 	pms ([`aef0c26`](https://github.com/mps-youtube/yewtube/commit/aef0c269d1738925bcb2cb32f0436b3198021b1b))
 
-* Add option to hide mplayer keys ([`587c493`](https://github.com/mps-youtube/yewtube/commit/587c4935bf63b03f97dfd8c7e0ff59ecdcaf5529))
-
 * Add option to hide mplayer keys ([`3ea3c1f`](https://github.com/mps-youtube/yewtube/commit/3ea3c1f55af0ad9340f19cf1e824bf15603b0e71))
+
+* Add option to hide mplayer keys ([`587c493`](https://github.com/mps-youtube/yewtube/commit/587c4935bf63b03f97dfd8c7e0ff59ecdcaf5529))
 
 * Disallow colours on Windows without colorama ([`994c928`](https://github.com/mps-youtube/yewtube/commit/994c928e01a9f576fac0ee6d9581d9b129a2244e))
 
@@ -4978,10 +4987,6 @@ Conflicts:
 
 * Merge branch &#39;master&#39; of https://github.com/np1/pms ([`ae48bc7`](https://github.com/mps-youtube/yewtube/commit/ae48bc73302abd7468f9e1d184785b92888aa10b))
 
-* Cleaner prompt ([`c8fbf7f`](https://github.com/mps-youtube/yewtube/commit/c8fbf7fdbea8529ece028adc420173c57252fa9c))
-
-* Allow / as search prefix ([`afa4c62`](https://github.com/mps-youtube/yewtube/commit/afa4c621c32a1b450460b6c024189f9d0bed2234))
-
 * Merge pull request #30 from thomasleveil/windows_colors
 
 add color support for Windows ([`621aa86`](https://github.com/mps-youtube/yewtube/commit/621aa86dabdebd71fa883e636bf4f2c096ce121a))
@@ -4989,6 +4994,10 @@ add color support for Windows ([`621aa86`](https://github.com/mps-youtube/yewtub
 * add optional color support for Windows
 
 if the colorama python module is found ([`a4409d8`](https://github.com/mps-youtube/yewtube/commit/a4409d87cad9a6c6feeb71f5f18e7b9d2779ae63))
+
+* Cleaner prompt ([`c8fbf7f`](https://github.com/mps-youtube/yewtube/commit/c8fbf7fdbea8529ece028adc420173c57252fa9c))
+
+* Allow / as search prefix ([`afa4c62`](https://github.com/mps-youtube/yewtube/commit/afa4c621c32a1b450460b6c024189f9d0bed2234))
 
 * Use setuptools, fallback to distutils.core ([`a03e034`](https://github.com/mps-youtube/yewtube/commit/a03e034e5404f975f71e10e139cc7d6e4f8db7ba))
 
@@ -5248,11 +5257,11 @@ more concise functions ([`8b566b2`](https://github.com/mps-youtube/yewtube/commi
 
 * Merge branch &#39;master&#39; of https://github.com/np1/pms ([`a39ceeb`](https://github.com/mps-youtube/yewtube/commit/a39ceebfd46daa060feda52a19fd2d46c35b5b1f))
 
-* Catch AttributeError ([`0d63dce`](https://github.com/mps-youtube/yewtube/commit/0d63dce16087a58365c0985e35c1147b3a594036))
-
 * Update pms
 
 catch Glib.get_user_special_dir() returns None ([`3f43c0d`](https://github.com/mps-youtube/yewtube/commit/3f43c0d27d210716657bde2b4d1765d116aa1cf3))
+
+* Catch AttributeError ([`0d63dce`](https://github.com/mps-youtube/yewtube/commit/0d63dce16087a58365c0985e35c1147b3a594036))
 
 * playlists ([`a5e7ef9`](https://github.com/mps-youtube/yewtube/commit/a5e7ef95d4b7ca1aa470f38c5c6ba92dbda53720))
 
@@ -5496,6 +5505,8 @@ some tidying up ([`ec50612`](https://github.com/mps-youtube/yewtube/commit/ec506
 
 * Merge branch &#39;master&#39; of https://github.com/np1/pms ([`5a8baad`](https://github.com/mps-youtube/yewtube/commit/5a8baad9ed4bca30e1b442b8e26a5153e4c64db7))
 
+* Update README.md ([`c227a7d`](https://github.com/mps-youtube/yewtube/commit/c227a7dc7c89541d219066e7dc4e6c8f14c3307e))
+
 * removed redundant conditional ([`6a2dac0`](https://github.com/mps-youtube/yewtube/commit/6a2dac005f0feacd08e174eeaa98f02e233b1a07))
 
 * removed logging ([`33aa5b9`](https://github.com/mps-youtube/yewtube/commit/33aa5b9a9416ca561e62c08b569d31c4e163fe60))
@@ -5503,8 +5514,6 @@ some tidying up ([`ec50612`](https://github.com/mps-youtube/yewtube/commit/ec506
 * added logging history ([`e36520c`](https://github.com/mps-youtube/yewtube/commit/e36520c15a4aef07ee306d4c648702d69157656f))
 
 * added timeout ([`144c9a3`](https://github.com/mps-youtube/yewtube/commit/144c9a34d92e9b7406fb686a107e6f642d603f92))
-
-* Update README.md ([`c227a7d`](https://github.com/mps-youtube/yewtube/commit/c227a7dc7c89541d219066e7dc4e6c8f14c3307e))
 
 * added requirement, mplayer ([`f8472cd`](https://github.com/mps-youtube/yewtube/commit/f8472cd13871981723c6973bfbde0747fd25754b))
 
