@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v2.11.7 (2024-09-11)
+
+### Fix
+
+* fix: semantic_release version for pypi setup.py was stuck ([`f29e0b3`](https://github.com/mps-youtube/yewtube/commit/f29e0b33241ae50e04fb4d2b0b8308be328eef82))
+
 ## v2.11.6 (2024-09-11)
 
 ### Chore
