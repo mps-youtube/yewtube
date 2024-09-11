@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v2.12.0 (2024-09-11)
+
+### Chore
+
+* chore: clean up setup.cfg ([`dfa42a2`](https://github.com/mps-youtube/yewtube/commit/dfa42a2afeed3e4130870af8eecd6a54d05d4340))
+
 ## v2.11.7 (2024-09-11)
 
 ### Fix
