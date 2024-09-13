@@ -2,3 +2,4 @@ include mps-youtube.desktop
 include LICENSE
 include README.md
 include CHANGELOG.md
+include requirements.txt
