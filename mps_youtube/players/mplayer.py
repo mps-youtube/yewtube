@@ -70,6 +70,11 @@ class mplayer(CmdPlayer):
         util.list_update("-cache", args)
         util.list_update("4096", args)
 
+        # MPlayer currently only supports audio files local to the filesystem,
+        # so this will not work with audio streams.
+        if 'audio_url' in self.stream and self.stream['mtype'] == 'video_only':
+            util.list_update(f'-audiofile {self.stream["audio_url"]}', args)
+
         return [self.player] + args + [self.stream['url']]
 
     def clean_up(self):

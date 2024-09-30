@@ -98,6 +98,9 @@ class mpv(CmdPlayer):
             util.list_update('--no-video', args)
             util.list_update('--vid=no', args)
 
+        if 'audio_url' in self.stream and self.stream['mtype'] == 'video_only':
+            util.list_update(f'--audio-file={self.stream["audio_url"]}', args)
+
         return [self.player] + args + [self.stream['url']]
 
     def clean_up(self):

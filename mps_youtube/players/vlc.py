@@ -24,6 +24,9 @@ class vlc(CmdPlayer):
         if self.subtitle_path:
             args.extend(('--sub-file', self.subtitle_path))
 
+        if 'audio_url' in self.stream and self.stream['mtype'] == 'video_only':
+            util.list_update(f'--input-slave={self.stream["audio_url"]}', args)
+
         util.list_update("--play-and-exit", args)
 
         return [self.player] + args + [self.stream['url']]
