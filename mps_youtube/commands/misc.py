@@ -60,7 +60,7 @@ def quits(showlogo=True):
     if config.CHECKUPDATE.get and showlogo:
 
         try:
-            url = "https://raw.githubusercontent.com/iamtalhaasghar/yewtube/master/setup.py"
+            url = "https://raw.githubusercontent.com/mps-youtube/yewtube/master/setup.py"
             v = urlopen(url, timeout=1).read().decode()
             v = re.search(r'__version__\s*=\s*"\s*([\d\.]+)\s*"\s*', v, re.MULTILINE)
 

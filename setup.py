@@ -2,7 +2,7 @@
 
 """ setup.py for yewtube.
 
-https://github.com/iamtalhaasghar/yewtube
+https://github.com/mps-youtube/yewtube
 
 python setup.py sdist bdist_wheel
 """
@@ -21,7 +21,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 with open('requirements.txt', 'r') as fh:
     requirements = fh.readlines()
 
-__version__ = "2.10.2"
+__version__ = "2.12.0"
 
 options = dict(
     name="yewtube",
@@ -29,9 +29,9 @@ options = dict(
     description="A Terminal based YouTube player and downloader. No Youtube API key required. Forked from mps-youtube",
     keywords=["video", "music", "audio", "youtube", "stream", "download"],
     author="talha_programmer",
-    author_email="talhaasghar.contact@simplelogin.fr",
-    url="https://github.com/iamtalhaasghar/yewtube",
-    download_url="https://github.com/iamtalhaasghar/yewtube/releases",
+    author_email="iamtalhaasghar@gmail.com",
+    url="https://github.com/mps-youtube/yewtube",
+    download_url="https://github.com/mps-youtube/yewtube/releases",
     packages=['mps_youtube', 'mps_youtube.commands', 'mps_youtube.listview', 'mps_youtube.players'],
     entry_points={'console_scripts': ['yt = mps_youtube:main.main']},
     python_requires='>=3.6',

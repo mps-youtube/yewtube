@@ -1,8 +1,8 @@
 site_name: Yewtube
 site_description: Terminal based YouTube player and downloader.
 site_url: https://iamtalhaasghar.github.io/yewtube
-repo_url: https://github.com/iamtalhaasghar/yewtube
-repo_name: iamtalhaasghar/yewtube
+repo_url: https://github.com/mps-youtube/yewtube
+repo_name: mps-youtube/yewtube
 
 nav:
 - Home:

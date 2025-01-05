@@ -14,7 +14,6 @@ You can also find lists of all contributors [in this file](./CONTRIBUTORS) or [i
 * maintained mps-youtube, a fork of [mps](https://web.archive.org/web/20180429034221/https://github.com/np1/mps) with [Darren a.k.a np1](https://github.com/np1)
 ## [Talha Asghar](https://github.com/iamtalhaasghar) 
 [![gh-sponsor](https://img.shields.io/badge/_-Github-orange.svg?logo=github&labelColor=555555&style=for-the-badge)](https://github.com/iamtalhaasghar)
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/iamtalhaasghar)
 *  created yewtube - a fork of mps-youtube with no Youtube API Key, vlc with no gui, vlc subtitles support
 * was made [owner of mps-youtube](https://github.com/mps-youtube/yewtube/discussions/1202) organization by [Ian Douglas Scott](https://github.com/orgs/mps-youtube/people/ids1024)
 ## [Jiri Hörner](https://github.com/hrnr) 

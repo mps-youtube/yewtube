@@ -492,7 +492,7 @@ def _get_mpv_version(exename):
 
 def _get_mplayer_version(exename):
     o = subprocess.check_output([exename]).decode()
-    m = re.search('MPlayer SVN[\s-]r([0-9]+)', o, re.MULTILINE|re.IGNORECASE)
+    m = re.search(r'MPlayer SVN[\s-]r([0-9]+)', o, re.MULTILINE|re.IGNORECASE)
 
     ver = 0
     if m:
@@ -510,7 +510,7 @@ def _get_mplayer_version(exename):
 
 def _get_metadata(song_title):
     ''' Get metadata from a song title '''
-    t = re.sub("[\(\[].*?[\)\]]", "", song_title.lower())
+    t = re.sub(r"[\(\[].*?[\)\]]", "", song_title.lower())
     t = t.split('-')
 
     if len(t) != 2:  # If len is not 2, no way of properly knowing title for sure
