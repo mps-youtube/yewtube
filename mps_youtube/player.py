@@ -132,9 +132,16 @@ class BasePlayer:
         if config.NOTIFIER.get:
             subprocess.Popen(shlex.split(config.NOTIFIER.get) + [self.song.title])
 
-        size = streams.get_size(self.song.ytid, self.stream['url'])
-        songdata = (self.song.ytid, '' if self.stream.get('ext') is None else self.stream.get('ext') + " " + self.stream['quality'],
-                    int(size / (1024 ** 2)))
+        #option does not interfere unless mpv is selected as the player.
+        if config.PIPE_DIRECT_MPV.get and config.PLAYER.get == 'mpv':
+            songdata = (self.song.ytid, 'Direct to MPV ',
+                            0)
+        else:
+            size = streams.get_size(self.song.ytid, self.stream['url'])
+
+            songdata = (self.song.ytid, '' if self.stream.get('ext') is None else self.stream.get('ext') + " " + self.stream['quality'],
+                            int(size / (1024 ** 2)))
+
         self.songdata = "%s; %s; %s Mb" % songdata
         screen.writestatus(self.songdata)
 
@@ -318,6 +325,19 @@ class CmdPlayer(BasePlayer):
 def stream_details(song, failcount=0, override=False, softrepeat=False):
     """Fetch stream details for a song."""
     # don't interrupt preloading:
+    if config.PIPE_DIRECT_MPV.get and config.PLAYER.get == 'mpv':
+        video = ((config.SHOW_VIDEO.get and override != "audio") or
+                 (override in ("fullscreen", "window", "forcevid")))
+        # doesn't matter - since we are passing direct to mpv we only care about the url
+        stream = {"url": str('https://www.youtube.com/watch?v=%s' % song.ytid),
+                "ext": 'mp4',
+                "quality": str(config.MAX_RES.get),
+                "rawbitrate": 99,
+                "mtype": 'video',
+                "size": 100} 
+
+        return (video, stream, override)
+
     while song.ytid in g.preloading:
         screen.writestatus("fetching item..")
         time.sleep(0.1)
