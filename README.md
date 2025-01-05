@@ -161,6 +161,18 @@ yewtube is run on the command line using the command:
 Enter `h` from within the program for help.
 
 
+Using yewtube with mpv
+----------------------
+
+If you have `mpv` player installed and you set it to be used as the player
+you can have yewtube to use its input bindings (with only a few usability changes
+done automatically by yewtube) by soft-linking to it from `~/.config/mps-youtube/mpv-input.conf`
+like so:
+
+```shell
+> ln -sr ~/.config/mpv/input.conf ~/.config/mps-youtube/mpv-input.conf
+```
+
 Using yewtube with mpris
 ------------------------
 
