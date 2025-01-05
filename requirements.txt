@@ -1,3 +1,4 @@
+httpx<0.28
 requests
 pyreadline3 ; platform_system=="Windows"
 pyperclip
