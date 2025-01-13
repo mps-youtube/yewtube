@@ -21,7 +21,7 @@ parser.add_argument('search', nargs='+')
 from .. import c, config, content, contentquery, g, listview, screen, util
 from ..playlist import Playlist, Video
 from . import command
-from .songlist import paginatesongs, plist
+from .songlist import paginatesongs, plist, mixlist
 
 ISO8601_TIMEDUR_EX = re.compile(r'PT((\d{1,3})H)?((\d{1,3})M)?((\d{1,2})S)?')
 
@@ -530,11 +530,10 @@ def mix(num):
         if item is None:
             g.message = util.F('invalid item')
             return
-        item = util.get_pafy(item)
-        # Mix playlists are made up of 'RD' + video_id
+        item = g.model[int(num) -1]
         try:
-            plist("RD" + item.videoid)
-        except OSError:
+            mixlist(item.ytid)
+        except KeyError:
             g.message = util.F('no mix')
 
 
