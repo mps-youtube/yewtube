@@ -158,7 +158,7 @@ class BasePlayer:
         metadata = util._get_metadata(self.song.title) if config.LOOKUP_METADATA.get else None
 
         if metadata is None:
-            arturl = "https://i.ytimg.com/vi/%s/default.jpg" % self.song.ytid
+            arturl = util.get_pafy(self.song.ytid).getbestthumb()
             metadata = (self.song.ytid, self.song.title, self.song.length,
                         arturl, [''], '')
         else:
