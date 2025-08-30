@@ -189,6 +189,9 @@ def _preload(song, delay, override):
         streamlist = get(song)
         stream = select(streamlist, audio=not video, m4a_ok=m4a)
 
+        if not stream:
+            return
+
         if not stream and not video:
             # preload video stream, no audio available
             stream = select(streamlist, audio=False)
