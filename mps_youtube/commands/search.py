@@ -210,7 +210,7 @@ def usersearch_id(user, channel_id, term):
     else:
         msg = "Video uploads by {2}{4}{0}"
         progtext = termuser[1]
-        if config.SEARCH_MUSIC:
+        if config.SEARCH_MUSIC.get:
             failmsg = """User %s not found or has no videos in the Music category.
 Use 'set search_music False' to show results not in the Music category.""" % termuser[1]
         else:
