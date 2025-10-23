@@ -29,17 +29,22 @@ import traceback as traceback_py
 from . import util
 
 completer = None
+readline = None
 try:
     import readline
+except ImportError:
+    try:
+        from pyreadline3 import Readline
+        readline = Readline()
+    except ImportError:
+        pass
+if readline:
     readline.set_history_length(2000)
     has_readline = True
     completer = util.CommandCompleter()
     readline.parse_and_bind('tab: complete')
     readline.set_completer(completer.complete_command)
     readline.set_completer_delims('')
-
-except ImportError:
-    has_readline = False
 
 from . import g, c, commands, screen, history, init
 from . import __version__, playlists, content, listview
