@@ -21,7 +21,7 @@ class vlc(CmdPlayer):
         if not config.SHOW_VIDEO.get:
             args.extend(("--no-video",))
 
-        if self.subtitle_path:
+        if self.__getattribute__('subtitle_path'):
             args.extend(('--sub-file', self.subtitle_path))
 
         util.list_update("--play-and-exit", args)
