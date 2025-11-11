@@ -37,7 +37,7 @@ except ImportError:
         from pyreadline3 import Readline
         readline = Readline()
     except ImportError:
-        pass
+        has_readline = False
 if readline:
     readline.set_history_length(2000)
     has_readline = True
