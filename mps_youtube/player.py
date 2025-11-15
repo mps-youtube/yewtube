@@ -71,7 +71,7 @@ class BasePlayer:
                 lastfm.set_now_playing(g.artist, g.scrobble_queue[self.song_no])
 
             try:
-                if config.SHOW_VIDEO and config.SHOW_SUBTITLES:
+                if config.SHOW_VIDEO.get and config.SHOW_SUBTITLES.get:
                     self.subtitle_path = pafy.get_subtitles(self.song.ytid, config.DDIR.get)
                 self.video, self.stream, self.override = stream_details(
                                                             self.song,
