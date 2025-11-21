@@ -8,6 +8,8 @@ import requests
 import yt_dlp
 from youtubesearchpython import VideosSearch, ChannelsSearch, PlaylistsSearch, Suggestions, Playlist, playlist_from_channel_id, Comments, Video, Channel, ChannelSearch
 
+from . import playlists
+
 
 class MyLogger:
 
@@ -105,6 +107,45 @@ def get_playlist(playlist_id):
     playlist = Playlist('https://www.youtube.com/playlist?list=%s' % playlist_id)
     while playlist.hasMoreVideos:
         playlist.getNextVideos()
+    return playlist
+
+def get_mix(video_id):
+
+    '''
+    Get a list of all videos (max 100) in the mix of the specified video_id
+    '''
+
+    # youtubesearchpython gets playlists by parsing the HTML of the
+    # corresponding page, and this doesn't work for mixes. so, we need to
+    # enlist the help of yt-dlp instead
+
+    # Mix playlist IDs are made up of "RD" + video_id
+    # In order to see the mix, we need to fetch the first video in the list
+    playlist_url = "https://www.youtube.com/watch?v=%s&list=RD%s" % (video_id, video_id)
+
+    ydl_opts = {
+        "extract_flat": True,
+        "playlist_items": "1-100",
+        "dump_single_json": True,
+        "logger": MyLogger()
+    }
+    playlist_data = {}
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        playlist_data = ydl.extract_info(playlist_url)
+
+    videos = []
+    for video_data in playlist_data["entries"]:
+        video = {}
+
+        video["id"] = video_data["id"]
+        video["title"] = video_data["title"]
+        video["link"] = "https://www.youtube.com/watch?v=%s" % video_data["id"]
+        video["duration_parsed"] = video_data["duration"]
+
+        videos.append(video)
+
+    # NB: We use a playlists.Playlist instead of youtubesearchpython.Playlist
+    playlist = playlists.Playlist(playlist_data["title"], videos)
     return playlist
 
 def get_video_title_suggestions(query):
