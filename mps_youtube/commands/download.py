@@ -336,6 +336,21 @@ def external_download(song, filename, url):
     util.dbg("Downloading using: %s", " ".join(cmd_list))
     subprocess.call(cmd_list)
 
+def _transcode(song, filename, audio=False):
+    """ Transcode filename
+
+    Return new filename (transcoded file)
+    """
+    active_encoder = g.encoders[config.ENCODER.get]
+    ext = filename.split(".")[-1]
+    valid_ext = ext in active_encoder['valid'].split(",")
+
+    if audio and g.muxapp:
+        remux_audio(filename, song.title)
+
+    if config.ENCODER.get != 0 and valid_ext:
+        filename = transcode(filename, active_encoder)
+    return filename
 
 def _download(song, filename, url=None, audio=False, allow_transcode=True):
     """ Download file, show status.
@@ -356,6 +371,10 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
         title = c.y + os.path.splitext(os.path.basename(filename))[0] + c.w
         util.xprint("Downloading %s using custom command" % title)
         external_download(song, filename, url)
+        
+        if allow_transcode:
+            _transcode(song, filename, audio)
+
         return None
 
     if not config.OVERWRITE.get:
@@ -396,15 +415,8 @@ def _download(song, filename, url=None, audio=False, allow_transcode=True):
         sys.stdout.write("\r" + status + ' ' * 4 + "\r")
         sys.stdout.flush()
 
-    active_encoder = g.encoders[config.ENCODER.get]
-    ext = filename.split(".")[-1]
-    valid_ext = ext in active_encoder['valid'].split(",")
-
-    if audio and g.muxapp:
-        remux_audio(filename, song.title)
-
-    if config.ENCODER.get != 0 and valid_ext and allow_transcode:
-        filename = transcode(filename, active_encoder)
+    if allow_transcode:
+        filename = _transcode(song, filename, audio)
 
     return filename
 
