@@ -10,18 +10,11 @@ import tempfile
 try:
     # pylint: disable=F0401
     import colorama
+
     has_colorama = True
 
 except ImportError:
     has_colorama = False
-
-try:
-    import readline
-    readline.set_history_length(2000)
-    has_readline = True
-
-except ImportError:
-    has_readline = False
 
 from . import __version__, c, cache, config, g, paths, screen
 from .helptext import helptext
@@ -31,7 +24,7 @@ mswin = os.name == "nt"
 
 
 def init():
-    """ Initial setup. """
+    """Initial setup."""
 
     _process_cl_args()
 
@@ -43,7 +36,6 @@ def init():
     config.convert_old_cf_to_json()
 
     if not os.path.exists(g.CFFILE):
-
         if has_exefile(vlc):
             config.PLAYER.set(vlc)
 
@@ -58,14 +50,19 @@ def init():
     else:
         config.load()
         try:
-            assign_player(config.PLAYER.get)  # Player is not assigned when config is loaded
-        except Exception as ex:
-            g.message = "%sFailed to get %s`s version. Probabily it is not installed. Try installing it again or change player using `set player <player_name>` %s" %(c.y, config.PLAYER.get , c.w)
+            assign_player(
+                config.PLAYER.get
+            )  # Player is not assigned when config is loaded
+        except Exception:
+            g.message = (
+                "%sFailed to get %s`s version. Probabily it is not installed. Try installing it again or change player using `set player <player_name>` %s"
+                % (c.y, config.PLAYER.get, c.w)
+            )
             screen.update()
             input("Press Enter to go back to main menu.")
 
-    # Make pafy use the same api key
-    # pafy.set_api_key(config.API_KEY.get)
+    # Make extractor use the same api key
+    # extractor.set_api_key(config.API_KEY.get)
 
     _init_readline()
     cache.load()
@@ -95,6 +92,7 @@ def init():
     if config.MPRIS.get:
         try:
             from . import mpris
+
             conn1, conn2 = multiprocessing.Pipe()
             g.mprisctl = mpris.MprisConnection(conn1)
             t = multiprocessing.Process(target=mpris.main, args=(conn2,))
@@ -105,7 +103,7 @@ def init():
 
 
 def _init_transcode():
-    """ Create transcoding presets if not present.
+    """Create transcoding presets if not present.
 
     Read transcoding presets.
     """
@@ -178,7 +176,6 @@ command: ENCODER_PATH -i IN -codec:a wmav2 -q:a 0 OUT.EXT"""
         e = {}
 
         for line in tcf.readlines():
-
             if line.startswith("TRANSCODER_PATH:"):
                 m = re.match("TRANSCODER_PATH:(.*)", line).group(1)
                 g.transcoder_path = m.strip()
@@ -189,16 +186,16 @@ command: ENCODER_PATH -i IN -codec:a wmav2 -q:a 0 OUT.EXT"""
                 g.delete_orig = do
 
             elif line.startswith("name:"):
-                e['name'] = re.match("name:(.*)", line).group(1).strip()
+                e["name"] = re.match("name:(.*)", line).group(1).strip()
 
             elif line.startswith("extension:"):
-                e['ext'] = re.match("extension:(.*)", line).group(1).strip()
+                e["ext"] = re.match("extension:(.*)", line).group(1).strip()
 
             elif line.startswith("valid for:"):
-                e['valid'] = re.match("valid for:(.*)", line).group(1).strip()
+                e["valid"] = re.match("valid for:(.*)", line).group(1).strip()
 
             elif line.startswith("command:"):
-                e['command'] = re.match("command:(.*)", line).group(1).strip()
+                e["command"] = re.match("command:(.*)", line).group(1).strip()
 
                 if "name" in e and "ext" in e and "valid" in e:
                     g.encoders.append(e)
@@ -206,37 +203,30 @@ command: ENCODER_PATH -i IN -codec:a wmav2 -q:a 0 OUT.EXT"""
 
 
 def _init_readline():
-    """ Enable readline for input history. """
-    if g.command_line:
-        return
-
-    if has_readline:
-        g.READLINE_FILE = os.path.join(paths.get_config_dir(), "input_history")
-
-        if os.path.exists(g.READLINE_FILE):
-            readline.read_history_file(g.READLINE_FILE)
-            dbg(c.g + "Read history file" + c.w)
+    """Enable history file path setting."""
+    g.READLINE_FILE = os.path.join(paths.get_config_dir(), "input_history")
+    dbg(c.g + "Set history file path to: " + g.READLINE_FILE + c.w)
 
 
 def _process_cl_args():
-    """ Process command line arguments. """
+    """Process command line arguments."""
 
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('commands', nargs='*')
-    parser.add_argument('--help', '-h', action='store_true')
-    parser.add_argument('--version', '-v', action='store_true')
-    parser.add_argument('--debug', '-d', action='store_true')
-    parser.add_argument('--logging', '-l', action='store_true')
-    parser.add_argument('--no-autosize', action='store_true')
-    parser.add_argument('--no-preload', action='store_true')
-    parser.add_argument('--no-textart', action='store_true')
+    parser.add_argument("commands", nargs="*")
+    parser.add_argument("--help", "-h", action="store_true")
+    parser.add_argument("--version", "-v", action="store_true")
+    parser.add_argument("--debug", "-d", action="store_true")
+    parser.add_argument("--logging", "-l", action="store_true")
+    parser.add_argument("--no-autosize", action="store_true")
+    parser.add_argument("--no-preload", action="store_true")
+    parser.add_argument("--no-textart", action="store_true")
     args = parser.parse_args()
 
     if args.version:
         screen.msgexit(_get_version_info())
 
     elif args.help:
-        screen.msgexit('\n'.join(i[2] for i in helptext()))
+        screen.msgexit("\n".join(i[2] for i in helptext()))
 
     if args.debug or os.environ.get("mpsytdebug") == "1":
         xprint(_get_version_info())
@@ -246,7 +236,7 @@ def _process_cl_args():
     if args.logging or os.environ.get("mpsytlog") == "1" or g.debug_mode:
         logfile = os.path.join(tempfile.gettempdir(), "mpsyt.log")
         logging.basicConfig(level=logging.DEBUG, filename=logfile)
-        logging.getLogger("pafy").setLevel(logging.DEBUG)
+        logging.getLogger("extractor").setLevel(logging.DEBUG)
 
     if args.no_autosize:
         g.detectable_size = False
@@ -265,12 +255,12 @@ def _process_cl_args():
 
 
 def _get_version_info():
-    """ Return version and platform info. """
-    # pafy_version = pafy.__version__
+    """Return version and platform info."""
+    # extractor_version = extractor.__version__
     # youtube_dl_version = None
-    # if tuple(map(int, pafy_version.split('.'))) >= (0, 5, 0):
-    #     pafy_version += " (" + pafy.backend + " backend)"
-    #     if pafy.backend == "youtube-dl":
+    # if tuple(map(int, extractor_version.split('.'))) >= (0, 5, 0):
+    #     extractor_version += " (" + extractor.backend + " backend)"
+    #     if extractor.backend == "youtube-dl":
 
     from yt_dlp.version import __version__ as ytdlp_version
 
@@ -283,8 +273,6 @@ def _get_version_info():
     except Exception:
         pass
     try:
-        from gi.repository import GLib
-
         glib = True
     except Exception:
         pass

@@ -19,9 +19,7 @@ class GenericPlayer(CmdPlayer):
         self.player = player
 
     def _generate_real_playerargs(self):
-        '''Generates player arguments to called using Popen
-
-        '''
+        """Generates player arguments to called using Popen"""
         args = config.PLAYERARGS.get.strip().split()
 
         ############################################
@@ -29,12 +27,10 @@ class GenericPlayer(CmdPlayer):
 
         ###########################################
 
-        return [self.player] + args + [self.stream['url']]
+        return [self.player] + args + [self.stream["url"]]
 
     def clean_up(self):
-        ''' Cleans up temp files after process exits.
-
-        '''
+        """Cleans up temp files after process exits."""
         pass
 
     def launch_player(self, cmd):
@@ -52,9 +48,9 @@ class GenericPlayer(CmdPlayer):
         self.next()
 
     def _help(self, short=True):
-        ''' Help keys shown when the song is played.
+        """Help keys shown when the song is played.
 
         See mpv.py for reference.
 
-        '''
+        """
         pass

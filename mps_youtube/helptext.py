@@ -1,6 +1,7 @@
 """
-    Holds all help text
+Holds all help text
 """
+
 import pathlib
 import re
 import socket
@@ -12,10 +13,13 @@ from .util import F, get_near_name
 
 
 def helptext():
-    """ Return a list of help categories, with their contents. """
+    """Return a list of help categories, with their contents."""
 
     return [
-        ("basic", "Basics", """
+        (
+            "basic",
+            "Basics",
+            """
 
     {0}Basic Usage{1}
 
@@ -37,8 +41,12 @@ def helptext():
         Visit https://pyperclip.readthedocs.io/en/latest/index.html#not-implemented-error for more info.
 
         {2}q{1}, {2}quit{1} - exit yewtube
-    """.format(c.ul, c.w, c.y)),
-        ("search", "Searching and Retrieving", """
+    """.format(c.ul, c.w, c.y),
+        ),
+        (
+            "search",
+            "Searching and Retrieving",
+            """
     {0}Searching and Retrieving{1}
 
     {2}set search_music false{1} - search all YouTube categories.
@@ -81,9 +89,12 @@ def helptext():
     {2}r <number>{1} - show videos related to video <number>.
     {2}u <number>{1} - show videos uploaded by uploader of video <number>.
     {2}c <number>{1} - view comments for video <number>
-    """.format(c.ul, c.w, c.y, ", ".join(g.categories.keys()))),
-
-        ("edit", "Editing / Manipulating Results", """
+    """.format(c.ul, c.w, c.y, ", ".join(g.categories.keys())),
+        ),
+        (
+            "edit",
+            "Editing / Manipulating Results",
+            """
     {0}Editing and Manipulating Results{1}
 
     {2}rm <number(s)>{1} - remove items from displayed results.
@@ -96,9 +107,14 @@ def helptext():
     {2}shuffle all{1} - Shuffle entire loaded playlist.
     {2}reverse{1} or {2}reverse <number>-<number>{1} - Reverse the displayed items or item range.
     {2}reverse all{1} - Reverse order of entire loaded playlist.
-    """.format(c.ul, c.w, c.y)),
 
-        ("download", "Downloading and Playback", """
+    {2}sort name|duration|age{1} - Sort the displayed items. Subsequent command will reverse order.
+    """.format(c.ul, c.w, c.y),
+        ),
+        (
+            "download",
+            "Downloading and Playback",
+            """
     {0}Downloading and Playback{1}
 
     {2}set show_video true{1} - play video instead of audio.
@@ -121,9 +137,12 @@ def helptext():
     {2}all{1} or {2}*{1} - play all displayed items.
     {2}repeat <number(s)>{1} - play and repeat the specified items.
     {2}shuffle <number(s)>{1} - play specified items in random order.
-    """.format(c.ul, c.w, c.y)),
-
-        ("dl-command", "Downloading Using External Application", """
+    """.format(c.ul, c.w, c.y),
+        ),
+        (
+            "dl-command",
+            "Downloading Using External Application",
+            """
     {0}Download Using A Custom Application{1}
 
     Use {2}set download_command <command>{1} to specify a custom command to use for
@@ -143,10 +162,12 @@ def helptext():
 
     Note that using a custom download command does not support transcoding the
     downloaded file to another format using mps-youtube.
-    """.format(c.ul, c.w, c.y)),
-
-
-        ("encode", "Encoding to MP3 and other formats", """
+    """.format(c.ul, c.w, c.y),
+        ),
+        (
+            "encode",
+            "Encoding to MP3 and other formats",
+            """
     {0}Encoding to MP3 and other formats{1}
 
     Enter {2}encoders{1} to view available encoding presets
@@ -158,9 +179,12 @@ def helptext():
     The encoding presets can be modified by editing the text config file which
     resides at:
        {3}
-    """.format(c.ul, c.w, c.y, g.TCFILE)),
-
-        ("playlists", "Using Local Playlists", """
+    """.format(c.ul, c.w, c.y, g.TCFILE),
+        ),
+        (
+            "playlists",
+            "Using Local Playlists",
+            """
     {0}Using Local Playlists{1}
 
     {2}add <number(s)>{1} - add items to the current playlist.
@@ -180,9 +204,12 @@ def helptext():
     {2}rm <number(s)>{1} - remove items from displayed results.
     {2}sw <number>,<number>{1} - swap two items.
     {2}mv <number>,<number>{1} - move item <number> to position <number>.
-    """.format(c.ul, c.w, c.y)),
-
-        ("history", "Accessing Local History", """
+    """.format(c.ul, c.w, c.y),
+        ),
+        (
+            "history",
+            "Accessing Local History",
+            """
     {0}Accessing Local History{1}
 
     Access songs that have been played within yewtube
@@ -191,9 +218,12 @@ def helptext():
         {2}history clear{1} - clears the song history
         {2}history recent{1} - displays a list of recent played songs
         {2}set history on|off{1} - toggles history recording
-    """.format(c.ul, c.w, c.y)),
-
-        ("invoke", "Invocation Parameters", """
+    """.format(c.ul, c.w, c.y),
+        ),
+        (
+            "invoke",
+            "Invocation Parameters",
+            """
     {0}Invocation{1}
 
     All yewtube commands can be entered from the command line.  For example;
@@ -212,9 +242,12 @@ def helptext():
       {2}yt //the doors, 1, all -a{1} - open YouTube playlist and play audio
 
     If you need to enter an actual comma on the command line, use {2},,{1} instead.
-    """.format(c.ul, c.w, c.y)),
-
-        ("config", "Configuration Options", """
+    """.format(c.ul, c.w, c.y),
+        ),
+        (
+            "config",
+            "Configuration Options",
+            """
     {0}Configuration{1}
 
     {2}set{1} - view current configuration
@@ -257,11 +290,20 @@ def helptext():
 
     Additionally, {2}set -t{1} may be used to temporarily change a setting without
     saving it to disk
-    """.format(c.ul, c.w, c.y, '\n{0}set max_results <number>{1} - show <number> re'
-               'sults when searching (max 50)'.format(c.y, c.w) if not
-               g.detectable_size else '')),
-
-        ("lastfm", "Last.fm configuration", """
+    """.format(
+                c.ul,
+                c.w,
+                c.y,
+                "\n{0}set max_results <number>{1} - show <number> re"
+                "sults when searching (max 50)".format(c.y, c.w)
+                if not g.detectable_size
+                else "",
+            ),
+        ),
+        (
+            "lastfm",
+            "Last.fm configuration",
+            """
     {0}Configure Last.fm{1}
 
     pylast needs to be installed for Last.fm support. See https://github.com/pylast/pylast.
@@ -276,9 +318,12 @@ def helptext():
     with {2}lastfm_connect{1}. Additionally, {2}lastfm_connect{1} provides verbose error messages.
 
     For now, Last.fm support only works with the {2}album{1} command.
-    """.format(c.ul, c.w, c.y)),
-
-        ("tips", "Advanced Tips", """
+    """.format(c.ul, c.w, c.y),
+        ),
+        (
+            "tips",
+            "Advanced Tips",
+            """
     {0}Advanced Tips{1}
 
     Use {2}-w{1}, {2}-f{1} or {2}-a{1} with your choice to override the configured\
@@ -309,19 +354,21 @@ def helptext():
     command
 
     Use {2}clearcache{1} command to clear the cache.
-    """.format(
-                c.ul, c.w, c.y
-            ),
+    """.format(c.ul, c.w, c.y),
         ),
         (
             "new",
             "Show online changelog for the latest version",
-            """{0}What's New{1}\n{3}""".format(c.ul, c.w, c.y, "get_changelog()"),
+            """{0}What's New{1}\n{3}""".format(
+                c.ul, c.w, c.y, "get_changelog()"
+            ),
         ),
         (
             "changelog",
             "Check program changelog",
-            """{0}Changelog{1}\n{3}""".format(c.ul, c.w, c.y, "get_changelog_local()"),
+            """{0}Changelog{1}\n{3}""".format(
+                c.ul, c.w, c.y, "get_changelog_local()"
+            ),
         ),
         (
             "tor",
@@ -332,44 +379,46 @@ def helptext():
 
 
 def get_help(choice):
-    """ Return help message. """
-    helps = {"download": ("playback dl listen watch show repeat playing"
-                          "show_video playurl browserplay dlurl d da dv all *"
-                          " play browsersearch".split()),
-
-             "dl-command": ("dlcmd dl-cmd download-cmd dl_cmd download_cmd "
-                            "download-command download_command".split()),
-
-             "encode": ("encoding transcoding transcode wma mp3 format "
-                        "encode encoder".split()),
-
-             "invoke": "command commands yt invocation".split(),
-
-             "search": ("user userpl pl pls r n p url album "
-                        "editing result results related remove swop mkp --description".split()),
-
-             "edit": ("editing manupulate manipulating rm mv sw edit move "
-                      "swap shuffle".split()),
-
-             "tips": ("undump dump -f -w -a adv advanced".split(" ")),
-
-             "basic": ("basic comment basics c copy clipboard comments u "
-                       "i".split()),
-
-             "config": ("set checkupdate colours colors ddir directory player "
-                        "arguments args playerargs music search_music keys "
-                        "status show_status show_video video configuration "
-                        "fullscreen full screen folder player mpv mplayer"
-                        " settings default reset configure audio results "
-                        "max_results size lines rows height window "
-                        "position window_pos quality resolution max_res "
-                        "columns width console overwrite".split()),
-
-             "playlists": ("save rename delete move rm ls mv sw add vp open"
-                           " view".split())}
+    """Return help message."""
+    helps = {
+        "download": (
+            "playback dl listen watch show repeat playing"
+            "show_video playurl browserplay dlurl d da dv all *"
+            " play browsersearch".split()
+        ),
+        "dl-command": (
+            "dlcmd dl-cmd download-cmd dl_cmd download_cmd "
+            "download-command download_command".split()
+        ),
+        "encode": (
+            "encoding transcoding transcode wma mp3 format encode encoder".split()
+        ),
+        "invoke": "command commands yt invocation".split(),
+        "search": (
+            "user userpl pl pls r n p url album "
+            "editing result results related remove swop mkp --description".split()
+        ),
+        "edit": (
+            "editing manupulate manipulating rm mv sw edit move swap shuffle".split()
+        ),
+        "tips": ("undump dump -f -w -a adv advanced".split(" ")),
+        "basic": ("basic comment basics c copy clipboard comments u i".split()),
+        "config": (
+            "set checkupdate colours colors ddir directory player "
+            "arguments args playerargs music search_music keys "
+            "status show_status show_video video configuration "
+            "fullscreen full screen folder player mpv mplayer"
+            " settings default reset configure audio results "
+            "max_results size lines rows height window "
+            "position window_pos quality resolution max_res "
+            "columns width console overwrite".split()
+        ),
+        "playlists": (
+            "save rename delete move rm ls mv sw add vp open view".split()
+        ),
+    }
 
     for topic, aliases in helps.items():
-
         if choice in aliases:
             choice = topic
             break
@@ -380,23 +429,23 @@ def get_help(choice):
     choice = get_near_name(choice, help_names)
 
     def indent(x):
-        """ Indent. """
+        """Indent."""
         return "\n  ".join(x.split("\n"))
 
     if choice == "menu" or choice not in help_names:
         out += "  %sHelp Topics%s" % (c.ul, c.w)
-        out += F('help topic', 2, 1)
+        out += F("help topic", 2, 1)
 
         for x in all_help:
-            out += ("\n%s     %-10s%s : %s" % (c.y, x[0], c.w, x[1]))
+            out += "\n%s     %-10s%s : %s" % (c.y, x[0], c.w, x[1])
 
         out += "\n"
         return out
 
     else:
-        if choice == 'tor':
+        if choice == "tor":
             output_text = check_tor()
-        elif choice == 'new':
+        elif choice == "new":
             output_text = get_changelog()
         elif choice == "changelog":
             output_text = get_changelog_local()
@@ -406,11 +455,12 @@ def get_help(choice):
 
         return indent(output_text)
 
+
 def get_changelog():
     try:
         url = "https://raw.githubusercontent.com/mps-youtube/yewtube/master/CHANGELOG.md"
         v = urlopen(url, timeout=1).read().decode()
-        v = v.split('## v')[1]
+        v = v.split("## v")[1]
         return v
     except (URLError, HTTPError, socket.timeout):
         return "read changelog timed out"
@@ -428,10 +478,10 @@ def check_tor():
     try:
         url = "https://check.torproject.org/?lang=en"
         v = urlopen(url, timeout=1).read().decode()
-        ip = re.findall('<strong>(.*)</strong>', v)
-        status = re.findall('Congratulations.(.*)', v)
+        ip = re.findall("<strong>(.*)</strong>", v)
+        status = re.findall("Congratulations.(.*)", v)
         if len(status) == 0:
-            status = re.findall('Sorry.(.*)', v)
-        return str({'ip' : ip, 'status': status[0]})
+            status = re.findall("Sorry.(.*)", v)
+        return str({"ip": ip, "status": status[0]})
     except (URLError, HTTPError, socket.timeout):
         return "read check tor status timed out"

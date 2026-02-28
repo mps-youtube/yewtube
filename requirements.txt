@@ -1,8 +1,7 @@
-httpx<0.28
-requests
-pyreadline3 ; platform_system=="Windows"
+httpx
 pyperclip
-youtube-search-python>=1.6.5
 yt-dlp>=2023.9.24
+click
+prompt-toolkit
 colorama ; platform_system=="Windows"
 pylast

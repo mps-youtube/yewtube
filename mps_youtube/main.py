@@ -25,30 +25,17 @@ import logging
 import os
 import sys
 import traceback as traceback_py
+import click
+from prompt_toolkit import prompt as pt_prompt
+from prompt_toolkit.history import FileHistory
 
-from . import util
-
-completer = None
-readline = None
-try:
-    import readline
-except ImportError:
-    try:
-        from pyreadline3 import Readline
-        readline = Readline()
-    except ImportError:
-        has_readline = False
-if readline:
-    readline.set_history_length(2000)
-    has_readline = True
-    completer = util.CommandCompleter()
-    readline.parse_and_bind('tab: complete')
-    readline.set_completer(completer.complete_command)
-    readline.set_completer_delims('')
-
-from . import g, c, commands, screen, history, init
-from . import __version__, playlists, content, listview
+from . import g, c, commands, screen, history, init, util
+from . import __version__, playlists, content
 from . import config
+
+has_readline = (
+    True  # We use prompt_toolkit now, which provides equivalent features
+)
 
 mswin = os.name == "nt"
 
@@ -58,60 +45,50 @@ except Exception as err:
     logging.debug(f"locale not set: {err}")
 
 
+def handle_command_exception(e):
+    """Centralized error reporting for command execution."""
+    if g.debug_mode:
+        g.content = "".join(traceback_py.format_exception(*sys.exc_info()))
+
+    if isinstance(e, IndexError):
+        g.message = util.F("invalid range")
+    elif isinstance(e, (ValueError, IOError)):
+        g.message = util.F("cant get track") % str(e)
+    else:
+        template = util.F("no data")
+        g.message = template % str(e) if "%s" in template else f"{template}: {e}"
+        if not g.debug_mode:
+            logging.debug(traceback_py.format_exc())
+
+    g.content = g.content or content.generate_songlist_display()
+
+
 def matchfunction(func, regex, userinput):
-    """ Match userinput against regex.
-
-    Call func, return True if matches.
-
-    """
-    # Not supported in python 3.3 or lower
-    # match = regex.fullmatch(userinput)
-    # if match:
+    """Match userinput against regex. Call func, return True if matches."""
     match = regex.match(userinput)
     if match and match.group(0) == userinput:
         matches = match.groups()
         util.dbg("input: %s", userinput)
         util.dbg("function call: %s", func.__name__)
-        util.dbg("regx matches: %s", matches)
 
         try:
             func(*matches)
-
-        except IndexError:
-            if g.debug_mode:
-                g.content = ''.join(traceback_py.format_exception(
-                    *sys.exc_info()))
-            g.message = util.F('invalid range')
-            g.content = g.content or content.generate_songlist_display()
-
-        except (ValueError, IOError) as e:
-            if g.debug_mode:
-                g.content = ''.join(traceback_py.format_exception(
-                    *sys.exc_info()))
-            g.message = util.F('cant get track') % str(e)
-            g.content = g.content or\
-                content.generate_songlist_display(zeromsg=g.message)
-
-        except Exception as e:#pafy.GdataError as e:
-            import traceback
-            traceback.print_exception(type(e), e, e.__traceback__)
-            if g.debug_mode:
-                g.content = ''.join(traceback.format_exception(
-                    *sys.exc_info()))
-            g.message = util.F('no data') % e
-            g.content = g.content
+        except Exception as e:
+            handle_command_exception(e)
 
         return True
 
 
-def prompt_for_exit():
-    """ Ask for exit confirmation. """
+def prompt_for_exit(history=None, completer=None):
+    """Ask for exit confirmation."""
     g.message = c.r + "Press ctrl-c again to exit" + c.w
     g.content = content.generate_songlist_display()
     screen.update()
 
     try:
-        userinput = input(c.r + " > " + c.w)
+        userinput = pt_prompt(
+            c.r + " > " + c.w, history=history, completer=completer
+        ).strip()
 
     except (KeyboardInterrupt, EOFError):
         commands.misc.quits(showlogo=False)
@@ -119,9 +96,55 @@ def prompt_for_exit():
     return userinput
 
 
-def main():
-    init.init()
-    """ Main control loop. """
+@click.command(
+    context_settings=dict(
+        help_option_names=["-h", "--help"], ignore_unknown_options=True
+    )
+)
+@click.version_option(version=__version__)
+@click.option("--debug", "-d", is_flag=True, help="Enable debug mode")
+@click.option(
+    "--logging", "-l", "enable_logging", is_flag=True, help="Enable logging"
+)
+@click.option("--no-autosize", is_flag=True, help="Disable terminal autosizing")
+@click.option("--no-preload", is_flag=True, help="Disable preloading of tracks")
+@click.option("--no-textart", is_flag=True, help="Disable ASCII art")
+@click.argument("commands_args", nargs=-1, type=click.UNPROCESSED)
+def main(
+    debug, enable_logging, no_autosize, no_preload, no_textart, commands_args
+):
+    """yewtube - Terminal based YouTube player and downloader."""
+
+    # Setup global flags based on click options
+    if debug or os.environ.get("mpsytdebug") == "1":
+        g.debug_mode = True
+        g.no_clear_screen = True
+
+    if no_autosize:
+        g.detectable_size = False
+
+    if no_preload:
+        g.preload_disabled = True
+
+    if no_textart:
+        g.no_textart = True
+
+    g.argument_commands = list(commands_args)
+    g.command_line = (
+        "playurl" in g.argument_commands or "dlurl" in g.argument_commands
+    )
+    if g.command_line:
+        g.no_clear_screen = True
+
+    # Initialize
+    try:
+        init.init()
+    except Exception as e:
+        click.echo(f"Initialization failed: {e}", err=True)
+        if g.debug_mode:
+            traceback_py.print_exc()
+        return sys.exit(1)
+
     if config.SET_TITLE.get:
         util.set_window_title("yewtube")
 
@@ -141,11 +164,17 @@ def main():
     prev_model = []
     scrobble_funcs = [commands.album_search.search_album]
 
-    arg_inp = " ".join(g.argument_commands)
+    arg_inp = [
+        cmd.replace(r",,", "[mpsyt-comma]") for cmd in g.argument_commands
+    ]
+    # Emulate the existing comma-split behavior for compatibility if args are concatenated
+    if len(arg_inp) == 1 and "," in arg_inp[0]:
+        arg_inp = arg_inp[0].split(",")
 
-    prompt = "> "
-    arg_inp = arg_inp.replace(r",,", "[mpsyt-comma]")
-    arg_inp = arg_inp.split(",")
+    prompt_str = "> "
+
+    # Initialize prompt_toolkit history
+    pt_history = FileHistory(g.READLINE_FILE) if g.READLINE_FILE else None
 
     while True:
         next_inp = ""
@@ -155,28 +184,48 @@ def main():
             next_inp = next_inp.replace("[mpsyt-comma]", ",")
 
         try:
-            userinput = next_inp or input(prompt).strip()
+            if next_inp:
+                userinput = next_inp
+            else:
+                userinput = pt_prompt(
+                    prompt_str,
+                    completer=util.completer,
+                    history=pt_history,
+                    complete_while_typing=False,
+                ).strip()
 
         except (KeyboardInterrupt, EOFError):
-            userinput = prompt_for_exit()
+            userinput = prompt_for_exit(
+                history=pt_history, completer=util.completer
+            )
 
-        for i in g.commands:
-            if matchfunction(i.function, i.regex, userinput):
-                if prev_model != g.model and not i.function in scrobble_funcs:
-                    g.scrobble = False
-                prev_model = g.model
-                break
+        try:
+            matched = False
+            for i in g.commands:
+                if matchfunction(i.function, i.regex, userinput):
+                    if (
+                        prev_model != g.model
+                        and i.function not in scrobble_funcs
+                    ):
+                        g.scrobble = False
+                    prev_model = g.model
+                    matched = True
+                    break
 
-        else:
-            g.content = g.content or content.generate_songlist_display()
+            if not matched:
+                g.content = g.content or content.generate_songlist_display()
 
-            if g.command_line:
-                g.content = ""
+                if g.command_line:
+                    g.content = ""
 
-            if userinput and not g.command_line:
-                g.message = c.b + "Bad syntax. Enter h for help" + c.w
+                if userinput and not g.command_line:
+                    g.message = c.b + "Bad syntax. Enter h for help" + c.w
 
-            elif userinput and g.command_line:
-                sys.exit("Bad syntax")
+                elif userinput and g.command_line:
+                    sys.exit("Bad syntax")
+        except Exception as e:
+            if g.debug_mode:
+                traceback_py.print_exc()
+            g.message = f"{c.r}Error: {e}{c.w}"
 
         screen.update()

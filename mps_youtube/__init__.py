@@ -1,7 +1,10 @@
-from pip._vendor import pkg_resources
+import importlib.metadata
 
-__version__ = next((p.version for p in pkg_resources.working_set if p.project_name.lower() == 'yewtube'), "unable to determine")
+try:
+    __version__ = importlib.metadata.version("yewtube")
+except importlib.metadata.PackageNotFoundError:
+    __version__ = "unable to determine"
+
 __author__ = "iamtalhaasghar"
 __license__ = "GPLv3"
 __url__ = "https://github.com/mps-youtube/yewtube"
-

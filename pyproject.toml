@@ -1,2 +1,19 @@
-[tool.semantic_release]
-version_variables = ["setup.py:__version__"]
+[tool.ruff]
+# Same as Black.
+line-length = 80
+
+[tool.ruff.lint]
+# Enable standard rules
+select = ["E", "F", "W"]
+ignore = ["E501", "E721", "E741", "F523"]
+
+# Allow fix for some rules
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+"mps_youtube/commands/__init__.py" = ["E402", "F401"]
+"mps_youtube/commands/search.py" = ["E402"]
+"mps_youtube/listview/__init__.py" = ["F401"]
+"mps_youtube/players/__init__.py" = ["F401"]
+"mps_youtube/__init__.py" = ["F401"]

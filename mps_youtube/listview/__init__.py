@@ -1,6 +1,7 @@
 """
-    DOCSTING COMES HERE
+DOCSTING COMES HERE
 """
+
 import re
 import math
 
@@ -12,33 +13,34 @@ from .songtitle import ListSongtitle
 
 
 class ListView(content.PaginatedContent):
-    """ Content Agnostic Numbered List
+    """Content Agnostic Numbered List
 
-        This class, using ListViewItems as abstractions you can
-        give it a list of data and which columns to show and it will
-        show it.
+    This class, using ListViewItems as abstractions you can
+    give it a list of data and which columns to show and it will
+    show it.
 
-        Todo:
-            Currently we rely on the commands/play code to send information
-            about which elements are being picked.
+    Todo:
+        Currently we rely on the commands/play code to send information
+        about which elements are being picked.
 
-        Attributes:
-            func        The function that will be run on the selected items
-            objects     List of objects(or a ContentQuery object)
-            columns     A list of Hashes containing information about which
-                        columns to show
-            page        Current Page
+    Attributes:
+        func        The function that will be run on the selected items
+        objects     List of objects(or a ContentQuery object)
+        columns     A list of Hashes containing information about which
+                    columns to show
+        page        Current Page
 
-        Column format:
-            {"name": "idx", "size": 3, "heading": "Num"}
-            name:    The method name that will be called from the ListViewItem
-            size:    How much size is allocated to the columns,
-                     see ListView.content for more information about
-                     the dynamic options
-            heading: The text shown in the header
+    Column format:
+        {"name": "idx", "size": 3, "heading": "Num"}
+        name:    The method name that will be called from the ListViewItem
+        size:    How much size is allocated to the columns,
+                 see ListView.content for more information about
+                 the dynamic options
+        heading: The text shown in the header
 
-            "idx" is generated in the content function, not by the ListViewItem
+        "idx" is generated in the content function, not by the ListViewItem
     """
+
     func = None
     objects = None
     columns = None
@@ -61,7 +63,7 @@ class ListView(content.PaginatedContent):
         self.object_type = [obj.__class__ for obj in objects][0]
 
     def numPages(self):
-        """ Returns # of pages """
+        """Returns # of pages"""
         return max(1, math.ceil(len(self.objects) / self.views_per_page()))
 
     def getPage(self, page):
@@ -70,56 +72,64 @@ class ListView(content.PaginatedContent):
 
     def _page_slice(self):
         chgt = self.views_per_page()
-        return slice(self.page * chgt, (self.page+1) * chgt)
+        return slice(self.page * chgt, (self.page + 1) * chgt)
 
     def content(self):
-        """ Generates content
+        """Generates content
 
-            ===============
-            Dynamic fields
-            ===============
+        ===============
+        Dynamic fields
+        ===============
 
-            Column.size may instead of an integer be a string
-            containing either "length" or "remaining".
+        Column.size may instead of an integer be a string
+        containing either "length" or "remaining".
 
-            Length is for time formats like 20:40
-            Remaining will allocate all remaining space to that
-            column.
+        Length is for time formats like 20:40
+        Remaining will allocate all remaining space to that
+        column.
 
-            TODO: Make it so set columns can set "remaining" ?
+        TODO: Make it so set columns can set "remaining" ?
         """
         # Sums all ints, deal with strings later
-        remaining = (util.getxy().width) - sum(1 + (x['size'] if x['size'] and x['size'].__class__ == int else 0) for x in self.columns) - (len(self.columns))
+        remaining = (
+            (util.getxy().width)
+            - sum(
+                1
+                + (x["size"] if x["size"] and x["size"].__class__ == int else 0)
+                for x in self.columns
+            )
+            - (len(self.columns))
+        )
         lengthsize = 0
-        if "length" in [x['size'] for x in self.columns]:
+        if "length" in [x["size"] for x in self.columns]:
             max_l = max((getattr(x, "length")() for x in self.objects))
             lengthsize = 8 if max_l > 35999 else 7
             lengthsize = 6 if max_l < 6000 else lengthsize
 
         for col in self.columns:
-            if col['size'] == "remaining":
-                col['size'] = remaining - lengthsize
-            if col['size'] == "length":
-                col['size'] = lengthsize
+            if col["size"] == "remaining":
+                col["size"] = remaining - lengthsize
+            if col["size"] == "length":
+                col["size"] = lengthsize
 
         for num, column in enumerate(self.columns):
-            column['idx'] = num
-            column['sign'] = "-" if not column['name'] == "length" else ""
+            column["idx"] = num
+            column["sign"] = "-" if not column["name"] == "length" else ""
 
-        fmt = ["%{}{}s  ".format(x['sign'], x['size']) for x in self.columns]
+        fmt = ["%{}{}s  ".format(x["sign"], x["size"]) for x in self.columns]
         fmtrow = fmt[0:1] + ["%s  "] + fmt[2:]
         fmt, fmtrow = "".join(fmt).strip(), "".join(fmtrow).strip()
-        titles = tuple([x['heading'][:x['size']] for x in self.columns])
+        titles = tuple([x["heading"][: x["size"]] for x in self.columns])
         out = "\n" + (c.ul + fmt % titles + c.w) + "\n"
 
         for num, obj in enumerate(self.objects[self._page_slice()]):
-            col = (c.r if num % 2 == 0 else c.p)
+            col = c.r if num % 2 == 0 else c.p
             idx = num + (self.views_per_page() * self.page) + 1
 
-            line = ''
+            line = ""
             for column in self.columns:
-                fieldsize, field = column['size'], column['name']
-                direction = "<" if column['sign'] == "-" else ">"
+                fieldsize, field = column["size"], column["name"]
+                direction = "<" if column["sign"] == "-" else ">"
 
                 if field == "idx":
                     field = "%2d" % idx
@@ -135,12 +145,12 @@ class ListView(content.PaginatedContent):
 
             line = col + line + c.w
             out += line + "\n"
-        
+
         return out
 
     def _play(self, _, choice, __):  # pre, choice, post
-        """ Handles what happends when a user selects something from the list
-            Currently this functions hooks into commands/play
+        """Handles what happends when a user selects something from the list
+        Currently this functions hooks into commands/play
         """
 
         uids = []
@@ -157,6 +167,5 @@ class ListView(content.PaginatedContent):
         self.func([getattr(self.objects[x], var)() for x in uids])
 
     def views_per_page(self):
-        """ Determines how many views can be per page
-        """
+        """Determines how many views can be per page"""
         return util.getxy().max_results

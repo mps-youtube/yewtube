@@ -7,11 +7,10 @@ from .songlist import paginatesongs, songlist_rm_add
 from ..util import parse_video_length
 
 
-@command(r'rmp\s*(\d+|%s)' % WORD, 'rmp')
+@command(r"rmp\s*(\d+|%s)" % WORD, "rmp")
 def playlist_remove(name):
-    """ Delete a saved playlist by name - or purge working playlist if *all."""
+    """Delete a saved playlist by name - or purge working playlist if *all."""
     if name.isdigit() or g.userpl.get(name):
-
         if name.isdigit():
             name = int(name) - 1
             name = sorted(g.userpl)[name]
@@ -19,16 +18,16 @@ def playlist_remove(name):
         playlists.delete(name)
         g.message = "Deleted playlist %s%s%s" % (c.y, name, c.w)
         g.content = content.playlists_display()
-        #playlists.save()
+        # playlists.save()
 
     else:
-        g.message = util.F('pl not found advise ls') % name
+        g.message = util.F("pl not found advise ls") % name
         g.content = content.playlists_display()
 
 
-@command(r'add\s*(-?\d[-,\d\s]{1,250})(%s)' % WORD, 'add')
+@command(r"add\s*(-?\d[-,\d\s]{1,250})(%s)" % WORD, "add")
 def playlist_add(nums, playlist):
-    """ Add selected song nums to saved playlist. """
+    """Add selected song nums to saved playlist."""
     nums = util.parse_multi(nums)
     # Replacing spaces with hyphens before checking if playlist already exist.
     # See https://github.com/mps-youtube/mps-youtube/issues/1046.
@@ -41,7 +40,7 @@ def playlist_add(nums, playlist):
         g.userpl[playlist].songs.append(g.model[songnum - 1])
         dur = g.userpl[playlist].duration
         f = (len(nums), playlist, len(g.userpl[playlist]), dur)
-        g.message = util.F('added to saved pl') % f
+        g.message = util.F("added to saved pl") % f
 
     if nums:
         playlists.save()
@@ -49,22 +48,22 @@ def playlist_add(nums, playlist):
     g.content = content.generate_songlist_display()
 
 
-@command(r'mv\s*(\d{1,3})\s*(%s)' % WORD, 'mv')
+@command(r"mv\s*(\d{1,3})\s*(%s)" % WORD, "mv")
 def playlist_rename_idx(_id, name):
-    """ Rename a playlist by ID. """
+    """Rename a playlist by ID."""
     _id = int(_id) - 1
     playlist_rename(sorted(g.userpl)[_id] + " " + name)
 
 
-@command(r'mv\s*(%s\s+%s)' % (WORD, WORD), 'mv')
+@command(r"mv\s*(%s\s+%s)" % (WORD, WORD), "mv")
 def playlist_rename(playlists_):
-    """ Rename a playlist using mv command. """
+    """Rename a playlist using mv command."""
     # Deal with old playlist names that permitted spaces
     a, b = "", playlists_.split(" ")
     while a not in g.userpl:
         a = (a + " " + (b.pop(0))).strip()
         if not b and a not in g.userpl:
-            g.message = util.F('no pl match for rename')
+            g.message = util.F("no pl match for rename")
             g.content = g.content or content.playlists_display()
             return
 
@@ -72,13 +71,13 @@ def playlist_rename(playlists_):
     g.userpl[b] = Playlist(b)
     g.userpl[b].songs = list(g.userpl[a].songs)
     playlist_remove(a)
-    g.message = util.F('pl renamed') % (a, b)
+    g.message = util.F("pl renamed") % (a, b)
     playlists.save()
 
 
-@command(r'(rm|add)\s(?:\*|all)', 'rm', 'add')
+@command(r"(rm|add)\s(?:\*|all)", "rm", "add")
 def add_rm_all(action):
-    """ Add all displayed songs to current playlist.
+    """Add all displayed songs to current playlist.
 
     remove all displayed songs from view.
 
@@ -93,9 +92,9 @@ def add_rm_all(action):
         songlist_rm_add("add", "-" + str(size))
 
 
-@command(r'save', 'save')
+@command(r"save", "save")
 def save_last():
-    """ Save command with no playlist name. """
+    """Save command with no playlist name."""
     if g.last_opened:
         open_save_view("save", g.last_opened)
 
@@ -104,9 +103,11 @@ def save_last():
 
         # save using artist name in postion 1
         if g.model:
-            if g.selected_pafy_pls_id: # if a playlist was selected
-                saveas = g.pafy_pls[g.selected_pafy_pls_id][0].info['info']['title']
-            else: # user didn't selected a playlist
+            if g.selected_playlist_id:  # if a playlist was selected
+                saveas = g.playlist_cache[g.selected_playlist_id][0].info["info"][
+                    "title"
+                ]
+            else:  # user didn't selected a playlist
                 saveas = g.model[0].title[:18].strip()
             saveas = re.sub(r"[^-\w]", "-", saveas, flags=re.UNICODE)
 
@@ -124,9 +125,9 @@ def save_last():
         open_save_view("save", saveas)
 
 
-@command(r'(open|save|view)\s*(%s)' % WORD, 'open', 'save', 'view')
+@command(r"(open|save|view)\s*(%s)" % WORD, "open", "save", "view")
 def open_save_view(action, name):
-    """ Open, save or view a playlist by name.  Get closest name match. """
+    """Open, save or view a playlist by name.  Get closest name match."""
     name = name.replace(" ", "-")
     if action == "open" or action == "view":
         saved = g.userpl.get(name)
@@ -152,46 +153,57 @@ def open_save_view(action, name):
 
     elif action == "save":
         if not g.model:
-            g.message = "Nothing to save. " + util.F('advise search')
+            g.message = "Nothing to save. " + util.F("advise search")
             g.content = content.generate_songlist_display()
 
         else:
-            if g.selected_pafy_pls_id: # if a playlist was selected by user:
-                g.userpl[name] = Playlist(name, [Video(i['id'], i['title'], parse_video_length(i['duration'])) for i in g.pafy_pls[g.selected_pafy_pls_id][0].videos])
-            else: # user created custom playlist and never opened it and now wants to save it
+            if g.selected_playlist_id:  # if a playlist was selected by user:
+                g.userpl[name] = Playlist(
+                    name,
+                    [
+                        Video(
+                            i["id"],
+                            i["title"],
+                            parse_video_length(i["duration"]),
+                        )
+                        for i in g.playlist_cache[g.selected_playlist_id][0].videos
+                    ],
+                )
+            else:  # user created custom playlist and never opened it and now wants to save it
                 g.userpl[name] = Playlist(name, list(g.model.songs))
-            g.message = util.F('pl saved') % name
+            g.message = util.F("pl saved") % name
             playlists.save()
             g.content = content.generate_songlist_display()
 
 
-@command(r'(open|view)\s*(\d{1,4})', 'open', 'view')
+@command(r"(open|view)\s*(\d{1,4})", "open", "view")
 def open_view_bynum(action, num):
-    """ Open or view a saved playlist by number. """
+    """Open or view a saved playlist by number."""
     srt = sorted(g.userpl)
     name = srt[int(num) - 1]
     open_save_view(action, name)
 
 
-@command(r'ls', 'ls')
+@command(r"ls", "ls")
 def ls():
-    """ List user saved playlists. """
+    """List user saved playlists."""
     if not g.userpl:
-        g.message = util.F('no playlists')
-        g.content = g.content or \
-                content.generate_songlist_display(zeromsg=g.message)
+        g.message = util.F("no playlists")
+        g.content = g.content or content.generate_songlist_display(
+            zeromsg=g.message
+        )
 
     else:
         g.content = content.playlists_display()
-        g.message = util.F('pl help')
+        g.message = util.F("pl help")
 
 
-@command(r'vp', 'vp')
+@command(r"vp", "vp")
 def vp():
-    """ View current working playlist. """
+    """View current working playlist."""
 
-    msg = util.F('current pl')
-    txt = util.F('advise add') if g.model else util.F('advise search')
-    failmsg = util.F('pl empty') + " " + txt
+    msg = util.F("current pl")
+    txt = util.F("advise add") if g.model else util.F("advise search")
+    failmsg = util.F("pl empty") + " " + txt
 
     paginatesongs(g.active, msg=msg, failmsg=failmsg)

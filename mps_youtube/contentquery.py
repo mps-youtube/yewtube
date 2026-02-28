@@ -1,18 +1,19 @@
 """
-    ContentQuery is an abstraction layer between the the pafy.call_gdata
-    and the listViews.
+ContentQuery is an abstraction layer between the the extractor.call_gdata
+and the listViews.
 
-    It lets you treat A query as a list of all the results, even though
-    data is only queried when requested.
+It lets you treat A query as a list of all the results, even though
+data is only queried when requested.
 """
 
-from . import util, pafy
+from . import util, extractor
 
 
 class ContentQuery:
-    """ A wrapper for pafy.call_gdata. I lets you treat a search as a list,
-        but the results will only be fetched when needed.
+    """A wrapper for extractor.call_gdata. I lets you treat a search as a list,
+    but the results will only be fetched when needed.
     """
+
     maxresults = 0
     pdata = []
     nextpagetoken = None
@@ -44,7 +45,7 @@ class ContentQuery:
         return self.pdata[iid]
 
     def count(self):
-        """ Returns how many items are in the list """
+        """Returns how many items are in the list"""
         return self.maxresults
 
     def __len__(self):
@@ -59,10 +60,12 @@ class ContentQuery:
 
         # Run query
         util.dbg("CQ.query", self.query)
-        data = pafy.channel_search(self.query)#pafy.call_gdata(self.api, qry)
-        
-        self.maxresults = len(data)#int(data.get("pageInfo").get("totalResults"))
-        self.nextpagetoken = None#data.get("nextPageToken")
+        data = extractor.channel_search(self.query)  # extractor.call_gdata(self.api, qry)
+
+        self.maxresults = len(
+            data
+        )  # int(data.get("pageInfo").get("totalResults"))
+        self.nextpagetoken = None  # data.get("nextPageToken")
 
         for obj in data:
             self.pdata.append(self.datatype(obj))

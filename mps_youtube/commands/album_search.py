@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 from xml.etree import ElementTree as ET
 
 
-from .. import c, g, screen, __version__, __url__, config, util, pafy
+from .. import c, g, screen, __version__, __url__, config, util, extractor
 from .. import content as content_py
 from . import command
 from .songlist import paginatesongs
@@ -15,7 +15,7 @@ from .search import get_tracks_from_json
 
 
 def show_message(message, col=c.r, update=False):
-    """ Show message using col, update screen if required. """
+    """Show message using col, update screen if required."""
     g.content = content_py.generate_songlist_display()
     g.message = col + message + c.w
 
@@ -23,8 +23,8 @@ def show_message(message, col=c.r, update=False):
         screen.update()
 
 
-def _do_query(url, query, err='query failed', report=False):
-    """ Perform http request using yewtube user agent header.
+def _do_query(url, query, err="query failed", report=False):
+    """Perform http request using yewtube user agent header.
 
     if report is True, return whether response is from memo
 
@@ -32,7 +32,7 @@ def _do_query(url, query, err='query failed', report=False):
     # create url opener
     ua = "mps-youtube/%s ( %s )" % (__version__, __url__)
     mpsyt_opener = build_opener()
-    mpsyt_opener.addheaders = [('User-agent', ua)]
+    mpsyt_opener.addheaders = [("User-agent", ua)]
 
     # convert query to sorted list of tuples (needed for consistent url_memo)
     query = [(k, query[k]) for k in sorted(query.keys())]
@@ -50,7 +50,7 @@ def _do_query(url, query, err='query failed', report=False):
 
 
 def _best_song_match(songs, title, duration, titleweight, durationweight):
-    """ Select best matching song based on title, length.
+    """Select best matching song based on title, length.
 
     Score from 0 to 1 where 1 is best. titleweight and durationweight
     parameters added to enable function usage when duration can't be guessed
@@ -60,8 +60,8 @@ def _best_song_match(songs, title, duration, titleweight, durationweight):
     seqmatch = difflib.SequenceMatcher
 
     def variance(a, b):
-        """ Return difference ratio. """
-        return float(abs(a - b)) / max(a, b)
+        """Return difference ratio."""
+        return float(abs(a - b)) / max(a, b) if max(a, b) > 0 else 0
 
     candidates = []
 
@@ -89,8 +89,9 @@ def _best_song_match(songs, title, duration, titleweight, durationweight):
 
         title_score = seqmatch(None, title.lower(), tit.lower()).ratio()
         duration_score = 1 - variance(duration, dur)
-        util.dbg("Title score: %s, Duration score: %s", title_score,
-                 duration_score)
+        util.dbg(
+            "Title score: %s, Duration score: %s", title_score, duration_score
+        )
 
         # apply weightings
         score = duration_score * durationweight + title_score * titleweight
@@ -102,7 +103,7 @@ def _best_song_match(songs, title, duration, titleweight, durationweight):
 
 
 def _match_tracks(artist, title, mb_tracks):
-    """ Match list of tracks in mb_tracks by performing multiple searches. """
+    """Match list of tracks in mb_tracks by performing multiple searches."""
     # pylint: disable=R0914
     util.dbg("artists is %s", artist)
     util.dbg("title is %s", title)
@@ -110,22 +111,26 @@ def _match_tracks(artist, title, mb_tracks):
     util.xprint("\nSearching for %s by %s\n\n" % title_artist_str)
 
     def dtime(x):
-        """ Format time to M:S. """
-        return time.strftime('%M:%S', time.gmtime(int(x)))
+        """Format time to M:S."""
+        return time.strftime("%M:%S", time.gmtime(int(x)))
 
     # do matching
     for track in mb_tracks:
-        ttitle = track['title']
-        length = track['length']
-        util.xprint("Search :  %s%s - %s%s - %s" % (c.y, artist, ttitle, c.w,
-                                                    dtime(length)))
+        ttitle = track["title"]
+        length = track["length"]
+        util.xprint(
+            "Search :  %s%s - %s%s - %s"
+            % (c.y, artist, ttitle, c.w, dtime(length))
+        )
         q = "%s %s" % (artist, ttitle)
         w = q = ttitle if artist == "Various Artists" else q
-        query = w#generate_search_qs(w, 0)
+        query = w  # generate_search_qs(w, 0)
         util.dbg(query)
 
         # perform fetch
-        wdata = pafy.search_videos(q, int(config.PAGES.get))  # pafy.call_gdata('search', query)
+        wdata = extractor.search_videos(
+            q, int(config.PAGES.get)
+        )  # extractor.call_gdata('search', query)
         results = get_tracks_from_json(wdata)
 
         if not results:
@@ -133,34 +138,37 @@ def _match_tracks(artist, title, mb_tracks):
             continue
 
         s, score = _best_song_match(
-            results, artist + " " + ttitle, length, .5, .5)
+            results, artist + " " + ttitle, length, 0.5, 0.5
+        )
         cc = c.g if score > 85 else c.y
         cc = c.r if score < 75 else cc
-        util.xprint("Matched:  %s%s%s - %s \n[%sMatch confidence: "
-                    "%s%s]\n" % (c.y, s.title, c.w, util.fmt_time(s.length),
-                                 cc, score, c.w))
+        util.xprint(
+            "Matched:  %s%s%s - %s \n[%sMatch confidence: "
+            "%s%s]\n"
+            % (c.y, s.title, c.w, util.fmt_time(s.length), cc, score, c.w)
+        )
         yield s
 
 
 def _get_mb_tracks(albumid):
-    """ Get track listing from MusicBraiz by album id. """
-    ns = {'mb': 'http://musicbrainz.org/ns/mmd-2.0#'}
+    """Get track listing from MusicBraiz by album id."""
+    ns = {"mb": "http://musicbrainz.org/ns/mmd-2.0#"}
     url = "http://musicbrainz.org/ws/2/release/" + albumid
     query = {"inc": "recordings"}
-    wdata = _do_query(url, query, err='album search error')
+    wdata = _do_query(url, query, err="album search error")
 
     if not wdata:
         return None
 
     root = ET.fromstring(wdata)
-    tlist = root.find("./mb:release/mb:medium-list/mb:medium/mb:track-list",
-                      namespaces=ns)
+    tlist = root.find(
+        "./mb:release/mb:medium-list/mb:medium/mb:track-list", namespaces=ns
+    )
     mb_songs = tlist.findall("mb:track", namespaces=ns)
     tracks = []
     path = "./mb:recording/mb:"
 
     for track in mb_songs:
-
         try:
             title, length, rawlength = "unknown", 0, 0
             title = track.find(path + "title", namespaces=ns).text
@@ -176,12 +184,13 @@ def _get_mb_tracks(albumid):
 
 
 def _get_mb_album(albumname, **kwa):
-    """ Return artist, album title and track count from MusicBrainz. """
+    """Return artist, album title and track count from MusicBrainz."""
     url = "http://musicbrainz.org/ws/2/release/"
     qargs = dict(
         release='"%s"' % albumname,
         primarytype=kwa.get("primarytype", "album"),
-        status=kwa.get("status", "official"))
+        status=kwa.get("status", "official"),
+    )
     qargs.update({k: '"%s"' % v for k, v in kwa.items()})
     qargs = ["%s:%s" % item for item in qargs.items()]
     qargs = {"query": " AND ".join(qargs)}
@@ -191,24 +200,27 @@ def _get_mb_album(albumname, **kwa):
     if not wdata:
         return None
 
-    ns = {'mb': 'http://musicbrainz.org/ns/mmd-2.0#'}
+    ns = {"mb": "http://musicbrainz.org/ns/mmd-2.0#"}
     root = ET.fromstring(wdata)
     rlist = root.find("mb:release-list", namespaces=ns)
 
-    if int(rlist.get('count')) == 0:
+    if int(rlist.get("count")) == 0:
         return None
 
     album = rlist.find("mb:release", namespaces=ns)
-    artist = album.find("./mb:artist-credit/mb:name-credit/mb:artist",
-                        namespaces=ns).find("mb:name", namespaces=ns).text
+    artist = (
+        album.find("./mb:artist-credit/mb:name-credit/mb:artist", namespaces=ns)
+        .find("mb:name", namespaces=ns)
+        .text
+    )
     title = album.find("mb:title", namespaces=ns).text
-    aid = album.get('id')
+    aid = album.get("id")
     return dict(artist=artist, title=title, aid=aid)
 
 
-@command(r'album\s*(.{0,500})', 'album')
+@command(r"album\s*(.{0,500})", "album")
 def search_album(term):
-    """Search for albums. """
+    """Search for albums."""
     # pylint: disable=R0914,R0912
     if not term:
         show_message("Enter album name:", c.g, update=True)
@@ -225,12 +237,11 @@ def search_album(term):
         show_message("Album '%s' not found!" % term)
         return
 
-    prompt = "Artist? [%s] > " % album['artist']
+    prompt = "Artist? [%s] > " % album["artist"]
     util.xprint(prompt, end="")
     artistentry = input().strip()
 
     if artistentry:
-
         if artistentry == "q":
             show_message("Album search abandoned!")
             return
@@ -241,8 +252,8 @@ def search_album(term):
             show_message("Album '%s' by '%s' not found!" % (term, artistentry))
             return
 
-    title, artist = album['title'], album['artist']
-    mb_tracks = _get_mb_tracks(album['aid'])
+    title, artist = album["title"], album["artist"]
+    mb_tracks = _get_mb_tracks(album["aid"])
 
     if not mb_tracks:
         show_message("Album '%s' by '%s' has 0 tracks!" % (title, artist))
@@ -253,7 +264,7 @@ def search_album(term):
     g.message = msg
     g.content = "Tracks:\n"
     for n, track in enumerate(mb_tracks, 1):
-        g.content += "%02s  %s" % (n, track['title'])
+        g.content += "%02s  %s" % (n, track["title"])
         g.content += "\n"
 
     screen.update()
@@ -291,10 +302,18 @@ def search_album(term):
             g.album = title
             g.scrobble = True
             # Fill up queue with all the track names
-            g.scrobble_queue = [t['title'] for t in mb_tracks]
+            g.scrobble_queue = [t["title"] for t in mb_tracks]
 
     msg = "Contents of album %s%s - %s%s %s(%d/%d)%s:" % (
-        c.y, artist, title, c.w, c.b, len(songs), len(mb_tracks), c.w)
+        c.y,
+        artist,
+        title,
+        c.w,
+        c.b,
+        len(songs),
+        len(mb_tracks),
+        c.w,
+    )
     failmsg = "Found no album tracks for %s%s%s" % (c.y, title, c.w)
 
     paginatesongs(songs, msg=msg, failmsg=failmsg)
