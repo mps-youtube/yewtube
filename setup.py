@@ -33,7 +33,7 @@ options = dict(
     url="https://github.com/mps-youtube/yewtube",
     download_url="https://github.com/mps-youtube/yewtube/releases",
     packages=['mps_youtube', 'mps_youtube.commands', 'mps_youtube.listview', 'mps_youtube.players'],
-    entry_points={'console_scripts': ['yt = mps_youtube:main.main']},
+    entry_points={'console_scripts': ['yt = mps_youtube.main:main']},
     python_requires='>=3.6',
     install_requires=requirements,
     extras_require={
