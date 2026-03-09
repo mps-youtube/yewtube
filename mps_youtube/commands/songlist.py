@@ -94,6 +94,21 @@ def plist(parturl):
     loadmsg = "Retrieving YouTube playlist"
     paginatesongs(pl_seg, length=len(ytpl.videos), msg=msg, loadmsg=loadmsg)
 
+def mixlist(video_url):
+    """ Retrieve YouTube mix from video slug """
+
+    util.dbg("%sFetching mix using pafy%s", c.y, c.w)
+    # No caching here because mixes are different every time they are retrieved
+    ytpl = pafy.get_mix(video_url)
+    plitems = util.IterSlicer(ytpl.songs)
+
+    def pl_seg(s, e):
+        return [Video(i["id"], i["title"], i["duration_parsed"]) for i in plitems[s:e]]
+
+    msg = "Showing YouTube playlist %s" % (c.y + ytpl.name + c.w)
+    loadmsg = "Retrieving YouTube playlist"
+    paginatesongs(pl_seg, length=len(ytpl.songs), msg=msg, loadmsg=loadmsg)
+
 
 @command(r'(rm|add)\s*(-?\d[-,\d\s]{,250})', 'rm', 'add')
 def songlist_rm_add(action, songrange):
