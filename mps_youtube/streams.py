@@ -193,13 +193,14 @@ def _preload(song, delay, override):
             # preload video stream, no audio available
             stream = select(streamlist, audio=False)
 
+        if not stream:
+            util.dbg("preload: no stream available for %s", ytid)
+            return
+
         get_size(ytid, stream['url'], preloading=True)
 
-    except (ValueError, AttributeError, IOError) as e:
-        import traceback
-        traceback.print_exception(type(e), e, e.__traceback__)
-        input("Press any key to continue...")
-        util.dbg(e)  # Fail silently on preload
+    except (ValueError, AttributeError, IOError, TypeError, KeyError) as e:
+        util.dbg("preload: failed for %s: %s", ytid, e)  # Fail silently
 
     finally:
         g.preloading.remove(song.ytid)
