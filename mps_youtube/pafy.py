@@ -39,9 +39,19 @@ def get_video_streams(ytid):
     given a youtube video id returns different video / audio stream formats' \
     '''
 
-    with yt_dlp.YoutubeDL({'logger':MyLogger()}) as ydl:
+    ydl_opts = {
+        'logger': MyLogger(),
+        'quiet': True,
+        'no_warnings': True,
+        'geo_bypass': True,
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info_dict = ydl.extract_info(ytid, download=False)
+        if not info_dict or 'formats' not in info_dict:
+            return []
         return [i for i in info_dict['formats'] if i.get('format_note') != 'storyboard']
+
 
 def download_video(ytid, folder, audio_only=False):
 
@@ -50,7 +60,7 @@ def download_video(ytid, folder, audio_only=False):
     '''
 
     ytdl_format_options = {
-        'outtmpl': os.path.join(folder, '%(title)s-%(id)s.%(ext)s')
+        'outtmpl': os.path.join(folder, '%(title)s-%(id)s.%(ext)s'),
     }
     if audio_only:
         ytdl_format_options['format'] = 'bestaudio/best'

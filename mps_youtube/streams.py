@@ -68,15 +68,20 @@ def get(vid, force=False, callback=None, threeD=False):
                 "ext": s['ext'],
                 "quality": s['resolution'],
                 "rawbitrate": s.get('bitrate',-1),
-                "mtype": 'audio' if 'audio' in s['resolution'] else ('video' if s['acodec'] != 'none' else '?'),
+                "mtype": 'audio' if 'audio' in s['resolution'] else ('video' if s.get('acodec', 'none') != 'none' else '?'),
                 "size": int(s.get('filesize') if s.get('filesize') is not None else s.get('filesize_approx', -1))} for s in ps]
 
-
-    if 'manifest' in streams[0]['url']:
-        expiry = float(streams[0]['url'].split('/expire/')[1].split('/')[0])
-    else:
-        temp = streams[0]['url'].split('expire=')[1]
-        expiry = float(temp[:temp.find('&')])
+    try:
+        url = streams[0]['url']
+        if 'manifest' in url and '/expire/' in url:
+            expiry = float(url.split('/expire/')[1].split('/')[0])
+        elif 'expire=' in url:
+            temp = url.split('expire=')[1]
+            expiry = float(temp[:temp.find('&')])
+        else:
+            expiry = None
+    except (IndexError, ValueError):
+        expiry = None
 
     g.streams[ytid] = dict(expiry=expiry, meta=streams)
     prune()
@@ -195,10 +200,7 @@ def _preload(song, delay, override):
 
         get_size(ytid, stream['url'], preloading=True)
 
-    except (ValueError, AttributeError, IOError) as e:
-        import traceback
-        traceback.print_exception(type(e), e, e.__traceback__)
-        input("Press any key to continue...")
+    except Exception as e:
         util.dbg(e)  # Fail silently on preload
 
     finally:

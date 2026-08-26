@@ -3,6 +3,7 @@ requests
 pyreadline3 ; platform_system=="Windows"
 pyperclip
 yewtube-search-python>=1.6.7
-yt-dlp>=2023.9.24
+yt-dlp>=2026.8
+yt-dlp-ejs
 colorama ; platform_system=="Windows"
 pylast

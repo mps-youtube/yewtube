@@ -10,8 +10,8 @@ python setup.py sdist bdist_wheel
 import os
 import sys
 
-if sys.version_info < (3, 6):
-    sys.exit("yewtube requires minimum python 3.6")
+if sys.version_info < (3, 10):
+    sys.exit("yewtube requires minimum python 3.10")
 
 from setuptools import setup
 
@@ -34,7 +34,7 @@ options = dict(
     download_url="https://github.com/mps-youtube/yewtube/releases",
     packages=['mps_youtube', 'mps_youtube.commands', 'mps_youtube.listview', 'mps_youtube.players'],
     entry_points={'console_scripts': ['yt = mps_youtube:main.main']},
-    python_requires='>=3.6',
+    python_requires='>=3.10',
     install_requires=requirements,
     extras_require={
         "mpris": [
