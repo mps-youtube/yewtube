@@ -67,7 +67,7 @@ def get(vid, force=False, callback=None, threeD=False):
     streams = [{"url": s['url'],
                 "ext": s['ext'],
                 "quality": s['resolution'],
-                "rawbitrate": s.get('bitrate',-1),
+                "rawbitrate": s.get('abr') or s.get('tbr') or -1,
                 "mtype": 'audio' if 'audio' in s['resolution'] else ('video' if s['acodec'] != 'none' else '?'),
                 "size": int(s.get('filesize') if s.get('filesize') is not None else s.get('filesize_approx', -1))} for s in ps]
 
